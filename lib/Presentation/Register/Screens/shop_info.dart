@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
@@ -28,10 +29,10 @@ class _ShopInfoState extends State<ShopInfo> {
                       child: Row(
                         children: [
                           CommonContainer.topLeftArrow(onTap: () {}),
-                          SizedBox(width: 30),
+                          SizedBox(width: 60),
                           Text(
                             'Register Shop - Individual',
-                            style: TextStyle(
+                            style: GoogleFonts.mulish(
                               fontSize: 16,
                               color: AppColor.eerieBlack,
                             ),
