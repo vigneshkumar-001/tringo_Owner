@@ -21,7 +21,7 @@ class _ShopInfoState extends State<ShopInfo> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColor.whiteSmoke,
+                      color: AppColor. leftArrow ,
                       borderRadius: BorderRadius.circular(50),
                     ),
                     child: Padding(

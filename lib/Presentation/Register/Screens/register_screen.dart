@@ -26,6 +26,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 'Choose your business type',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
+              SizedBox(height: 20),
+              Text(
+                'Connect your business to millions of customers. Whether you sell products or services, our platform helps you grow.',
+                style: TextStyle(fontSize: 12,color: AppColor.mildBlack),
+              ),
             ],
           ),
         ),
