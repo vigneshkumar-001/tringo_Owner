@@ -1,0 +1,3 @@
+class CommonContainer {
+  static topLeftArrow (){}
+}
