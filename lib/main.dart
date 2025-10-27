@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
+import 'package:tringo_vendor/Presentation/Register/Screens/shop_info.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
-      home: RegisterScreen(),
+      home: ShopInfo(),
     );
   }
 }
