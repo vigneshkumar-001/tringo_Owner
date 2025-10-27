@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
 class ShopInfo extends StatefulWidget {
   const ShopInfo({super.key});
@@ -17,23 +17,30 @@ class _ShopInfoState extends State<ShopInfo> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Row(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColor.whiteSmoke,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Image.asset(
-                        AppImages.leftArrow,
-                        height: 14,
-                        color: AppColor.mediumGray,
+              Container(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          CommonContainer.topLeftArrow(onTap: () {}),
+                          SizedBox(width: 30),
+                          Text(
+                            'Register Shop - Individual',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColor.eerieBlack,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
