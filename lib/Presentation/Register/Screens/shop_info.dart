@@ -128,6 +128,7 @@ class _ShopInfoState extends State<ShopInfo> {
                       validator: (value) =>
                       value == null || value.isEmpty ? 'Please select a city' : null,
                     ),
+
                   ],
                 ),
               ),
