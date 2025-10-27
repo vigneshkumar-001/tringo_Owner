@@ -7,7 +7,8 @@ class AppImages {
   static String rightStickArrow = 'Assets/Images/Right_Stick_Arrow.png';
   static String iImage = 'Assets/Images/I_Image.png';
   static String registerBCImage = 'Assets/Images/Register_BCimage.png';
-  static String shopInfoImage = 'Assets/ImagesShop_Info_Image.png';
+
   static String sell = 'Assets/Images/sell.png';
   static String service = 'Assets/Images/service.png';
+  static String shopInfoImage = 'Assets/Images/Shop_Info_Image.png';
 }

@@ -7,5 +7,9 @@ class AppColor {
      static const mildBlack = Color(0XFF252525);
      static const gray84 = Color(0XFF6D6D6D);
      static const black = Color(0XFF000000);
+    static const lightSkyBlue = Color(0XFFE6F2F9);
+  static const mediumGreen = Color(0XFF31CC64);
+  static const lightGray = Color(0XFFF2F2F2);
+  static const red = Color(0xffF5465C);
 
 }
