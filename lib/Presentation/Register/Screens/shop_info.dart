@@ -34,7 +34,7 @@ class _ShopInfoState extends State<ShopInfo> {
                             'Register Shop - Individual',
                             style: GoogleFonts.mulish(
                               fontSize: 16,
-                              color: AppColor.eerieBlack,
+                              color: AppColor. mildBlack,
                             ),
                           ),
                         ],
