@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
 
         theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
-        home: RegisterScreen(),
+        home: ShopInfo(),
       ),
     );
   }

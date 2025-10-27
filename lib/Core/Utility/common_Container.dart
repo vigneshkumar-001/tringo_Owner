@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -67,7 +68,7 @@ class CommonContainer {
             RichText(
               text: TextSpan(
                 text: title.split(' ').take(2).join(' ') + ' ',
-                style: const TextStyle(
+                style: AppTextStyles.mulish(
                   fontSize: 22,
                   fontWeight: FontWeight.w400,
                   color: Colors.black,
@@ -75,7 +76,7 @@ class CommonContainer {
                 children: [
                   TextSpan(
                     text: title.split(' ').skip(2).join(' '),
-                    style: const TextStyle(
+                    style: AppTextStyles.mulish(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: Colors.black,
@@ -131,17 +132,17 @@ class CommonContainer {
                             ),
                             child: Column(
                               children: [
-                                const Text(
+                                Text(
                                   "Individual",
-                                  style: TextStyle(
+                                  style: AppTextStyles.mulish(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
                                   ),
                                 ),
                                 if (isIndividual)
-                                  const Text(
+                                  Text(
                                     "Selected",
-                                    style: TextStyle(
+                                    style: AppTextStyles.mulish(
                                       color: Colors.grey,
                                       fontSize: 12,
                                     ),
@@ -173,17 +174,17 @@ class CommonContainer {
                             ),
                             child: Column(
                               children: [
-                                const Text(
+                                Text(
                                   "Company",
-                                  style: TextStyle(
+                                  style: AppTextStyles.mulish(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
                                   ),
                                 ),
                                 if (!isIndividual)
-                                  const Text(
+                                  Text(
                                     "Selected",
-                                    style: TextStyle(
+                                    style: AppTextStyles.mulish(
                                       color: Colors.grey,
                                       fontSize: 12,
                                     ),
@@ -196,7 +197,7 @@ class CommonContainer {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 // --- Save & Continue Button ---
                 GestureDetector(
                   onTap: () {
@@ -210,9 +211,9 @@ class CommonContainer {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
+                    child: Text(
                       "Save & Continue",
-                      style: TextStyle(
+                      style: AppTextStyles.mulish(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -233,9 +234,9 @@ class CommonContainer {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      const Text(
+                      Text(
                         "Individual",
-                        style: TextStyle(
+                        style: AppTextStyles.mulish(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -256,17 +257,17 @@ class CommonContainer {
                             ),
                           ],
                         ),
-                        child: const Text(
+                        child: Text(
                           "or",
-                          style: TextStyle(
+                          style: AppTextStyles.mulish(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                      const Text(
+                      Text(
                         "Company",
-                        style: TextStyle(
+                        style: AppTextStyles.mulish(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -334,14 +335,6 @@ class CommonContainer {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (imagePath != null) ...[
-                    Image.asset(
-                      imagePath,
-                      height: imgHeight!.sp,
-                      width: imgWeight!.sp,
-                    ),
-                    SizedBox(width: 10.w),
-                  ],
                   DefaultTextStyle(
                     style: TextStyle(
                       fontFamily: "Roboto-normal",
@@ -351,13 +344,25 @@ class CommonContainer {
                     ),
                     child: text,
                   ),
+                  if (imagePath != null) ...[
+                    SizedBox(width: 10.w),
+                    Image.asset(
+                      imagePath,
+                      height: imgHeight!.sp,
+                      width: imgWeight!.sp,
+                    ),
+                  ],
                 ],
               ),
       ),
     );
   }
+
   static Widget fillingContainer({
     String? text,
+    double? textSize = 14,
+    Color? textColor = AppColor.mediumGray,
+    FontWeight? textFontWeight,
     Key? fieldKey,
     TextEditingController? controller,
     String? imagePath,
@@ -438,7 +443,7 @@ class CommonContainer {
               );
             } else {
               controller?.text =
-              "${pickedDate.day.toString().padLeft(2, '0')}-"
+                  "${pickedDate.day.toString().padLeft(2, '0')}-"
                   "${pickedDate.month.toString().padLeft(2, '0')}-"
                   "${pickedDate.year}";
               state.didChange(controller?.text ?? '');
@@ -453,7 +458,12 @@ class CommonContainer {
           } else if (isDropdown &&
               dropdownItems != null &&
               dropdownItems!.isNotEmpty) {
-            _showDropdownBottomSheet(context!, dropdownItems!, controller, state);
+            _showDropdownBottomSheet(
+              context!,
+              dropdownItems!,
+              controller,
+              state,
+            );
           } else {
             onFieldTap?.call();
           }
@@ -462,11 +472,11 @@ class CommonContainer {
         // -------------------- Input Formatter Handling --------------------
         final effectiveInputFormatters = isMobile || isAadhaar || isPincode
             ? <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(
-            isMobile ? 10 : (isAadhaar ? 12 : 6),
-          ),
-        ]
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  isMobile ? 10 : (isAadhaar ? 12 : 6),
+                ),
+              ]
             : (inputFormatters ?? const []);
 
         // -------------------- UI --------------------
@@ -506,22 +516,20 @@ class CommonContainer {
                                 : (isAadhaar ? 12 : (isPincode ? 6 : null)),
                             keyboardType: keyboardType,
                             inputFormatters: effectiveInputFormatters,
-                            style: GoogleFonts.mulish(
-                              fontSize: 14,
-                              color: AppColor.black,
-                            ),
+                            style: AppTextStyles.mulish(),
                             decoration: const InputDecoration(
                               hintText: '',
                               counterText: '',
-                              contentPadding:
-                              EdgeInsets.symmetric(horizontal: 10),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
                               border: InputBorder.none,
                               isDense: true,
                               errorText: null,
                             ),
                             showCursor: !(isDOB || readOnly || isDropdown),
                             enableInteractiveSelection:
-                            !(isDOB || readOnly || isDropdown),
+                                !(isDOB || readOnly || isDropdown),
                             onChanged: (v) {
                               state.didChange(v);
                               onChanged?.call(v);
@@ -546,6 +554,18 @@ class CommonContainer {
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
+                      if (text != null) ...[
+                        const SizedBox(width: 10),
+                        Text(
+                          text,
+                          style: AppTextStyles.mulish(
+                            fontWeight: textFontWeight,
+                            fontSize: textSize!,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+
                       const SizedBox(width: 20),
                       if (imagePath != null)
                         InkWell(
@@ -585,11 +605,11 @@ class CommonContainer {
 
   // -------------------- Common Dropdown Bottom Sheet --------------------
   static void _showDropdownBottomSheet(
-      BuildContext context,
-      List<String> items,
-      TextEditingController? controller,
-      FormFieldState<String> state,
-      ) {
+    BuildContext context,
+    List<String> items,
+    TextEditingController? controller,
+    FormFieldState<String> state,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -607,10 +627,9 @@ class CommonContainer {
             return ListTile(
               title: Text(
                 value,
-                style: TextStyle(
+                style: AppTextStyles.mulish(
                   fontSize: 16,
-                  fontWeight:
-                  isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? AppColor.lightSkyBlue : Colors.black,
                 ),
               ),
@@ -625,6 +644,105 @@ class CommonContainer {
       },
     );
   }
+
+  static registerTopContainer({
+    Color? gradientColor,
+    required String image,
+    required String text,
+    double? imageHeight,
+    double? imageWidth,
+    double? value,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(AppImages.registerBCImage),
+          fit: BoxFit.cover,
+        ),
+        gradient: LinearGradient(
+          colors: [AppColor.scaffoldColor, gradientColor!],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(30),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            Image.asset(image, height: imageHeight, width: imageWidth),
+            SizedBox(height: 15),
+            Text(
+              text,
+              style: AppTextStyles.mulish(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColor.mildBlack,
+              ),
+            ),
+            SizedBox(height: 30),
+            LinearProgressIndicator(
+              minHeight: 12,
+              value: value,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColor.mediumGreen),
+              backgroundColor: AppColor.scaffoldColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            SizedBox(height: 25),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // static bottomBlackButton({
+  //   required VoidCallback onTap,
+  //   required String text,
+  //   Color textColor = AppColor.scaffoldColor,
+  //   FontWeight? fontWeight,
+  //   double? fontSize,
+  //   String? image,
+  //   double? imageHeight,
+  //   double? imageWidth,
+  //   Color imageColor = AppColor.scaffoldColor,
+  //   double verticalPadding = 18.5,
+  // }) {
+  //   return InkWell(
+  //     onTap: onTap,
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         color: AppColor.black,
+  //         borderRadius: BorderRadius.circular(14),
+  //       ),
+  //       child: Padding(
+  //         padding: EdgeInsets.symmetric(vertical: verticalPadding),
+  //         child: Row(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: [
+  //             Text(
+  //               text,
+  //               style: AppTextStyles.mulish(
+  //                 fontSize: fontSize!,
+  //                 fontWeight: fontWeight,
+  //                 color: textColor,
+  //               ),
+  //             ),
+  //             SizedBox(width: 15),
+  //             Image.asset(
+  //               image!,
+  //               height: imageHeight,
+  //               width: imageWidth,
+  //               color: imageColor,
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }
 
 // Row(
