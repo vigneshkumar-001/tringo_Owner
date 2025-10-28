@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -32,6 +33,7 @@ class CommonContainer {
   static Widget sellingProduct({
     required String image,
     required VoidCallback onTap,
+    VoidCallback? buttonTap,
     required String title,
     required String description,
     required bool isSelected,
@@ -199,9 +201,7 @@ class CommonContainer {
                 const SizedBox(height: 20),
                 // --- Save & Continue Button ---
                 GestureDetector(
-                  onTap: () {
-                    // do save action
-                  },
+                  onTap: buttonTap,
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -356,6 +356,7 @@ class CommonContainer {
       ),
     );
   }
+
   static Widget fillingContainer({
     String? text,
     Key? fieldKey,
@@ -438,7 +439,7 @@ class CommonContainer {
               );
             } else {
               controller?.text =
-              "${pickedDate.day.toString().padLeft(2, '0')}-"
+                  "${pickedDate.day.toString().padLeft(2, '0')}-"
                   "${pickedDate.month.toString().padLeft(2, '0')}-"
                   "${pickedDate.year}";
               state.didChange(controller?.text ?? '');
@@ -453,7 +454,12 @@ class CommonContainer {
           } else if (isDropdown &&
               dropdownItems != null &&
               dropdownItems!.isNotEmpty) {
-            _showDropdownBottomSheet(context!, dropdownItems!, controller, state);
+            _showDropdownBottomSheet(
+              context!,
+              dropdownItems!,
+              controller,
+              state,
+            );
           } else {
             onFieldTap?.call();
           }
@@ -462,11 +468,11 @@ class CommonContainer {
         // -------------------- Input Formatter Handling --------------------
         final effectiveInputFormatters = isMobile || isAadhaar || isPincode
             ? <TextInputFormatter>[
-          FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(
-            isMobile ? 10 : (isAadhaar ? 12 : 6),
-          ),
-        ]
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  isMobile ? 10 : (isAadhaar ? 12 : 6),
+                ),
+              ]
             : (inputFormatters ?? const []);
 
         // -------------------- UI --------------------
@@ -506,22 +512,20 @@ class CommonContainer {
                                 : (isAadhaar ? 12 : (isPincode ? 6 : null)),
                             keyboardType: keyboardType,
                             inputFormatters: effectiveInputFormatters,
-                            style: GoogleFonts.mulish(
-                              fontSize: 14,
-                              color: AppColor.black,
-                            ),
+                            style: AppTextStyles.textWith700(fontSize: 18),
                             decoration: const InputDecoration(
                               hintText: '',
                               counterText: '',
-                              contentPadding:
-                              EdgeInsets.symmetric(horizontal: 10),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
                               border: InputBorder.none,
                               isDense: true,
                               errorText: null,
                             ),
                             showCursor: !(isDOB || readOnly || isDropdown),
                             enableInteractiveSelection:
-                            !(isDOB || readOnly || isDropdown),
+                                !(isDOB || readOnly || isDropdown),
                             onChanged: (v) {
                               state.didChange(v);
                               onChanged?.call(v);
@@ -546,6 +550,17 @@ class CommonContainer {
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
+                      if (text != null) ...[
+                        const SizedBox(width: 10),
+                        Text(
+                          text,
+                          style: AppTextStyles.mulish(
+                            fontSize: 14,
+                            color: AppColor.mediumGray,
+                          ),
+                        ),
+                      ],
+
                       const SizedBox(width: 20),
                       if (imagePath != null)
                         InkWell(
@@ -585,11 +600,11 @@ class CommonContainer {
 
   // -------------------- Common Dropdown Bottom Sheet --------------------
   static void _showDropdownBottomSheet(
-      BuildContext context,
-      List<String> items,
-      TextEditingController? controller,
-      FormFieldState<String> state,
-      ) {
+    BuildContext context,
+    List<String> items,
+    TextEditingController? controller,
+    FormFieldState<String> state,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -609,8 +624,7 @@ class CommonContainer {
                 value,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight:
-                  isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? AppColor.lightSkyBlue : Colors.black,
                 ),
               ),
@@ -625,48 +639,279 @@ class CommonContainer {
       },
     );
   }
-}
 
-// Row(
-// mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-// children: [
-// const Text(
-// "Individual",
-// style: TextStyle(
-// fontSize: 16,
-// fontWeight: FontWeight.w500,
-// ),
-// ),
-// Container(
-// padding: const EdgeInsets.symmetric(
-// horizontal: 14,
-// vertical: 8,
-// ),
-// decoration: BoxDecoration(
-// color: Colors.white,
-// borderRadius: BorderRadius.circular(12),
-// boxShadow: [
-// BoxShadow(
-// color: Colors.black.withOpacity(0.1),
-// blurRadius: 5,
-// offset: const Offset(0, 2),
-// ),
-// ],
-// ),
-// child: const Text(
-// "or",
-// style: TextStyle(
-// fontSize: 16,
-// fontWeight: FontWeight.bold,
-// ),
-// ),
-// ),
-// const Text(
-// "Company",
-// style: TextStyle(
-// fontSize: 16,
-// fontWeight: FontWeight.w500,
-// ),
-// ),
-// ],
-// ),
+  static Widget mobileNumberField({
+    Key? fieldKey,
+    TextEditingController? controller,
+    Function(String)? onChanged,
+    VoidCallback? onVerifyTap,
+    TextInputType? keyboardType,
+    FocusNode? focusNode,
+    FormFieldValidator<String>? validator,
+    bool readOnly = false,
+    Color borderColor = Colors.red,
+  }) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return FormField<String>(
+          key: fieldKey,
+          validator: validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          builder: (state) {
+            final hasError = state.hasError;
+            final textValue = controller?.text ?? '';
+            final isTenDigits = textValue.length == 10;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xFFF5F5F5),
+                    border: Border.all(
+                      color: hasError ? Colors.red : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 5,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            readOnly: readOnly,
+                            maxLength: 10,
+                            keyboardType: keyboardType ?? TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
+                            decoration: const InputDecoration(
+                              counterText: '',
+                              hintText: ' ',
+                              border: InputBorder.none,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              letterSpacing: 0.5,
+                            ),
+                            onChanged: (v) {
+                              setState(() {});
+                              state.didChange(v);
+                              onChanged?.call(v);
+                            },
+                          ),
+                        ),
+
+                        textValue.isNotEmpty
+                            ? GestureDetector(
+                                onTap: () {
+                                  controller?.clear();
+                                  setState(() {});
+                                },
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.grey,
+                                  size: 22,
+                                ),
+                              )
+                            : SizedBox.shrink(),
+                        Container(
+                          width: 1.2,
+                          height: 30,
+                          color: Colors.grey.shade300,
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+
+                        textValue.isEmpty
+                            ? Text('Mobile No')
+                            : SizedBox.shrink(),
+                        if (textValue.isNotEmpty)
+                          GestureDetector(
+                            onTap: onVerifyTap,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2196F3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                "Verify",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (hasError)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12.0, top: 4),
+                    child: Text(
+                      state.errorText!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static Widget otpVerificationCard({
+    required BuildContext context,
+    required List<TextEditingController> controllers,
+    required VoidCallback onSubmit,
+    required VoidCallback onBack,
+    required int resendSeconds,
+    bool showError = false,
+  }) {
+    return Container(
+      key: const ValueKey('otpCard'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFF5F5F5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top Row with back + title
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onBack,
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 14,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                "OTP Sent to your xxx9509",
+                style: AppTextStyles.mulish(
+                  color: AppColor.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            "If you didn’t get OTP by SMS, resend OTP using the button",
+            style: AppTextStyles.mulish(color: AppColor.darkGrey, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+
+          Text(
+            resendSeconds > 0 ? "Resend in ${resendSeconds}s" : "Resend OTP",
+            style: AppTextStyles.mulish(
+              color: AppColor.resendOtp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children:
+                List.generate(4, (index) {
+                  return SizedBox(
+                    width: 55,
+                    height: 55,
+                    child: TextField(
+                      controller: controllers[index],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      maxLength: 1,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      decoration: InputDecoration(
+                        filled: true, // 👈 enable fill
+                        fillColor:
+                            Colors.white,
+                        counterText: '',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        if (value.isNotEmpty && index < 3) {
+                          FocusScope.of(context).nextFocus(); // jump next
+                        } else if (value.isEmpty && index > 0) {
+                          FocusScope.of(context).previousFocus(); // jump back
+                        }
+                      },
+                    ),
+                  );
+                })..add(
+                  // ✅ Check button at end
+                  GestureDetector(
+                    onTap: onSubmit,
+                    child: Container(
+                      width: 55,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+          ),
+
+          if (showError)
+            const Padding(
+              padding: EdgeInsets.only(top: 8, left: 4),
+              child: Text(
+                "⚠️ Please Enter Valid OTP",
+                style: TextStyle(color: Colors.red, fontSize: 13),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
