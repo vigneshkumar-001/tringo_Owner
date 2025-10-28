@@ -319,6 +319,7 @@ class _ShopInfoState extends State<ShopInfo> {
                         imagePath: AppImages.rightStickArrow,
                         imgHeight: 20,
                       ),
+                      SizedBox(height: 36),
                     ],
                   ),
                 ),
