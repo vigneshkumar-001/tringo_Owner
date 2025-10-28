@@ -742,7 +742,6 @@ class CommonContainer {
   //     ),
   //   );
   // }
-}
 
   static Widget mobileNumberField({
     Key? fieldKey,
