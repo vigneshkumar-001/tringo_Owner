@@ -11,4 +11,6 @@ class AppImages {
   static String sell = 'Assets/Images/sell.png';
   static String service = 'Assets/Images/service.png';
   static String shopInfoImage = 'Assets/Images/Shop_Info_Image.png';
+  static String ownerInfo = 'Assets/Images/ownerInfo.png';
+  static String person = 'Assets/Images/person.png';
 }
