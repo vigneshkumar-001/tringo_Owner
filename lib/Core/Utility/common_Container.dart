@@ -742,7 +742,6 @@ class CommonContainer {
   //     ),
   //   );
   // }
-}
 
   static Widget mobileNumberField({
     Key? fieldKey,
@@ -957,8 +956,7 @@ class CommonContainer {
                       ),
                       decoration: InputDecoration(
                         filled: true, // 👈 enable fill
-                        fillColor:
-                            Colors.white,
+                        fillColor: Colors.white,
                         counterText: '',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
