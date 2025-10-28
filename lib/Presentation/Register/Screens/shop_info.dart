@@ -20,7 +20,6 @@ class _ShopInfoState extends State<ShopInfo> {
   final List<String> cities = ['Madurai', 'Chennai', 'Coimbatore'];
   final List<String> genders = ['Male', 'Female', 'Other'];
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,10 +112,11 @@ class _ShopInfoState extends State<ShopInfo> {
                       isDropdown: true,
                       dropdownItems: categories,
                       context: context,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Please select a category' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please select a category'
+                          : null,
                     ),
-                    SizedBox(height: 10,),
+                    SizedBox(height: 10),
                     CommonContainer.fillingContainer(
                       text: 'City',
                       imagePath: AppImages.downArrow,
@@ -125,10 +125,10 @@ class _ShopInfoState extends State<ShopInfo> {
                       isDropdown: true,
                       dropdownItems: cities,
                       context: context,
-                      validator: (value) =>
-                      value == null || value.isEmpty ? 'Please select a city' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please select a city'
+                          : null,
                     ),
-
                   ],
                 ),
               ),
