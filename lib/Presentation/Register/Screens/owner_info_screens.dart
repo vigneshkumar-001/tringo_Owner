@@ -1,0 +1,257 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:tringo_vendor/Core/Const/app_color.dart';
+import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+
+class OwnerInfoScreens extends StatefulWidget {
+  const OwnerInfoScreens({super.key});
+
+  @override
+  State<OwnerInfoScreens> createState() => _OwnerInfoScreensState();
+}
+
+class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
+  final TextEditingController englishNameController = TextEditingController();
+  final TextEditingController tamilNameController = TextEditingController();
+  final TextEditingController mobileController = TextEditingController();
+
+  bool showOtpCard = false;
+  int resendSeconds = 30;
+
+  // OTP related
+  final int otpLength = 4;
+  late List<TextEditingController> otpControllers;
+  late List<FocusNode> otpFocusNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    otpControllers = List.generate(otpLength, (_) => TextEditingController());
+    otpFocusNodes = List.generate(otpLength, (_) => FocusNode());
+  }
+
+  @override
+  void dispose() {
+    englishNameController.dispose();
+    tamilNameController.dispose();
+    mobileController.dispose();
+    for (final c in otpControllers) {
+      c.dispose();
+    }
+    for (final f in otpFocusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  void _startResendTimer() {
+    resendSeconds = 30;
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendSeconds == 0) {
+        timer.cancel();
+      } else {
+        setState(() => resendSeconds--);
+      }
+    });
+  }
+
+  void _onOtpChanged(int index, String value) {
+    if (value.isNotEmpty && index < otpLength - 1) {
+      FocusScope.of(context).requestFocus(otpFocusNodes[index + 1]);
+    } else if (value.isEmpty && index > 0) {
+      FocusScope.of(context).requestFocus(otpFocusNodes[index - 1]);
+    }
+    setState(() {});
+  }
+
+  bool get isOtpComplete =>
+      otpControllers.every((controller) => controller.text.isNotEmpty);
+
+  void _onSubmitOtp() {
+    final otp = otpControllers.map((c) => c.text).join();
+    debugPrint("Entered OTP: $otp");
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("OTP Entered: $otp")));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// Top Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    CommonContainer.topLeftArrow(
+                      onTap: () {
+                        if (showOtpCard) {
+                          setState(() => showOtpCard = false);
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 50),
+                    Text(
+                      'Register Shop - Individual',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColor.mildBlack,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 35),
+
+              /// Header Container
+              Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(AppImages.registerBCImage),
+                    fit: BoxFit.cover,
+                  ),
+                  gradient: LinearGradient(
+                    colors: [AppColor.scaffoldColor, AppColor.lightGreen],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomRight: Radius.circular(30),
+                    bottomLeft: Radius.circular(30),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      Image.asset(AppImages.person, height: 85),
+                      const SizedBox(height: 15),
+                      Text(
+                        'Owner’s Info',
+                        style: AppTextStyles.mulish(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      LinearProgressIndicator(
+                        minHeight: 12,
+                        value: 0.3,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColor.mediumGreen,
+                        ),
+                        backgroundColor: AppColor.scaffoldColor,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      const SizedBox(height: 25),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              /// Form Fields
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Name of the User ( As per Govt Certificate )',
+                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
+                    ),
+                    const SizedBox(height: 10),
+                    CommonContainer.fillingContainer(
+                      text: 'English',
+                      verticalDivider: true,
+                      controller: englishNameController,
+                      context: context,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please enter a user name'
+                          : null,
+                    ),
+                    const SizedBox(height: 10),
+                    CommonContainer.fillingContainer(
+                      text: 'Tamil',
+                      verticalDivider: true,
+                      controller: tamilNameController,
+                      context: context,
+                    ),
+                    const SizedBox(height: 30),
+                    Text(
+                      'Mobile Number',
+                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
+                    ),
+                    const SizedBox(height: 10),
+
+                    /// OTP Switcher
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, animation) =>
+                          FadeTransition(opacity: animation, child: child),
+                      child: showOtpCard
+                          ? CommonContainer.otpVerificationCard(
+                              resendSeconds: resendSeconds,
+                              context: context,
+                              controllers: otpControllers,
+                              // focusNodes: otpFocusNodes,
+                              // onChanged: _onOtpChanged,
+                              // isOtpComplete: isOtpComplete,
+                              onSubmit: _onSubmitOtp,
+                              onBack: () => setState(() => showOtpCard = false),
+                            )
+                          : CommonContainer.mobileNumberField(
+                              controller: mobileController,
+                              onChanged: (v) {},
+                              onVerifyTap: () {
+                                if (mobileController.text.length == 10) {
+                                  setState(() => showOtpCard = true);
+                                  _startResendTimer();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Enter a valid 10-digit mobile number",
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Mobile number required';
+                                }
+                                if (value.length != 10) {
+                                  return 'Enter valid 10-digit number';
+                                }
+                                return null;
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
