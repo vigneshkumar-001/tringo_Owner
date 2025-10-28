@@ -3,6 +3,7 @@ import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -42,6 +43,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(height: 20),
 
                 CommonContainer.sellingProduct(
+                  buttonTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OwnerInfoScreens(),
+                      ),
+                    );
+                  },
                   onTap: () {
                     setState(() {
                       selectedIndex = 0;
