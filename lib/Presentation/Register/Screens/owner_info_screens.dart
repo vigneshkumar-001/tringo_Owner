@@ -6,6 +6,8 @@ import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
+import '../../../Core/Utility/common_Container.dart';
+
 class OwnerInfoScreens extends StatefulWidget {
   const OwnerInfoScreens({super.key});
 
