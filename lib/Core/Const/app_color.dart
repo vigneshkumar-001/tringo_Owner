@@ -13,4 +13,9 @@ class AppColor {
   static const lightGray = Color(0XFFF2F2F2);
   static const mediumLightGray = Color(0XffACACAC);
   static const red = Color(0xffF5465C);
+  static const lightGreen = Color(0xffE6F9EC);
+  static const darkGrey = Color(0xffA1A1A1);
+  static const resendOtp = Color(0xff2C8DD1);
+
+
 }

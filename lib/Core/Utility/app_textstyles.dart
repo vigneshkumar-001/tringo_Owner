@@ -6,8 +6,8 @@ class AppTextStyles {
   static textWith600() {
     return GoogleFonts.mulish(fontWeight: FontWeight.w600);
   }
-  static textWith700({  FontWeight? fontWeight = FontWeight.w700,Color?color}) {
-    return GoogleFonts.mulish(fontWeight: fontWeight,color: color);
+  static textWith700({  FontWeight? fontWeight = FontWeight.w700,Color?color,double? fontSize}) {
+    return GoogleFonts.mulish(fontWeight: fontWeight,color: color,fontSize: fontSize);
   }
   static textWithBold({
     double fontSize = 32,
