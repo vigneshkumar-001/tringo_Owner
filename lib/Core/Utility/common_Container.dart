@@ -11,6 +11,7 @@ class CommonContainer {
     return Row(
       children: [
         InkWell(
+          borderRadius: BorderRadius.circular(50),
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
@@ -1014,6 +1015,25 @@ class CommonContainer {
             ),
         ],
       ),
+    );
+  }
+
+  static containerTitle({required String title, required String image}) {
+    return Row(
+      children: [
+        Text(title, style: AppTextStyles.mulish(color: AppColor.mildBlack)),
+        SizedBox(width: 7),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColor.iceBlue,
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Image.asset(image, height: 10),
+          ),
+        ),
+      ],
     );
   }
 }
