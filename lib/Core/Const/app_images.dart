@@ -7,12 +7,12 @@ class AppImages {
   static String rightStickArrow = 'Assets/Images/Right_Stick_Arrow.png';
   static String iImage = 'Assets/Images/I_Image.png';
   static String registerBCImage = 'Assets/Images/Register_BCimage.png';
-
   static String sell = 'Assets/Images/sell.png';
   static String service = 'Assets/Images/service.png';
   static String shopInfoImage = 'Assets/Images/Shop_Info_Image.png';
   static String ownerInfo = 'Assets/Images/ownerInfo.png';
   static String person = 'Assets/Images/person.png';
+  static String closeImage = 'Assets/Images/Close_Image.png';
   static String dob = 'Assets/Images/dob.png';
   static String qr_code = 'Assets/Images/qr_code.png';
   static String profile = 'Assets/Images/profile.png';
