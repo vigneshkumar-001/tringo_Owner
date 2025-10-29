@@ -4,6 +4,8 @@ import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart
 import 'package:tringo_vendor/Presentation/Register/Screens/shop_info.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'Presentation/Home/Screens/home_screens.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -19,7 +21,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
 
         theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
-        home: ShopInfo(),
+        home: HomeScreens(),
       ),
     );
   }

@@ -18,6 +18,9 @@ class OwnerInfoScreens extends StatefulWidget {
 class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
   final TextEditingController englishNameController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
+  final TextEditingController emailIdController = TextEditingController();
+  final TextEditingController dateOfBirthController = TextEditingController();
+  final TextEditingController genderController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
 
   bool showOtpCard = false;
@@ -175,10 +178,27 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Name of the User ( As per Govt Certificate )',
-                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
+                    RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: 'Name of the User ',
+                            style: TextStyle(color: AppColor.mildBlack),
+                          ),
+                          TextSpan(
+                            text: '( As per Govt Certificate )',
+                            style: const TextStyle(
+                              color: AppColor.mediumLightGray,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+
                     const SizedBox(height: 10),
                     CommonContainer.fillingContainer(
                       text: 'English',
@@ -197,11 +217,6 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                       context: context,
                     ),
                     const SizedBox(height: 30),
-                    Text(
-                      'Mobile Number',
-                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
-                    ),
-                    const SizedBox(height: 10),
 
                     /// OTP Switcher
                     AnimatedSwitcher(
@@ -210,6 +225,9 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                           FadeTransition(opacity: animation, child: child),
                       child: showOtpCard
                           ? CommonContainer.otpVerificationCard(
+                              last4Digits: mobileController.text.substring(
+                                mobileController.text.length - 4,
+                              ),
                               resendSeconds: resendSeconds,
                               context: context,
                               controllers: otpControllers,
@@ -247,6 +265,54 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                               },
                             ),
                     ),
+                    const SizedBox(height: 30),
+                    Text(
+                      'Email Id',
+                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
+                    ),
+                    const SizedBox(height: 10),
+                    CommonContainer.fillingContainer(
+                      text: 'Email Id',
+                      verticalDivider: true,
+                      controller: emailIdController,
+                      context: context,
+                    ),
+                    const SizedBox(height: 30),
+                    Text(
+                      'Date of Birth',
+                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
+                    ),
+                    const SizedBox(height: 10),
+                    CommonContainer.fillingContainer(
+                      isDOB: true,
+
+                      verticalDivider: true,
+
+                      imagePath: AppImages.dob,
+                      imageWidth: 20,
+                      imageHight: 25,
+                      controller: dateOfBirthController,
+                      context: context,
+                    ),
+                    const SizedBox(height: 30),
+                    Text(
+                      'Gender',
+                      style: GoogleFonts.mulish(color: AppColor.mildBlack),
+                    ),
+                    const SizedBox(height: 10),
+                    CommonContainer.fillingContainer(
+                      isDropdown: true,
+                      verticalDivider: false,
+                      imagePath: AppImages.downArrow,
+                      controller: genderController,
+                      context: context,
+                    ),
+                    const SizedBox(height: 30),
+                    CommonContainer.button(
+                      onTap: () {},
+                      text: Text('Save & Continue'),
+                    ),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
