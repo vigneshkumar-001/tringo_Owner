@@ -291,7 +291,7 @@ class CommonContainer {
     double? imgWeight = 24,
     double? borderRadius = 15,
 
-    Color? buttonColor,
+    Color buttonColor = AppColor.black,
     Color? foreGroundColor,
     Color? borderColor,
     Color? textColor = Colors.white,
@@ -698,52 +698,6 @@ class CommonContainer {
     );
   }
 
-  // static bottomBlackButton({
-  //   required VoidCallback onTap,
-  //   required String text,
-  //   Color textColor = AppColor.scaffoldColor,
-  //   FontWeight? fontWeight,
-  //   double? fontSize,
-  //   String? image,
-  //   double? imageHeight,
-  //   double? imageWidth,
-  //   Color imageColor = AppColor.scaffoldColor,
-  //   double verticalPadding = 18.5,
-  // }) {
-  //   return InkWell(
-  //     onTap: onTap,
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         color: AppColor.black,
-  //         borderRadius: BorderRadius.circular(14),
-  //       ),
-  //       child: Padding(
-  //         padding: EdgeInsets.symmetric(vertical: verticalPadding),
-  //         child: Row(
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //           children: [
-  //             Text(
-  //               text,
-  //               style: AppTextStyles.mulish(
-  //                 fontSize: fontSize!,
-  //                 fontWeight: fontWeight,
-  //                 color: textColor,
-  //               ),
-  //             ),
-  //             SizedBox(width: 15),
-  //             Image.asset(
-  //               image!,
-  //               height: imageHeight,
-  //               width: imageWidth,
-  //               color: imageColor,
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   static Widget mobileNumberField({
     Key? fieldKey,
     TextEditingController? controller,
@@ -769,6 +723,11 @@ class CommonContainer {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  'Mobile Number',
+                  style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                ),
+                const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
@@ -836,7 +795,12 @@ class CommonContainer {
                         ),
 
                         textValue.isEmpty
-                            ? Text('Mobile No')
+                            ? Text(
+                                'Mobile No',
+                                style: AppTextStyles.mulish(
+                                  color: AppColor.mediumGray,
+                                ),
+                              )
                             : SizedBox.shrink(),
                         if (textValue.isNotEmpty)
                           GestureDetector(
@@ -885,6 +849,7 @@ class CommonContainer {
     required VoidCallback onSubmit,
     required VoidCallback onBack,
     required int resendSeconds,
+    required String last4Digits,
     bool showError = false,
   }) {
     return Container(
@@ -902,15 +867,15 @@ class CommonContainer {
             children: [
               GestureDetector(
                 onTap: onBack,
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_back_ios_new,
                   size: 14,
-                  color: Colors.black,
+                  color: AppColor.mediumGray,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
-                "OTP Sent to your xxx9509",
+                "OTP Sent to your xxx$last4Digits",
                 style: AppTextStyles.mulish(
                   color: AppColor.black,
                   fontSize: 18,
@@ -1018,6 +983,226 @@ class CommonContainer {
     );
   }
 
+  static Widget smallShopContainer({
+    required String shopImage,
+    required String shopLocation,
+    required String shopName,
+    bool isAdd = false,
+  }) {
+    return Container(
+      width: 370,
+      margin: const EdgeInsets.only(right: 0, left: 4),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: Stack(
+          alignment: Alignment.bottomLeft,
+          children: [
+            Image.asset(
+              shopImage,
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            !isAdd
+                ? Container(
+                    width: double.infinity,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                  )
+                : SizedBox.shrink(),
+            !isAdd
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 25,
+                      vertical: 15,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          shopName,
+                          style: AppTextStyles.mulish(
+                            color: AppColor.scaffoldColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 24,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              color: AppColor.scaffoldColor.withOpacity(0.6),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                shopLocation,
+                                style: AppTextStyles.mulish(
+                                  color: AppColor.scaffoldColor.withOpacity(
+                                    0.6,
+                                  ),
+                                  fontSize: 12,
+                                ),
+                                // overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )
+                : Padding(
+                  padding: const EdgeInsets.only(right: 10,bottom: 5),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                              color: AppColor.black.withOpacity(0.3),
+                               border: Border.all(color: AppColor.black.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.info,
+                                color: Colors.white,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'T-Ads',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget offerCardContainer({
+    required String tittle,
+    required String cardImage,
+    required String cardImage1,
+    Color arrowColor = AppColor.appOfferArrow,
+    bool isSurpriseCard = false,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(child: Image.asset(cardImage, height: 100)),
+        // Orange Card
+        Container(
+          width: 180,
+          height: 200,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              top: 50,
+              left: 20,
+              right: 15,
+              bottom: 10,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Spacer(),
+                Text(
+                  "$tittle\nOffer",
+                  style: AppTextStyles.mulish(
+                    color: AppColor.scaffoldColor,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    !isSurpriseCard
+                        ? RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '10',
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColor.scaffoldColor,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' Out of 25', // Normal part
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.scaffoldColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Text(
+                            'Create Now',
+                            style: AppTextStyles.mulish(
+                              color: AppColor.scaffoldColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.asset(
+                        AppImages.rightArrow,
+                        height: 15,
+                        color: arrowColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        Positioned(top: -70, child: Image.asset(cardImage1, height: 150)),
+      ],
+    );
+  }
   static containerTitle({required String title, required String image}) {
     return Row(
       children: [
