@@ -13,4 +13,21 @@ class AppImages {
   static String shopInfoImage = 'Assets/Images/Shop_Info_Image.png';
   static String ownerInfo = 'Assets/Images/ownerInfo.png';
   static String person = 'Assets/Images/person.png';
+  static String dob = 'Assets/Images/dob.png';
+  static String qr_code = 'Assets/Images/qr_code.png';
+  static String profile = 'Assets/Images/profile.png';
+  static String pothys = 'Assets/Images/pothys.png';
+
+  static String search = 'Assets/Images/search.png';
+  static String call = 'Assets/Images/call.png';
+  static String location = 'Assets/Images/location.png';
+  static String msg = 'Assets/Images/msg.png';
+  static String upgrade = 'Assets/Images/upgrade.png';
+  static String appOffer = 'Assets/Images/appOffer.png';
+  static String surprise = 'Assets/Images/surprise.png';
+  static String appOfferCard = 'Assets/Images/appOfferCard.png';
+  static String surpriseCard = 'Assets/Images/surpriseCard.png';
+  static String rightArrow = 'Assets/Images/rightArrow.png';
+  static String ads = 'Assets/Images/ads.png';
+  static String phone = 'Assets/Images/phone.png';
 }
