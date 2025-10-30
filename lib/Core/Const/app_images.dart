@@ -7,17 +7,16 @@ class AppImages {
   static String rightStickArrow = 'Assets/Images/Right_Stick_Arrow.png';
   static String iImage = 'Assets/Images/I_Image.png';
   static String registerBCImage = 'Assets/Images/Register_BCimage.png';
-
   static String sell = 'Assets/Images/sell.png';
   static String service = 'Assets/Images/service.png';
   static String shopInfoImage = 'Assets/Images/Shop_Info_Image.png';
   static String ownerInfo = 'Assets/Images/ownerInfo.png';
   static String person = 'Assets/Images/person.png';
+  static String closeImage = 'Assets/Images/Close_Image.png';
   static String dob = 'Assets/Images/dob.png';
   static String qr_code = 'Assets/Images/qr_code.png';
   static String profile = 'Assets/Images/profile.png';
   static String pothys = 'Assets/Images/pothys.png';
-
   static String search = 'Assets/Images/search.png';
   static String call = 'Assets/Images/call.png';
   static String location = 'Assets/Images/location.png';
@@ -30,4 +29,21 @@ class AppImages {
   static String rightArrow = 'Assets/Images/rightArrow.png';
   static String ads = 'Assets/Images/ads.png';
   static String phone = 'Assets/Images/phone.png';
+  static String sub = 'Assets/Images/sub.png';
+  static String addPlus = 'Assets/Images/add_plus.png';
+  static String deliveryImage = 'Assets/Images/Delivery_Image.png';
+  static String locationImage = 'Assets/Images/Location_Image.png';
+  static String callImage = 'Assets/Images/Call_Image.png';
+  static String messageImage = 'Assets/Images/Message_Image.png';
+  static String whatsappImage = 'Assets/Images/Whatsapp_Image.png';
+  static String fireImage = 'Assets/Images/Fire_Image.png';
+  static String imageContainer1 = 'Assets/Images/Image_Container_1.png';
+  static String imageContainer2 = 'Assets/Images/Image_Container_2.png';
+  static String imageContainer3 = 'Assets/Images/Image_Container_3.png';
+  static String imageContainer4 = 'Assets/Images/Image_Container_4.png';
+  static String starImage = 'Assets/Images/Star_Image.png';
+  static String snacks1 = 'Assets/Images/Snacks1.png';
+  static String reviewImage = 'Assets/Images/Reviews_Image.png';
+  static String dratImage = 'Assets/Images/Dart_Image.png';
+  static String containerBCImage2 = 'Assets/Images/Container Bc Image 2.png';
 }
