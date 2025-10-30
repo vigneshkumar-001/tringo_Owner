@@ -6,11 +6,14 @@ import 'package:tringo_vendor/Core/Const/app_images.dart';
 
 import 'app_textstyles.dart';
 
+enum DatePickMode { none, single, range }
+
 class CommonContainer {
   static topLeftArrow({required VoidCallback onTap}) {
     return Row(
       children: [
         InkWell(
+          borderRadius: BorderRadius.circular(50),
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
@@ -27,6 +30,736 @@ class CommonContainer {
           ),
         ),
       ],
+    );
+  }
+
+  static Widget gradientContainer({
+    required String text,
+    String? locationImage,
+    String? iconImage,
+    Color lIconColor = AppColor.darkBlue,
+    Color dIconColor = AppColor.darkBlue,
+    Color textColor = AppColor.darkBlue,
+    FontWeight? fontWeight,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColor.lowLightBlue,
+              AppColor.lowLightBlue.withOpacity(0.5),
+              AppColor.scaffoldColor.withOpacity(0.3),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (locationImage != null)
+              Image.asset(locationImage, height: 24, color: lIconColor),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: AppTextStyles.mulish(
+                  color: textColor,
+                  fontWeight: fontWeight,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            if (iconImage != null)
+              Image.asset(iconImage, height: 11, color: dIconColor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static doorDelivery() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColor.iceBlue,
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: Row(
+          children: [
+            Image.asset(AppImages.deliveryImage, height: 14),
+            SizedBox(width: 5),
+            Text(
+              'Door Delivery',
+              style: AppTextStyles.mulish(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: AppColor.skyBlue,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static callNowButton({
+    VoidCallback? callOnTap,
+    VoidCallback? orderOnTap,
+    VoidCallback? mapOnTap,
+    VoidCallback? messageOnTap,
+    VoidCallback? whatsAppOnTap,
+    VoidCallback? fireOnTap,
+    bool messageContainer = false,
+    bool mapBox = false,
+    bool whatsAppIcon = false,
+    bool MessageIcon = false,
+    bool FireIcon = false,
+    bool order = false,
+
+    // Custom paddings
+    EdgeInsetsGeometry? callNowPadding,
+    EdgeInsetsGeometry? mapBoxPadding,
+    EdgeInsetsGeometry? iconContainerPadding,
+
+    // Custom sizes
+    double? callIconSize,
+    double? callTextSize,
+    double? mapIconSize,
+    double? mapTextSize,
+    double? messagesIconSize,
+    double? whatsAppIconSize,
+    double? fireIconSize,
+
+    Color? callImageColor,
+
+    String? mapImage,
+    String? mapText,
+    String? callImage,
+    String? callText,
+    String? orderText,
+    String? orderImage,
+  }) {
+    return Row(
+      children: [
+        if (order)
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: InkWell(
+              onTap: orderOnTap,
+              child: Container(
+                padding:
+                    callNowPadding ??
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColor.blueGradient1,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  children: [
+                    Image.asset(orderImage!, height: callIconSize ?? 16),
+                    const SizedBox(width: 7),
+                    Text(
+                      orderText!,
+                      style: AppTextStyles.mulish(
+                        fontWeight: FontWeight.bold,
+                        fontSize: callTextSize ?? 16,
+                        color: AppColor.scaffoldColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+        // ---- Call button (smart flexible) ----
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final bounded =
+                constraints.hasBoundedWidth && constraints.maxWidth.isFinite;
+
+            final callBtn = InkWell(
+              onTap: callOnTap,
+              child: Container(
+                padding:
+                    callNowPadding ??
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColor.skyBlue,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center, // nice centering
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      callImage!,
+                      height: callIconSize ?? 16,
+                      color: callImageColor,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      callText!,
+                      style: AppTextStyles.mulish(
+                        fontWeight: FontWeight.bold,
+                        fontSize: callTextSize ?? 14,
+                        color: AppColor.scaffoldColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+
+            // If width is bounded (typical page layout), behave like Expanded.
+            // If unbounded (inside horizontal SingleChildScrollView), return intrinsic size.
+            return bounded ? Expanded(child: callBtn) : callBtn;
+          },
+        ),
+
+        if (mapBox)
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: mapOnTap,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColor.skyBlue, width: 1.5),
+                ),
+                child: Padding(
+                  padding:
+                      mapBoxPadding ??
+                      const EdgeInsets.symmetric(horizontal: 17, vertical: 5),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        mapImage!,
+                        height: mapIconSize ?? 21,
+                        color: AppColor.skyBlue,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        mapText!,
+                        style: AppTextStyles.mulish(
+                          fontWeight: FontWeight.bold,
+                          fontSize: mapTextSize ?? 16,
+                          color: AppColor.skyBlue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // ⬇️ only add gap if the pill is going to show
+        if (messageContainer && (MessageIcon || whatsAppIcon || FireIcon))
+          const SizedBox(width: 9),
+
+        if (messageContainer && (MessageIcon || whatsAppIcon || FireIcon))
+          Container(
+            padding:
+                iconContainerPadding ??
+                const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColor.softWhiteGray,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            // ⬇️ auto-size & auto-center the icons based on how many are visible
+            child: Wrap(
+              spacing: 16, // even spacing for 2+ icons
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (MessageIcon)
+                  GestureDetector(
+                    onTap: messageOnTap,
+                    child: Image.asset(
+                      AppImages.messageImage,
+                      height: messagesIconSize ?? 19,
+                    ),
+                  ),
+                if (whatsAppIcon)
+                  GestureDetector(
+                    onTap: whatsAppOnTap,
+                    child: Image.asset(
+                      AppImages.whatsappImage,
+                      height: whatsAppIconSize ?? 19,
+                    ),
+                  ),
+                if (FireIcon)
+                  GestureDetector(
+                    onTap: fireOnTap,
+                    child: Image.asset(
+                      AppImages.fireImage,
+                      height: fireIconSize ?? 19,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  static Widget foodList({
+    required String image,
+    required String foodName,
+    required String ratingStar,
+    required String ratingCount,
+    required String offAmound,
+    required String oldAmound,
+    required String km,
+    required String location,
+    double imageHeight = 160,
+    double imageWidth = 155,
+    double fontSize = 16,
+    FontWeight titleWeight = FontWeight.w800,
+    bool Verify = false,
+    bool locations = false,
+    bool weight = false,
+    bool Ad = false,
+    VoidCallback? onTap,
+    bool horizontalDivider = false,
+
+    List<String> weightOptions = const ['300Gm', '500Gm'],
+    int? selectedWeightIndex, // null = none selected
+    ValueChanged<int>? onWeightChanged, // callback when tapped
+  }) {
+    // Apply filtering logic:
+    final List<String> filteredWeightOptions = [
+      if (weightOptions.contains('1Kg')) '1Kg',
+      ...weightOptions.where((w) => w.toLowerCase().endsWith('gm')).take(2),
+    ];
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Row(
+              children: [
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        height: 130, // desired height
+                        width: 130, // desired width
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          clipBehavior: Clip.hardEdge,
+                          child: Image.asset(image),
+                        ),
+                      ),
+                    ),
+
+                    // if (Ad)
+                    //   Positioned(
+                    //     bottom: 10,
+                    //     right: 8,
+                    //     child: Container(
+                    //       decoration: BoxDecoration(
+                    //         color: AppColor.black.withOpacity(0.5),
+                    //         borderRadius: BorderRadius.circular(50),
+                    //       ),
+                    //       child: Padding(
+                    //         padding: const EdgeInsets.symmetric(
+                    //           horizontal: 10,
+                    //           vertical: 4,
+                    //         ),
+                    //         child: Row(
+                    //           children: [
+                    //             Image.asset(AppImages.alertImage, height: 9),
+                    //             SizedBox(width: 4),
+                    //             Text(
+                    //               'AD',
+                    //               style: AppTextStyles.mulish(
+                    //                 fontSize: 10,
+                    //                 fontWeight: FontWeight.w900,
+                    //                 color: AppColor.scaffoldColor,
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                  ],
+                ),
+                SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          // if (Verify) CommonContainer.verifyTick(),
+                          // SizedBox(width: 5),
+                          CommonContainer.doorDelivery(),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        foodName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.mulish(
+                          fontWeight: titleWeight,
+                          fontSize: fontSize,
+                          color: AppColor.darkBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          CommonContainer.greenStarRating(
+                            ratingStar: ratingStar,
+                            ratingCount: ratingCount,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 7),
+                      Row(
+                        children: [
+                          Text(
+                            offAmound,
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Text(
+                                oldAmound,
+                                style: AppTextStyles.mulish(
+                                  fontSize: 14,
+                                  color: AppColor.gray84,
+                                ),
+                              ),
+                              Transform.rotate(
+                                angle: -0.1,
+                                child: Container(
+                                  height: 1.5,
+                                  width: 40,
+                                  color: AppColor.gray84,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      if (locations)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColor.scaffoldColor,
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                              color: AppColor.iceBlue,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  AppImages.locationImage,
+                                  height: 13,
+                                  color: AppColor.skyBlue,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  km,
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                    color: AppColor.skyBlue,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  child: Text(
+                                    location,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10,
+                                      color: AppColor.darkBlue,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      // if (weight)
+                      //   Row(
+                      //     crossAxisAlignment: CrossAxisAlignment.center,
+                      //     children: [
+                      //       Text(
+                      //         'Weight',
+                      //         style: GoogleFont.Mulish(
+                      //           fontSize: 12,
+                      //           color: AppColor.darkBlue,
+                      //         ),
+                      //       ),
+                      //       const SizedBox(width: 10),
+                      //       Expanded(
+                      //         child: Wrap(
+                      //           spacing: 10,
+                      //           runSpacing: 8,
+                      //           children: List.generate(
+                      //             filteredWeightOptions.length,
+                      //                 (i) {
+                      //               final bool isSelected =
+                      //                   selectedWeightIndex == i;
+                      //               return InkWell(
+                      //                 borderRadius: BorderRadius.circular(50),
+                      //                 onTap: () => onWeightChanged?.call(i),
+                      //                 child: Container(
+                      //                   decoration: BoxDecoration(
+                      //                     color: isSelected
+                      //                         ? AppColor.white
+                      //                         : Colors.transparent,
+                      //                     borderRadius: BorderRadius.circular(
+                      //                       50,
+                      //                     ),
+                      //                     border: Border.all(
+                      //                       color: isSelected
+                      //                           ? AppColor.blue
+                      //                           : AppColor.lightGray2,
+                      //                       width: 1.5,
+                      //                     ),
+                      //                     boxShadow: isSelected
+                      //                         ? [
+                      //                       BoxShadow(
+                      //                         color: AppColor.blue
+                      //                             .withOpacity(0.14),
+                      //                         blurRadius: 10,
+                      //                         offset: const Offset(0, 2),
+                      //                       ),
+                      //                     ]
+                      //                         : null,
+                      //                   ),
+                      //                   padding: const EdgeInsets.symmetric(
+                      //                     horizontal: 12,
+                      //                     vertical: 6,
+                      //                   ),
+                      //                   child: Text(
+                      //                     filteredWeightOptions[i],
+                      //                     style: GoogleFont.Mulish(
+                      //                       fontSize: 12,
+                      //                       fontWeight: FontWeight.w800,
+                      //                       color: isSelected
+                      //                           ? AppColor.blue
+                      //                           : AppColor.lightGray2,
+                      //                     ),
+                      //                   ),
+                      //                 ),
+                      //               );
+                      //             },
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ],
+                      //   ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10),
+          if (horizontalDivider) CommonContainer.horizonalDivider(),
+        ],
+      ),
+    );
+  }
+
+  static reviewBox() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColor.scaffoldColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border(
+            bottom: BorderSide(color: AppColor.brightGray, width: 8),
+            left: BorderSide(color: AppColor.brightGray, width: 2),
+            right: BorderSide(color: AppColor.brightGray, width: 2),
+            top: BorderSide(color: AppColor.brightGray, width: 2),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Great People',
+                    style: AppTextStyles.mulish(
+                      fontSize: 16,
+                      color: AppColor.darkBlue,
+                    ),
+                  ),
+                  SizedBox(width: 9),
+                  Image.asset(AppImages.dratImage, height: 8, width: 6),
+                  SizedBox(width: 9),
+                  Image.asset(
+                    AppImages.starImage,
+                    height: 12,
+                    color: AppColor.green,
+                  ),
+                  SizedBox(width: 4),
+                  Image.asset(
+                    AppImages.starImage,
+                    height: 12,
+                    color: AppColor.green,
+                  ),
+                  SizedBox(width: 4),
+                  Image.asset(
+                    AppImages.starImage,
+                    height: 12,
+                    color: AppColor.green,
+                  ),
+                  SizedBox(width: 4),
+                  Image.asset(
+                    AppImages.starImage,
+                    height: 12,
+                    color: AppColor.green,
+                  ),
+                  SizedBox(width: 4),
+                  Image.asset(
+                    AppImages.starImage,
+                    height: 12,
+                    color: AppColor.lightSilver,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '4',
+                    style: AppTextStyles.mulish(
+                      fontWeight: FontWeight.bold,
+                      color: AppColor.green,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 15),
+              Text(
+                'Praesent viverra volutpat lorem, eu convallis lacus maximus quis. Nam at lorem mi. In tempor commodo bibendum. Donec euismod urna pharetra justo finibus, eget volutpat justo dapibus. ',
+                style: AppTextStyles.mulish(color: AppColor.gray84),
+              ),
+              SizedBox(height: 15),
+              CommonContainer.horizonalDivider(),
+              SizedBox(height: 15),
+              Text(
+                '1 Month Ago',
+                style: AppTextStyles.mulish(color: AppColor.gray84),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static greenStarRating({String? ratingStar, String? ratingCount}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColor.green,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // 👈 stops expanding too much
+            children: [
+              Text(
+                ratingStar!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.mulish(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                  color: AppColor.scaffoldColor,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Image.asset(AppImages.starImage, height: 9),
+              const SizedBox(width: 5),
+              Container(
+                width: 1.5,
+                height: 13,
+                decoration: BoxDecoration(
+                  color: AppColor.scaffoldColor.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                ratingCount!,
+                style: AppTextStyles.mulish(
+                  fontSize: 12,
+                  color: AppColor.scaffoldColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static horizonalDivider() {
+    return Container(
+      width: double.infinity,
+      height: 2,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerRight,
+          end: Alignment.centerLeft,
+          colors: [
+            AppColor.scaffoldColor.withOpacity(0.5),
+            AppColor.white3,
+            AppColor.white3,
+            AppColor.white3,
+            AppColor.white3,
+            AppColor.white3,
+            AppColor.white3,
+            AppColor.scaffoldColor.withOpacity(0.5),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(1),
+      ),
     );
   }
 
@@ -288,7 +1021,7 @@ class CommonContainer {
     double? size = double.infinity,
     double? imgHeight = 24,
     double? imgWeight = 24,
-    double? borderRadius = 15,
+    double? borderRadius = 18,
 
     Color buttonColor = AppColor.black,
     Color? foreGroundColor,
@@ -357,6 +1090,253 @@ class CommonContainer {
     );
   }
 
+  // static Widget fillingContainer({
+  //   String? text,
+  //   double? textSize = 14,
+  //   Color? textColor = AppColor.mediumGray,
+  //   FontWeight? textFontWeight,
+  //   Key? fieldKey,
+  //   TextEditingController? controller,
+  //   String? imagePath,
+  //   bool verticalDivider = true,
+  //   Function(String)? onChanged,
+  //   TextInputType? keyboardType,
+  //   List<TextInputFormatter>? inputFormatters,
+  //   VoidCallback? onDetailsTap,
+  //   double imageHight = 30,
+  //   double imageWidth = 11,
+  //   int? maxLine,
+  //   int flex = 4,
+  //   bool isTamil = false,
+  //   bool isAadhaar = false,
+  //   bool isDOB = false,
+  //   bool isMobile = false,
+  //   bool isPincode = false,
+  //   bool readOnly = false,
+  //   bool isDropdown = false,
+  //   List<String>? dropdownItems,
+  //   BuildContext? context,
+  //   FormFieldValidator<String>? validator,
+  //   FocusNode? focusNode,
+  //   Color borderColor = AppColor.red,
+  //   Color? imageColor,
+  //   VoidCallback? onFieldTap,
+  // }) {
+  //   return FormField<String>(
+  //     validator: validator,
+  //     key: fieldKey,
+  //     autovalidateMode: AutovalidateMode.onUserInteraction,
+  //     builder: (state) {
+  //       final hasError = state.hasError;
+  //
+  //       // -------------------- DOB Picker --------------------
+  //       Future<void> _handleDobTap() async {
+  //         if (!isDOB || context == null) return;
+  //
+  //         final DateTime startDate = DateTime(2021, 6, 1);
+  //         final DateTime endDate = DateTime(2022, 5, 31);
+  //         final DateTime initialDate = DateTime(2021, 6, 2);
+  //
+  //         final pickedDate = await showDatePicker(
+  //           context: context!,
+  //           initialDate: initialDate,
+  //           firstDate: DateTime(2020),
+  //           lastDate: DateTime(2025),
+  //           builder: (context, child) {
+  //             return Theme(
+  //               data: Theme.of(context).copyWith(
+  //                 dialogBackgroundColor: AppColor.scaffoldColor,
+  //                 colorScheme: ColorScheme.light(
+  //                   primary: AppColor.lightSkyBlue,
+  //                   onPrimary: Colors.white,
+  //                   onSurface: AppColor.black,
+  //                 ),
+  //                 textButtonTheme: TextButtonThemeData(
+  //                   style: TextButton.styleFrom(
+  //                     foregroundColor: AppColor.lightSkyBlue,
+  //                   ),
+  //                 ),
+  //               ),
+  //               child: child!,
+  //             );
+  //           },
+  //         );
+  //
+  //         if (pickedDate != null) {
+  //           if (pickedDate.isBefore(startDate) || pickedDate.isAfter(endDate)) {
+  //             ScaffoldMessenger.of(context!).showSnackBar(
+  //               const SnackBar(
+  //                 content: Text(
+  //                   'Invalid Date of Birth!\nPlease select a date between 01-06-2021 and 31-05-2022.',
+  //                 ),
+  //                 backgroundColor: Colors.red,
+  //                 duration: Duration(seconds: 3),
+  //               ),
+  //             );
+  //           } else {
+  //             controller?.text =
+  //                 "${pickedDate.day.toString().padLeft(2, '0')}-"
+  //                 "${pickedDate.month.toString().padLeft(2, '0')}-"
+  //                 "${pickedDate.year}";
+  //             state.didChange(controller?.text ?? '');
+  //           }
+  //         }
+  //       }
+  //
+  //       // -------------------- Tap Handling --------------------
+  //       void _handleTap() {
+  //         if (isDOB) {
+  //           _handleDobTap();
+  //         } else if (isDropdown &&
+  //             dropdownItems != null &&
+  //             dropdownItems!.isNotEmpty) {
+  //           _showDropdownBottomSheet(
+  //             context!,
+  //             dropdownItems!,
+  //             controller,
+  //             state,
+  //           );
+  //         } else {
+  //           onFieldTap?.call();
+  //         }
+  //       }
+  //
+  //       // -------------------- Input Formatter Handling --------------------
+  //       final effectiveInputFormatters = isMobile || isAadhaar || isPincode
+  //           ? <TextInputFormatter>[
+  //               FilteringTextInputFormatter.digitsOnly,
+  //               LengthLimitingTextInputFormatter(
+  //                 isMobile ? 10 : (isAadhaar ? 12 : 6),
+  //               ),
+  //             ]
+  //           : (inputFormatters ?? const []);
+  //
+  //       // -------------------- UI --------------------
+  //       return Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           GestureDetector(
+  //             onTap: _handleTap,
+  //             behavior: HitTestBehavior.opaque,
+  //             child: Container(
+  //               decoration: BoxDecoration(
+  //                 borderRadius: BorderRadius.circular(20),
+  //                 color: AppColor.lightGray,
+  //                 border: Border.all(
+  //                   color: hasError ? AppColor.red : Colors.transparent,
+  //                   width: 1.5,
+  //                 ),
+  //               ),
+  //               child: Padding(
+  //                 padding: const EdgeInsets.symmetric(
+  //                   horizontal: 8.0,
+  //                   vertical: 15,
+  //                 ),
+  //                 child: Row(
+  //                   children: [
+  //                     Expanded(
+  //                       flex: flex,
+  //                       child: AbsorbPointer(
+  //                         absorbing: isDOB || readOnly || isDropdown,
+  //                         child: TextFormField(
+  //                           focusNode: focusNode,
+  //                           readOnly: readOnly || isDropdown,
+  //                           controller: controller,
+  //                           maxLines: maxLine,
+  //                           maxLength: isMobile
+  //                               ? 10
+  //                               : (isAadhaar ? 12 : (isPincode ? 6 : null)),
+  //                           keyboardType: keyboardType,
+  //                           inputFormatters: effectiveInputFormatters,
+  //                           style: AppTextStyles.textWith700(fontSize: 18),
+  //                           decoration: const InputDecoration(
+  //                             hintText: '',
+  //                             counterText: '',
+  //                             contentPadding: EdgeInsets.symmetric(
+  //                               horizontal: 10,
+  //                             ),
+  //                             border: InputBorder.none,
+  //                             isDense: true,
+  //                             errorText: null,
+  //                           ),
+  //                           showCursor: !(isDOB || readOnly || isDropdown),
+  //                           enableInteractiveSelection:
+  //                               !(isDOB || readOnly || isDropdown),
+  //                           onChanged: (v) {
+  //                             state.didChange(v);
+  //                             onChanged?.call(v);
+  //                           },
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     if (verticalDivider)
+  //                       Container(
+  //                         width: 2,
+  //                         height: 30,
+  //                         decoration: BoxDecoration(
+  //                           gradient: LinearGradient(
+  //                             begin: Alignment.topCenter,
+  //                             end: Alignment.bottomCenter,
+  //                             colors: [
+  //                               Colors.grey.shade200,
+  //                               Colors.grey.shade300,
+  //                               Colors.grey.shade200,
+  //                             ],
+  //                           ),
+  //                           borderRadius: BorderRadius.circular(1),
+  //                         ),
+  //                       ),
+  //                     if (text != null) ...[
+  //                       const SizedBox(width: 10),
+  //                       Text(
+  //                         text,
+  //                         style: AppTextStyles.mulish(
+  //                           fontWeight: textFontWeight,
+  //                           fontSize: textSize!,
+  //                           color: textColor,
+  //                         ),
+  //                       ),
+  //                     ],
+  //
+  //                     const SizedBox(width: 20),
+  //                     if (imagePath != null)
+  //                       InkWell(
+  //                         onTap: () {
+  //                           controller?.clear();
+  //                           state.didChange('');
+  //                           onDetailsTap?.call();
+  //                         },
+  //                         child: Padding(
+  //                           padding: const EdgeInsets.only(right: 15),
+  //                           child: Image.asset(
+  //                             imagePath,
+  //                             height: imageHight,
+  //                             width: imageWidth,
+  //                             color: imageColor,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //           if (hasError)
+  //             Padding(
+  //               padding: const EdgeInsets.only(left: 12.0, top: 4),
+  //               child: Text(
+  //                 state.errorText!,
+  //                 style: const TextStyle(color: Colors.red, fontSize: 12),
+  //               ),
+  //             ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
+  // -------------------- Common Dropdown Bottom Sheet --------------------
+
   static Widget fillingContainer({
     String? text,
     double? textSize = 14,
@@ -388,6 +1368,10 @@ class CommonContainer {
     Color borderColor = AppColor.red,
     Color? imageColor,
     VoidCallback? onFieldTap,
+
+    // 🔹 New
+    DatePickMode datePickMode = DatePickMode.none,
+    bool styledRangeText = false,
   }) {
     return FormField<String>(
       validator: validator,
@@ -396,25 +1380,60 @@ class CommonContainer {
       builder: (state) {
         final hasError = state.hasError;
 
-        // -------------------- DOB Picker --------------------
-        Future<void> _handleDobTap() async {
-          if (!isDOB || context == null) return;
+        // -------------------- Date Formatting Helper --------------------
+        String dd(int v) => v.toString().padLeft(2, '0');
+        String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
 
-          final DateTime startDate = DateTime(2021, 6, 1);
-          final DateTime endDate = DateTime(2022, 5, 31);
-          final DateTime initialDate = DateTime(2021, 6, 2);
+        // -------------------- Tap Handling --------------------
+        void _handleTap() async {
+          if (context == null) return;
 
-          final pickedDate = await showDatePicker(
-            context: context!,
-            initialDate: initialDate,
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2025),
-            builder: (context, child) {
-              return Theme(
-                data: Theme.of(context).copyWith(
+          // Single Date Picker
+          if (datePickMode == DatePickMode.single) {
+            final picked = await showDatePicker(
+              context: context!,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
                   dialogBackgroundColor: AppColor.scaffoldColor,
                   colorScheme: ColorScheme.light(
-                    primary: AppColor.lightSkyBlue,
+                    primary: AppColor.resendOtp,
+                    onPrimary: Colors.white,
+                    onSurface: AppColor.black,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.resendOtp,
+                    ),
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) {
+              controller?.text = fmt(picked);
+              state.didChange(controller?.text);
+            }
+            return;
+          }
+
+          // Range Picker
+          if (datePickMode == DatePickMode.range) {
+            final picked = await showDateRangePicker(
+              context: context!,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              initialDateRange: DateTimeRange(
+                start: DateTime.now(),
+                end: DateTime.now().add(const Duration(days: 7)),
+              ),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  colorScheme: ColorScheme.light(
+                    primary: AppColor.resendOtp,
                     onPrimary: Colors.white,
                     onSurface: AppColor.black,
                   ),
@@ -425,36 +1444,17 @@ class CommonContainer {
                   ),
                 ),
                 child: child!,
-              );
-            },
-          );
-
-          if (pickedDate != null) {
-            if (pickedDate.isBefore(startDate) || pickedDate.isAfter(endDate)) {
-              ScaffoldMessenger.of(context!).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Invalid Date of Birth!\nPlease select a date between 01-06-2021 and 31-05-2022.',
-                  ),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 3),
-                ),
-              );
-            } else {
-              controller?.text =
-                  "${pickedDate.day.toString().padLeft(2, '0')}-"
-                  "${pickedDate.month.toString().padLeft(2, '0')}-"
-                  "${pickedDate.year}";
-              state.didChange(controller?.text ?? '');
+              ),
+            );
+            if (picked != null) {
+              controller?.text = '${fmt(picked.start)}  to  ${fmt(picked.end)}';
+              state.didChange(controller?.text);
             }
+            return;
           }
-        }
 
-        // -------------------- Tap Handling --------------------
-        void _handleTap() {
-          if (isDOB) {
-            _handleDobTap();
-          } else if (isDropdown &&
+          // Dropdown
+          if (isDropdown &&
               dropdownItems != null &&
               dropdownItems!.isNotEmpty) {
             _showDropdownBottomSheet(
@@ -463,12 +1463,14 @@ class CommonContainer {
               controller,
               state,
             );
-          } else {
-            onFieldTap?.call();
+            return;
           }
+
+          // Default
+          onFieldTap?.call();
         }
 
-        // -------------------- Input Formatter Handling --------------------
+        // -------------------- Input Formatters --------------------
         final effectiveInputFormatters = isMobile || isAadhaar || isPincode
             ? <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly,
@@ -501,41 +1503,220 @@ class CommonContainer {
                   ),
                   child: Row(
                     children: [
+                      // -------------------- Date Input or Normal Field --------------------
                       Expanded(
                         flex: flex,
-                        child: AbsorbPointer(
-                          absorbing: isDOB || readOnly || isDropdown,
-                          child: TextFormField(
-                            focusNode: focusNode,
-                            readOnly: readOnly || isDropdown,
-                            controller: controller,
-                            maxLines: maxLine,
-                            maxLength: isMobile
-                                ? 10
-                                : (isAadhaar ? 12 : (isPincode ? 6 : null)),
-                            keyboardType: keyboardType,
-                            inputFormatters: effectiveInputFormatters,
-                            style: AppTextStyles.textWith700(fontSize: 18),
-                            decoration: const InputDecoration(
-                              hintText: '',
-                              counterText: '',
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 10,
+                        child: datePickMode != DatePickMode.none
+                            ? GestureDetector(
+                                onTap: _handleTap,
+                                child: AbsorbPointer(
+                                  absorbing: true,
+                                  child: styledRangeText
+                                      ? Stack(
+                                          alignment: Alignment.centerLeft,
+                                          children: [
+                                            Opacity(
+                                              opacity: 0,
+                                              child: TextFormField(
+                                                controller: controller,
+                                                validator: validator,
+                                                readOnly: true,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      border: InputBorder.none,
+                                                      isDense: true,
+                                                      errorText: null,
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 10,
+                                                          ),
+                                                    ),
+                                              ),
+                                            ),
+                                            ValueListenableBuilder<
+                                              TextEditingValue
+                                            >(
+                                              valueListenable: controller!,
+                                              builder: (context, value, _) {
+                                                final raw = value.text.trim();
+                                                if (raw.isEmpty) {
+                                                  return Text(
+                                                    text ?? '',
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 14,
+                                                      color:
+                                                          AppColor.mediumGray,
+                                                    ),
+                                                  );
+                                                }
+
+                                                final parts = raw.split(
+                                                  RegExp(
+                                                    r'\s+to\s+',
+                                                    caseSensitive: false,
+                                                  ),
+                                                );
+                                                if (parts.length == 1) {
+                                                  return Text(
+                                                    parts[0],
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: AppColor.black,
+                                                    ),
+                                                  );
+                                                }
+
+                                                return RichText(
+                                                  text: TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: parts[0],
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .black,
+                                                            ),
+                                                      ),
+                                                      TextSpan(
+                                                        text: '   to   ',
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .mediumGray,
+                                                            ),
+                                                      ),
+                                                      TextSpan(
+                                                        text: parts[1],
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .black,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        )
+                                      : TextFormField(
+                                          controller: controller,
+                                          // validator: validator,
+                                          readOnly: true,
+                                          decoration: const InputDecoration(
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                ),
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : GestureDetector(
+                                onTap: () {
+                                  if (isDOB ||
+                                      datePickMode != DatePickMode.none) {
+                                    _handleTap(); // open date picker
+                                  } else if (isDropdown) {
+                                    _handleTap(); // open dropdown
+                                  } else {
+                                    FocusScope.of(
+                                      context!,
+                                    ).requestFocus(focusNode);
+                                  }
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: TextFormField(
+                                  focusNode: focusNode,
+                                  controller: controller,
+                                  readOnly: readOnly,
+                                  maxLines: maxLine,
+                                  maxLength: isMobile
+                                      ? 10
+                                      : (isAadhaar
+                                            ? 12
+                                            : (isPincode ? 6 : null)),
+                                  keyboardType:
+                                      (isMobile || isAadhaar || isPincode)
+                                      ? TextInputType.number
+                                      : (keyboardType ?? TextInputType.text),
+                                  inputFormatters: effectiveInputFormatters,
+                                  style: AppTextStyles.textWith700(
+                                    fontSize: 18,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: '',
+                                    counterText: '',
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    errorText: null,
+                                  ),
+                                  onChanged: (v) {
+                                    state.didChange(v);
+                                    onChanged?.call(v);
+                                  },
+                                ),
                               ),
-                              border: InputBorder.none,
-                              isDense: true,
-                              errorText: null,
-                            ),
-                            showCursor: !(isDOB || readOnly || isDropdown),
-                            enableInteractiveSelection:
-                                !(isDOB || readOnly || isDropdown),
-                            onChanged: (v) {
-                              state.didChange(v);
-                              onChanged?.call(v);
-                            },
-                          ),
-                        ),
+
+                        // AbsorbPointer(
+                        //         absorbing: isDOB || readOnly || isDropdown,
+                        //         child: TextFormField(
+                        //           focusNode: focusNode,
+                        //           readOnly: readOnly || isDropdown,
+                        //           controller: controller,
+                        //           maxLines: maxLine,
+                        //           maxLength: isMobile
+                        //               ? 10
+                        //               : (isAadhaar
+                        //                     ? 12
+                        //                     : (isPincode ? 6 : null)),
+                        //           keyboardType: keyboardType,
+                        //           inputFormatters: effectiveInputFormatters,
+                        //           style: AppTextStyles.textWith700(
+                        //             fontSize: 18,
+                        //           ),
+                        //           decoration: const InputDecoration(
+                        //             hintText: '',
+                        //             counterText: '',
+                        //             contentPadding: EdgeInsets.symmetric(
+                        //               horizontal: 10,
+                        //             ),
+                        //             border: InputBorder.none,
+                        //             isDense: true,
+                        //             errorText: null,
+                        //           ),
+                        //           showCursor:
+                        //               !(isDOB || readOnly || isDropdown),
+                        //           enableInteractiveSelection:
+                        //               !(isDOB || readOnly || isDropdown),
+                        //           onChanged: (v) {
+                        //             state.didChange(v);
+                        //             onChanged?.call(v);
+                        //           },
+                        //         ),
+                        //       ),
                       ),
+
                       if (verticalDivider)
                         Container(
                           width: 2,
@@ -564,7 +1745,6 @@ class CommonContainer {
                           ),
                         ),
                       ],
-
                       const SizedBox(width: 20),
                       if (imagePath != null)
                         InkWell(
@@ -588,12 +1768,16 @@ class CommonContainer {
                 ),
               ),
             ),
-            if (hasError)
+            if (state.hasError)
               Padding(
-                padding: const EdgeInsets.only(left: 12.0, top: 4),
+                padding: const EdgeInsets.only(left: 4, top: 5),
                 child: Text(
-                  state.errorText!,
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  state.errorText ?? '',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
           ],
@@ -602,7 +1786,6 @@ class CommonContainer {
     );
   }
 
-  // -------------------- Common Dropdown Bottom Sheet --------------------
   static void _showDropdownBottomSheet(
     BuildContext context,
     List<String> items,
@@ -1064,8 +2247,8 @@ class CommonContainer {
                     ),
                   )
                 : Padding(
-                  padding: const EdgeInsets.only(right: 10,bottom: 5),
-                  child: Row(
+                    padding: const EdgeInsets.only(right: 10, bottom: 5),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Container(
@@ -1074,8 +2257,10 @@ class CommonContainer {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
+                            color: AppColor.black.withOpacity(0.3),
+                            border: Border.all(
                               color: AppColor.black.withOpacity(0.3),
-                               border: Border.all(color: AppColor.black.withOpacity(0.3)),
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
@@ -1099,7 +2284,7 @@ class CommonContainer {
                         ),
                       ],
                     ),
-                ),
+                  ),
           ],
         ),
       ),
@@ -1199,6 +2384,25 @@ class CommonContainer {
         ),
 
         Positioned(top: -70, child: Image.asset(cardImage1, height: 150)),
+      ],
+    );
+  }
+
+  static containerTitle({required String title, required String image}) {
+    return Row(
+      children: [
+        Text(title, style: AppTextStyles.mulish(color: AppColor.mildBlack)),
+        SizedBox(width: 7),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColor.iceBlue,
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Image.asset(image, height: 10),
+          ),
+        ),
       ],
     );
   }
