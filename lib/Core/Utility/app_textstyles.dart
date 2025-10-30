@@ -19,7 +19,7 @@ class AppTextStyles {
 
   static mulish({
     double fontSize = 14,
-    double? height = 1.5,
+    double? height = 1.3,
     FontWeight? fontWeight,
     letterSpacing,
     Color? color,
