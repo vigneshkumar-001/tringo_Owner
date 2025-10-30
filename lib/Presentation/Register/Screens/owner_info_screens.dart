@@ -7,6 +7,7 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
 import '../../../Core/Utility/common_Container.dart';
+import '../../ShopInfo/Screens/shop_category_info.dart';
 
 class OwnerInfoScreens extends StatefulWidget {
   const OwnerInfoScreens({super.key});
@@ -285,14 +286,13 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                     const SizedBox(height: 10),
                     CommonContainer.fillingContainer(
                       isDOB: true,
-
                       verticalDivider: true,
-
                       imagePath: AppImages.dob,
                       imageWidth: 20,
                       imageHight: 25,
                       controller: dateOfBirthController,
                       context: context,
+                      datePickMode: DatePickMode.single,
                     ),
                     const SizedBox(height: 30),
                     Text(
@@ -309,7 +309,14 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                     ),
                     const SizedBox(height: 30),
                     CommonContainer.button(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ShopCategoryInfo(),
+                          ),
+                        );
+                      },
                       text: Text('Save & Continue'),
                     ),
                     const SizedBox(height: 30),
