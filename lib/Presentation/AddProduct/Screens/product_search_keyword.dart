@@ -6,6 +6,7 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../../Shops Details/Screen/shops_details.dart';
 
 class ProductSearchKeyword extends StatefulWidget {
   const ProductSearchKeyword({super.key});
@@ -174,7 +175,7 @@ class _ProductSearchKeywordState extends State<ProductSearchKeyword> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const ProductCategoryScreens(),
+                                 ShopsDetails(),
                           ),
                         );
                       },

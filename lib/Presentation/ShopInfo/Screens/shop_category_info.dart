@@ -4,6 +4,8 @@ import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
+import '../../Create App Offer/Screens/create_app_offer.dart';
+
 class ShopCategoryInfo extends StatefulWidget {
   const ShopCategoryInfo({super.key});
 
@@ -29,6 +31,10 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       print('✅ All fields valid, proceed with API call');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Form Submitted Successfully')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => CreateAppOffer()),
       );
     } else {
       // Some field invalid → show error
@@ -56,7 +62,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                   ),
                   child: Row(
                     children: [
-                      CommonContainer.topLeftArrow(onTap: () {}),
+                      CommonContainer.topLeftArrow(onTap:() => Navigator.pop(context)),
                       SizedBox(width: 50),
                       Text(
                         'Register Shop - Individual',
