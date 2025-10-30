@@ -523,7 +523,7 @@ class _HomeScreensState extends State<HomeScreens> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// Question text
+
                       Text(
                         'Is Samsung s24fe white color available?\nIf it is I need best price',
                         style: AppTextStyles.mulish(
