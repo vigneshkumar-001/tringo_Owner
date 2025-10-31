@@ -11,7 +11,7 @@ import 'app_textstyles.dart';
 enum DatePickMode { none, single, range }
 
 class CommonContainer {
-  static topLeftArrow({required VoidCallback onTap}) {
+  static topLeftArrow({required VoidCallback onTap, bool isMenu = false}) {
     return Row(
       children: [
         InkWell(
@@ -20,14 +20,17 @@ class CommonContainer {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColor.leftArrow,
+              color: isMenu ? null : AppColor.leftArrow,
+
+              border:isMenu? Border.all(color: AppColor.border): null,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             child: Image.asset(
               height: 14,
               width: 14,
-              AppImages.leftArrow,
+                  AppImages.leftArrow,
               fit: BoxFit.contain,
+              color: isMenu? AppColor.black: null,
             ),
           ),
         ),
@@ -3175,6 +3178,7 @@ class CommonContainer {
       ),
     );
   }
+
   static Widget offerTile(String title, String count) {
     return Container(
       width: 130,
@@ -3194,10 +3198,7 @@ class CommonContainer {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: AppTextStyles.mulish(color: AppColor.gray84),
-            ),
+            Text(title, style: AppTextStyles.mulish(color: AppColor.gray84)),
             const SizedBox(height: 5),
             Text(
               count,
@@ -3220,5 +3221,4 @@ class CommonContainer {
       ),
     );
   }
-
 }

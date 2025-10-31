@@ -38,4 +38,5 @@ class AppColor {
   static const papayaWhip = Color(0xffFFEFDB);
   static const white3 = Color(0xffF1F1F1);
   static const red1 = Color(0xffDA4141);
+  static const border = Color(0xffE7EBEE);
 }

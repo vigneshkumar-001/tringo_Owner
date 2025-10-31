@@ -28,6 +28,7 @@ class AppImages {
   static String question = 'Assets/Images/question.png';
   static String surprise = 'Assets/Images/surprise.png';
   static String appOfferCard = 'Assets/Images/appOfferCard.png';
+  static String lock = 'Assets/Images/lock.png';
   static String surpriseCard = 'Assets/Images/surpriseCard.png';
   static String rightArrow = 'Assets/Images/rightArrow.png';
   static String ads = 'Assets/Images/ads.png';
@@ -62,4 +63,15 @@ class AppImages {
   static String fan = 'Assets/Images/fan.png';
   static String analytics = 'Assets/Images/analytics.png';
   static String groupPeople = 'Assets/Images/groupPeople.png';
+
+  static String loc = 'Assets/Images/loc.png';
+  static String hand = 'Assets/Images/hand.png';
+  static String enqury2 = 'Assets/Images/enqury2.png';
+
+  static String subscription = 'Assets/Images/subscription.png';
+  static String support = 'Assets/Images/support.png';
+  static String accountRelated = 'Assets/Images/accountRelated.png';
+  static String privacypolicy = 'Assets/Images/privacypolicy.png';
+  static String surpriseOffer = 'Assets/Images/surpriseOffer.png';
+  static String crown = 'Assets/Images/crown.png';
 }

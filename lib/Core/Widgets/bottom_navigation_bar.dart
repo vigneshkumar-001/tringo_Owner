@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_vendor/Presentation/Home/Screens/home_screens.dart';
 
 import '../../Presentation/AboutMe/Screens/about_me_screens.dart';
+import '../../Presentation/Menu/Screens/menu_screens.dart';
 import '../../Presentation/Offer/Screen/offer_screens.dart';
 import '../Const/app_color.dart';
 import '../Const/app_images.dart';
@@ -50,7 +51,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
       HomeScreens(),
       OfferScreens(),
       AboutMeScreens(),
-      AboutMeScreens(),
+      MenuScreens(),
     ];
 
     _updateSlideAnimation();
@@ -189,7 +190,11 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
                 ),
                 BottomNavigationBarItem(
                   icon: Image.asset(AppImages.menu, height: 26),
-                  activeIcon: Image.asset(AppImages.menu, height: 30),
+                  activeIcon: Image.asset(
+                    AppImages.menu,
+                    height: 30,
+                    color: AppColor.black,
+                  ),
                   label: 'Menu',
                 ),
               ],
