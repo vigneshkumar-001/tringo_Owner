@@ -5,6 +5,7 @@ class AppImages {
   static String downArrow = 'Assets/Images/Down_Arrow.png';
   static String leftArrow = 'Assets/Images/left_Arrow.png';
   static String rightStickArrow = 'Assets/Images/Right_Stick_Arrow.png';
+  static String filter = 'Assets/Images/filter.png';
   static String iImage = 'Assets/Images/I_Image.png';
   static String registerBCImage = 'Assets/Images/Register_BCimage.png';
   static String sell = 'Assets/Images/sell.png';
@@ -23,6 +24,8 @@ class AppImages {
   static String msg = 'Assets/Images/msg.png';
   static String upgrade = 'Assets/Images/upgrade.png';
   static String appOffer = 'Assets/Images/appOffer.png';
+  static String gallery = 'Assets/Images/gallery.png';
+  static String question = 'Assets/Images/question.png';
   static String surprise = 'Assets/Images/surprise.png';
   static String appOfferCard = 'Assets/Images/appOfferCard.png';
   static String surpriseCard = 'Assets/Images/surpriseCard.png';
@@ -46,4 +49,17 @@ class AppImages {
   static String reviewImage = 'Assets/Images/Reviews_Image.png';
   static String dratImage = 'Assets/Images/Dart_Image.png';
   static String containerBCImage2 = 'Assets/Images/Container Bc Image 2.png';
+
+  static String home = 'Assets/Images/home.png';
+  static String homeFill = 'Assets/Images/homeFill.png';
+  static String enquiry = 'Assets/Images/enquiry.png';
+  static String enquiryFill = 'Assets/Images/enquiryFill.png';
+  static String offerFill = 'Assets/Images/offerFill.png';
+  static String offer = 'Assets/Images/offer.png';
+  static String aboutMe = 'Assets/Images/aboutMe.png';
+  static String aboutMeFill = 'Assets/Images/aboutMeFill.png';
+  static String menu = 'Assets/Images/menu.png';
+  static String fan = 'Assets/Images/fan.png';
+  static String analytics = 'Assets/Images/analytics.png';
+  static String groupPeople = 'Assets/Images/groupPeople.png';
 }

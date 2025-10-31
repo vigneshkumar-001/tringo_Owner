@@ -26,25 +26,31 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
   int Percentage = 1;
 
   void _onSubmit() {
-    if (_formKey.currentState!.validate()) {
-      // ✅ All fields valid
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Form submitted successfully')),
-      );
-
-      // Navigate to next screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShopPhotoInfo(),
-        ), // Replace with your next screen
-      );
-    } else {
-      // ❌ Validation failed
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
-      );
-    }
+    // if (_formKey.currentState!.validate()) {
+    //   // ✅ All fields valid
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Form submitted successfully')),
+    //   );
+    //
+    //   // Navigate to next screen
+    //   Navigator.push(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (context) => ShopPhotoInfo(),
+    //     ), // Replace with your next screen
+    //   );
+    // } else {
+    //   // ❌ Validation failed
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Please fill all required fields')),
+    //   );
+    // }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShopPhotoInfo(),
+      ), // Replace with your next screen
+    );
   }
 
   @override
