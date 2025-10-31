@@ -26,23 +26,27 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
 
   void _onSubmit() {
     // Trigger all validators
-    if (_formKey.currentState!.validate()) {
-      // All fields valid → proceed
-      print('✅ All fields valid, proceed with API call');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Form Submitted Successfully')),
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => CreateAppOffer()),
-      );
-    } else {
-      // Some field invalid → show error
-      print('❌ Validation failed');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
-      );
-    }
+    // if (_formKey.currentState!.validate()) {
+    //   // All fields valid → proceed
+    //   print('✅ All fields valid, proceed with API call');
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Form Submitted Successfully')),
+    //   );
+    //   Navigator.push(
+    //     context,
+    //     MaterialPageRoute(builder: (context) => CreateAppOffer()),
+    //   );
+    // } else {
+    //   // Some field invalid → show error
+    //   print('❌ Validation failed');
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Please fill all required fields')),
+    //   );
+    // }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateAppOffer()),
+    );
   }
 
   @override

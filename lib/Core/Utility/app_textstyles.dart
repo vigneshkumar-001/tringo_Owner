@@ -30,6 +30,7 @@ class AppTextStyles {
     Paint? foreground,
   }) {
     return GoogleFonts.mulish(
+
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,

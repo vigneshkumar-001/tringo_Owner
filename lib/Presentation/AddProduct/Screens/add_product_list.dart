@@ -200,23 +200,23 @@ class _AddProductListState extends State<AddProductList> {
   }
 
   void _validateAndSubmit() {
-    bool imageValid = true;
-    if (_pickedImages[0] == null) {
-      imageValid = false;
-      _hasError[0] = true;
-    }
-
-    final formValid = _formKey.currentState?.validate() ?? false;
-    setState(() {}); // Refresh borders / error text
-
-    if (!imageValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please add required product image")),
-      );
-      return;
-    }
-
-    if (!formValid) return;
+    // bool imageValid = true;
+    // if (_pickedImages[0] == null) {
+    //   imageValid = false;
+    //   _hasError[0] = true;
+    // }
+    //
+    // final formValid = _formKey.currentState?.validate() ?? false;
+    // setState(() {}); // Refresh borders / error text
+    //
+    // if (!imageValid) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text("Please add required product image")),
+    //   );
+    //   return;
+    // }
+    //
+    // if (!formValid) return;
 
     //  All valid → proceed to next screen
     Navigator.push(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 
-// import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
@@ -103,7 +103,7 @@ class _HomeScreensState extends State<HomeScreens> {
                   ),
                 ),
                 SizedBox(height: 20),
-                /*   Stack(
+                Stack(
                   children: [
                     Container(
                       decoration: BoxDecoration(
@@ -382,7 +382,7 @@ class _HomeScreensState extends State<HomeScreens> {
                       ),
                     ),
                   ],
-                ),*/
+                ),
                 SizedBox(height: 110),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -514,213 +514,44 @@ class _HomeScreensState extends State<HomeScreens> {
                 ),
                 SizedBox(height: 20),
 
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColor.floralWhite,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
 
-                      Text(
-                        'Is Samsung s24fe white color available?\nIf it is I need best price',
-                        style: AppTextStyles.mulish(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColor.black,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColor.floralWhite.withOpacity(1),
-                              Colors.transparent,
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            /// Left content
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Samsung s24fe (258GB 8GB)',
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColor.black,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-
-                                  /// Rating
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF31CC64),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: const [
-                                            Text(
-                                              '4.5',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            SizedBox(width: 4),
-                                            Icon(
-                                              Icons.star,
-                                              color: Colors.white,
-                                              size: 12,
-                                            ),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              '16',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-
-                                  /// Price
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '₹29,999',
-                                        style: AppTextStyles.mulish(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColor.black,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '₹36,999',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey,
-                                          decoration:
-                                              TextDecoration.lineThrough,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            /// Right image
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                AppImages.phone, // Replace with phone image
-                                width: 70,
-                                height: 90,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      /// Footer with user info
-                      Row(
-                        children: [
-                          /// Profile image
-                          const CircleAvatar(
-                            radius: 14,
-                            backgroundImage: AssetImage(
-                              'assets/images/profile.png',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          /// Username & time
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Ganeshan Kandhasa...',
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.black,
-                                    ),
-                                  ),
-                                  Text(
-                                    '10.40Pm',
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          /// Message Icon
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Colors.black,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.chat_bubble_outline,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                CommonContainer.inquiryProductCard(
+                  questionText:
+                      'Is Samsung s24fe white color available?\nIf it is i need best price',
+                  productTitle: 'Samsung s24fe ( 258GB 8GB )',
+                  rating: '4.5',
+                  ratingCount: '16',
+                  priceText: '₹29,999',
+                  mrpText: '₹36,999',
+                  phoneImageAsset: AppImages.phone,
+                  avatarAsset: AppImages.profile,
+                  customerName: 'Ganeshan Kandhasa...',
+                  timeText: '10.40Pm',
+                  onChatTap: () {},
                 ),
+                SizedBox(height: 20),
+
+
+                CommonContainer.inquiryProductCard(
+                  isAds: true,
+                  questionText:
+                  'Is Samsung s24fe white color available?\nIf it is i need best price',
+                  productTitle: 'Samsung s24fe ( 258GB 8GB )',
+                  rating: '4.5',
+                  ratingCount: '16',
+                  priceText: '₹29,999',
+                  mrpText: '₹36,999',
+                  phoneImageAsset: AppImages.fan,
+                  avatarAsset: AppImages.profile,
+                  customerName: 'Ganeshan Kandhasa',
+                  timeText: '10.40Pm',
+                  onChatTap: () {},
+                ),
+
+// Reply to Enquiry section
+
+
+
               ],
             ),
           ),
@@ -731,7 +562,7 @@ class _HomeScreensState extends State<HomeScreens> {
 
   Widget _statBox(String value, String label, String image) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: AppColor.black,
