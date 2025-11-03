@@ -5,6 +5,7 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../ShopInfo/Screens/shop_photo_info.dart';
+import 'offer_products.dart';
 
 class CreateAppOffer extends StatefulWidget {
   const CreateAppOffer({super.key});
@@ -48,7 +49,7 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ShopPhotoInfo(),
+        builder: (context) => OfferProducts(),
       ), // Replace with your next screen
     );
   }

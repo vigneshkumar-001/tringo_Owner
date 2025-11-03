@@ -5,6 +5,8 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
 
+import '../../Create App Offer/Screens/create_app_offer.dart';
+
 class MenuScreens extends StatefulWidget {
   const MenuScreens({super.key});
 
@@ -40,7 +42,7 @@ class _MenuScreensState extends State<MenuScreens> {
   final List<Widget> screens = [
     const SubscriptionScreen(),
     const SubscriptionScreen(),
-    const SubscriptionScreen(),
+    const CreateAppOffer(),
     const SubscriptionScreen(),
     const SubscriptionScreen(),
     const SubscriptionScreen(),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_history.dart';
 
-class  SubscriptionScreen  extends StatefulWidget {
+class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
@@ -15,109 +18,133 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F0F10) : const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: isDark ? Colors.white : Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-        title: const Text(
-          '',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
-      ),
-      body: Center(
+      backgroundColor: Color(0xFFF3F3F3),
+      body: SafeArea(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
             children: [
-              // Top crown + title
-              Column(
+              SizedBox(height: 5),
+              Row(
                 children: [
-                  // Replace with your asset path
-                  Image.asset(
-                    AppImages.crown,
-                    height: 64,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Unlock the Tringo’s",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColor.border),
+                      shape: BoxShape.circle,
+                      color: AppColor.white,
                     ),
-                  ),
-                  Text(
-                    "Super Power",
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: .2,
-                      color: isDark ? Colors.white : Colors.black87,
+                    child: Image.asset(
+                      AppImages.leftArrow,
+                      height: 15,
+                      color: AppColor.black,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // Comparison Card
-              _ComparisonCard(isDark: isDark),
-
-              const SizedBox(height: 14),
-              Center(
-                child: Text(
-                  'Cancel Subscription Any time',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark ? Colors.white70 : Colors.grey[700],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Billing options
-              _BillingOptions(
-                selected: _selectedBilling,
-                onChanged: (i) => setState(() => _selectedBilling = i),
-              ),
-
-              const SizedBox(height: 16),
-
-              // CTA Button
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: const Color(0xFF24B0FF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Column(
+                  children: [
+                    Image.asset(
+                      AppImages.crown,
+                      height: 105,
+                      fit: BoxFit.contain,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text(
-                        'Get Super Power Now',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: Colors.white,
+                    const SizedBox(height: 10),
+                    Text(
+                      "Unlock the Tringo’s",
+                      style: AppTextStyles.mulish(fontSize: 22),
+                    ),
+                    Text(
+                      "Super Power",
+                      style: AppTextStyles.mulish(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _ComparisonCard(),
+
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Text(
+                        'Cancel Subscription Any time',
+                        style: AppTextStyles.mulish(color: AppColor.darkGrey),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Billing options
+                    _BillingOptions(
+                      selected: _selectedBilling,
+                      onChanged: (i) => setState(() => _selectedBilling = i),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF0797FD),
+                              Color(0xFF07C8FD),
+                              Color(0xFF0797FD),
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SubscriptionHistory(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            backgroundColor:
+                                Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 40,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Get Super Power Now',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
             ],
@@ -129,200 +156,168 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 }
 
 class _ComparisonCard extends StatelessWidget {
-  const _ComparisonCard({required this.isDark});
-
-  final bool isDark;
+  _ComparisonCard();
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = isDark ? const Color(0xFF1A1B20) : Colors.white;
-    final divider = isDark ? Colors.white10 : Colors.black12;
-
-    final premiumGradient = const LinearGradient(
+    const premiumGradient = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [Color(0xFF29D0FF), Color(0xFF227CFF)],
+      colors: [Color(0xFF0797FD), Color(0xFF07C8FD), Color(0xFF0797FD)],
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          if (!isDark)
+    // text + availability in Free
+    const features = <({String text, bool free, bool premium})>[
+      (text: 'Search engine visibility upto 5km', free: true, premium: true),
+      (text: 'Unlimited Reply in Smart Connect', free: false, premium: true),
+      (text: 'Reach your entire district', free: false, premium: true),
+      (text: 'Search engine priority', free: false, premium: true),
+      (text: 'Place 2 ads per month', free: false, premium: true),
+      (text: 'Get Trusted Batch to gain clients', free: false, premium: true),
+      (text: 'View Followers Picture', free: false, premium: true),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColor.white, // your container color stays
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.06),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+              spreadRadius: 12,
+              color: Colors.black.withOpacity(.05),
+              blurRadius: 25,
+              offset: const Offset(8, 8),
             ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Feature list + "Free" column
-          Expanded(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                // Header row
-
-
-
-                // Features
-                _FeatureRow(
-                  text: 'Search engine visibility upto 5km',
-                  free: true,
-                ),
-                _FeatureRow(
-                  text: 'Unlimited Reply in Smart Connect',
-                  free: false,
-                ),
-                _FeatureRow(
-                  text: 'Reach your entire district',
-                  free: false,
-                ),
-                _FeatureRow(
-                  text: 'Search engine priority',
-                  free: false,
-                ),
-                _FeatureRow(
-                  text: 'Place 2 ads per month',
-                  free: false,
-                ),
-                _FeatureRow(
-                  text: 'Get Trusted Batch to gain clients',
-                  free: false,
-                ),
-                _FeatureRow(
-                  text: 'View Followers Picture',
-                  free: false,
-                  showBottomDivider: false,
-                ),
-              ],
-            ),
-          ),
-
-          // Premium column
-          Container(
-            width: 84,
-            height: 420,
-            decoration: BoxDecoration(
-              color: AppColor.iceBlue
-
-            ),
-            child: Column(
-              children: const [
-                SizedBox(height: 16),
-                Text(
-                  'Free',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 16),
-                _Star(),
-
-              ],
-            ),
-          ),
-          Container(
-            width: 84,
-            height: 420,
-            decoration: BoxDecoration(
-              gradient: premiumGradient,
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-            ),
-            child: Column(
-              children: const [
-                SizedBox(height: 16),
-                Text(
-                  'Premium',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 16),
-                _Star(),
-                _Star(),
-                _Star(),
-                _Star(),
-                _Star(),
-                _Star(),
-                _Star(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  const _FeatureRow({
-    required this.text,
-    required this.free,
-    this.showBottomDivider = true,
-  });
-
-  final String text;
-  final bool free;
-  final bool showBottomDivider;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final divider = isDark ? Colors.white10 : Colors.black12;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
             children: [
-              // Feature text
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    height: 1.2,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
+              // Background bands (left = cardColor shows; middle = Free; right = Premium gradient)
+              // Make backgrounds fill the card area
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    const Expanded(flex: 2, child: Text('')),
+                    Expanded(
+                      flex: 1,
+                      child: Container(color: AppColor.iceBlue),
+                    ), // Free
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: premiumGradient,
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(18),
+                            bottomRight: Radius.circular(18),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: const [
+                        const Expanded(flex: 3, child: Text('')),
+
+                        Expanded(
+                          flex: 3,
+                          child: Center(
+                            child: Text(
+                              'Free',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 0,
+                          child: Center(
+                            child: Text(
+                              'Premium',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    ...features.map(
+                      (f) => Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: Text(
+                              f.text,
+                              style: AppTextStyles.mulish(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: AppColor.darkBlue,
+                              ),
+                            ),
+                          ),
+
+                          Expanded(
+                            flex: 3,
+                            child: Center(
+                              child: f.free
+                                  ? star(color: AppColor.skyBlue)
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+
+                          Expanded(
+                            flex: 2,
+                            child: Center(
+                              child: f.premium
+                                  ? star(color: AppColor.white)
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-
-      ],
+      ),
     );
   }
 }
 
-class _Star extends StatelessWidget {
-  const _Star();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 14),
-      child: Icon(Icons.star_rounded, color: Colors.white),
-    );
-  }
+Widget star({Color? color = AppColor.white}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    child: Icon(Icons.star_rounded, color: color),
+  );
 }
 
 class _BillingOptions extends StatelessWidget {
-  const _BillingOptions({
-    required this.selected,
-    required this.onChanged,
-  });
+  const _BillingOptions({required this.selected, required this.onChanged});
 
   final int selected;
   final ValueChanged<int> onChanged;
@@ -331,39 +326,42 @@ class _BillingOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Row(
-      children: [
-        Expanded(
-          child: _BillingChip(
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _BillingChip(
             labelTop: '₹ 999',
             labelBottom: '1 Year',
             selected: selected == 0,
             onTap: () => onChanged(0),
             highlight: true,
-            isDark: isDark,
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _BillingChip(
+          const SizedBox(width: 10),
+          _BillingChip(
             labelTop: '₹ 759',
             labelBottom: '6 Month',
             selected: selected == 1,
             onTap: () => onChanged(1),
-            isDark: isDark,
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _BillingChip(
+          const SizedBox(width: 10),
+          _BillingChip(
             labelTop: '₹ 569',
             labelBottom: '3 Month',
             selected: selected == 2,
             onTap: () => onChanged(2),
-            isDark: isDark,
           ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          _BillingChip(
+            labelTop: '₹ 569',
+            labelBottom: '3 Month',
+            selected: selected == 2,
+            onTap: () => onChanged(2),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -375,63 +373,40 @@ class _BillingChip extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.highlight = false,
-    required this.isDark,
   });
 
   final String labelTop;
   final String labelBottom;
   final bool selected;
   final bool highlight;
-  final bool isDark;
+
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final bg = selected
-        ? (isDark ? const Color(0xFF1F2635) : const Color(0xFFE9F5FF))
-        : (isDark ? const Color(0xFF14161C) : Colors.white);
-    final border = selected
-        ? const Color(0xFF24B0FF)
-        : (isDark ? const Color(0xFF2A2F3A) : const Color(0xFFE8EAF1));
+    final border = selected ? const Color(0xFF0797FD) : const Color(0xFFFFFFFF);
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
         decoration: BoxDecoration(
-          color: bg,
+          color: selected ? Colors.white : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: border, width: 1.2),
+          border: Border.all(color: border, width: 2),
         ),
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (highlight)
-                  Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    margin: const EdgeInsets.only(right: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF24B0FF),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Best',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
                 Text(
                   labelTop,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
+                    color: selected ? const Color(0xff0797FD) : AppColor.black,
                     fontSize: 18,
                   ),
                 ),
@@ -440,11 +415,15 @@ class _BillingChip extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               labelBottom,
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white70 : Colors.black54,
-                fontWeight: FontWeight.w600,
+
+              style: AppTextStyles.mulish(
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                color: selected ? AppColor.darkBlue : AppColor.gray84,
               ),
+              // style: TextStyle(
+              //   fontSize: 12,
+              //   color: selected ? AppColor.darkBlue : AppColor.gray84,
+              // ),
             ),
           ],
         ),

@@ -22,15 +22,15 @@ class CommonContainer {
               shape: BoxShape.circle,
               color: isMenu ? null : AppColor.leftArrow,
 
-              border:isMenu? Border.all(color: AppColor.border): null,
+              border: isMenu ? Border.all(color: AppColor.border) : null,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             child: Image.asset(
               height: 14,
               width: 14,
-                  AppImages.leftArrow,
+              AppImages.leftArrow,
               fit: BoxFit.contain,
-              color: isMenu? AppColor.black: null,
+              color: isMenu ? AppColor.black : null,
             ),
           ),
         ),
@@ -744,25 +744,37 @@ class CommonContainer {
     );
   }
 
-  static horizonalDivider() {
+  static horizonalDivider({bool isSubscription = false}) {
     return Container(
       width: double.infinity,
       height: 2,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+       gradient: isSubscription?  LinearGradient(
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
           colors: [
-            AppColor.scaffoldColor.withOpacity(0.5),
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.scaffoldColor.withOpacity(0.5),
+            Color(0xFFFFFFFF),
+            Color(0xFFE1E1E1),
+            Color(0xFFE1E1E1),
+            Color(0xFFE1E1E1),
+            Color(0xFFE1E1E1),
+            Color(0xFFFFFFFF),
           ],
-        ),
+        ) : LinearGradient(
+         begin: Alignment.centerRight,
+         end: Alignment.centerLeft,
+         colors: [
+           AppColor.scaffoldColor.withOpacity(0.5),
+           AppColor.white3,
+           AppColor.white3,
+           AppColor.white3,
+           AppColor.white3,
+           AppColor.white3,
+           AppColor.white3,
+           AppColor.scaffoldColor.withOpacity(0.5),
+         ],
+       ),
+
         borderRadius: BorderRadius.circular(1),
       ),
     );

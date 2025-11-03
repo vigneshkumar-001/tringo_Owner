@@ -19,12 +19,15 @@ class AppImages {
   static String profile = 'Assets/Images/profile.png';
   static String pothys = 'Assets/Images/pothys.png';
   static String search = 'Assets/Images/search.png';
+  static String sale = 'Assets/Images/sale.png';
   static String call = 'Assets/Images/call.png';
   static String location = 'Assets/Images/location.png';
   static String msg = 'Assets/Images/msg.png';
   static String upgrade = 'Assets/Images/upgrade.png';
   static String appOffer = 'Assets/Images/appOffer.png';
+  static String downLoad = 'Assets/Images/downLoad.png';
   static String gallery = 'Assets/Images/gallery.png';
+  static String vadai = 'Assets/Images/vadai.png';
   static String question = 'Assets/Images/question.png';
   static String surprise = 'Assets/Images/surprise.png';
   static String appOfferCard = 'Assets/Images/appOfferCard.png';

@@ -36,8 +36,9 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
   void _validateAndContinue() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => CommonBottomNavigation(initialIndex: 0,)),
+      MaterialPageRoute(builder: (_) => AddProductList()),
     );
+
     // if (_formKey.currentState!.validate()) {
     //   ScaffoldMessenger.of(context).showSnackBar(
     //     const SnackBar(

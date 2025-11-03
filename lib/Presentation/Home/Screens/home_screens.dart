@@ -18,7 +18,7 @@ class HomeScreens extends StatefulWidget {
 
 class _HomeScreensState extends State<HomeScreens> {
   int selectedIndex = 0; // 0 = Unanswered, 1 = Answered
-
+  bool isTexTiles = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -402,156 +402,723 @@ class _HomeScreensState extends State<HomeScreens> {
                   ],
                 ),
                 SizedBox(height: 25),
-                CommonContainer.smallShopContainer(
-                  isAdd: true,
-                  shopImage: AppImages.ads,
-                  shopLocation: ' ',
-                  shopName: ' ',
-                ),
-                SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Enquiries',
-                      style: AppTextStyles.mulish(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
+                if (isTexTiles) ...[
+                  CommonContainer.smallShopContainer(
+                    isAdd: true,
+                    shopImage: AppImages.ads,
+                    shopLocation: ' ',
+                    shopName: ' ',
+                  ),
+                  SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Enquiries',
+                        style: AppTextStyles.mulish(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 5,
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.black,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Image.asset(
+                          AppImages.rightStickArrow,
+                          height: 19,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColor.black,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Image.asset(AppImages.rightStickArrow, height: 19),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
+                    ],
+                  ),
+                  SizedBox(height: 20),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => selectedIndex = 0);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: selectedIndex == 0
-                                  ? AppColor.black
-                                  : AppColor.borderLightGrey,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '10 Unanswered',
-                              style: TextStyle(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = 0);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
                                 color: selectedIndex == 0
                                     ? AppColor.black
                                     : AppColor.borderLightGrey,
-                                fontWeight: selectedIndex == 0
-                                    ? FontWeight.w700
-                                    : FontWeight.normal,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '10 Unanswered',
+                                style: TextStyle(
+                                  color: selectedIndex == 0
+                                      ? AppColor.black
+                                      : AppColor.borderLightGrey,
+                                  fontWeight: selectedIndex == 0
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => selectedIndex = 1);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: selectedIndex == 1
-                                  ? AppColor.black
-                                  : AppColor.borderLightGrey,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '50 Answered',
-                              style: TextStyle(
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = 1);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
                                 color: selectedIndex == 1
                                     ? AppColor.black
                                     : AppColor.borderLightGrey,
-                                fontWeight: selectedIndex == 1
-                                    ? FontWeight.w700
-                                    : FontWeight.normal,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '50 Answered',
+                                style: TextStyle(
+                                  color: selectedIndex == 1
+                                      ? AppColor.black
+                                      : AppColor.borderLightGrey,
+                                  fontWeight: selectedIndex == 1
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Today',
-                  style: AppTextStyles.mulish(
-                    fontSize: 12,
-                    color: AppColor.darkGrey,
-                    fontWeight: FontWeight.w600,
+                    ],
                   ),
-                ),
-                SizedBox(height: 20),
+                  SizedBox(height: 20),
+                  Text(
+                    'Today',
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      color: AppColor.darkGrey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 20),
 
+                  CommonContainer.inquiryProductCard(
+                    questionText:
+                        'Is Samsung s24fe white color available?\nIf it is i need best price',
+                    productTitle: 'Samsung s24fe ( 258GB 8GB )',
+                    rating: '4.5',
+                    ratingCount: '16',
+                    priceText: '₹29,999',
+                    mrpText: '₹36,999',
+                    phoneImageAsset: AppImages.phone,
+                    avatarAsset: AppImages.profile,
+                    customerName: 'Ganeshan Kandhasa...',
+                    timeText: '10.40Pm',
+                    onChatTap: () {},
+                  ),
+                  SizedBox(height: 20),
 
-                CommonContainer.inquiryProductCard(
-                  questionText:
-                      'Is Samsung s24fe white color available?\nIf it is i need best price',
-                  productTitle: 'Samsung s24fe ( 258GB 8GB )',
-                  rating: '4.5',
-                  ratingCount: '16',
-                  priceText: '₹29,999',
-                  mrpText: '₹36,999',
-                  phoneImageAsset: AppImages.phone,
-                  avatarAsset: AppImages.profile,
-                  customerName: 'Ganeshan Kandhasa...',
-                  timeText: '10.40Pm',
-                  onChatTap: () {},
-                ),
-                SizedBox(height: 20),
+                  CommonContainer.inquiryProductCard(
+                    isAds: true,
+                    questionText:
+                        'Is Samsung s24fe white color available?\nIf it is i need best price',
+                    productTitle: 'Samsung s24fe ( 258GB 8GB )',
+                    rating: '4.5',
+                    ratingCount: '16',
+                    priceText: '₹29,999',
+                    mrpText: '₹36,999',
+                    phoneImageAsset: AppImages.fan,
+                    avatarAsset: AppImages.profile,
+                    customerName: 'Ganeshan Kandhasa',
+                    timeText: '10.40Pm',
+                    onChatTap: () {},
+                  ),
+                ] else ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFE29300), Color(0xFFFFB222)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withOpacity(0.35),
+                          offset: const Offset(0, 6),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
 
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      child: Stack(
+                        clipBehavior: Clip
+                            .none, // <-- allows overflow outside the stack bounds
+                        children: [
+                          // --- Background texture pattern (subtle, low opacity)
+                          Positioned.fill(
+                            child: Opacity(
+                              opacity: 0.05, // mild visibility
+                              child: Image.asset(
+                                AppImages.imageContainer1,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
 
-                CommonContainer.inquiryProductCard(
-                  isAds: true,
-                  questionText:
-                  'Is Samsung s24fe white color available?\nIf it is i need best price',
-                  productTitle: 'Samsung s24fe ( 258GB 8GB )',
-                  rating: '4.5',
-                  ratingCount: '16',
-                  priceText: '₹29,999',
-                  mrpText: '₹36,999',
-                  phoneImageAsset: AppImages.fan,
-                  avatarAsset: AppImages.profile,
-                  customerName: 'Ganeshan Kandhasa',
-                  timeText: '10.40Pm',
-                  onChatTap: () {},
-                ),
+                          Positioned(
+                            left: -17,
+                            bottom: -70,
 
-// Reply to Enquiry section
+                            child: Image.asset(
+                              AppImages.sale,
+                              height: 190,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
 
+                          Row(
+                            children: [
+                              Expanded(flex: 1, child: Text('')),
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'No Food\nWastage Sale',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.15,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black26,
+                                            offset: Offset(1, 1),
+                                            blurRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Sell your remaining food faster with offer',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: AppColor.white,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                          child: Text.rich(
+                                            TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: 'Starts at ',
+                                                  style: AppTextStyles.mulish(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: '1.30Pm',
+                                                  style: AppTextStyles.mulish(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 10),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColor.white,
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Image.asset(
+                                            AppImages.rightStickArrow,
+                                            height: 20,
+                                            color: AppColor.appOfferArrow,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 50),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '11Am ',
+                              style: AppTextStyles.mulish(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Food Orders',
+                              style: AppTextStyles.mulish(
+                                color: Colors.black,
 
+                                fontSize: 28,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.black,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Image.asset(
+                          AppImages.rightStickArrow,
+                          height: 19,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
 
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = 0);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: selectedIndex == 0
+                                    ? AppColor.black
+                                    : AppColor.borderLightGrey,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '15 All Orders',
+                                style: TextStyle(
+                                  color: selectedIndex == 0
+                                      ? AppColor.black
+                                      : AppColor.borderLightGrey,
+                                  fontWeight: selectedIndex == 0
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = 1);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: selectedIndex == 1
+                                    ? AppColor.black
+                                    : AppColor.borderLightGrey,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '50 Un Served',
+                                style: TextStyle(
+                                  color: selectedIndex == 1
+                                      ? AppColor.black
+                                      : AppColor.borderLightGrey,
+                                  fontWeight: selectedIndex == 1
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = 2);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: selectedIndex == 2
+                                    ? AppColor.black
+                                    : AppColor.borderLightGrey,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '5 Served',
+                                style: TextStyle(
+                                  color: selectedIndex == 2
+                                      ? AppColor.black
+                                      : AppColor.borderLightGrey,
+                                  fontWeight: selectedIndex == 2
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = 3);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: selectedIndex == 3
+                                    ? AppColor.black
+                                    : AppColor.borderLightGrey,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '50 Answered',
+                                style: TextStyle(
+                                  color: selectedIndex == 3
+                                      ? AppColor.black
+                                      : AppColor.borderLightGrey,
+                                  fontWeight: selectedIndex == 3
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Card(
+                    elevation: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColor.white,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // LEFT SIDE CONTENT
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Paid + Delivery Status
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColor.green,
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            "Paid",
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 15),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 15,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColor.iceBlue,
+                                            borderRadius: BorderRadius.circular(
+                                              15,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.delivery_dining,
+                                                size: 16,
+                                                color: Colors.blue,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                "Door Delivery",
+                                                style: AppTextStyles.mulish(
+                                                  fontWeight: FontWeight.w900,
+                                                  color: AppColor.skyBlue,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    // Order Time
+                                    Text(
+                                      'Order At 11.PM',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 25),
+
+                                    // PRICE + QTY + DOTTED DIVIDER
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "₹42 ",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Total",
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Container(
+                                          height: 15,
+                                          width: 1,
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              left: BorderSide(
+                                                color: Colors.grey,
+                                                width: 1,
+                                                style: BorderStyle.solid,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Text(
+                                          "2 Qty",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // RIGHT SIDE IMAGE
+                              Column(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset(
+                                      AppImages.vadai,
+                                      height: 100,
+                                      width: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  const Text(
+                                    'Kadai Vada',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // ACTION BUTTONS
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 15,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.skyBlue,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        AppImages.call,
+                                        color: AppColor.white,
+                                        height: 16,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'Call',
+                                        style: AppTextStyles.mulish(
+                                          color: AppColor.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 15,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColor.skyBlue),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        AppImages.loc,
+                                        height: 16,
+                                        color: AppColor.skyBlue,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'Location',
+                                        style: AppTextStyles.mulish(
+                                          color: AppColor.skyBlue,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
