@@ -4,6 +4,7 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Widgets/bottom_navigation_bar.dart';
 
 class ShopsDetails extends StatefulWidget {
   const ShopsDetails({super.key});
@@ -381,7 +382,10 @@ class _ShopsDetailsState extends State<ShopsDetails> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CommonBottomNavigation(initialIndex: 0,)),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,

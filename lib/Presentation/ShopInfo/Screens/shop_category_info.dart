@@ -3,6 +3,7 @@ import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
 
 import '../../Create App Offer/Screens/create_app_offer.dart';
 
@@ -45,7 +46,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
     // }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CreateAppOffer()),
+      MaterialPageRoute(builder: (context) => ShopPhotoInfo()),
     );
   }
 

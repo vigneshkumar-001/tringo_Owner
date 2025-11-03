@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_vendor/Presentation/Home/Screens/home_screens.dart';
 
 import '../../Presentation/AboutMe/Screens/about_me_screens.dart';
+import '../../Presentation/Enquiry/Screens/enquiry_screens.dart';
 import '../../Presentation/Menu/Screens/menu_screens.dart';
 import '../../Presentation/Offer/Screen/offer_screens.dart';
 import '../Const/app_color.dart';
@@ -48,7 +49,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
 
     _pages = [
       HomeScreens(),
-      HomeScreens(),
+      EnquiryScreens(),
       OfferScreens(),
       AboutMeScreens(),
       MenuScreens(),

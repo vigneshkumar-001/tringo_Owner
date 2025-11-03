@@ -24,8 +24,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
-        // home: RegisterScreen(),
-        home: CommonBottomNavigation(initialIndex: 0,),
+         home: RegisterScreen(),
+        //home: CommonBottomNavigation(initialIndex: 0),
       ),
     );
   }
