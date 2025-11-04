@@ -158,17 +158,17 @@ class _ProductSearchKeywordState extends State<ProductSearchKeyword> {
                       buttonColor: AppColor.black,
                       onTap: () {
                         // Validate before navigation (optional)
-                        if (_searchKeywordController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please select or enter a search keyword.',
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
+                        // if (_searchKeywordController.text.isEmpty) {
+                        //   ScaffoldMessenger.of(context).showSnackBar(
+                        //     const SnackBar(
+                        //       content: Text(
+                        //         'Please select or enter a search keyword.',
+                        //       ),
+                        //       backgroundColor: Colors.red,
+                        //     ),
+                        //   );
+                        //   return;
+                        // }
 
                         // Navigate to next screen
                         Navigator.push(

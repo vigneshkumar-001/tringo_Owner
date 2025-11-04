@@ -137,27 +137,27 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
   }
 
   void _validateAndContinue() {
-    bool valid = true;
-    setState(() {
-      for (int i = 0; i < _pickedImages.length; i++) {
-        if (_pickedImages[i] == null) {
-          _hasError[i] = true;
-          valid = false;
-        } else {
-          _hasError[i] = false;
-        }
-      }
-    });
-
-    if (!valid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add all required images before continuing.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    // bool valid = true;
+    // setState(() {
+    //   for (int i = 0; i < _pickedImages.length; i++) {
+    //     if (_pickedImages[i] == null) {
+    //       _hasError[i] = true;
+    //       valid = false;
+    //     } else {
+    //       _hasError[i] = false;
+    //     }
+    //   }
+    // });
+    //
+    // if (!valid) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Please add all required images before continuing.'),
+    //       backgroundColor: Colors.red,
+    //     ),
+    //   );
+    //   return;
+    // }
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SearchKeyword()),

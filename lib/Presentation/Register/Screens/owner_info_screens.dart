@@ -5,6 +5,7 @@ import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Core/Utility/thanglish_to_tamil.dart';
 
 import '../../../Core/Utility/common_Container.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
@@ -26,6 +27,8 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
 
   bool showOtpCard = false;
   int resendSeconds = 30;
+  List<String> tamilNameSuggestion = [];
+  bool isTamilNameLoading = false;
 
   // OTP related
   final int otpLength = 4;
@@ -212,11 +215,60 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                     ),
                     const SizedBox(height: 10),
                     CommonContainer.fillingContainer(
+                      onChanged: (value) async {
+                        setState(() => isTamilNameLoading = true);
+                        final result = await TanglishTamilHelper.transliterate(
+                          value,
+                        );
+
+                        setState(() {
+                          tamilNameSuggestion = result;
+                          isTamilNameLoading = false;
+                        });
+                      },
+
                       text: 'Tamil',
                       verticalDivider: true,
                       controller: tamilNameController,
                       context: context,
                     ),
+                    if (isTamilNameLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    if (tamilNameSuggestion.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        constraints: const BoxConstraints(maxHeight: 150),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: tamilNameSuggestion.length,
+                          itemBuilder: (context, index) {
+                            final suggestion = tamilNameSuggestion[index];
+                            return ListTile(
+                              title: Text(suggestion),
+                              onTap: () {
+                                print("Selected suggestion: $suggestion");
+                                TanglishTamilHelper.applySuggestion(
+                                  controller: tamilNameController,
+                                  suggestion: suggestion,
+                                  onSuggestionApplied: () {
+                                    setState(() => tamilNameSuggestion = []);
+                                  },
+                                );
+                              },
+                              // onTap:
+                              //     () => _onSuggestionSelected(suggestion),
+                            );
+                          },
+                        ),
+                      ),
                     const SizedBox(height: 30),
 
                     /// OTP Switcher
@@ -273,6 +325,7 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                     ),
                     const SizedBox(height: 10),
                     CommonContainer.fillingContainer(
+                      keyboardType: TextInputType.emailAddress,
                       text: 'Email Id',
                       verticalDivider: true,
                       controller: emailIdController,
@@ -301,7 +354,10 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                     ),
                     const SizedBox(height: 10),
                     CommonContainer.fillingContainer(
+                      readOnly: true,
+
                       isDropdown: true,
+                      dropdownItems: ['Male', 'Female', 'Others'],
                       verticalDivider: false,
                       imagePath: AppImages.downArrow,
                       controller: genderController,
@@ -309,6 +365,7 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                     ),
                     const SizedBox(height: 30),
                     CommonContainer.button(
+                      imagePath: AppImages.rightStickArrow,
                       onTap: () {
                         Navigator.push(
                           context,

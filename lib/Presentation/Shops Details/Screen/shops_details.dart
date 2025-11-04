@@ -4,6 +4,7 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Widgets/bottom_navigation_bar.dart';
 
 class ShopsDetails extends StatefulWidget {
   const ShopsDetails({super.key});
@@ -306,83 +307,8 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                       ),
                     ),
                     SizedBox(height: 40),
-                    Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(AppImages.containerBCImage2),
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColor.brightBlue,
-                            AppColor.electricSkyBlue,
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    'Attract More Customers',
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColor.scaffoldColor,
-                                    ),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Text(
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    'Unlock premium to attract more customers',
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColor.scaffoldColor,
-                                    ),
-                                  ),
-                                  SizedBox(height: 20),
-                                  InkWell(
-                                    onTap: () {},
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColor.scaffoldColor,
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14.5,
-                                          vertical: 6.5,
-                                        ),
-                                        child: Image.asset(
-                                          AppImages.rightStickArrow,
-                                          height: 20,
-                                          color: AppColor.royalBlue,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 30),
-                            Image.asset(AppImages.upgrade, height: 138),
-                          ],
-                        ),
-                      ),
-                    ),
+
+                    CommonContainer.attractCustomerCard(title: 'Attract More Customers', description: 'Unlock premium to attract more customers', onTap: (){}),
                     SizedBox(height: 48),
                     Row(
                       children: [
@@ -456,7 +382,10 @@ class _ShopsDetailsState extends State<ShopsDetails> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CommonBottomNavigation(initialIndex: 0,)),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,

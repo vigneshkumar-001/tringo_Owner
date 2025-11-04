@@ -5,6 +5,7 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../ShopInfo/Screens/shop_photo_info.dart';
+import 'offer_products.dart';
 
 class CreateAppOffer extends StatefulWidget {
   const CreateAppOffer({super.key});
@@ -26,25 +27,31 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
   int Percentage = 1;
 
   void _onSubmit() {
-    if (_formKey.currentState!.validate()) {
-      // ✅ All fields valid
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Form submitted successfully')),
-      );
-
-      // Navigate to next screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShopPhotoInfo(),
-        ), // Replace with your next screen
-      );
-    } else {
-      // ❌ Validation failed
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
-      );
-    }
+    // if (_formKey.currentState!.validate()) {
+    //   // ✅ All fields valid
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Form submitted successfully')),
+    //   );
+    //
+    //   // Navigate to next screen
+    //   Navigator.push(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (context) => ShopPhotoInfo(),
+    //     ), // Replace with your next screen
+    //   );
+    // } else {
+    //   // ❌ Validation failed
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Please fill all required fields')),
+    //   );
+    // }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OfferProducts(),
+      ), // Replace with your next screen
+    );
   }
 
   @override
