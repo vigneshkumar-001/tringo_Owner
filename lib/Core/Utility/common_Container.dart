@@ -749,31 +749,33 @@ class CommonContainer {
       width: double.infinity,
       height: 2,
       decoration: BoxDecoration(
-       gradient: isSubscription?  LinearGradient(
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-          colors: [
-            Color(0xFFFFFFFF),
-            Color(0xFFE1E1E1),
-            Color(0xFFE1E1E1),
-            Color(0xFFE1E1E1),
-            Color(0xFFE1E1E1),
-            Color(0xFFFFFFFF),
-          ],
-        ) : LinearGradient(
-         begin: Alignment.centerRight,
-         end: Alignment.centerLeft,
-         colors: [
-           AppColor.scaffoldColor.withOpacity(0.5),
-           AppColor.white3,
-           AppColor.white3,
-           AppColor.white3,
-           AppColor.white3,
-           AppColor.white3,
-           AppColor.white3,
-           AppColor.scaffoldColor.withOpacity(0.5),
-         ],
-       ),
+        gradient: isSubscription
+            ? LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  Color(0xFFFFFFFF),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFFFFFFF),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  AppColor.scaffoldColor.withOpacity(0.5),
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.scaffoldColor.withOpacity(0.5),
+                ],
+              ),
 
         borderRadius: BorderRadius.circular(1),
       ),
@@ -1354,6 +1356,7 @@ class CommonContainer {
 
   // -------------------- Common Dropdown Bottom Sheet --------------------
 
+  /*
   static Widget fillingContainer({
     String? text,
     double? textSize = 14,
@@ -1389,7 +1392,8 @@ class CommonContainer {
     // 🔹 New
     DatePickMode datePickMode = DatePickMode.none,
     bool styledRangeText = false,
-  }) {
+  })
+  {
     return FormField<String>(
       validator: validator,
       key: fieldKey,
@@ -1497,12 +1501,21 @@ class CommonContainer {
               ]
             : (inputFormatters ?? const []);
 
-        // -------------------- UI --------------------
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: _handleTap,
+              onTap: (){
+                if (isDOB ||
+                    datePickMode != DatePickMode.none) {
+                  _handleTap(); // open date picker
+                } else if (isDropdown) {
+                  _handleTap(); // open dropdown
+                } else {
+                  FocusScope.of(context!).requestFocus(focusNode);
+                }
+              },
               behavior: HitTestBehavior.opaque,
               child: Container(
                 decoration: BoxDecoration(
@@ -1525,7 +1538,16 @@ class CommonContainer {
                         flex: flex,
                         child: datePickMode != DatePickMode.none
                             ? GestureDetector(
-                                onTap: _handleTap,
+                          onTap: (){
+                            if (isDOB ||
+                                datePickMode != DatePickMode.none) {
+                              _handleTap(); // open date picker
+                            } else if (isDropdown) {
+                              _handleTap(); // open dropdown
+                            } else {
+                              FocusScope.of(context!).requestFocus(focusNode);
+                            }
+                          },
                                 child: AbsorbPointer(
                                   absorbing: true,
                                   child: styledRangeText
@@ -1766,6 +1788,405 @@ class CommonContainer {
                       if (imagePath != null)
                         InkWell(
                           onTap: () {
+                            controller?.clear();
+                            state.didChange('');
+                            onDetailsTap?.call();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: Image.asset(
+                              imagePath,
+                              height: imageHight,
+                              width: imageWidth,
+                              color: imageColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (state.hasError)
+              Padding(
+                padding: const EdgeInsets.only(left: 4, top: 5),
+                child: Text(
+                  state.errorText ?? '',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+*/
+  static Widget fillingContainer({
+    String? text,
+    double? textSize = 14,
+    Color? textColor = AppColor.mediumGray,
+    FontWeight? textFontWeight,
+    Key? fieldKey,
+    TextEditingController? controller,
+    String? imagePath,
+    bool verticalDivider = true,
+    Function(String)? onChanged,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    VoidCallback? onDetailsTap,
+    double imageHight = 30,
+    double imageWidth = 11,
+    int? maxLine,
+    int flex = 4,
+    bool isTamil = false,
+    bool isAadhaar = false,
+    bool isDOB = false,
+    bool isMobile = false,
+    bool isPincode = false,
+    bool readOnly = false,
+    bool isDropdown = false,
+    List<String>? dropdownItems,
+    BuildContext? context,
+    FormFieldValidator<String>? validator,
+    FocusNode? focusNode,
+    Color borderColor = AppColor.red,
+    Color? imageColor,
+    VoidCallback? onFieldTap,
+
+    // 🔹 New
+    DatePickMode datePickMode = DatePickMode.none,
+    bool styledRangeText = false,
+  }) {
+    return FormField<String>(
+      validator: validator,
+      key: fieldKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      builder: (state) {
+        final hasError = state.hasError;
+
+        // -------------------- Date Formatting Helper --------------------
+        String dd(int v) => v.toString().padLeft(2, '0');
+        String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
+
+        // -------------------- Tap Handling --------------------
+        void _handleTap() async {
+          if (context == null) return;
+
+          // Single Date Picker
+          if (datePickMode == DatePickMode.single) {
+            final picked = await showDatePicker(
+              context: context!,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  colorScheme: ColorScheme.light(
+                    primary: AppColor.resendOtp,
+                    onPrimary: Colors.white,
+                    onSurface: AppColor.black,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.resendOtp,
+                    ),
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) {
+              controller?.text = fmt(picked);
+              state.didChange(controller?.text);
+            }
+            return;
+          }
+
+          // Range Picker
+          if (datePickMode == DatePickMode.range) {
+            final picked = await showDateRangePicker(
+              context: context!,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              initialDateRange: DateTimeRange(
+                start: DateTime.now(),
+                end: DateTime.now().add(const Duration(days: 7)),
+              ),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  colorScheme: ColorScheme.light(
+                    primary: AppColor.resendOtp,
+                    onPrimary: Colors.white,
+                    onSurface: AppColor.black,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.lightSkyBlue,
+                    ),
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) {
+              controller?.text = '${fmt(picked.start)}  to  ${fmt(picked.end)}';
+              state.didChange(controller?.text);
+            }
+            return;
+          }
+
+          // Dropdown
+          if (isDropdown && dropdownItems?.isNotEmpty == true) {
+            FocusScope.of(context!).unfocus();
+            await Future.delayed(const Duration(milliseconds: 100));
+            _showDropdownBottomSheet(
+              context!,
+              dropdownItems!,
+              controller,
+              state,
+            );
+            return;
+          }
+
+          // Default
+          onFieldTap?.call();
+        }
+
+        // -------------------- Input Formatters --------------------
+        final effectiveInputFormatters = isMobile || isAadhaar || isPincode
+            ? <TextInputFormatter>[
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  isMobile ? 10 : (isAadhaar ? 12 : 6),
+                ),
+              ]
+            : (inputFormatters ?? const []);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: _handleTap,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: AppColor.lightGray,
+                  border: Border.all(
+                    color: hasError ? AppColor.red : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 15,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: flex,
+                        child: datePickMode != DatePickMode.none
+                            ? GestureDetector(
+                                onTap: _handleTap,
+                                child: AbsorbPointer(
+                                  absorbing: true,
+                                  child: styledRangeText
+                                      ? Stack(
+                                          alignment: Alignment.centerLeft,
+                                          children: [
+                                            Opacity(
+                                              opacity: 0,
+                                              child: TextFormField(
+                                                controller: controller,
+                                                validator: validator,
+                                                readOnly: true,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      border: InputBorder.none,
+                                                      isDense: true,
+                                                      errorText: null,
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 10,
+                                                          ),
+                                                    ),
+                                              ),
+                                            ),
+                                            ValueListenableBuilder<
+                                              TextEditingValue
+                                            >(
+                                              valueListenable: controller!,
+                                              builder: (context, value, _) {
+                                                final raw = value.text.trim();
+                                                if (raw.isEmpty) {
+                                                  return Text(
+                                                    text ?? '',
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 14,
+                                                      color:
+                                                          AppColor.mediumGray,
+                                                    ),
+                                                  );
+                                                }
+
+                                                final parts = raw.split(
+                                                  RegExp(
+                                                    r'\s+to\s+',
+                                                    caseSensitive: false,
+                                                  ),
+                                                );
+                                                if (parts.length == 1) {
+                                                  return Text(
+                                                    parts[0],
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: AppColor.black,
+                                                    ),
+                                                  );
+                                                }
+
+                                                return RichText(
+                                                  text: TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: parts[0],
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .black,
+                                                            ),
+                                                      ),
+                                                      TextSpan(
+                                                        text: '   to   ',
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .mediumGray,
+                                                            ),
+                                                      ),
+                                                      TextSpan(
+                                                        text: parts[1],
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .black,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        )
+                                      : TextFormField(
+                                          controller: controller,
+                                          readOnly: true,
+                                          decoration: const InputDecoration(
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                ),
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : AbsorbPointer(
+                                absorbing: isDropdown || isDOB || readOnly,
+                                child: TextFormField(
+                                  focusNode: focusNode,
+                                  controller: controller,
+                                  readOnly: readOnly,
+                                  maxLines: maxLine,
+                                  maxLength: isMobile
+                                      ? 10
+                                      : (isAadhaar
+                                            ? 12
+                                            : (isPincode ? 6 : null)),
+                                  keyboardType:
+                                      (isMobile || isAadhaar || isPincode)
+                                      ? TextInputType.number
+                                      : (keyboardType ?? TextInputType.text),
+                                  inputFormatters: effectiveInputFormatters,
+                                  style: AppTextStyles.textWith700(
+                                    fontSize: 18,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: '',
+                                    counterText: '',
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    errorText: null,
+                                  ),
+                                  onChanged: (v) {
+                                    state.didChange(v);
+                                    onChanged?.call(v);
+                                  },
+                                ),
+                              ),
+                      ),
+
+                      if (verticalDivider)
+                        Container(
+                          width: 2,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.grey.shade200,
+                                Colors.grey.shade300,
+                                Colors.grey.shade200,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      if (text != null) ...[
+                        const SizedBox(width: 10),
+                        Text(
+                          text,
+                          style: AppTextStyles.mulish(
+                            fontWeight: textFontWeight,
+                            fontSize: textSize!,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 20),
+                      if (imagePath != null)
+                        InkWell(
+                          onTap: () {
+                            if (isDropdown) {
+                              return null;
+                            }
                             controller?.clear();
                             state.didChange('');
                             onDetailsTap?.call();
