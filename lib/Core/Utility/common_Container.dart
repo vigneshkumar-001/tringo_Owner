@@ -3,6 +3,7 @@ import 'package:dotted_border/dotted_border.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 
@@ -2211,7 +2212,7 @@ class CommonContainer {
                 padding: const EdgeInsets.only(left: 4, top: 5),
                 child: Text(
                   state.errorText ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.red,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -2826,17 +2827,111 @@ class CommonContainer {
     );
   }
 
-  static containerTitle({required String title, required String image}) {
+  /*  static containerTitle({
+    required String title,
+    required String image,
+    VoidCallback? onTap,
+  }) {
     return Row(
       children: [
         Text(title, style: AppTextStyles.mulish(color: AppColor.mildBlack)),
         SizedBox(width: 7),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColor.iceBlue,
-            borderRadius: BorderRadius.circular(50),
+        InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColor.iceBlue,
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: Image.asset(image, height: 10),
+            ),
           ),
-          child: Padding(
+        ),
+      ],
+    );
+  }*/
+
+  static Widget containerTitle({
+    required String title,
+    required String image,
+    String? infoMessage,
+    VoidCallback? onTap,
+    BuildContext? context,
+  }) {
+    return Row(
+      children: [
+        Text(title, style: AppTextStyles.mulish(color: AppColor.mildBlack)),
+        SizedBox(width: 7),
+        InkWell(
+          borderRadius: BorderRadius.circular(15),
+          onTap: () {
+            if (onTap != null) {
+              onTap();
+            } else if (context != null && infoMessage != null) {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  backgroundColor: Colors.white,
+                  contentPadding: const EdgeInsets.all(20),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Image.asset(image, height: 18, width: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            title,
+                            style: AppTextStyles.mulish(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.mildBlack,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        infoMessage,
+                        style: AppTextStyles.mulish(
+                          color: AppColor.mediumLightGray,
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.skyBlue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            'Got it',
+                            style: AppTextStyles.mulish(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColor.iceBlue,
+              borderRadius: BorderRadius.circular(50),
+            ),
             padding: const EdgeInsets.all(5),
             child: Image.asset(image, height: 10),
           ),

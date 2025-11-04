@@ -25,17 +25,20 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
               SizedBox(height: 15),
               Row(
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.border),
-                      shape: BoxShape.circle,
-                      color: AppColor.white,
-                    ),
-                    child: Image.asset(
-                      AppImages.leftArrow,
-                      height: 15,
-                      color: AppColor.black,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColor.border),
+                        shape: BoxShape.circle,
+                        color: AppColor.white,
+                      ),
+                      child: Image.asset(
+                        AppImages.leftArrow,
+                        height: 15,
+                        color: AppColor.black,
+                      ),
                     ),
                   ),
                 ],
@@ -63,170 +66,176 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    SizedBox(height: 15),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 25,
+              Column(
+                children: [
+                  SizedBox(height: 15),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 25,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColor.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '1 Year Premium Plan',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 15),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: 'Paid on ',
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.gray84,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: '18-Jun-2025',
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.gray84,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: 'Expires on ',
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.gray84,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: '18-Jun-2025',
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.gray84,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Right side image
+                            Image.asset(AppImages.crown, height: 90),
+                          ],
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColor.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColor.black,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                           child: Row(
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '1 Year Premium Plan',
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 15),
-                                    Text.rich(
-                                      TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'Paid on ',
-                                            style: AppTextStyles.mulish(
-                                              color: AppColor.gray84,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: '18-Jun-2025',
-                                            style: AppTextStyles.mulish(
-                                              color: AppColor.gray84,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text.rich(
-                                      TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'Expires on ',
-                                            style: AppTextStyles.mulish(
-                                              color: AppColor.gray84,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: '18-Jun-2025',
-                                            style: AppTextStyles.mulish(
-                                              color: AppColor.gray84,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                              Image.asset(AppImages.downLoad, height: 20),
+                              SizedBox(width: 10),
+                              Text(
+                                'Download Invoice',
+                                style: AppTextStyles.mulish(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColor.white,
                                 ),
                               ),
-
-                              // Right side image
-                              Image.asset(AppImages.crown, height: 90),
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColor.black,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Row(
-                              children: [
-                                Image.asset(AppImages.downLoad, height: 20),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Download Invoice',
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: AppColor.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 10),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
                           ),
-                          SizedBox(width: 10),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColor.red1,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Row(
-                              children: [
-                                Image.asset(
-                                  AppImages.closeImage,
-                                  height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColor.red1,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                AppImages.closeImage,
+                                height: 20,
+                                color: AppColor.white,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'Cancel Subscription',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                   color: AppColor.white,
                                 ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Cancel Subscription',
-                                  style: AppTextStyles.mulish(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColor.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 50),
-                    CommonContainer.horizonalDivider(isSubscription: true),
-                    SizedBox(height: 20),
-                    Text(
-                      "Premium Tringo’s Features",
-                      style: AppTextStyles.mulish(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  SizedBox(height: 50),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Column(
+                      children: [
+                        CommonContainer.horizonalDivider(isSubscription: true),
+                        SizedBox(height: 20),
+                        Text(
+                          "Premium Tringo’s Features",
+                          style: AppTextStyles.mulish(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        _ComparisonCard(),
+                        SizedBox(height: 20),
+                      ],
                     ),
-                    SizedBox(height: 20),
-                    _ComparisonCard(),
-                    SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -282,7 +291,7 @@ class _ComparisonCard extends StatelessWidget {
               Positioned.fill(
                 child: Row(
                   children: [
-                    const Expanded(flex: 2, child: Text('')),
+                    Expanded(flex: 2, child: Text('')),
                     // Free
                     Expanded(
                       flex: 1,
@@ -309,8 +318,8 @@ class _ComparisonCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
-                      children: const [
-                        const Expanded(flex: 3, child: Text('')),
+                      children: [
+                        Expanded(flex: 3, child: Text('')),
 
                         Expanded(
                           flex: 1,
@@ -326,23 +335,27 @@ class _ComparisonCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
 
                     ...features.map(
                       (f) => Row(
                         children: [
                           Expanded(
                             flex: 3,
-                            child: Text(
-                              f.text,
-                              style: AppTextStyles.mulish(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                color: AppColor.darkBlue,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: Text(
+                                f.text,
+                                style: AppTextStyles.mulish(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: AppColor.darkBlue,
+                                ),
                               ),
                             ),
                           ),
-
                           Expanded(
                             flex: 1,
                             child: Center(
@@ -364,6 +377,111 @@ class _ComparisonCard extends StatelessWidget {
     );
   }
 }
+
+///new
+// class _ComparisonCard extends StatelessWidget {
+//   const _ComparisonCard({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     const premiumGradient = LinearGradient(
+//       begin: Alignment.topCenter,
+//       end: Alignment.bottomCenter,
+//       colors: [Color(0xFF0797FD), Color(0xFF07C8FD), Color(0xFF0797FD)],
+//     );
+//
+//     const features = <({String text, bool premium})>[
+//       (text: 'Search engine visibility upto 5km', premium: true),
+//       (text: 'Unlimited Reply in Smart Connect', premium: true),
+//       (text: 'Reach your entire district', premium: true),
+//       (text: 'Search engine priority', premium: true),
+//       (text: 'Place 2 ads per month', premium: true),
+//       (text: 'Get Trusted Batch to gain clients', premium: true),
+//       (text: 'View Followers Picture', premium: true),
+//     ];
+//
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(18),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.05),
+//             spreadRadius: 3,
+//             blurRadius: 10,
+//             offset: const Offset(2, 4),
+//           ),
+//         ],
+//       ),
+//       child: Row(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           // Left side: feature texts
+//           Expanded(
+//             flex: 3,
+//             child: Padding(
+//               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: features
+//                     .map(
+//                       (f) => Padding(
+//                         padding: EdgeInsets.symmetric(vertical: 8),
+//                         child: Text(
+//                           f.text,
+//                           style: AppTextStyles.mulish(
+//                             color: AppColor.darkBlue,
+//                             fontSize: 14,
+//                             fontWeight: FontWeight.w600,
+//                           ),
+//                         ),
+//                       ),
+//                     )
+//                     .toList(),
+//               ),
+//             ),
+//           ),
+//
+//           // Right side: premium column
+//           Expanded(
+//             flex: 2,
+//             child: Container(
+//               decoration: const BoxDecoration(
+//                 gradient: premiumGradient,
+//                 borderRadius: BorderRadius.only(
+//                   topRight: Radius.circular(18),
+//                   bottomRight: Radius.circular(18),
+//                 ),
+//               ),
+//               child: Padding(
+//                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+//                 child: Column(
+//                   children: [
+//                     Text(
+//                       'Premium',
+//                       style: TextStyle(
+//                         color: Colors.white,
+//                         fontWeight: FontWeight.w700,
+//                         fontSize: 14,
+//                       ),
+//                     ),
+//                     SizedBox(height: 8),
+//                     ...features.map(
+//                       (f) => Padding(
+//                         padding: EdgeInsets.symmetric(vertical: 12),
+//                         child: Icon(Icons.star, color: Colors.white, size: 18),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 Widget star({Color? color = AppColor.white}) {
   return Padding(

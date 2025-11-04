@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
+import '../../AddProduct/Screens/add_product_list.dart';
+import '../../AddProduct/Screens/product_category_screens.dart';
 
 class ShopsDetails extends StatefulWidget {
   const ShopsDetails({super.key});
@@ -16,6 +19,31 @@ class ShopsDetails extends StatefulWidget {
 class _ShopsDetailsState extends State<ShopsDetails> {
   int selectedIndex = 0;
   int selectedWeight = 0; // default
+
+  Future<void> _openMap(double latitude, double longitude) async {
+    final Uri googleMapUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+    );
+
+    try {
+      final bool launched = await launchUrl(
+        googleMapUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open Google Maps')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error launching map: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to open map')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +138,8 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                             messageOnTap: () {},
                             MessageIcon: true,
                             mapText: 'Map',
+                            mapOnTap: () =>
+                                _openMap(9.91878153068342, 78.11575595524265),
                             mapImage: AppImages.locationImage,
                             callIconSize: 21,
                             callTextSize: 16,
@@ -281,34 +311,48 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                       //     setState(() => selectedWeight = i),
                     ),
                     SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColor.lightGray,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 22.5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            AppImages.addListImage,
-                            height: 22,
-                            color: AppColor.darkBlue,
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductCategoryScreens(),
                           ),
-                          SizedBox(width: 9),
-                          Text(
-                            'Add Product',
-                            style: AppTextStyles.mulish(
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColor.lightGray,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 22.5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              AppImages.addListImage,
+                              height: 22,
                               color: AppColor.darkBlue,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 9),
+                            Text(
+                              'Add Product',
+                              style: AppTextStyles.mulish(
+                                color: AppColor.darkBlue,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     SizedBox(height: 40),
 
-                    CommonContainer.attractCustomerCard(title: 'Attract More Customers', description: 'Unlock premium to attract more customers', onTap: (){}),
+                    CommonContainer.attractCustomerCard(
+                      title: 'Attract More Customers',
+                      description: 'Unlock premium to attract more customers',
+                      onTap: () {},
+                    ),
                     SizedBox(height: 48),
                     Row(
                       children: [
@@ -384,7 +428,9 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CommonBottomNavigation(initialIndex: 0,)),
+                    MaterialPageRoute(
+                      builder: (_) => CommonBottomNavigation(initialIndex: 0),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -1,10 +1,12 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Widgets/qr_scanner_page.dart';
 
 class OfferScreens extends StatefulWidget {
   const OfferScreens({super.key});
@@ -15,6 +17,26 @@ class OfferScreens extends StatefulWidget {
 
 class _OfferScreensState extends State<OfferScreens> {
   int selectedIndex = 0; // 0 = Live, 1 = Expired
+
+  Future<void> _openQrScanner() async {
+    var status = await Permission.camera.request();
+    if (status.isGranted) {
+      final result = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (_) => const QRScannerPage()),
+      );
+
+      if (result != null && result.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Scanned: $result')));
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Camera permission denied')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,24 +50,27 @@ class _OfferScreensState extends State<OfferScreens> {
             Row(
               children: [
                 // Left circular icon
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 15,
-                    vertical: 15,
-                  ),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColor.shadowBlue,
-                        blurRadius: 5,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Image.asset(AppImages.qr_code, height: 23),
+                GestureDetector(
+                  onTap: _openQrScanner,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15,
+                    ),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColor.shadowBlue,
+                          blurRadius: 5,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Image.asset(AppImages.qr_code, height: 23),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -263,7 +288,6 @@ class _OfferScreensState extends State<OfferScreens> {
                   ),
                   const SizedBox(height: 10),
 
-
                   DottedBorder(
                     color: AppColor.gray84.withOpacity(0.4),
                     strokeWidth: 1.2,
@@ -290,7 +314,6 @@ class _OfferScreensState extends State<OfferScreens> {
                     child: Row(
                       children: [
                         Container(
-
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 10,
@@ -300,7 +323,6 @@ class _OfferScreensState extends State<OfferScreens> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Row(
-
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // LEFT: two texts stacked
@@ -343,9 +365,8 @@ class _OfferScreensState extends State<OfferScreens> {
                             ],
                           ),
                         ),
-                        SizedBox(width: 15,),
+                        SizedBox(width: 15),
                         Container(
-
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 10,
@@ -355,7 +376,6 @@ class _OfferScreensState extends State<OfferScreens> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Row(
-
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // LEFT: two texts stacked
@@ -398,9 +418,8 @@ class _OfferScreensState extends State<OfferScreens> {
                             ],
                           ),
                         ),
-                        SizedBox(width: 15,),
+                        SizedBox(width: 15),
                         Container(
-
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 10,
@@ -410,7 +429,6 @@ class _OfferScreensState extends State<OfferScreens> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Row(
-
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // LEFT: two texts stacked
@@ -453,19 +471,24 @@ class _OfferScreensState extends State<OfferScreens> {
                             ],
                           ),
                         ),
-
-
-
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text('Products',style: AppTextStyles.mulish(fontWeight: FontWeight.bold,fontSize: 16),),
+                  Text(
+                    'Products',
+                    style: AppTextStyles.mulish(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05)),
+                      ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
@@ -481,9 +504,13 @@ class _OfferScreensState extends State<OfferScreens> {
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
-                                    const Color(0xFF000000).withOpacity(0.04), // 3%
+                                    const Color(
+                                      0xFF000000,
+                                    ).withOpacity(0.04), // 3%
 
-                                    const Color(0xFF000000).withOpacity(0.00), // 0%
+                                    const Color(
+                                      0xFF000000,
+                                    ).withOpacity(0.00), // 0%
                                   ],
                                 ),
                               ),
@@ -499,7 +526,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                     vertical: 14,
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Samsung s24fe ( 258GB 8GB )',
@@ -521,7 +549,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF31CC64),
-                                              borderRadius: BorderRadius.circular(20),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                             ),
                                             child: Row(
                                               children: [
@@ -553,7 +582,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                       const SizedBox(height: 10),
 
                                       Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: const [
                                           // price
                                         ],
@@ -562,12 +592,21 @@ class _OfferScreensState extends State<OfferScreens> {
                                         children: [
                                           Text(
                                             '₹29000',
-                                              style: AppTextStyles.mulish(color: AppColor.black, fontSize: 16,fontWeight: FontWeight.bold)
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.black,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
                                             '₹39000',
-                                            style: AppTextStyles.mulish(color: AppColor.gray84,decoration: TextDecoration.lineThrough,fontSize: 11)
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.gray84,
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                              fontSize: 11,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -591,11 +630,13 @@ class _OfferScreensState extends State<OfferScreens> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 10,),
+                  SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05)),
+                      ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
@@ -611,9 +652,13 @@ class _OfferScreensState extends State<OfferScreens> {
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
-                                    const Color(0xFF000000).withOpacity(0.04), // 3%
+                                    const Color(
+                                      0xFF000000,
+                                    ).withOpacity(0.04), // 3%
 
-                                    const Color(0xFF000000).withOpacity(0.00), // 0%
+                                    const Color(
+                                      0xFF000000,
+                                    ).withOpacity(0.00), // 0%
                                   ],
                                 ),
                               ),
@@ -629,7 +674,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                     vertical: 14,
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Samsung s24fe ( 258GB 8GB )',
@@ -651,7 +697,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF31CC64),
-                                              borderRadius: BorderRadius.circular(20),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                             ),
                                             child: Row(
                                               children: [
@@ -683,7 +730,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                       const SizedBox(height: 10),
 
                                       Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: const [
                                           // price
                                         ],
@@ -691,13 +739,22 @@ class _OfferScreensState extends State<OfferScreens> {
                                       Row(
                                         children: [
                                           Text(
-                                              '₹29000',
-                                              style: AppTextStyles.mulish(color: AppColor.black, fontSize: 16,fontWeight: FontWeight.bold)
+                                            '₹29000',
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.black,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                              '₹39000',
-                                              style: AppTextStyles.mulish(color: AppColor.gray84,decoration: TextDecoration.lineThrough,fontSize: 11)
+                                            '₹39000',
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.gray84,
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                              fontSize: 11,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -721,11 +778,13 @@ class _OfferScreensState extends State<OfferScreens> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 10,),
+                  SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05)),
+                      ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
@@ -741,9 +800,13 @@ class _OfferScreensState extends State<OfferScreens> {
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
-                                    const Color(0xFF000000).withOpacity(0.04), // 3%
+                                    const Color(
+                                      0xFF000000,
+                                    ).withOpacity(0.04), // 3%
 
-                                    const Color(0xFF000000).withOpacity(0.00), // 0%
+                                    const Color(
+                                      0xFF000000,
+                                    ).withOpacity(0.00), // 0%
                                   ],
                                 ),
                               ),
@@ -759,7 +822,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                     vertical: 14,
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Samsung s24fe ( 258GB 8GB )',
@@ -781,7 +845,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF31CC64),
-                                              borderRadius: BorderRadius.circular(20),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                             ),
                                             child: Row(
                                               children: [
@@ -813,7 +878,8 @@ class _OfferScreensState extends State<OfferScreens> {
                                       const SizedBox(height: 10),
 
                                       Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: const [
                                           // price
                                         ],
@@ -821,13 +887,22 @@ class _OfferScreensState extends State<OfferScreens> {
                                       Row(
                                         children: [
                                           Text(
-                                              '₹29000',
-                                              style: AppTextStyles.mulish(color: AppColor.black, fontSize: 16,fontWeight: FontWeight.bold)
+                                            '₹29000',
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.black,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                              '₹39000',
-                                              style: AppTextStyles.mulish(color: AppColor.gray84,decoration: TextDecoration.lineThrough,fontSize: 11)
+                                            '₹39000',
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.gray84,
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                              fontSize: 11,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -851,7 +926,6 @@ class _OfferScreensState extends State<OfferScreens> {
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
