@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
-import 'package:tringo_vendor/Presentation/Register/Screens/shop_info.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'Core/Widgets/bottom_navigation_bar.dart';
