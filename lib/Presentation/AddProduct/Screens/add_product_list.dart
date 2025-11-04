@@ -77,37 +77,35 @@ class _AddProductListState extends State<AddProductList> {
                 color: hasError
                     ? Colors.red
                     : (file != null
-                    ? AppColor.lightSkyBlue
-                    : Colors.transparent),
+                          ? AppColor.lightSkyBlue
+                          : Colors.transparent),
                 width: 1.5,
               ),
             ),
             child: file == null
                 ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 22.5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(AppImages.addImage, height: 20),
-                   SizedBox(width: 10),
-                  Text(
-                    'Add Image',
-                    style: AppTextStyles.mulish(
-                      color: AppColor.darkGrey,
+                    padding: const EdgeInsets.symmetric(vertical: 22.5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(AppImages.addImage, height: 20),
+                        SizedBox(width: 10),
+                        Text(
+                          'Add Image',
+                          style: AppTextStyles.mulish(color: AppColor.darkGrey),
+                        ),
+                      ],
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      file,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 150,
                     ),
                   ),
-                ],
-              ),
-            )
-                : ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.file(
-                file,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 150,
-              ),
-            ),
           ),
         ),
         if (hasError)
@@ -142,15 +140,15 @@ class _AddProductListState extends State<AddProductList> {
                 '${index + 1}. Feature',
                 style: AppTextStyles.mulish(color: AppColor.mildBlack),
               ),
-               Spacer(),
+              Spacer(),
               if (_featureControllers.length > 1)
                 InkWell(
                   onTap: () => _removeFeature(index),
-                  child:  Icon(Icons.close, size: 20, color: Colors.red),
+                  child: Icon(Icons.close, size: 20, color: Colors.red),
                 ),
             ],
           ),
-           SizedBox(height: 10),
+          SizedBox(height: 10),
 
           // --- Heading Row ---
           Row(
@@ -165,14 +163,14 @@ class _AddProductListState extends State<AddProductList> {
                       : null,
                 ),
               ),
-               SizedBox(width: 15),
+              SizedBox(width: 15),
               Text(
                 'Heading',
                 style: AppTextStyles.mulish(color: AppColor.mildBlack),
               ),
             ],
           ),
-           SizedBox(height: 10),
+          SizedBox(height: 10),
 
           // --- Answer Row ---
           Row(
@@ -187,7 +185,7 @@ class _AddProductListState extends State<AddProductList> {
                       : null,
                 ),
               ),
-               SizedBox(width: 15),
+              SizedBox(width: 15),
               Text(
                 'Answer ',
                 style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -200,33 +198,30 @@ class _AddProductListState extends State<AddProductList> {
   }
 
   void _validateAndSubmit() {
-    bool imageValid = true;
-    if (_pickedImages[0] == null) {
-      imageValid = false;
-      _hasError[0] = true;
-    }
-
-    final formValid = _formKey.currentState?.validate() ?? false;
-    setState(() {}); // Refresh borders / error text
-
-    if (!imageValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please add required product image")),
-      );
-      return;
-    }
-
-    if (!formValid) return;
+    // bool imageValid = true;
+    // if (_pickedImages[0] == null) {
+    //   imageValid = false;
+    //   _hasError[0] = true;
+    // }
+    //
+    // final formValid = _formKey.currentState?.validate() ?? false;
+    // setState(() {}); // Refresh borders / error text
+    //
+    // if (!imageValid) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text("Please add required product image")),
+    //   );
+    //   return;
+    // }
+    //
+    // if (!formValid) return;
 
     //  All valid → proceed to next screen
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) =>  ProductSearchKeyword(),
-      ),
+      MaterialPageRoute(builder: (context) => ProductSearchKeyword()),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -238,14 +233,16 @@ class _AddProductListState extends State<AddProductList> {
             child: Column(
               children: [
                 Padding(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 16,
+                  ),
                   child: Row(
                     children: [
                       CommonContainer.topLeftArrow(
                         onTap: () => Navigator.pop(context),
                       ),
-                       SizedBox(width: 50),
+                      SizedBox(width: 50),
                       Text(
                         'Register Shop - Individual',
                         style: AppTextStyles.mulish(
@@ -256,7 +253,7 @@ class _AddProductListState extends State<AddProductList> {
                     ],
                   ),
                 ),
-                 SizedBox(height: 35),
+                SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.addProduct,
                   text: 'Add Product',
@@ -264,31 +261,33 @@ class _AddProductListState extends State<AddProductList> {
                   gradientColor: AppColor.lavenderMist,
                   value: 0.8,
                 ),
-                 SizedBox(height: 30),
+                SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Product Image',
-                          style:
-                          AppTextStyles.mulish(color: AppColor.mildBlack)),
-                       SizedBox(height: 10),
+                      Text(
+                        'Product Image',
+                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      ),
+                      SizedBox(height: 10),
                       _addImageContainer(index: 0),
-                       SizedBox(height: 25),
-                      Text('Feature List',
-                          style:
-                          AppTextStyles.mulish(color: AppColor.mildBlack)),
-                       SizedBox(height: 20),
+                      SizedBox(height: 25),
+                      Text(
+                        'Feature List',
+                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      ),
+                      SizedBox(height: 20),
 
                       // --- Dynamic Feature Items ---
                       Column(
                         children: List.generate(
                           _featureControllers.length,
-                              (index) => _buildFeatureItem(index),
+                          (index) => _buildFeatureItem(index),
                         ),
                       ),
-                       SizedBox(height: 15),
+                      SizedBox(height: 15),
                       GestureDetector(
                         onTap: _addFeatureList,
                         child: Container(
@@ -302,7 +301,7 @@ class _AddProductListState extends State<AddProductList> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Image.asset(AppImages.addListImage, height: 20),
-                               SizedBox(width: 10),
+                              SizedBox(width: 10),
                               Text(
                                 'Add Feature List',
                                 style: AppTextStyles.mulish(
@@ -314,7 +313,7 @@ class _AddProductListState extends State<AddProductList> {
                         ),
                       ),
 
-                       SizedBox(height: 30),
+                      SizedBox(height: 30),
 
                       CommonContainer.button(
                         buttonColor: AppColor.black,
@@ -330,7 +329,7 @@ class _AddProductListState extends State<AddProductList> {
                         imgHeight: 20,
                       ),
 
-                       SizedBox(height: 36),
+                      SizedBox(height: 36),
                     ],
                   ),
                 ),

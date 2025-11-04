@@ -3,6 +3,7 @@ import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import 'add_product_list.dart';
 
 class ProductCategoryScreens extends StatefulWidget {
@@ -33,27 +34,32 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
   ];
 
   void _validateAndContinue() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Form submitted successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AddProductList()),
+    );
 
-      // 👉 TODO: Navigate to next screen here
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => AddProductList()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required fields correctly.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    // if (_formKey.currentState!.validate()) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Form submitted successfully!'),
+    //       backgroundColor: Colors.green,
+    //     ),
+    //   );A
+    //
+    //   // 👉 TODO: Navigate to next screen here
+    //   Navigator.push(
+    //     context,
+    //     MaterialPageRoute(builder: (_) => AddProductList()),
+    //   );
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Please fill all required fields correctly.'),
+    //       backgroundColor: Colors.red,
+    //     ),
+    //   );
+    // }
   }
 
   @override

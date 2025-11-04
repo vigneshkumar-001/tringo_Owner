@@ -2,6 +2,7 @@ import 'dart:ui';
 
 class AppColor {
   static const scaffoldColor = Color(0xFFFFFFFF);
+  static const white = Color(0xFFFFFFFF);
   static const mediumGray = Color(0xff777777);
   static const darkGrey = Color(0xffA1A1A1);
   static const brightGray = Color(0xffEDF1F4);
@@ -36,4 +37,6 @@ class AppColor {
   static const floralWhite = Color(0xffF5F9F5);
   static const papayaWhip = Color(0xffFFEFDB);
   static const white3 = Color(0xffF1F1F1);
+  static const red1 = Color(0xffDA4141);
+  static const border = Color(0xffE7EBEE);
 }

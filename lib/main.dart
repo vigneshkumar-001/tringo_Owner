@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
-import 'package:tringo_vendor/Presentation/Register/Screens/shop_info.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'Core/Widgets/bottom_navigation_bar.dart';
 import 'Presentation/AddProduct/Screens/add_product_list.dart';
 import 'Presentation/Create App Offer/Screens/create_app_offer.dart';
 import 'Presentation/Home/Screens/home_screens.dart';
@@ -23,7 +24,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
-        home: RegisterScreen(),
+         home: RegisterScreen(),
+        //home: CommonBottomNavigation(initialIndex: 0),
       ),
     );
   }

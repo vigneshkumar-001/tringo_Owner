@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:dotted_border/dotted_border.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
@@ -9,7 +11,7 @@ import 'app_textstyles.dart';
 enum DatePickMode { none, single, range }
 
 class CommonContainer {
-  static topLeftArrow({required VoidCallback onTap}) {
+  static topLeftArrow({required VoidCallback onTap, bool isMenu = false}) {
     return Row(
       children: [
         InkWell(
@@ -18,7 +20,9 @@ class CommonContainer {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColor.leftArrow,
+              color: isMenu ? null : AppColor.leftArrow,
+
+              border: isMenu ? Border.all(color: AppColor.border) : null,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             child: Image.asset(
@@ -26,6 +30,7 @@ class CommonContainer {
               width: 14,
               AppImages.leftArrow,
               fit: BoxFit.contain,
+              color: isMenu ? AppColor.black : null,
             ),
           ),
         ),
@@ -739,25 +744,39 @@ class CommonContainer {
     );
   }
 
-  static horizonalDivider() {
+  static horizonalDivider({bool isSubscription = false}) {
     return Container(
       width: double.infinity,
       height: 2,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-          colors: [
-            AppColor.scaffoldColor.withOpacity(0.5),
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.white3,
-            AppColor.scaffoldColor.withOpacity(0.5),
-          ],
-        ),
+        gradient: isSubscription
+            ? LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  Color(0xFFFFFFFF),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFE1E1E1),
+                  Color(0xFFFFFFFF),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  AppColor.scaffoldColor.withOpacity(0.5),
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.white3,
+                  AppColor.scaffoldColor.withOpacity(0.5),
+                ],
+              ),
+
         borderRadius: BorderRadius.circular(1),
       ),
     );
@@ -1337,6 +1356,7 @@ class CommonContainer {
 
   // -------------------- Common Dropdown Bottom Sheet --------------------
 
+  /*
   static Widget fillingContainer({
     String? text,
     double? textSize = 14,
@@ -1372,7 +1392,8 @@ class CommonContainer {
     // 🔹 New
     DatePickMode datePickMode = DatePickMode.none,
     bool styledRangeText = false,
-  }) {
+  })
+  {
     return FormField<String>(
       validator: validator,
       key: fieldKey,
@@ -1480,12 +1501,21 @@ class CommonContainer {
               ]
             : (inputFormatters ?? const []);
 
-        // -------------------- UI --------------------
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: _handleTap,
+              onTap: (){
+                if (isDOB ||
+                    datePickMode != DatePickMode.none) {
+                  _handleTap(); // open date picker
+                } else if (isDropdown) {
+                  _handleTap(); // open dropdown
+                } else {
+                  FocusScope.of(context!).requestFocus(focusNode);
+                }
+              },
               behavior: HitTestBehavior.opaque,
               child: Container(
                 decoration: BoxDecoration(
@@ -1508,7 +1538,16 @@ class CommonContainer {
                         flex: flex,
                         child: datePickMode != DatePickMode.none
                             ? GestureDetector(
-                                onTap: _handleTap,
+                          onTap: (){
+                            if (isDOB ||
+                                datePickMode != DatePickMode.none) {
+                              _handleTap(); // open date picker
+                            } else if (isDropdown) {
+                              _handleTap(); // open dropdown
+                            } else {
+                              FocusScope.of(context!).requestFocus(focusNode);
+                            }
+                          },
                                 child: AbsorbPointer(
                                   absorbing: true,
                                   child: styledRangeText
@@ -1749,6 +1788,405 @@ class CommonContainer {
                       if (imagePath != null)
                         InkWell(
                           onTap: () {
+                            controller?.clear();
+                            state.didChange('');
+                            onDetailsTap?.call();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: Image.asset(
+                              imagePath,
+                              height: imageHight,
+                              width: imageWidth,
+                              color: imageColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (state.hasError)
+              Padding(
+                padding: const EdgeInsets.only(left: 4, top: 5),
+                child: Text(
+                  state.errorText ?? '',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+*/
+  static Widget fillingContainer({
+    String? text,
+    double? textSize = 14,
+    Color? textColor = AppColor.mediumGray,
+    FontWeight? textFontWeight,
+    Key? fieldKey,
+    TextEditingController? controller,
+    String? imagePath,
+    bool verticalDivider = true,
+    Function(String)? onChanged,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    VoidCallback? onDetailsTap,
+    double imageHight = 30,
+    double imageWidth = 11,
+    int? maxLine,
+    int flex = 4,
+    bool isTamil = false,
+    bool isAadhaar = false,
+    bool isDOB = false,
+    bool isMobile = false,
+    bool isPincode = false,
+    bool readOnly = false,
+    bool isDropdown = false,
+    List<String>? dropdownItems,
+    BuildContext? context,
+    FormFieldValidator<String>? validator,
+    FocusNode? focusNode,
+    Color borderColor = AppColor.red,
+    Color? imageColor,
+    VoidCallback? onFieldTap,
+
+    // 🔹 New
+    DatePickMode datePickMode = DatePickMode.none,
+    bool styledRangeText = false,
+  }) {
+    return FormField<String>(
+      validator: validator,
+      key: fieldKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      builder: (state) {
+        final hasError = state.hasError;
+
+        // -------------------- Date Formatting Helper --------------------
+        String dd(int v) => v.toString().padLeft(2, '0');
+        String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
+
+        // -------------------- Tap Handling --------------------
+        void _handleTap() async {
+          if (context == null) return;
+
+          // Single Date Picker
+          if (datePickMode == DatePickMode.single) {
+            final picked = await showDatePicker(
+              context: context!,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  colorScheme: ColorScheme.light(
+                    primary: AppColor.resendOtp,
+                    onPrimary: Colors.white,
+                    onSurface: AppColor.black,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.resendOtp,
+                    ),
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) {
+              controller?.text = fmt(picked);
+              state.didChange(controller?.text);
+            }
+            return;
+          }
+
+          // Range Picker
+          if (datePickMode == DatePickMode.range) {
+            final picked = await showDateRangePicker(
+              context: context!,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              initialDateRange: DateTimeRange(
+                start: DateTime.now(),
+                end: DateTime.now().add(const Duration(days: 7)),
+              ),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  colorScheme: ColorScheme.light(
+                    primary: AppColor.resendOtp,
+                    onPrimary: Colors.white,
+                    onSurface: AppColor.black,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.lightSkyBlue,
+                    ),
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) {
+              controller?.text = '${fmt(picked.start)}  to  ${fmt(picked.end)}';
+              state.didChange(controller?.text);
+            }
+            return;
+          }
+
+          // Dropdown
+          if (isDropdown && dropdownItems?.isNotEmpty == true) {
+            FocusScope.of(context!).unfocus();
+            await Future.delayed(const Duration(milliseconds: 100));
+            _showDropdownBottomSheet(
+              context!,
+              dropdownItems!,
+              controller,
+              state,
+            );
+            return;
+          }
+
+          // Default
+          onFieldTap?.call();
+        }
+
+        // -------------------- Input Formatters --------------------
+        final effectiveInputFormatters = isMobile || isAadhaar || isPincode
+            ? <TextInputFormatter>[
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  isMobile ? 10 : (isAadhaar ? 12 : 6),
+                ),
+              ]
+            : (inputFormatters ?? const []);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: _handleTap,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: AppColor.lightGray,
+                  border: Border.all(
+                    color: hasError ? AppColor.red : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 15,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: flex,
+                        child: datePickMode != DatePickMode.none
+                            ? GestureDetector(
+                                onTap: _handleTap,
+                                child: AbsorbPointer(
+                                  absorbing: true,
+                                  child: styledRangeText
+                                      ? Stack(
+                                          alignment: Alignment.centerLeft,
+                                          children: [
+                                            Opacity(
+                                              opacity: 0,
+                                              child: TextFormField(
+                                                controller: controller,
+                                                validator: validator,
+                                                readOnly: true,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      border: InputBorder.none,
+                                                      isDense: true,
+                                                      errorText: null,
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 10,
+                                                          ),
+                                                    ),
+                                              ),
+                                            ),
+                                            ValueListenableBuilder<
+                                              TextEditingValue
+                                            >(
+                                              valueListenable: controller!,
+                                              builder: (context, value, _) {
+                                                final raw = value.text.trim();
+                                                if (raw.isEmpty) {
+                                                  return Text(
+                                                    text ?? '',
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 14,
+                                                      color:
+                                                          AppColor.mediumGray,
+                                                    ),
+                                                  );
+                                                }
+
+                                                final parts = raw.split(
+                                                  RegExp(
+                                                    r'\s+to\s+',
+                                                    caseSensitive: false,
+                                                  ),
+                                                );
+                                                if (parts.length == 1) {
+                                                  return Text(
+                                                    parts[0],
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: AppColor.black,
+                                                    ),
+                                                  );
+                                                }
+
+                                                return RichText(
+                                                  text: TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: parts[0],
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .black,
+                                                            ),
+                                                      ),
+                                                      TextSpan(
+                                                        text: '   to   ',
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .mediumGray,
+                                                            ),
+                                                      ),
+                                                      TextSpan(
+                                                        text: parts[1],
+                                                        style:
+                                                            AppTextStyles.mulish(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppColor
+                                                                  .black,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        )
+                                      : TextFormField(
+                                          controller: controller,
+                                          readOnly: true,
+                                          decoration: const InputDecoration(
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                ),
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : AbsorbPointer(
+                                absorbing: isDropdown || isDOB || readOnly,
+                                child: TextFormField(
+                                  focusNode: focusNode,
+                                  controller: controller,
+                                  readOnly: readOnly,
+                                  maxLines: maxLine,
+                                  maxLength: isMobile
+                                      ? 10
+                                      : (isAadhaar
+                                            ? 12
+                                            : (isPincode ? 6 : null)),
+                                  keyboardType:
+                                      (isMobile || isAadhaar || isPincode)
+                                      ? TextInputType.number
+                                      : (keyboardType ?? TextInputType.text),
+                                  inputFormatters: effectiveInputFormatters,
+                                  style: AppTextStyles.textWith700(
+                                    fontSize: 18,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    hintText: '',
+                                    counterText: '',
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    errorText: null,
+                                  ),
+                                  onChanged: (v) {
+                                    state.didChange(v);
+                                    onChanged?.call(v);
+                                  },
+                                ),
+                              ),
+                      ),
+
+                      if (verticalDivider)
+                        Container(
+                          width: 2,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.grey.shade200,
+                                Colors.grey.shade300,
+                                Colors.grey.shade200,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      if (text != null) ...[
+                        const SizedBox(width: 10),
+                        Text(
+                          text,
+                          style: AppTextStyles.mulish(
+                            fontWeight: textFontWeight,
+                            fontSize: textSize!,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 20),
+                      if (imagePath != null)
+                        InkWell(
+                          onTap: () {
+                            if (isDropdown) {
+                              return null;
+                            }
                             controller?.clear();
                             state.didChange('');
                             onDetailsTap?.call();
@@ -2173,7 +2611,7 @@ class CommonContainer {
   }) {
     return Container(
       width: 370,
-      margin: const EdgeInsets.only(right: 0, left: 4),
+      margin: const EdgeInsets.only(right: 0, left: 2),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
@@ -2404,6 +2842,816 @@ class CommonContainer {
           ),
         ),
       ],
+    );
+  }
+
+  static Widget attractCustomerCard({
+    required String title,
+    required String description,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(image: AssetImage(AppImages.containerBCImage2)),
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [AppColor.brightBlue, AppColor.electricSkyBlue],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    title,
+                    style: AppTextStyles.mulish(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: AppColor.scaffoldColor,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    description,
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColor.scaffoldColor,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  InkWell(
+                    onTap: onTap,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColor.scaffoldColor,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14.5,
+                          vertical: 6.5,
+                        ),
+                        child: Image.asset(
+                          AppImages.rightStickArrow,
+                          height: 20,
+                          color: AppColor.royalBlue,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 30),
+            Image.asset(AppImages.upgrade, height: 138),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget inquiryProductCard({
+    required String questionText,
+    required String productTitle,
+    required String rating,
+    bool isAds = false,
+    required String ratingCount,
+    required String priceText,
+    required String mrpText,
+    required String phoneImageAsset,
+    required String avatarAsset,
+    required String customerName,
+    required String timeText,
+    VoidCallback? onChatTap,
+
+    Color floralWhite = const Color(0xFFF9FAF6),
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: BoxDecoration(
+        color: floralWhite,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            questionText,
+            style: AppTextStyles.mulish(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          if (isAds == false) ...[
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: const ColoredBox(color: Color(0xFFF8FBF8)),
+                    ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              const Color(0xFF000000).withOpacity(0.02), // 0%
+                              const Color(0xFF000000).withOpacity(0.00), // 0%
+                              const Color(0xFF000000).withOpacity(0.00), // 3%
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 14,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  productTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.normal,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF31CC64),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            '$rating ',
+                                            style: AppTextStyles.mulish(
+                                              fontSize: 12,
+                                              color: AppColor.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const Icon(
+                                            Icons.star,
+                                            size: 14,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            ratingCount,
+                                            style: AppTextStyles.mulish(
+                                              fontSize: 12,
+                                              color: AppColor.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: const [
+                                    // price
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      priceText,
+                                      style: AppTextStyles.mulish(
+                                        fontSize: 16,
+                                        color: AppColor.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      mrpText,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF888888),
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.asset(
+                            phoneImageAsset,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundImage: AssetImage(avatarAsset),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DottedBorder(
+                    color: Colors.grey.shade300, // border color
+                    strokeWidth: 1.2, // border thickness
+                    dashPattern: const [6, 4], // [dash, gap]
+                    borderType: BorderType.RRect, // rounded rect
+                    radius: const Radius.circular(30),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            customerName,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.mulish(
+                              fontSize: 12,
+                              color: AppColor.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          timeText,
+                          style: AppTextStyles.mulish(
+                            fontSize: 12,
+                            color: AppColor.darkGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onChatTap,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 17, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Image.asset(
+                      AppImages.messageImage,
+                      color: AppColor.white,
+                      height: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: DottedBorder(
+                    color: Colors.grey.shade300, // border color
+                    strokeWidth: 1.2, // border thickness
+                    dashPattern: const [6, 4], // [dash, gap]
+                    borderType: BorderType.RRect, // rounded rect
+                    radius: const Radius.circular(30),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_rounded,
+                          color: AppColor.darkGrey,
+                          size: 13,
+                        ),
+                        Text(
+                          '100 M',
+                          style: AppTextStyles.mulish(
+                            color: AppColor.darkGrey,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(width: 15),
+                        Text(
+                          customerName,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.mulish(
+                            fontSize: 12,
+                            color: AppColor.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  timeText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: AppColor.gray84,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 25),
+            Text(
+              questionText,
+              style: AppTextStyles.mulish(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 25),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: const ColoredBox(color: Color(0xFFF8FBF8)),
+                    ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              const Color(0xFF000000).withOpacity(0.02), // 3%
+                              const Color(0xFF000000).withOpacity(0.00), // 0%
+                              const Color(0xFF000000).withOpacity(0.00), // 0%
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 14,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  productTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.normal,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF31CC64),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            '$rating ',
+                                            style: AppTextStyles.mulish(
+                                              fontSize: 12,
+                                              color: AppColor.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const Icon(
+                                            Icons.star,
+                                            size: 14,
+                                            color: Colors.white,
+                                          ),
+                                          Text(
+                                            ratingCount,
+                                            style: AppTextStyles.mulish(
+                                              fontSize: 12,
+                                              color: AppColor.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: const [
+                                    // price
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      priceText,
+                                      style: AppTextStyles.mulish(
+                                        fontSize: 16,
+                                        color: AppColor.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      mrpText,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF888888),
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.asset(
+                            phoneImageAsset,
+                            width: 100,
+                            height: 110,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 25),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Reply to Enquiry",
+                        style: AppTextStyles.mulish(
+                          color: AppColor.darkGrey,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        "Report",
+                        style: AppTextStyles.mulish(
+                          color: AppColor.red1,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Stack(
+                              children: [
+                                Image.asset(
+                                  AppImages.imageContainer1,
+                                  width: double.infinity,
+                                  height: 150,
+                                  fit: BoxFit.cover,
+                                ),
+                                Positioned(
+                                  right: 8,
+                                  top: 8,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    padding: const EdgeInsets.all(5),
+                                    child: Image.asset(
+                                      AppImages.closeImage,
+                                      height: 12,
+                                      color: AppColor.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Message Text
+                  Text(
+                    "We have lot more models in best price, please visit our showroom",
+                    style: AppTextStyles.mulish(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Letter count
+                  Text(
+                    "10 Letters left",
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      color: AppColor.darkGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Price Box
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColor.leftArrow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          "My Price",
+                          style: AppTextStyles.mulish(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Container(
+                          width: 1.5,
+                          height: 23,
+                          decoration: BoxDecoration(
+                            color: AppColor.borderLightGrey,
+                            // gradient: LinearGradient(
+                            //   begin: Alignment.topCenter,
+                            //   end: Alignment.bottomCenter,
+                            //   colors: [
+                            //     Colors.grey.shade200,
+                            //     Colors.grey.shade300,
+                            //     Colors.grey.shade200,
+                            //   ],
+                            // ),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          "2750",
+                          style: AppTextStyles.mulish(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Image.asset(AppImages.question, height: 13),
+                      ),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          "Give less price than quoted price to attract more customers easily.",
+                          style: AppTextStyles.mulish(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.gray84,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColor.iceBlue,
+                            border: Border.all(color: AppColor.iceBlue),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(AppImages.gallery, height: 19),
+                              SizedBox(width: 10),
+                              Text(
+                                "Replace Image",
+                                style: AppTextStyles.mulish(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColor.skyBlue,
+                            border: Border.all(color: AppColor.iceBlue),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                AppImages.messageImage,
+                                height: 19,
+                                color: AppColor.white,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Send",
+                                style: AppTextStyles.mulish(
+                                  color: AppColor.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Footer
+        ],
+      ),
+    );
+  }
+
+  static Widget offerTile(String title, String count) {
+    return Container(
+      width: 130,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: AppTextStyles.mulish(color: AppColor.gray84)),
+            const SizedBox(height: 5),
+            Text(
+              count,
+              style: AppTextStyles.mulish(
+                fontSize: 18,
+                color: AppColor.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Image.asset(
+                AppImages.rightStickArrow,
+                color: AppColor.black,
+                height: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
