@@ -209,6 +209,9 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                 child: Column(
                   children: [
                     CommonContainer.containerTitle(
+                      context: context,
+                      infoMessage:
+                          'Please upload a clear photo of your shop signboard showing the name clearly.',
                       title: 'Sign Board Photo',
                       image: AppImages.iImage,
                     ),
@@ -216,15 +219,21 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                     _addImageContainer(index: 0),
                     SizedBox(height: 25),
                     CommonContainer.containerTitle(
+                      context: context,
                       title: 'Shop Outside Photo',
                       image: AppImages.iImage,
+                      infoMessage:
+                      'Please upload a clear photo of your shop signboard showing the name clearly.',
                     ),
                     SizedBox(height: 10),
                     _addImageContainer(index: 1),
                     SizedBox(height: 25),
                     CommonContainer.containerTitle(
+                      context: context,
                       title: 'Shop Inside Photo',
                       image: AppImages.iImage,
+                      infoMessage:
+                      'Please upload a clear photo of your shop signboard showing the name clearly.',
                     ),
                     SizedBox(height: 10),
                     _addImageContainer(index: 2),
