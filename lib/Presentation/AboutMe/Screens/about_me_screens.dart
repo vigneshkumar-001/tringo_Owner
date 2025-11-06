@@ -1,12 +1,13 @@
 import 'dart:ui';
 
-import 'package:fl_chart/fl_chart.dart';
+// import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../AddProduct/Screens/product_category_screens.dart';
 
 class AboutMeScreens extends StatefulWidget {
   const AboutMeScreens({super.key});
@@ -24,14 +25,12 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
     final offset = index * itemWidth - (itemWidth * 1.3);
 
     _scrollController.animateTo(
-      offset.clamp(
-        0.0,
-        _scrollController.position.maxScrollExtent,
-      ),
+      offset.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
+
   final tabs = [
     {'icon': AppImages.aboutMeFill, 'label': 'Shop Details'},
     {'icon': AppImages.analytics, 'label': 'Analytics'},
@@ -173,68 +172,67 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                 ),
               ),
               SizedBox(height: 20),
-          SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Row(
-                children: List.generate(tabs.length, (index) {
-                  final isSelected = selectedIndex == index;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => selectedIndex = index);
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _scrollToSelected(index);
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColor.white : AppColor.leftArrow,
-                          borderRadius: BorderRadius.circular(20),
-                          border: isSelected
-                              ? Border.all(
-                            color: AppColor.black,
-                            width: 2,
-                          )
-                              : null,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 15,
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              tabs[index]['icon']!,
-                              height: 20,
+              SingleChildScrollView(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    children: List.generate(tabs.length, (index) {
+                      final isSelected = selectedIndex == index;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => selectedIndex = index);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _scrollToSelected(index);
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColor.black
-                                  : AppColor.gray84,
+                                  ? AppColor.white
+                                  : AppColor.leftArrow,
+                              borderRadius: BorderRadius.circular(20),
+                              border: isSelected
+                                  ? Border.all(color: AppColor.black, width: 2)
+                                  : null,
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              tabs[index]['label']!,
-                              style: AppTextStyles.mulish(
-                                fontWeight: FontWeight.bold,
-                                color: isSelected
-                                    ? AppColor.black
-                                    : AppColor.gray84,
-                              ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 15,
                             ),
-                          ],
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  tabs[index]['icon']!,
+                                  height: 20,
+                                  color: isSelected
+                                      ? AppColor.black
+                                      : AppColor.gray84,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  tabs[index]['label']!,
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected
+                                        ? AppColor.black
+                                        : AppColor.gray84,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }),
+                      );
+                    }),
+                  ),
+                ),
               ),
-            ),
-          ),
               const SizedBox(height: 15),
 
               // ---------- SELECTED CONTENT ----------
@@ -389,7 +387,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                             child: Row(
                               children: [
                                 Text(
-                                  'Edit Shop Details',
+                                  'Edit Shop Photos',
                                   style: AppTextStyles.mulish(
                                     color: AppColor.resendOtp,
                                     fontWeight: FontWeight.bold,
@@ -416,7 +414,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                             child: Row(
                               children: [
                                 Text(
-                                  'Edit Shop Details',
+                                  'Edit Shop Location in Map',
                                   style: AppTextStyles.mulish(
                                     color: AppColor.resendOtp,
                                     fontWeight: FontWeight.bold,
@@ -670,7 +668,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
 
               child: SizedBox(
                 height: 180,
-                child: LineChart(_lineChartData(blue)),
+                // child: LineChart(_lineChartData(blue)),
               ),
             ),
             const SizedBox(height: 12),
@@ -1351,32 +1349,43 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
               ],
             ),
             SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(),
-                color: AppColor.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 15.5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    AppImages.addListImage,
-                    height: 22,
-                    color: AppColor.darkBlue,
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductCategoryScreens(),
                   ),
-                  SizedBox(width: 9),
-                  Text(
-                    'Add Product',
-                    style: AppTextStyles.mulish(
-                      color: AppColor.black,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                  color: AppColor.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 15.5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      AppImages.addListImage,
+                      height: 22,
+                      color: AppColor.darkBlue,
                     ),
-                  ),
-                ],
+                    SizedBox(width: 9),
+                    Text(
+                      'Add Product',
+                      style: AppTextStyles.mulish(
+                        color: AppColor.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -1668,7 +1677,6 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
             ),
             const SizedBox(height: 20),
 
-
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -1679,7 +1687,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                     color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
-                    spreadRadius: 15
+                    spreadRadius: 15,
                   ),
                 ],
               ),
@@ -2194,52 +2202,52 @@ width: double.infinity,
     );
   }*/
 
-  LineChartData _lineChartData(Color blue) {
-    final points = <FlSpot>[
-      const FlSpot(0, 6),
-      const FlSpot(1, 6.8),
-      const FlSpot(2, 6.4),
-      const FlSpot(3, 4.2),
-      const FlSpot(4, 6.9),
-      const FlSpot(5, 8.1),
-      const FlSpot(6, 7.2),
-    ];
-
-    return LineChartData(
-      gridData: FlGridData(show: false),
-      titlesData: FlTitlesData(show: false),
-      borderData: FlBorderData(show: false),
-      minX: 0,
-      maxX: 6,
-      minY: 0,
-      maxY: 10,
-      lineBarsData: [
-        LineChartBarData(
-          spots: points,
-          isCurved: true,
-          barWidth: 3,
-          color: blue,
-          dotData: const FlDotData(show: false),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                blue.withOpacity(0.22),
-                blue.withOpacity(0.22),
-                blue.withOpacity(0.20),
-
-                blue.withOpacity(0.15),
-                blue.withOpacity(0.06),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // LineChartData _lineChartData(Color blue) {
+  //   final points = <FlSpot>[
+  //     const FlSpot(0, 6),
+  //     const FlSpot(1, 6.8),
+  //     const FlSpot(2, 6.4),
+  //     const FlSpot(3, 4.2),
+  //     const FlSpot(4, 6.9),
+  //     const FlSpot(5, 8.1),
+  //     const FlSpot(6, 7.2),
+  //   ];
+  //
+  //   return LineChartData(
+  //     gridData: FlGridData(show: false),
+  //     titlesData: FlTitlesData(show: false),
+  //     borderData: FlBorderData(show: false),
+  //     minX: 0,
+  //     maxX: 6,
+  //     minY: 0,
+  //     maxY: 10,
+  //     lineBarsData: [
+  //       LineChartBarData(
+  //         spots: points,
+  //         isCurved: true,
+  //         barWidth: 3,
+  //         color: blue,
+  //         dotData: const FlDotData(show: false),
+  //         belowBarData: BarAreaData(
+  //           show: true,
+  //           gradient: LinearGradient(
+  //             begin: Alignment.topCenter,
+  //             end: Alignment.bottomCenter,
+  //             colors: [
+  //               blue.withOpacity(0.22),
+  //               blue.withOpacity(0.22),
+  //               blue.withOpacity(0.20),
+  //
+  //               blue.withOpacity(0.15),
+  //               blue.withOpacity(0.06),
+  //               Colors.transparent,
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 }
 
 class _MetricCard extends StatelessWidget {

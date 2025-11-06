@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
@@ -26,6 +27,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       TextEditingController();
   final TextEditingController descriptionTamilController =
       TextEditingController();
+  final TextEditingController _gpsController = TextEditingController();
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
   final List<String> cities = ['Madurai', 'Chennai', 'Coimbatore'];
@@ -60,6 +62,55 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       context,
       MaterialPageRoute(builder: (context) => ShopPhotoInfo()),
     );
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location services are disabled.')),
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied.')),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permissions are permanently denied.'),
+          ),
+        );
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        _gpsController.text =
+            '${position.latitude.toStringAsFixed(6)}, '
+            '${position.longitude.toStringAsFixed(6)}';
+      });
+
+      debugPrint('📍 Current Location → ${_gpsController.text}');
+    } catch (e) {
+      debugPrint('❌ Error getting location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to get current location.')),
+      );
+    }
   }
 
   @override
@@ -369,14 +420,33 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        text: 'Get by GPS',
-                        textColor: AppColor.skyBlue,
-                        textFontWeight: FontWeight.w700,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a GPS Location'
-                            : null,
+
+                      GestureDetector(
+                        onTap: _getCurrentLocation,
+                        child: AbsorbPointer(
+                          // prevent manual editing, tap triggers GPS
+                          child: CommonContainer.fillingContainer(
+                            controller: _gpsController,
+                            text: 'Get by GPS',
+                            textColor: _gpsController.text.isEmpty
+                                ? AppColor.skyBlue
+                                : AppColor.mildBlack,
+                            textFontWeight: FontWeight.w700,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Please get GPS location'
+                                : null,
+                          ),
+                        ),
                       ),
+
+                      // CommonContainer.fillingContainer(
+                      //   text: 'Get by GPS',
+                      //   textColor: AppColor.skyBlue,
+                      //   textFontWeight: FontWeight.w700,
+                      //   validator: (value) => value == null || value.isEmpty
+                      //       ? 'Please select a GPS Location'
+                      //       : null,
+                      // ),
                       SizedBox(height: 25),
                       Text(
                         'Primary Mobile Number',

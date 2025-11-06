@@ -61,7 +61,10 @@ class _MenuScreensState extends State<MenuScreens> {
             physics: BouncingScrollPhysics(),
             child: Column(
               children: [
-                CommonContainer.topLeftArrow(isMenu: true, onTap: () {}),
+                CommonContainer.topLeftArrow(
+                  isMenu: true,
+                  onTap: () => Navigator.pop(context),
+                ),
                 SizedBox(height: 20),
                 CommonContainer.attractCustomerCard(
                   title: 'Attract More Customers',

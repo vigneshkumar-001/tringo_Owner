@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+
+import '../../../Core/Widgets/qr_scanner_page.dart';
 
 class EnquiryScreens extends StatefulWidget {
   const EnquiryScreens({super.key});
@@ -13,6 +16,27 @@ class EnquiryScreens extends StatefulWidget {
 
 class _EnquiryScreensState extends State<EnquiryScreens> {
   int selectedIndex = 0; // 0 = Unanswered, 1 = Answered
+
+  Future<void> _openQrScanner() async {
+    var status = await Permission.camera.request();
+    if (status.isGranted) {
+      final result = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (_) => const QRScannerPage()),
+      );
+
+      if (result != null && result.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Scanned: $result')));
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Camera permission denied')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,25 +51,28 @@ class _EnquiryScreensState extends State<EnquiryScreens> {
                   children: [
                     Expanded(
                       flex: 1,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 15,
-                        ),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.shadowBlue,
-                              blurRadius: 5,
-                              offset: const Offset(0, 1),
-                              spreadRadius: 0,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Image.asset(AppImages.qr_code, height: 23),
+                      child: GestureDetector(
+                        onTap: _openQrScanner,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 15,
+                          ),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColor.shadowBlue,
+                                blurRadius: 5,
+                                offset: const Offset(0, 1),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Image.asset(AppImages.qr_code, height: 23),
+                          ),
                         ),
                       ),
                     ),
