@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 
-import 'package:fl_chart/fl_chart.dart';
+// import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Widgets/qr_scanner_page.dart';
 
 class HomeScreens extends StatefulWidget {
   const HomeScreens({super.key});
@@ -19,6 +21,27 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreensState extends State<HomeScreens> {
   int selectedIndex = 0; // 0 = Unanswered, 1 = Answered
   bool isTexTiles = true;
+
+  Future<void> _openQrScanner() async {
+    var status = await Permission.camera.request();
+    if (status.isGranted) {
+      final result = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (_) => const QRScannerPage()),
+      );
+
+      if (result != null && result.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Scanned: $result')));
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Camera permission denied')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,25 +56,28 @@ class _HomeScreensState extends State<HomeScreens> {
                   children: [
                     Expanded(
                       flex: 1,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 15,
-                        ),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.shadowBlue,
-                              blurRadius: 5,
-                              offset: const Offset(0, 1),
-                              spreadRadius: 0,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Image.asset(AppImages.qr_code, height: 23),
+                      child: GestureDetector(
+                        onTap: _openQrScanner,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 15,
+                          ),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColor.shadowBlue,
+                                blurRadius: 5,
+                                offset: const Offset(0, 1),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Image.asset(AppImages.qr_code, height: 23),
+                          ),
                         ),
                       ),
                     ),
@@ -177,136 +203,135 @@ class _HomeScreensState extends State<HomeScreens> {
                           const SizedBox(height: 20),
 
                           // Chart
-                          SizedBox(
-                            height: 240,
-                            child: LineChart(
-                              LineChartData(
-                                betweenBarsData: [
-                                  BetweenBarsData(
-                                    fromIndex: 1,
-                                    toIndex: 0,
-                                    // color: [
-                                    //   Colors.blueAccent.withOpacity(0.8),
-                                    //   Colors.blueAccent.withOpacity(0.3)
-                                    // ],
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.white.withOpacity(0.2),
-                                        Colors.white.withOpacity(0.2),
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                  ),
-                                ],
-                                gridData: FlGridData(
-                                  drawVerticalLine: false,
-                                  getDrawingHorizontalLine: (value) => FlLine(
-                                    color: Colors.white12,
-                                    strokeWidth: 1,
-                                  ),
-                                ),
-                                titlesData: FlTitlesData(
-                                  rightTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  topTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      reservedSize: 30,
-                                      interval: 100,
-                                      getTitlesWidget: (value, meta) {
-                                        return Text(
-                                          value.toInt().toString(),
-                                          style: GoogleFonts.mulish(
-                                            color: Colors.white54,
-                                            fontSize: 10,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                borderData: FlBorderData(show: false),
-                                minX: 0,
-                                maxX: 4,
-                                minY: 0,
-                                maxY: 600,
-                                lineBarsData: [
-                                  // Premium User Line
-                                  LineChartBarData(
-                                    spots: const [
-                                      FlSpot(0, 400),
-                                      FlSpot(1, 500),
-                                      FlSpot(2, 600),
-                                      FlSpot(3, 450),
-                                      FlSpot(4, 500),
-                                    ],
-                                    isCurved: false,
-                                    color: Colors.white70,
-                                    barWidth: 0.5,
-                                    belowBarData: BarAreaData(show: false),
-                                    dotData: FlDotData(
-                                      show: true,
-                                      getDotPainter:
-                                          (spot, percent, barData, index) {
-                                            return FlDotCirclePainter(
-                                              color: Colors.white,
-                                              radius: spot.y == 600 ? 4 : 2,
-                                              strokeWidth: 0,
-                                            );
-                                          },
-                                    ),
-                                  ),
-
-                                  // Your Reach Line
-                                  LineChartBarData(
-                                    spots: const [
-                                      FlSpot(0, 250),
-                                      FlSpot(1, 200),
-                                      FlSpot(2, 320),
-                                      FlSpot(3, 260),
-                                      FlSpot(4, 300),
-                                    ],
-                                    isCurved: false,
-                                    color: Colors.blueAccent,
-                                    barWidth: 0.5,
-                                    // belowBarData: BarAreaData(
-                                    //   show: true,
-                                    //   gradient: LinearGradient(
-                                    //     colors: [
-                                    //       Colors.blueAccent.withOpacity(0.6),
-                                    //       Colors.transparent,
-                                    //     ],
-                                    //     begin: Alignment.topCenter,
-                                    //     end: Alignment.bottomCenter,
-                                    //   ),
-                                    // ),
-                                    dotData: FlDotData(
-                                      show: true,
-                                      getDotPainter:
-                                          (spot, percent, barData, index) {
-                                            return FlDotCirclePainter(
-                                              color: spot.y == 320
-                                                  ? Colors.blueAccent
-                                                  : Colors.white54,
-                                              radius: spot.y == 320 ? 5 : 2,
-                                              strokeWidth: 0,
-                                            );
-                                          },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
+                          // SizedBox(
+                          //   height: 240,
+                          //   child: LineChart(
+                          //     LineChartData(
+                          //       betweenBarsData: [
+                          //         BetweenBarsData(
+                          //           fromIndex: 1,
+                          //           toIndex: 0,
+                          //           // color: [
+                          //           //   Colors.blueAccent.withOpacity(0.8),
+                          //           //   Colors.blueAccent.withOpacity(0.3)
+                          //           // ],
+                          //           gradient: LinearGradient(
+                          //             colors: [
+                          //               Colors.white.withOpacity(0.2),
+                          //               Colors.white.withOpacity(0.2),
+                          //             ],
+                          //             begin: Alignment.topCenter,
+                          //             end: Alignment.bottomCenter,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //       gridData: FlGridData(
+                          //         drawVerticalLine: false,
+                          //         getDrawingHorizontalLine: (value) => FlLine(
+                          //           color: Colors.white12,
+                          //           strokeWidth: 1,
+                          //         ),
+                          //       ),
+                          //       titlesData: FlTitlesData(
+                          //         rightTitles: const AxisTitles(
+                          //           sideTitles: SideTitles(showTitles: false),
+                          //         ),
+                          //         topTitles: const AxisTitles(
+                          //           sideTitles: SideTitles(showTitles: false),
+                          //         ),
+                          //         bottomTitles: AxisTitles(
+                          //           sideTitles: SideTitles(showTitles: false),
+                          //         ),
+                          //         leftTitles: AxisTitles(
+                          //           sideTitles: SideTitles(
+                          //             showTitles: true,
+                          //             reservedSize: 30,
+                          //             interval: 100,
+                          //             getTitlesWidget: (value, meta) {
+                          //               return Text(
+                          //                 value.toInt().toString(),
+                          //                 style: GoogleFonts.mulish(
+                          //                   color: Colors.white54,
+                          //                   fontSize: 10,
+                          //                 ),
+                          //               );
+                          //             },
+                          //           ),
+                          //         ),
+                          //       ),
+                          //       borderData: FlBorderData(show: false),
+                          //       minX: 0,
+                          //       maxX: 4,
+                          //       minY: 0,
+                          //       maxY: 600,
+                          //       lineBarsData: [
+                          //         // Premium User Line
+                          //         LineChartBarData(
+                          //           spots: const [
+                          //             FlSpot(0, 400),
+                          //             FlSpot(1, 500),
+                          //             FlSpot(2, 600),
+                          //             FlSpot(3, 450),
+                          //             FlSpot(4, 500),
+                          //           ],
+                          //           isCurved: false,
+                          //           color: Colors.white70,
+                          //           barWidth: 0.5,
+                          //           belowBarData: BarAreaData(show: false),
+                          //           dotData: FlDotData(
+                          //             show: true,
+                          //             getDotPainter:
+                          //                 (spot, percent, barData, index) {
+                          //                   return FlDotCirclePainter(
+                          //                     color: Colors.white,
+                          //                     radius: spot.y == 600 ? 4 : 2,
+                          //                     strokeWidth: 0,
+                          //                   );
+                          //                 },
+                          //           ),
+                          //         ),
+                          //
+                          //         // Your Reach Line
+                          //         LineChartBarData(
+                          //           spots: const [
+                          //             FlSpot(0, 250),
+                          //             FlSpot(1, 200),
+                          //             FlSpot(2, 320),
+                          //             FlSpot(3, 260),
+                          //             FlSpot(4, 300),
+                          //           ],
+                          //           isCurved: false,
+                          //           color: Colors.blueAccent,
+                          //           barWidth: 0.5,
+                          //           // belowBarData: BarAreaData(
+                          //           //   show: true,
+                          //           //   gradient: LinearGradient(
+                          //           //     colors: [
+                          //           //       Colors.blueAccent.withOpacity(0.6),
+                          //           //       Colors.transparent,
+                          //           //     ],
+                          //           //     begin: Alignment.topCenter,
+                          //           //     end: Alignment.bottomCenter,
+                          //           //   ),
+                          //           // ),
+                          //           dotData: FlDotData(
+                          //             show: true,
+                          //             getDotPainter:
+                          //                 (spot, percent, barData, index) {
+                          //                   return FlDotCirclePainter(
+                          //                     color: spot.y == 320
+                          //                         ? Colors.blueAccent
+                          //                         : Colors.white54,
+                          //                     radius: spot.y == 320 ? 5 : 2,
+                          //                     strokeWidth: 0,
+                          //                   );
+                          //                 },
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
                           const SizedBox(height: 20),
 
                           SingleChildScrollView(

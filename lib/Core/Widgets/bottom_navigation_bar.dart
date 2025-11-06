@@ -182,7 +182,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
                 BottomNavigationBarItem(
                   icon: Image.asset(AppImages.offer, height: 26),
                   activeIcon: Image.asset(AppImages.offerFill, height: 30),
-                  label: 'Offer',
+                  label: 'Offers',
                 ),
                 BottomNavigationBarItem(
                   icon: Image.asset(AppImages.aboutMe, height: 26),

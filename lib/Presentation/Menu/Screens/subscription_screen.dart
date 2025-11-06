@@ -28,17 +28,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               SizedBox(height: 5),
               Row(
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.border),
-                      shape: BoxShape.circle,
-                      color: AppColor.white,
-                    ),
-                    child: Image.asset(
-                      AppImages.leftArrow,
-                      height: 15,
-                      color: AppColor.black,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColor.border),
+                        shape: BoxShape.circle,
+                        color: AppColor.white,
+                      ),
+                      child: Image.asset(
+                        AppImages.leftArrow,
+                        height: 15,
+                        color: AppColor.black,
+                      ),
                     ),
                   ),
                 ],

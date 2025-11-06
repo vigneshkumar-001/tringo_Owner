@@ -18,7 +18,8 @@ class _SearchKeywordState extends State<SearchKeyword> {
   final TextEditingController _searchKeywordController =
       TextEditingController();
 
-  final List<String> _keywords = [
+  final List<String> _keywords = []; // Only added/typed ones
+  final List<String> _recommendedKeywords = [
     'Saravana store',
     'Textile near me',
     'Tshirt Sale',
@@ -26,14 +27,37 @@ class _SearchKeywordState extends State<SearchKeyword> {
     'Trending costumes',
   ];
 
-  void _onKeywordTap(String keyword) {
-    _searchKeywordController.text = keyword;
+  bool _showRecommended = false;
+
+  void _addKeyword(String keyword) {
+    final text = keyword.trim();
+
+    if (text.isEmpty) return;
+
+    if (_keywords.contains(text)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Keyword already added')));
+      return;
+    }
+
+    if (_keywords.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can only add up to 5 keywords')),
+      );
+      return;
+    }
+
+    setState(() => _keywords.add(text));
+  }
+
+  void _onSubmitted() {
+    _addKeyword(_searchKeywordController.text);
+    _searchKeywordController.clear();
   }
 
   void _removeKeyword(String keyword) {
-    setState(() {
-      _keywords.remove(keyword);
-    });
+    setState(() => _keywords.remove(keyword));
   }
 
   @override
@@ -42,12 +66,11 @@ class _SearchKeywordState extends State<SearchKeyword> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     CommonContainer.topLeftArrow(
@@ -65,6 +88,7 @@ class _SearchKeywordState extends State<SearchKeyword> {
                 ),
               ),
               SizedBox(height: 35),
+
               CommonContainer.registerTopContainer(
                 image: AppImages.shopInfoImage,
                 text: 'Shop Info',
@@ -72,28 +96,60 @@ class _SearchKeywordState extends State<SearchKeyword> {
                 gradientColor: AppColor.lightSkyBlue,
                 value: 0.8,
               ),
+
               SizedBox(height: 30),
+
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    //  Search Keyword title
                     CommonContainer.containerTitle(
+                      context: context,
                       title: 'Search Keyword',
                       image: AppImages.iImage,
+                      infoMessage:
+                          'Please upload a clear photo of your shop signboard showing the name clearly.',
                     ),
                     SizedBox(height: 10),
-                    CommonContainer.fillingContainer(
-                      imagePath: AppImages.downArrow,
-                      verticalDivider: false,
+
+                    // Typing Field
+                    TextField(
                       controller: _searchKeywordController,
-                      isDropdown: true,
-                      // dropdownItems: categories,
-                      context: context,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Please select a Search Keyword'
-                          : null,
+                      enabled: _keywords.length < 5,
+                      onSubmitted: (_) => _onSubmitted(),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: AppColor.lightGray,
+                        hintText: _keywords.length >= 5
+                            ? 'Keyword limit reached'
+                            : 'Enter keyword',
+                        hintStyle: AppTextStyles.mulish(
+                          fontSize: 14,
+                          color: AppColor.gray84,
+                        ),
+                        suffixIcon: _searchKeywordController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.clear,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () =>
+                                    _searchKeywordController.clear(),
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
+
                     SizedBox(height: 10),
                     Text(
                       'Maximum 5 keywords acceptable',
@@ -102,78 +158,131 @@ class _SearchKeywordState extends State<SearchKeyword> {
                         color: AppColor.darkGrey,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 15),
+
+                    // Show typed/added keywords only
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
                       children: _keywords.map((keyword) {
-                        return GestureDetector(
-                          onTap: () => _onKeywordTap(keyword),
-                          child: DottedBorder(
-                            borderType: BorderType.RRect,
-                            radius: const Radius.circular(12),
-                            color: AppColor.lightSilver,
-                            strokeWidth: 1,
-                            dashPattern: const [3, 2],
-                            padding: const EdgeInsets.all(1),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 9,
-                                horizontal: 16,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    keyword,
-                                    style: AppTextStyles.mulish(
-                                      color: AppColor.gray84,
+                        return DottedBorder(
+                          borderType: BorderType.RRect,
+                          radius: Radius.circular(12),
+                          color: AppColor.black,
+                          strokeWidth: 1,
+                          dashPattern: [3, 2],
+                          padding: EdgeInsets.all(1),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 9,
+                              horizontal: 16,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  keyword,
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.black,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () => _removeKeyword(keyword),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColor.leftArrow,
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    padding: const EdgeInsets.all(9.5),
+                                    child: Image.asset(
+                                      AppImages.closeImage,
+                                      height: 11,
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () => _removeKeyword(keyword),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColor.leftArrow,
-                                        borderRadius: BorderRadius.circular(9),
-                                      ),
-                                      padding: const EdgeInsets.all(9.5),
-                                      child: Image.asset(
-                                        AppImages.closeImage,
-                                        height: 11,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       }).toList(),
                     ),
+
+                    SizedBox(height: 20),
+
+                    //  Toggle Button (show/hide recommended)
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        _showRecommended = !_showRecommended;
+                      }),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColor.brightBlue,
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          child: Text(
+                            _showRecommended
+                                ? 'Hide Recommended Keywords'
+                                : 'View Recommended Keywords',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.scaffoldColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    //  Recommended Keywords (only when toggled)
+                    if (_showRecommended)
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: _recommendedKeywords.map((keyword) {
+                          return GestureDetector(
+                            onTap: () => _addKeyword(keyword),
+                            child: DottedBorder(
+                              borderType: BorderType.RRect,
+                              radius: const Radius.circular(12),
+                              color: AppColor.lightSilver,
+                              strokeWidth: 1,
+                              dashPattern: const [3, 2],
+                              padding: const EdgeInsets.all(1),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 9,
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  keyword,
+                                  style: AppTextStyles.mulish(
+                                    color: AppColor.gray84,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
                     SizedBox(height: 30),
+
+                    //  Save & Continue
                     CommonContainer.button(
                       buttonColor: AppColor.black,
                       onTap: () {
-                        // Validate before navigation (optional)
-                        // if (_searchKeywordController.text.isEmpty) {
-                        //   ScaffoldMessenger.of(context).showSnackBar(
-                        //     const SnackBar(
-                        //       content: Text(
-                        //         'Please select or enter a search keyword.',
-                        //       ),
-                        //       backgroundColor: Colors.red,
-                        //     ),
-                        //   );
-                        //   return;
-                        // }
-
-                        // Navigate to next screen
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProductCategoryScreens(),
+                            builder: (context) => ProductCategoryScreens(),
                           ),
                         );
                       },
@@ -188,42 +297,6 @@ class _SearchKeywordState extends State<SearchKeyword> {
                       imgHeight: 20,
                     ),
                     SizedBox(height: 36),
-                    // DottedBorder(
-                    //   borderType: BorderType.RRect,
-                    //   radius: const Radius.circular(20),
-                    //   color: AppColor.lightSilver,
-                    //   strokeWidth: 1.5,
-                    //   dashPattern: const [8, 4],
-                    //   padding: const EdgeInsets.all(1),
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.symmetric(vertical: 11.5),
-                    //     child: Row(
-                    //       mainAxisAlignment: MainAxisAlignment.center,
-                    //       children: [
-                    //         Text(
-                    //           'Saravana store',
-                    //           style: AppTextStyles.mulish(
-                    //             color: AppColor.gray84,
-                    //           ),
-                    //         ),
-                    //         SizedBox(width: 10),
-                    //         Container(
-                    //           decoration: BoxDecoration(
-                    //             color: AppColor.leftArrow,
-                    //             borderRadius: BorderRadius.circular(9),
-                    //           ),
-                    //           child: Padding(
-                    //             padding: const EdgeInsets.all(9.5),
-                    //             child: Image.asset(
-                    //               AppImages.closeImage,
-                    //               height: 11,
-                    //             ),
-                    //           ),
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
