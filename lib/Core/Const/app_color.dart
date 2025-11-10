@@ -3,7 +3,9 @@ import 'dart:ui';
 class AppColor {
   static const scaffoldColor = Color(0xFFFFFFFF);
   static const white = Color(0xFFFFFFFF);
+  static const white3 = Color(0xffF1F1F1);
   static const mediumGray = Color(0xff777777);
+  static const ghostWhite = Color(0xffF5F7F9);
   static const darkGrey = Color(0xffA1A1A1);
   static const brightGray = Color(0xffEDF1F4);
   static const softWhiteGray = Color(0xffF6F6F6);
@@ -26,9 +28,14 @@ class AppColor {
   static const blueGradient1 = Color(0xff0797FD);
   static const lowLightBlue = Color(0xffE4F4FF);
   static const mediumGreen = Color(0xFF31CC64);
+  static const teaGreen = Color(0xffE8F3D2);
   static const green = Color(0xff31CC64);
+  static const paleMintGreen = Color(0xffE6FEDF);
+  static const deepForestGreen = Color(0xff202B0A);
   static const lightGreen = Color(0xffE6F9EC);
+  static const red1 = Color(0xffDA4141);
   static const red = Color(0xffF5465C);
+  static const mistyRose = Color(0xffFFEFEF);
   static const resendOtp = Color(0xff2C8DD1);
   static const lightSilver = Color(0xffD0D0D0);
   static const lavenderMist = Color(0xffEBEFFF);
@@ -36,7 +43,8 @@ class AppColor {
   static const surpriseOfferArrow = Color(0xff648E15);
   static const floralWhite = Color(0xffF5F9F5);
   static const papayaWhip = Color(0xffFFEFDB);
-  static const white3 = Color(0xffF1F1F1);
-  static const red1 = Color(0xffDA4141);
   static const border = Color(0xffE7EBEE);
+  static const darkCoffee = Color(0xff2F1D0B);
+  static const lightApricot = Color(0xffFFECD0);
+  static const slatePurple = Color(0xff615E83);
 }
