@@ -53,7 +53,6 @@ class AppImages {
   static String reviewImage = 'Assets/Images/Reviews_Image.png';
   static String dratImage = 'Assets/Images/Dart_Image.png';
   static String containerBCImage2 = 'Assets/Images/Container Bc Image 2.png';
-
   static String home = 'Assets/Images/home.png';
   static String homeFill = 'Assets/Images/homeFill.png';
   static String enquiry = 'Assets/Images/enquiry.png';
@@ -66,15 +65,18 @@ class AppImages {
   static String fan = 'Assets/Images/fan.png';
   static String analytics = 'Assets/Images/analytics.png';
   static String groupPeople = 'Assets/Images/groupPeople.png';
-
+  static String blackSurprise = 'Assets/Images/black Surprise.png';
+  static String blackAppOffers = 'Assets/Images/Black App Offers.png';
   static String loc = 'Assets/Images/loc.png';
   static String hand = 'Assets/Images/hand.png';
   static String enqury2 = 'Assets/Images/enqury2.png';
-
   static String subscription = 'Assets/Images/subscription.png';
   static String support = 'Assets/Images/support.png';
   static String accountRelated = 'Assets/Images/accountRelated.png';
   static String privacypolicy = 'Assets/Images/privacypolicy.png';
   static String surpriseOffer = 'Assets/Images/surpriseOffer.png';
   static String crown = 'Assets/Images/crown.png';
+  static String editImage = 'Assets/Images/Edit Image.png';
+  static String customerImage1 = 'Assets/Images/Customer Image 1.png';
+  static String customerImage2 = 'Assets/Images/Customer Image 2.png';
 }

@@ -69,21 +69,28 @@ class _MenuScreensState extends State<MenuScreens> {
                 CommonContainer.attractCustomerCard(
                   title: 'Attract More Customers',
                   description: 'Unlock premium to attract more customers',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SubscriptionScreen(),
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(height: 20),
 
                 for (int i = 0; i < titles.length; i++) ...[
                   InkWell(
-                    onTap: () {
-                      print('Tapped on ${titles[i]}');
-                      // Example: Navigate or trigger Bloc here
-                      // Navigator.push(...);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => screens[i]),
-                      );
-                    },
+                    // onTap: () {
+                    //   print('Tapped on ${titles[i]}');
+                    //   // Example: Navigate or trigger Bloc here
+                    //   // Navigator.push(...);
+                    //   Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(builder: (_) => screens[i]),
+                    //   );
+                    // },
                     child: Row(
                       children: [
                         Container(
@@ -126,18 +133,48 @@ class _MenuScreensState extends State<MenuScreens> {
 
                     const SizedBox(height: 15),
                   ] else if (i == 8) ...[
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 25),
                     CommonContainer.horizonalDivider(),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
                   ] else
                     const SizedBox(height: 18),
                 ],
 
                 CommonContainer.button(
-                  onTap: () {},
+                  onTap: () async {
+                    final shouldLogout = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: AppColor.white,
+                        title: Text('Confirm Logout'),
+                        content: Text('Are you sure you want to logout?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(context, false), // cancel
+                            child: Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(context, true), // confirm
+                            child: Text(
+                              'Logout',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (shouldLogout ?? false) {
+                      // Perform your logout logic here
+                      // For example: AuthController.logout() or Navigator.pushReplacement to login screen
+                      print('User logged out');
+                    }
+                  },
                   text: Text(
                     'Logout',
-                    style: AppTextStyles.mulish(color: AppColor.red1),
+                    style: AppTextStyles.mulish(color: AppColor.red1,fontWeight: FontWeight.w800,fontSize: 16),
                   ),
                   borderColor: AppColor.red1,
                   buttonColor: AppColor.white,

@@ -23,138 +23,271 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       body: SafeArea(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: ListView(
+          child: Column(
             children: [
-              SizedBox(height: 5),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColor.border),
-                        shape: BoxShape.circle,
-                        color: AppColor.white,
+              // Scrollable top part
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 25,
+                                vertical: 13,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColor.border),
+                                shape: BoxShape.circle,
+                                color: AppColor.white,
+                              ),
+                              child: Image.asset(
+                                AppImages.leftArrow,
+                                height: 15,
+                                color: AppColor.black,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Image.asset(
-                        AppImages.leftArrow,
-                        height: 15,
-                        color: AppColor.black,
+                      SizedBox(height: 10),
+                      Image.asset(
+                        AppImages.crown,
+                        height: 105,
+                        fit: BoxFit.contain,
                       ),
-                    ),
+                      SizedBox(height: 10),
+                      Text(
+                        "Unlock the Tringo’s",
+                        style: AppTextStyles.mulish(fontSize: 22),
+                      ),
+                      Text(
+                        "Super Power",
+                        style: AppTextStyles.mulish(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      _ComparisonCard(),
+                      SizedBox(height: 20),
+                      Center(
+                        child: Text(
+                          'Cancel Subscription Any time',
+                          style: AppTextStyles.mulish(color: AppColor.darkGrey),
+                        ),
+                      ),
+                      SizedBox(height: 25),
+                    ],
                   ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Column(
-                  children: [
-                    Image.asset(
-                      AppImages.crown,
-                      height: 105,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Unlock the Tringo’s",
-                      style: AppTextStyles.mulish(fontSize: 22),
-                    ),
-                    Text(
-                      "Super Power",
-                      style: AppTextStyles.mulish(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _ComparisonCard(),
-
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Text(
-                        'Cancel Subscription Any time',
-                        style: AppTextStyles.mulish(color: AppColor.darkGrey),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Billing options
-                    _BillingOptions(
-                      selected: _selectedBilling,
-                      onChanged: (i) => setState(() => _selectedBilling = i),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF0797FD),
-                              Color(0xFF07C8FD),
-                              Color(0xFF0797FD),
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubscriptionHistory(),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor:
-                                Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                              horizontal: 40,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Get Super Power Now',
-                                style: AppTextStyles.mulish(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
                 ),
               ),
+              SizedBox(height: 15),
+              // Fixed bottom part
+              _BillingOptions(
+                selected: _selectedBilling,
+                onChanged: (i) => setState(() => _selectedBilling = i),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 5),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF0797FD),
+                        Color(0xFF07C8FD),
+                        Color(0xFF0797FD),
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SubscriptionHistory(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 40,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Get Super Power Now',
+                          style: AppTextStyles.mulish(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
+
+    ///
+    //   Scaffold(
+    //   backgroundColor: Color(0xFFF3F3F3),
+    //   body: SafeArea(
+    //     child: ConstrainedBox(
+    //       constraints: const BoxConstraints(maxWidth: 420),
+    //       child: ListView(
+    //         children: [
+    //           Row(
+    //             children: [
+    //               GestureDetector(
+    //                 onTap: () => Navigator.pop(context),
+    //                 child: Container(
+    //                   padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
+    //                   decoration: BoxDecoration(
+    //                     border: Border.all(color: AppColor.border),
+    //                     shape: BoxShape.circle,
+    //                     color: AppColor.white,
+    //                   ),
+    //                   child: Image.asset(
+    //                     AppImages.leftArrow,
+    //                     height: 15,
+    //                     color: AppColor.black,
+    //                   ),
+    //                 ),
+    //               ),
+    //             ],
+    //           ),
+    //           Column(
+    //             children: [
+    //               Image.asset(
+    //                 AppImages.crown,
+    //                 height: 105,
+    //                 fit: BoxFit.contain,
+    //               ),
+    //                SizedBox(height: 10),
+    //               Text(
+    //                 "Unlock the Tringo’s",
+    //                 style: AppTextStyles.mulish(fontSize: 22),
+    //               ),
+    //               Text(
+    //                 "Super Power",
+    //                 style: AppTextStyles.mulish(
+    //                   fontSize: 22,
+    //                   fontWeight: FontWeight.bold,
+    //                 ),
+    //               ),
+    //                SizedBox(height: 20),
+    //               _ComparisonCard(),
+    //
+    //                SizedBox(height: 20),
+    //               Center(
+    //                 child: Text(
+    //                   'Cancel Subscription Any time',
+    //                   style: AppTextStyles.mulish(color: AppColor.darkGrey),
+    //                 ),
+    //               ),
+    //                SizedBox(height: 30),
+    //
+    //               // Billing options
+    //               _BillingOptions(
+    //                 selected: _selectedBilling,
+    //                 onChanged: (i) => setState(() => _selectedBilling = i),
+    //               ),
+    //
+    //               const SizedBox(height: 16),
+    //
+    //               Padding(
+    //                 padding: const EdgeInsets.symmetric(horizontal: 15),
+    //                 child: Container(
+    //                   padding: EdgeInsets.symmetric(vertical: 5),
+    //                   decoration: BoxDecoration(
+    //                     gradient: const LinearGradient(
+    //                       colors: [
+    //                         Color(0xFF0797FD),
+    //                         Color(0xFF07C8FD),
+    //                         Color(0xFF0797FD),
+    //                       ],
+    //                       begin: Alignment.centerLeft,
+    //                       end: Alignment.centerRight,
+    //                     ),
+    //                     borderRadius: BorderRadius.circular(16),
+    //                   ),
+    //                   child: ElevatedButton(
+    //                     onPressed: () {
+    //                       Navigator.push(
+    //                         context,
+    //                         MaterialPageRoute(
+    //                           builder: (context) => SubscriptionHistory(),
+    //                         ),
+    //                       );
+    //                     },
+    //                     style: ElevatedButton.styleFrom(
+    //                       elevation: 0,
+    //                       backgroundColor:
+    //                           Colors.transparent,
+    //                       shadowColor: Colors.transparent,
+    //                       shape: RoundedRectangleBorder(
+    //                         borderRadius: BorderRadius.circular(16),
+    //                       ),
+    //                       padding: const EdgeInsets.symmetric(
+    //                         vertical: 14,
+    //                         horizontal: 40,
+    //                       ),
+    //                     ),
+    //                     child: Row(
+    //                       mainAxisAlignment: MainAxisAlignment.center,
+    //                       children: [
+    //                         Text(
+    //                           'Get Super Power Now',
+    //                           style: AppTextStyles.mulish(
+    //                             fontSize: 18,
+    //                             fontWeight: FontWeight.w900,
+    //                             color: Colors.white,
+    //                           ),
+    //                         ),
+    //                         SizedBox(width: 10),
+    //                         Icon(
+    //                           Icons.arrow_forward_rounded,
+    //                           color: Colors.white,
+    //                         ),
+    //                       ],
+    //                     ),
+    //                   ),
+    //                 ),
+    //               ),
+    //               const SizedBox(height: 16),
+    //             ],
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 }
 
@@ -342,26 +475,26 @@ class _BillingOptions extends StatelessWidget {
             onTap: () => onChanged(0),
             highlight: true,
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           _BillingChip(
             labelTop: '₹ 759',
             labelBottom: '6 Month',
             selected: selected == 1,
             onTap: () => onChanged(1),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           _BillingChip(
             labelTop: '₹ 569',
             labelBottom: '3 Month',
             selected: selected == 2,
             onTap: () => onChanged(2),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           _BillingChip(
-            labelTop: '₹ 569',
-            labelBottom: '3 Month',
-            selected: selected == 2,
-            onTap: () => onChanged(2),
+            labelTop: '₹ 456',
+            labelBottom: '1 Month',
+            selected: selected == 3,
+            onTap: () => onChanged(3),
           ),
         ],
       ),
