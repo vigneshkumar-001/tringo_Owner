@@ -7,10 +7,12 @@ import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
 
 import '../../../Core/Utility/thanglish_to_tamil.dart';
+import '../../AboutMe/Screens/about_me_screens.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 
 class ShopCategoryInfo extends StatefulWidget {
-  const ShopCategoryInfo({super.key});
+  final String? pages;
+  const ShopCategoryInfo({super.key, this.pages});
 
   @override
   State<ShopCategoryInfo> createState() => _ShopCategoryInfotate();
@@ -38,31 +40,25 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   bool isTamilNameLoading = false;
   bool isDescriptionTamilLoading = false;
   bool isAddressLoading = false;
+  bool _isSubmitted = false; // Add this at class level
+  bool _gpsFetched = false; // Track if GPS has been fetched
 
-  void _onSubmit() {
-    // Trigger all validators
-    // if (_formKey.currentState!.validate()) {
-    //   // All fields valid → proceed
-    //   print('✅ All fields valid, proceed with API call');
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('Form Submitted Successfully')),
-    //   );
-    //   Navigator.push(
-    //     context,
-    //     MaterialPageRoute(builder: (context) => CreateAppOffer()),
-    //   );
-    // } else {
-    //   // Some field invalid → show error
-    //   print('❌ Validation failed');
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('Please fill all required fields')),
-    //   );
-    // }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ShopPhotoInfo()),
-    );
-  }
+  // void _onSubmit() {
+  //   setState(() => _isSubmitted = true); // Mark that user clicked submit
+  //
+  //   if (_formKey.currentState!.validate()) {
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => ShopPhotoInfo()),
+  //     ).then((_) {
+  //       Navigator.pop(context, true);
+  //     });
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please fill all required fields')),
+  //     );
+  //   }
+  // }
 
   Future<void> _getCurrentLocation() async {
     try {
@@ -102,6 +98,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
         _gpsController.text =
             '${position.latitude.toStringAsFixed(6)}, '
             '${position.longitude.toStringAsFixed(6)}';
+        _gpsFetched = true; // Mark GPS as fetched
       });
 
       debugPrint('📍 Current Location → ${_gpsController.text}');
@@ -112,6 +109,55 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       );
     }
   }
+
+  // Future<void> _getCurrentLocation() async {
+  //   try {
+  //     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //     if (!serviceEnabled) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Location services are disabled.')),
+  //       );
+  //       return;
+  //     }
+  //
+  //     LocationPermission permission = await Geolocator.checkPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       permission = await Geolocator.requestPermission();
+  //       if (permission == LocationPermission.denied) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(content: Text('Location permission denied.')),
+  //         );
+  //         return;
+  //       }
+  //     }
+  //
+  //     if (permission == LocationPermission.deniedForever) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text('Location permissions are permanently denied.'),
+  //         ),
+  //       );
+  //       return;
+  //     }
+  //
+  //     final position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high,
+  //     );
+  //
+  //     setState(() {
+  //       _gpsController.text =
+  //           '${position.latitude.toStringAsFixed(6)}, '
+  //           '${position.longitude.toStringAsFixed(6)}';
+  //     });
+  //
+  //     debugPrint('📍 Current Location → ${_gpsController.text}');
+  //   } catch (e) {
+  //     debugPrint('❌ Error getting location: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Failed to get current location.')),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -424,7 +470,6 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       GestureDetector(
                         onTap: _getCurrentLocation,
                         child: AbsorbPointer(
-                          // prevent manual editing, tap triggers GPS
                           child: CommonContainer.fillingContainer(
                             controller: _gpsController,
                             text: 'Get by GPS',
@@ -432,9 +477,12 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                                 ? AppColor.skyBlue
                                 : AppColor.mildBlack,
                             textFontWeight: FontWeight.w700,
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Please get GPS location'
-                                : null,
+                            validator: (value) {
+                              if (!_isSubmitted) return null;
+                              return _gpsFetched
+                                  ? null
+                                  : 'Please get GPS location';
+                            },
                           ),
                         ),
                       ),
@@ -508,9 +556,34 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
-                        onTap: _onSubmit,
+                        onTap: () {
+                          if (widget.pages == "AboutMeScreens") {
+                            // If coming from AboutMeScreens, treat this as an update flow
+                            // Example: gather updated data to return
+                            final updatedData = {
+                              'category': _categoryController.text,
+                              'city': _cityController.text,
+                              'tamilName': tamilNameController.text,
+                            };
+
+                            Navigator.pop(
+                              context,
+                              updatedData,
+                            ); // return data back
+                          } else {
+                            // Normal flow: move to next step
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ShopPhotoInfo(),
+                              ),
+                            );
+                          }
+                        },
                         text: Text(
-                          'Save & Continue',
+                          widget.pages == "AboutMeScreens"
+                              ? 'Update'
+                              : 'Save & Continue',
                           style: AppTextStyles.mulish(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -520,6 +593,53 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         imgHeight: 20,
                       ),
                       SizedBox(height: 36),
+
+                      // SizedBox(height: 30),
+                      // CommonContainer.button(
+                      //   buttonColor: AppColor.black,
+                      //   // onTap: _onSubmit,
+                      //   onTap: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) => ShopPhotoInfo(),
+                      //       ),
+                      //     );
+                      //   },
+                      //   text: Text(
+                      //     widget.pages == "AboutMeScreens"
+                      //         ? 'UpDate'
+                      //         : 'Save & Continue',
+                      //     style: AppTextStyles.mulish(
+                      //       fontSize: 18,
+                      //       fontWeight: FontWeight.w700,
+                      //     ),
+                      //   ),
+                      //   imagePath: AppImages.rightStickArrow,
+                      //   imgHeight: 20,
+                      // ),
+                      // if (widget.pages == "AboutMeScreens")
+                      //   CommonContainer.button(
+                      //     buttonColor: AppColor.black,
+                      //     // onTap: _onSubmit,
+                      //     onTap: () {
+                      //       Navigator.push(
+                      //         context,
+                      //         MaterialPageRoute(
+                      //           builder: (context) => AboutMeScreens(),
+                      //         ),
+                      //       );
+                      //     },
+                      //     text: Text(
+                      //       'UpDate',
+                      //       style: AppTextStyles.mulish(
+                      //         fontSize: 18,
+                      //         fontWeight: FontWeight.w700,
+                      //       ),
+                      //     ),
+                      //     imagePath: AppImages.rightStickArrow,
+                      //     imgHeight: 20,
+                      //   ),
                     ],
                   ),
                 ),

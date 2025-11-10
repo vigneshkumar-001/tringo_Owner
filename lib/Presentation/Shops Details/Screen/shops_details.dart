@@ -8,6 +8,7 @@ import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../AddProduct/Screens/add_product_list.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../../Menu/Screens/subscription_screen.dart';
 
 class ShopsDetails extends StatefulWidget {
   const ShopsDetails({super.key});
@@ -87,7 +88,12 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
-                            children: [CommonContainer.doorDelivery()],
+                            children: [CommonContainer.doorDelivery(
+                              text: 'Door Delivery',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              textColor: AppColor.skyBlue,
+                            ),],
                           ),
                         ),
                         SizedBox(height: 12),
@@ -351,7 +357,14 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                     CommonContainer.attractCustomerCard(
                       title: 'Attract More Customers',
                       description: 'Unlock premium to attract more customers',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubscriptionScreen(),
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(height: 48),
                     Row(

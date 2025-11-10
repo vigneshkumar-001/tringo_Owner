@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 // import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
@@ -8,12 +9,28 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../../Menu/Screens/subscription_screen.dart';
+import '../../ShopInfo/Screens/shop_category_info.dart';
+import '../../ShopInfo/Screens/shop_photo_info.dart';
+import '../../Shops Details/Screen/shops_details.dart';
 
 class AboutMeScreens extends StatefulWidget {
   const AboutMeScreens({super.key});
 
   @override
   State<AboutMeScreens> createState() => _AboutMeScreensState();
+}
+
+class ProductItem {
+  final String name, image, ratingStar, ratingCount, offAmount, oldAmount;
+  ProductItem({
+    required this.name,
+    required this.image,
+    required this.ratingStar,
+    required this.ratingCount,
+    required this.offAmount,
+    required this.oldAmount,
+  });
 }
 
 class _AboutMeScreensState extends State<AboutMeScreens> {
@@ -30,6 +47,18 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
       curve: Curves.easeInOut,
     );
   }
+
+  final List<ProductItem> _products = [
+    ProductItem(
+      name: 'Badam Mysurpa',
+      image: AppImages.snacks1,
+      ratingStar: '4.5',
+      ratingCount: '16',
+      offAmount: '₹79',
+      oldAmount: '₹110',
+    ),
+    // add more items here...
+  ];
 
   final tabs = [
     {'icon': AppImages.aboutMeFill, 'label': 'Shop Details'},
@@ -157,7 +186,16 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
               SizedBox(height: 25),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 15),
-                child: Row(children: [CommonContainer.doorDelivery()]),
+                child: Row(
+                  children: [
+                    CommonContainer.doorDelivery(
+                      text: 'Door Delivery',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      textColor: AppColor.skyBlue,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 12),
               Padding(
@@ -233,7 +271,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                   ),
                 ),
               ),
-              const SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // ---------- SELECTED CONTENT ----------
               AnimatedSwitcher(
@@ -256,7 +294,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
       case 2:
         return buildFollowersDetails();
       default:
-        return const SizedBox();
+        return SizedBox();
     }
   }
 
@@ -283,9 +321,9 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
                 decoration: BoxDecoration(
                   color: AppColor.white,
                   borderRadius: BorderRadius.circular(15),
@@ -295,138 +333,126 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       MainAxisSize.min, // 🔹 prevents extra vertical space
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Kaalavasal',
-                          style: AppTextStyles.mulish(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Kaalavasal',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.all(
-                            5,
-                          ), // 🔹 reduce vertical space
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColor.black.withOpacity(0.05),
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.all(
+                              5,
+                            ), // 🔹 reduce vertical space
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColor.black.withOpacity(0.05),
+                            ),
+                            child: Image.asset(
+                              AppImages.downArrow,
+                              height: 25,
+                              color: AppColor.black,
+                            ),
                           ),
-                          child: Image.asset(
-                            AppImages.downArrow,
-                            height: 16,
-                            color: AppColor.black,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: AppColor.darkGrey,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            '12, 2, Tirupparankunram Rd, kunram',
-                            style: AppTextStyles.mulish(
-                              color: AppColor.darkGrey,
-                              fontSize: 12,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: AppColor.darkGrey,
+                            size: 14,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              '12, 2, Tirupparankunram Rd, kunram',
+                              style: AppTextStyles.mulish(
+                                color: AppColor.darkGrey,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: AppColor.iceBlue,
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Edit Shop Details',
-                                  style: AppTextStyles.mulish(
-                                    color: AppColor.resendOtp,
-                                    fontWeight: FontWeight.bold,
+                          CommonContainer.editShopContainer(
+                            text: 'Edit Shop Details',
+                            onTap: () async {
+                              final updatedData = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ShopCategoryInfo(
+                                    pages: "AboutMeScreens",
                                   ),
                                 ),
-                                Image.asset(
-                                  AppImages.rightArrow,
-                                  color: AppColor.resendOtp,
-                                  height: 14,
-                                ),
-                              ],
-                            ),
+                              );
+
+                              if (updatedData != null) {
+                                setState(() {
+                                  // Use updatedData to refresh your AboutMeScreens UI if needed
+                                });
+                              }
+                            },
                           ),
+
                           SizedBox(width: 10),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: AppColor.iceBlue,
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Edit Shop Photos',
-                                  style: AppTextStyles.mulish(
-                                    color: AppColor.resendOtp,
-                                    fontWeight: FontWeight.bold,
+                          CommonContainer.editShopContainer(
+                            text: 'Edit Shop Photos',
+                            onTap: () async {
+                              final updatedPhotos = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ShopPhotoInfo(
+                                    pages: "AboutMeScreens",
                                   ),
                                 ),
-                                Image.asset(
-                                  AppImages.rightArrow,
-                                  color: AppColor.resendOtp,
-                                  height: 14,
-                                ),
-                              ],
-                            ),
+                              );
+
+                              if (updatedPhotos != null) {
+                                setState(() {
+                                  // use updatedPhotos to refresh your AboutMeScreens UI
+                                });
+                              }
+                            },
                           ),
+
                           SizedBox(width: 10),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: AppColor.iceBlue,
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Edit Shop Location in Map',
-                                  style: AppTextStyles.mulish(
-                                    color: AppColor.resendOtp,
-                                    fontWeight: FontWeight.bold,
+                          CommonContainer.editShopContainer(
+                            text: 'Edit Shop Location In Map',
+                            onTap: () async {
+                              final updatedData = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ShopCategoryInfo(
+                                    pages: "AboutMeScreens",
                                   ),
                                 ),
-                                Image.asset(
-                                  AppImages.rightArrow,
-                                  color: AppColor.resendOtp,
-                                  height: 14,
-                                ),
-                              ],
-                            ),
+                              );
+
+                              if (updatedData != null) {
+                                setState(() {
+                                  // Use updatedData to refresh your AboutMeScreens UI if needed
+                                });
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -437,6 +463,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
             ),
             SizedBox(height: 25),
             SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -446,7 +473,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.leftArrow),
+                      border: Border.all(color: AppColor.leftArrow, width: 1.3),
                       color: AppColor.white,
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -489,7 +516,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColor.iceBlue,
+                            color: AppColor.leftArrow,
 
                             shape: BoxShape.circle,
                           ),
@@ -512,7 +539,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                     ),
                     decoration: BoxDecoration(
                       color: AppColor.white,
-                      border: Border.all(color: AppColor.leftArrow),
+                      border: Border.all(color: AppColor.leftArrow, width: 1.3),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
@@ -548,14 +575,14 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                           ),
                         ),
 
-                        const SizedBox(width: 15),
+                        SizedBox(width: 15),
                         Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColor.iceBlue,
+                            color: AppColor.leftArrow,
 
                             shape: BoxShape.circle,
                           ),
@@ -577,7 +604,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.leftArrow),
+                      border: Border.all(color: AppColor.leftArrow, width: 1.3),
                       color: AppColor.white,
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -619,7 +646,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColor.iceBlue,
+                            color: AppColor.leftArrow,
 
                             shape: BoxShape.circle,
                           ),
@@ -649,11 +676,11 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       color: blue,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  // SizedBox(height: 4),
                   Text(
                     'Search Impressions',
                     style: AppTextStyles.mulish(
-                      color: AppColor.darkGrey,
+                      color: AppColor.darkBlue,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -668,7 +695,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
 
               child: SizedBox(
                 height: 180,
-                // child: LineChart(_lineChartData(blue)),
+                child: LineChart(_lineChartData(blue)),
               ),
             ),
             const SizedBox(height: 12),
@@ -680,7 +707,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 itemCount: 12,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
                 itemBuilder: (_, i) {
                   const months = [
                     'Jan',
@@ -700,20 +727,25 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                   return GestureDetector(
                     onTap: () => setState(() => _selectedMonth = i),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
                       decoration: BoxDecoration(
                         color: isSel ? AppColor.resendOtp : Colors.transparent,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       alignment: Alignment.center,
-                      child: Text(
-                        months[i],
-                        style: AppTextStyles.mulish(
-                          color: isSel ? AppColor.white : Colors.black54,
-                          fontSize: 16,
-                          fontWeight: isSel
-                              ? FontWeight.normal
-                              : FontWeight.w600,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          months[i],
+                          style: AppTextStyles.mulish(
+                            color: isSel
+                                ? AppColor.white
+                                : AppColor.slatePurple,
+                            fontSize: 16,
+                            fontWeight: isSel
+                                ? FontWeight.normal
+                                : FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -721,7 +753,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                 },
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 44),
 
             // More Details
             Padding(
@@ -735,7 +767,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -750,7 +782,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColor.floralWhite,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -827,7 +859,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColor.floralWhite,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -904,7 +936,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColor.floralWhite,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -981,7 +1013,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColor.floralWhite,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1083,7 +1115,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
           children: [
             SizedBox(height: 20),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
               decoration: BoxDecoration(
                 color: AppColor.white,
                 borderRadius: BorderRadius.circular(15),
@@ -1093,138 +1125,126 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                     MainAxisSize.min, // 🔹 prevents extra vertical space
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Kaalavasal',
-                        style: AppTextStyles.mulish(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Kaalavasal',
+                          style: AppTextStyles.mulish(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.all(
-                          5,
-                        ), // 🔹 reduce vertical space
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.black.withOpacity(0.05),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(
+                            5,
+                          ), // 🔹 reduce vertical space
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColor.black.withOpacity(0.05),
+                          ),
+                          child: Image.asset(
+                            AppImages.downArrow,
+                            height: 25,
+                            color: AppColor.black,
+                          ),
                         ),
-                        child: Image.asset(
-                          AppImages.downArrow,
-                          height: 16,
-                          color: AppColor.black,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: AppColor.darkGrey,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '12, 2, Tirupparankunram Rd, kunram',
-                          style: AppTextStyles.mulish(
-                            color: AppColor.darkGrey,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: AppColor.darkGrey,
+                          size: 14,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '12, 2, Tirupparankunram Rd, kunram',
+                            style: AppTextStyles.mulish(
+                              color: AppColor.darkGrey,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 5),
+                  SizedBox(height: 20),
                   SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: AppColor.iceBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Edit Shop Details',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.resendOtp,
-                                  fontWeight: FontWeight.bold,
+                        CommonContainer.editShopContainer(
+                          text: 'Edit Shop Details',
+                          onTap: () async {
+                            final updatedData = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ShopCategoryInfo(
+                                  pages: "AboutMeScreens",
                                 ),
                               ),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                color: AppColor.resendOtp,
-                                height: 14,
-                              ),
-                            ],
-                          ),
+                            );
+
+                            if (updatedData != null) {
+                              setState(() {
+                                // Use updatedData to refresh your AboutMeScreens UI if needed
+                              });
+                            }
+                          },
                         ),
+
                         SizedBox(width: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: AppColor.iceBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Edit Shop Details',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.resendOtp,
-                                  fontWeight: FontWeight.bold,
+                        CommonContainer.editShopContainer(
+                          text: 'Edit Shop Photos',
+                          onTap: () async {
+                            final updatedPhotos = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ShopPhotoInfo(
+                                  pages: "AboutMeScreens",
                                 ),
                               ),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                color: AppColor.resendOtp,
-                                height: 14,
-                              ),
-                            ],
-                          ),
+                            );
+
+                            if (updatedPhotos != null) {
+                              setState(() {
+                                // use updatedPhotos to refresh your AboutMeScreens UI
+                              });
+                            }
+                          },
                         ),
+
                         SizedBox(width: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: AppColor.iceBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Edit Shop Details',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.resendOtp,
-                                  fontWeight: FontWeight.bold,
+                        CommonContainer.editShopContainer(
+                          text: 'Edit Shop Location In Map',
+                          onTap: () async {
+                            final updatedData = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ShopCategoryInfo(
+                                  pages: "AboutMeScreens",
                                 ),
                               ),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                color: AppColor.resendOtp,
-                                height: 14,
-                              ),
-                            ],
-                          ),
+                            );
+
+                            if (updatedData != null) {
+                              setState(() {
+                                // Use updatedData to refresh your AboutMeScreens UI if needed
+                              });
+                            }
+                          },
                         ),
                       ],
                     ),
@@ -1232,11 +1252,16 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 28),
             CommonContainer.attractCustomerCard(
               title: 'Attract More Customers',
               description: 'Unlock premium to attract more customers',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SubscriptionScreen()),
+                );
+              },
             ),
             SizedBox(height: 20),
             Row(
@@ -1258,96 +1283,158 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
               ],
             ),
             SizedBox(height: 16),
-            CommonContainer.foodList(
-              fontSize: 14,
-              titleWeight: FontWeight.w700,
-              onTap: () {},
-              imageWidth: 130,
-              image: AppImages.snacks1,
-              foodName: 'Badam Mysurpa',
-              ratingStar: '4.5',
-              ratingCount: '16',
-              offAmound: '₹79',
-              oldAmound: '₹110',
-              km: '',
-              location: '',
-              Verify: false,
-              locations: false,
-              weight: false,
-              horizontalDivider: false,
-              // weightOptions: const ['300Gm', '500Gm'],
-              // selectedWeightIndex: selectedWeight,
-              // onWeightChanged: (i) =>
-              //     setState(() => selectedWeight = i),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: AppColor.resendOtp,
-                      borderRadius: BorderRadius.circular(15),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _products.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                final p = _products[i];
+                return Column(
+                  children: [
+                    CommonContainer.foodList(
+                      fontSize: 14,
+                      titleWeight: FontWeight.w700,
+                      onTap: () {},
+                      imageWidth: 130,
+                      image: p.image,
+                      foodName: p.name,
+                      ratingStar: p.ratingStar,
+                      ratingCount: p.ratingCount,
+                      offAmound: p.offAmount,
+                      oldAmound: p.oldAmount,
+                      km: '',
+                      location: '',
+                      Verify: false,
+                      locations: false,
+                      weight: false,
+                      horizontalDivider: false,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              AppImages.call,
-                              color: AppColor.white,
-                              height: 16,
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              'Edit',
-                              style: AppTextStyles.mulish(
-                                color: AppColor.white,
-                                fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProductCategoryScreens(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 15,
+                                horizontal: 15,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.resendOtp,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    AppImages.editImage,
+                                    color: AppColor.white,
+                                    height: 16,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Edit',
+                                    style: AppTextStyles.mulish(
+                                      color: AppColor.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              // Show confirmation dialog
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: AppColor.white,
+                                  title: Text('Confirm Remove'),
+                                  content: Text(
+                                    'Are you sure you want to remove this product?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(
+                                        context,
+                                        false,
+                                      ), // cancel
+                                      child: Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(
+                                        context,
+                                        true,
+                                      ), // confirm
+                                      child: Text(
+                                        'Remove',
+                                        style: AppTextStyles.mulish(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              // If user confirmed, remove the product
+                              if (confirm == true) {
+                                setState(() {
+                                  _products.removeAt(i);
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 15,
+                                horizontal: 15,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.leftArrow,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    AppImages.closeImage,
+                                    color: AppColor.black,
+                                    height: 16,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Remove',
+                                    style: AppTextStyles.mulish(
+                                      color: AppColor.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: AppColor.leftArrow,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
-                          children: [
-                            Image.asset(
-                              AppImages.closeImage,
-                              color: AppColor.black,
-                              height: 16,
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              'Remove',
-                              style: AppTextStyles.mulish(
-                                color: AppColor.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
+
             SizedBox(height: 20),
             InkWell(
               onTap: () {
@@ -1429,9 +1516,9 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
               'Based on 58 reviews',
               style: AppTextStyles.mulish(color: AppColor.gray84),
             ),
-            SizedBox(height: 2),
+            SizedBox(height: 17),
             CommonContainer.reviewBox(),
-            SizedBox(height: 2),
+            SizedBox(height: 17),
             CommonContainer.reviewBox(),
           ],
         ),
@@ -1456,77 +1543,83 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
 
             /// SHOP DETAILS CARD
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-              decoration: BoxDecoration(
-                color: AppColor.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColor.gray84.withOpacity(0.3),
-                    spreadRadius: 0.2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Kaalavasal',
-                        style: AppTextStyles.mulish(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.black.withOpacity(0.05),
-                        ),
-                        child: Image.asset(
-                          AppImages.downArrow,
-                          height: 16,
-                          color: AppColor.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: AppColor.darkGrey,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '12, 2, Tirupparankunram Rd, Kunram',
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColor.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColor.gray84.withOpacity(0.3),
+                      spreadRadius: 0.2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Kaalavasal',
                           style: AppTextStyles.mulish(
-                            color: AppColor.darkGrey,
-                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                ],
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColor.black.withOpacity(0.05),
+                          ),
+                          child: Image.asset(
+                            AppImages.downArrow,
+                            height: 16,
+                            color: AppColor.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: AppColor.darkGrey,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '12, 2, Tirupparankunram Rd, Kunram',
+                            style: AppTextStyles.mulish(
+                              color: AppColor.darkGrey,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
             ),
 
@@ -1542,6 +1635,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
             ),
             const SizedBox(height: 15),
             SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
@@ -1677,657 +1771,167 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
             ),
             const SizedBox(height: 20),
 
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 15,
-                  ),
-                ],
-              ),
-              child: ListView.builder(
-                itemCount: 5,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 6,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 15,
                     ),
-                    child: Row(
-                      children: [
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Stack(
-                                children: [
-                                  Image.asset(
-                                    AppImages.person,
-                                    height: 50,
-                                    width: 50,
-                                    fit: BoxFit.cover,
-                                  ),
+                  ],
+                ),
+                child: ListView.builder(
+                  itemCount: 5,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Stack(
+                                  children: [
+                                    Image.asset(
+                                      AppImages.person,
+                                      height: 50,
+                                      width: 50,
+                                      fit: BoxFit.cover,
+                                    ),
 
-                                  // 🔹 If unsubscribed, apply blur overlay
-                                  Positioned.fill(
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                        sigmaX: 8,
-                                        sigmaY: 8,
-                                      ),
-                                      child: Container(
-                                        color: Colors.black.withOpacity(
-                                          0.3,
-                                        ), // slight dark overlay
-                                        alignment: Alignment.center,
+                                    // 🔹 If unsubscribed, apply blur overlay
+                                    Positioned.fill(
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(
+                                          sigmaX: 8,
+                                          sigmaY: 8,
+                                        ),
+                                        child: Container(
+                                          color: Colors.black.withOpacity(
+                                            0.3,
+                                          ), // slight dark overlay
+                                          alignment: Alignment.center,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
 
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                height: 15,
-                                width: 15,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(7),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  height: 15,
+                                  width: 15,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(7),
+                                    ),
+                                  ),
+                                  child: Image.asset(
+                                    AppImages.lock,
+                                    height: 16,
                                   ),
                                 ),
-                                child: Image.asset(AppImages.lock, height: 16),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Vignesh',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black,
+                            ],
+                          ),
+                          const SizedBox(width: 15),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Vignesh',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              'Joined at 11.30Am',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
+                              const SizedBox(height: 3),
+                              Text(
+                                'Joined at 11.30Am',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-            const SizedBox(height: 30),
+            SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
-  /*Widget buildFollowersDetails() {
-    return Container(
-      key: const ValueKey('shopDetails'),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: [
-            AppColor.leftArrow,
-            AppColor.scaffoldColor,
-            AppColor.scaffoldColor,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-              decoration: BoxDecoration(
-                color: AppColor.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColor.gray84.withOpacity(0.3),
-                    spreadRadius: 0.2,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Kaalavasal',
-                        style: AppTextStyles.mulish(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.all(
-                          5,
-                        ), // 🔹 reduce vertical space
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.black.withOpacity(0.05),
-                        ),
-                        child: Image.asset(
-                          AppImages.downArrow,
-                          height: 16,
-                          color: AppColor.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: AppColor.darkGrey,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '12, 2, Tirupparankunram Rd, kunram',
-                          style: AppTextStyles.mulish(
-                            color: AppColor.darkGrey,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: AppColor.iceBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Edit Shop Details',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.resendOtp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                color: AppColor.resendOtp,
-                                height: 14,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: AppColor.iceBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Edit Shop Details',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.resendOtp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                color: AppColor.resendOtp,
-                                height: 14,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: AppColor.iceBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Edit Shop Details',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.resendOtp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Image.asset(
-                                AppImages.rightArrow,
-                                color: AppColor.resendOtp,
-                                height: 14,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 30),
-            Center(
-              child: Text(
-                'Followers List',
-                style: AppTextStyles.mulish(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => followersSelectedIndex = 0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: followersSelectedIndex == 0
-                              ? AppColor.black
-                              : AppColor.borderLightGrey,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '15 Last week',
-                          style: TextStyle(
-                            color: followersSelectedIndex == 0
-                                ? AppColor.black
-                                : AppColor.borderLightGrey,
-                            fontWeight: followersSelectedIndex == 0
-                                ? FontWeight.w700
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () => setState(() => followersSelectedIndex = 1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: followersSelectedIndex == 1
-                              ? AppColor.black
-                              : AppColor.borderLightGrey,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '38 Last Month',
-                          style: TextStyle(
-                            color: followersSelectedIndex == 1
-                                ? AppColor.black
-                                : AppColor.borderLightGrey,
-                            fontWeight: followersSelectedIndex == 1
-                                ? FontWeight.w700
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () => setState(() => followersSelectedIndex = 2),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: followersSelectedIndex == 2
-                              ? AppColor.black
-                              : AppColor.borderLightGrey,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '15 Last week',
-                          style: TextStyle(
-                            color: followersSelectedIndex == 2
-                                ? AppColor.black
-                                : AppColor.borderLightGrey,
-                            fontWeight: followersSelectedIndex == 2
-                                ? FontWeight.w700
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () => setState(() => followersSelectedIndex = 3),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: followersSelectedIndex == 3
-                              ? AppColor.black
-                              : AppColor.borderLightGrey,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '103 All times',
-                          style: TextStyle(
-                            color: followersSelectedIndex == 3
-                                ? AppColor.black
-                                : AppColor.borderLightGrey,
-                            fontWeight: followersSelectedIndex == 3
-                                ? FontWeight.w700
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: SizedBox(height: 250,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                itemCount: 5,
-               shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-              
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
-                    child: Row(
-                      children: [
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                 'image' ,
-                                height: 55,
-                                width: 55,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 2,
-                              right: 2,
-                              child: Container(
-                                height: 18,
-                                width: 18,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.lock,
-                                  size: 12,
-                                  color: Colors.amber,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'name',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              'Joined at }',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
 
-          ],
-        ),
-      ),
-    );
-  }*/
+  LineChartData _lineChartData(Color blue) {
+    final points = <FlSpot>[
+      const FlSpot(0, 6),
+      const FlSpot(1, 6.8),
+      const FlSpot(2, 6.4),
+      const FlSpot(3, 4.2),
+      const FlSpot(4, 6.9),
+      const FlSpot(5, 8.1),
+      const FlSpot(6, 7.2),
+    ];
 
-  // LineChartData _lineChartData(Color blue) {
-  //   final points = <FlSpot>[
-  //     const FlSpot(0, 6),
-  //     const FlSpot(1, 6.8),
-  //     const FlSpot(2, 6.4),
-  //     const FlSpot(3, 4.2),
-  //     const FlSpot(4, 6.9),
-  //     const FlSpot(5, 8.1),
-  //     const FlSpot(6, 7.2),
-  //   ];
-  //
-  //   return LineChartData(
-  //     gridData: FlGridData(show: false),
-  //     titlesData: FlTitlesData(show: false),
-  //     borderData: FlBorderData(show: false),
-  //     minX: 0,
-  //     maxX: 6,
-  //     minY: 0,
-  //     maxY: 10,
-  //     lineBarsData: [
-  //       LineChartBarData(
-  //         spots: points,
-  //         isCurved: true,
-  //         barWidth: 3,
-  //         color: blue,
-  //         dotData: const FlDotData(show: false),
-  //         belowBarData: BarAreaData(
-  //           show: true,
-  //           gradient: LinearGradient(
-  //             begin: Alignment.topCenter,
-  //             end: Alignment.bottomCenter,
-  //             colors: [
-  //               blue.withOpacity(0.22),
-  //               blue.withOpacity(0.22),
-  //               blue.withOpacity(0.20),
-  //
-  //               blue.withOpacity(0.15),
-  //               blue.withOpacity(0.06),
-  //               Colors.transparent,
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
-}
+    return LineChartData(
+      gridData: FlGridData(show: false),
+      titlesData: FlTitlesData(show: false),
+      borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: 6,
+      minY: 0,
+      maxY: 10,
+      lineBarsData: [
+        LineChartBarData(
+          spots: points,
+          isCurved: true,
+          barWidth: 3,
+          color: blue,
+          dotData: const FlDotData(show: false),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                blue.withOpacity(0.22),
+                blue.withOpacity(0.22),
+                blue.withOpacity(0.20),
 
-class _MetricCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final IconData icon;
-
-  const _MetricCard({
-    required this.value,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 200,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            height: 36,
-            width: 36,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.black87, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      height: 26,
-                      width: 26,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                blue.withOpacity(0.15),
+                blue.withOpacity(0.06),
+                Colors.transparent,
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

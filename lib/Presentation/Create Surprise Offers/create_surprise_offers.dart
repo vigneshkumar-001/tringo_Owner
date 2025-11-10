@@ -4,17 +4,17 @@ import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
-import '../../ShopInfo/Screens/shop_photo_info.dart';
-import 'offer_products.dart';
+import '../Create App Offer/Screens/offer_products.dart';
+import '../ShopInfo/Screens/search_keyword.dart';
 
-class CreateAppOffer extends StatefulWidget {
-  const CreateAppOffer({super.key});
+class CreateSurpriseOffers extends StatefulWidget {
+  const CreateSurpriseOffers({super.key});
 
   @override
-  State<CreateAppOffer> createState() => _CreateAppOfferState();
+  State<CreateSurpriseOffers> createState() => _CreateSurpriseOffersState();
 }
 
-class _CreateAppOfferState extends State<CreateAppOffer> {
+class _CreateSurpriseOffersState extends State<CreateSurpriseOffers> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController _offerTitleController = TextEditingController();
@@ -49,7 +49,7 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OfferProducts(),
+        builder: (context) => SearchKeyword(),
       ), // Replace with your next screen
     );
   }
@@ -80,8 +80,8 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
                       fit: BoxFit.cover,
                     ),
                     gradient: LinearGradient(
-                      colors: [AppColor.scaffoldColor, AppColor.papayaWhip],
-                      begin: Alignment.topCenter,
+                      colors: [AppColor.scaffoldColor, AppColor.paleMintGreen],
+                      begin: Alignment.center,
                       end: Alignment.bottomCenter,
                     ),
                     borderRadius: BorderRadius.only(
@@ -90,16 +90,40 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
                     ),
                   ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(AppImages.appOffer, height: 154),
-                      Text(
-                        'Create App Offer',
-                        style: AppTextStyles.mulish(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: AppColor.mildBlack,
-                        ),
+                      Image.asset(AppImages.surprise, height: 154),
+                      SizedBox(height: 10),
+                      Column(
+                        children: [
+                          Text(
+                            'Create Surprise Offer',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.mulish(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: AppColor.mildBlack,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 70.0,
+                            ),
+                            child: Text(
+                              'Clients can view or claim this coupon by near your shop only',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.mulish(
+                                fontSize: 14,
+                                color: AppColor.gray84,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+
                       SizedBox(height: 35),
                     ],
                   ),
@@ -111,7 +135,7 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'App Offer Title',
+                        'Offer Title',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
@@ -124,7 +148,7 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
                       ),
                       SizedBox(height: 25),
                       Text(
-                        'App Offer Description',
+                        'Offer Description',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
@@ -138,8 +162,8 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
                       ),
                       SizedBox(height: 25),
                       CommonContainer.containerTitle(
-                        context: context ,
-                        title: 'App Offer Percentage',
+                        context: context,
+                        title: 'No of Coupons for Clients',
                         image: AppImages.iImage,
                         infoMessage:
                         'Please upload a clear photo of your shop signboard showing the name clearly.',
@@ -301,7 +325,7 @@ class _CreateAppOfferState extends State<CreateAppOffer> {
                         buttonColor: AppColor.black,
                         onTap: _onSubmit,
                         text: Text(
-                          'Next, Select Products',
+                          'Create Now',
                           style: AppTextStyles.mulish(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
