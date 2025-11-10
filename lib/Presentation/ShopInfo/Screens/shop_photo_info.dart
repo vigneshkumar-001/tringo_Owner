@@ -10,11 +10,13 @@ import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 
 class ShopPhotoInfo extends StatefulWidget {
-  const ShopPhotoInfo({super.key});
+  final String? pages;
+  const ShopPhotoInfo({super.key, this.pages});
 
   @override
   State<ShopPhotoInfo> createState() => _ShopPhotoInfoState();
 }
+
 
 class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
   final ImagePicker _picker = ImagePicker();
@@ -242,9 +244,21 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                     SizedBox(height: 30),
                     CommonContainer.button(
                       buttonColor: AppColor.black,
-                      onTap: _validateAndContinue,
+                      onTap: () {
+                        if (widget.pages == "AboutMeScreens") {
+                          // Example: collect image data before returning
+                          final updatedPhotos = _pickedImages
+                              .where((img) => img != null)
+                              .map((f) => f!.path)
+                              .toList();
+
+                          Navigator.pop(context, updatedPhotos); // Return to AboutMeScreens
+                        } else {
+                          _validateAndContinue(); // Normal flow for new registrations
+                        }
+                      },
                       text: Text(
-                        'Save & Continue',
+                        widget.pages == "AboutMeScreens" ? 'Update' : 'Save & Continue',
                         style: AppTextStyles.mulish(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -253,6 +267,7 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                       imagePath: AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
+
                     SizedBox(height: 36),
                   ],
                 ),

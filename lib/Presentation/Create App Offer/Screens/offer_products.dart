@@ -14,6 +14,16 @@ class OfferProducts extends StatefulWidget {
 
 class _OfferProductsState extends State<OfferProducts> {
   List<bool> selectedItems = List.generate(10, (_) => false);
+  int selectedFilterIndex = 0;
+
+  final List<String> _filters = [
+    'All Items',
+    'Mixture',
+    'Halwa',
+    'Badam',
+    'Cookies',
+    'Sweets',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -78,17 +88,36 @@ class _OfferProductsState extends State<OfferProducts> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: [
-                          _filterChip('All Items', true),
-                          _filterChip('Mixture'),
-                          _filterChip('Halwa'),
-                          _filterChip('Badam'),
-                          _filterChip('Cookies'),
-                          _filterChip('Sweets'),
-                        ],
+                        children: List.generate(_filters.length, (index) {
+                          final title = _filters[index];
+                          final isSelected = selectedFilterIndex == index;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedFilterIndex = index;
+                              });
+                            },
+                            child: _filterChip(title, isSelected),
+                          );
+                        }),
                       ),
                     ),
-                    const SizedBox(height: 20),
+
+                    // SingleChildScrollView(
+                    //   scrollDirection: Axis.horizontal,
+                    //   child: Row(
+                    //     children: [
+                    //       _filterChip('All Items', true),
+                    //       _filterChip('Mixture'),
+                    //       _filterChip('Halwa'),
+                    //       _filterChip('Badam'),
+                    //       _filterChip('Cookies'),
+                    //       _filterChip('Sweets'),
+                    //     ],
+                    //   ),
+                    // ),
+                    SizedBox(height: 20),
 
                     // --- Product List ---
                     ListView.separated(
@@ -123,7 +152,13 @@ class _OfferProductsState extends State<OfferProducts> {
                       child: CommonContainer.button(
                         onTap: () {},
                         imagePath: AppImages.rightStickArrow,
-                        text: Text('Apply Offer'),
+                        text: Text(
+                          'Apply Offer',
+                          style: AppTextStyles.mulish(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -154,16 +189,21 @@ class _OfferProductsState extends State<OfferProducts> {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: AppTextStyles.mulish(
               color: isSelected ? AppColor.darkBlue : AppColor.darkGrey,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (!isSelected) ...[
-            const SizedBox(width: 2),
-            Icon(Icons.chevron_right, color: AppColor.darkGrey, size: 20),
-          ],
+          if (isSelected)
+            const Icon(Icons.chevron_right, color: AppColor.darkBlue, size: 20)
+          else
+            const Icon(Icons.chevron_right, color: AppColor.darkGrey, size: 20),
+
+          // if (!isSelected) ...[
+          //     SizedBox(width: 2),
+          //   Icon(Icons.chevron_right, color: AppColor.darkGrey, size: 20),
+          // ],
         ],
       ),
     );
@@ -245,7 +285,7 @@ class _OfferProductsState extends State<OfferProducts> {
               : DottedBorder(
                   padding: const EdgeInsets.all(8),
                   color: Colors.grey.shade400,
-                  strokeWidth: 1,
+                  strokeWidth: 1.5,
                   dashPattern: const [4, 4],
                   borderType: BorderType.RRect,
                   radius: const Radius.circular(15),

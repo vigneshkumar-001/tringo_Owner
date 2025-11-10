@@ -71,12 +71,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 SizedBox(height: 20),
                 CommonContainer.sellingProduct(
+                  buttonTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OwnerInfoScreens(),
+                      ),
+                    );
+                  },
                   onToggle: (value) {
                     setState(() {
                       isIndividual = value;
                     });
                   },
-                  isSellingCard: false,
+                  isSellingCard: true,
                   image: AppImages.service,
                   onTap: () {
                     setState(() {
