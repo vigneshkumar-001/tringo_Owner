@@ -2420,7 +2420,7 @@ class CommonContainer {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 10),
+                                SizedBox(height: 10),
 
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -2525,7 +2525,7 @@ class CommonContainer {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: AppColor.skyBlue,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Image.asset(
@@ -2544,7 +2544,7 @@ class CommonContainer {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: AppColor.green,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Image.asset(
