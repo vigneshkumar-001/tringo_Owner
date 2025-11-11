@@ -45,6 +45,12 @@ dependencies:
   url_launcher: ^6.3.2
   permission_handler: ^12.0.1
   intl: any
+  flutter_riverpod: ^3.0.3
+  dio: ^5.9.0
+  shared_preferences: ^2.5.3
+  logger: ^2.6.2
+  equatable: ^2.0.7
+  dartz: ^0.10.1
 
 
 dependency_overrides:
