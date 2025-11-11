@@ -1158,10 +1158,10 @@ class _HomeScreensState extends State<HomeScreens> {
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 10),
-                                          const Text(
+                                            SizedBox(width: 10),
+                                            Text(
                                             "2 Qty",
-                                            style: TextStyle(
+                                            style: AppTextStyles.mulish(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w500,
                                             ),

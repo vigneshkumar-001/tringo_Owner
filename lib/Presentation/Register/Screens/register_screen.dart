@@ -5,6 +5,8 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.dart';
 
+import 'package:tringo_vendor/Core/Session/registration_session.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -14,7 +16,19 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   int selectedIndex = -1;
-  bool isIndividual = true;
+  bool isIndividual = true; // toggle: true = Individual, false = Company
+
+  void _goNext() {
+    RegistrationSession.instance.businessType = isIndividual
+        ? BusinessType.individual
+        : BusinessType.company;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const OwnerInfoScreens()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,17 +36,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
           child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CommonContainer.topLeftArrow(onTap: () {}),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   'Choose your business type',
                   style: AppTextStyles.textWithBold(),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   'Connect your business to millions of customers. Whether you sell products or services, our platform helps you grow.',
                   style: AppTextStyles.textWithBold(
@@ -40,21 +54,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fontWeight: FontWeight.normal,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 CommonContainer.sellingProduct(
-                  buttonTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const OwnerInfoScreens(),
-                      ),
-                    );
-                  },
+                  buttonTap: _goNext, // <-- set session + navigate
                   onTap: () {
                     setState(() {
                       selectedIndex = 0;
-                      isIndividual = true;
+                      isIndividual = true; // default when selecting card
                     });
                   },
                   isSelected: selectedIndex == 0,
@@ -62,23 +69,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   isIndividual: isIndividual,
                   onToggle: (value) {
                     setState(() {
-                      isIndividual = value;
+                      isIndividual = value; // Individual/Company toggle
                     });
                   },
                   title: 'I’m Selling Products',
                   description:
-                      'Gain instant visibility and connect with thousands of local customers actively searching for your goods. Our platform is your direct link to a wider audience and increased sales',
+                      'Gain instant visibility and connect with thousands of local customers actively searching for your goods. Our platform is your direct link to a wider audience and increased sales.',
                 ),
-                SizedBox(height: 20),
+
+                const SizedBox(height: 20),
+
                 CommonContainer.sellingProduct(
-                  buttonTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const OwnerInfoScreens(),
-                      ),
-                    );
-                  },
+                  buttonTap: _goNext, // <-- set session + navigate
                   onToggle: (value) {
                     setState(() {
                       isIndividual = value;
@@ -89,14 +91,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onTap: () {
                     setState(() {
                       selectedIndex = 1;
-                      isIndividual = true;
+                      isIndividual = true; // default when selecting card
                     });
                   },
-                  title: 'I Do Services ',
-
+                  title: 'I Do Services',
                   isSelected: selectedIndex == 1,
                   description:
-                      'row your client base and fill your schedule with quality leads from our platform. We help you get discovered by new customers who need your expertise right now.',
+                      'Grow your client base and fill your schedule with quality leads from our platform. We help you get discovered by new customers who need your expertise right now.',
                   isIndividual: isIndividual,
                 ),
               ],
