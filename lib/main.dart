@@ -156,7 +156,6 @@ class _OverlayHomePageState extends State<OverlayHomePage> {
 
 */
 
-
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 
@@ -164,14 +163,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tringo_vendor/Presentation/Login/Screens/login_screens.dart';
+import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
 import 'package:tringo_vendor/sample_screen.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -192,4 +188,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
