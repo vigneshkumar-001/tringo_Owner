@@ -12,7 +12,14 @@ import '../../Create App Offer/Screens/create_app_offer.dart';
 
 class ShopCategoryInfo extends StatefulWidget {
   final String? pages;
-  const ShopCategoryInfo({super.key, this.pages});
+  final String? initialShopNameEnglish;
+  final String? initialShopNameTamil;
+  const ShopCategoryInfo({
+    super.key,
+    this.pages,
+    this.initialShopNameEnglish,
+    this.initialShopNameTamil,
+  });
 
   @override
   State<ShopCategoryInfo> createState() => _ShopCategoryInfotate();
@@ -21,6 +28,8 @@ class ShopCategoryInfo extends StatefulWidget {
 class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   final _formKey = GlobalKey<FormState>();
 
+
+  final TextEditingController _shopNameEnglishController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
@@ -37,11 +46,12 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   List<String> tamilNameSuggestion = [];
   List<String> descriptionTamilSuggestion = [];
   List<String> addressTamilSuggestion = [];
+  bool _tamilPrefilled = false;
   bool isTamilNameLoading = false;
   bool isDescriptionTamilLoading = false;
   bool isAddressLoading = false;
   bool _isSubmitted = false; // Add this at class level
-  bool _gpsFetched = false; // Track if GPS has been fetched
+  bool _gpsFetched = false;
 
   // void _onSubmit() {
   //   setState(() => _isSubmitted = true); // Mark that user clicked submit
@@ -109,55 +119,95 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       );
     }
   }
+  @override
+  void initState() {
+    super.initState();
 
-  // Future<void> _getCurrentLocation() async {
-  //   try {
-  //     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  //     if (!serviceEnabled) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('Location services are disabled.')),
-  //       );
-  //       return;
-  //     }
+    // Prefill English (from nav param)
+    if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
+      _shopNameEnglishController.text = widget.initialShopNameEnglish!;
+    }
+
+    // If Tamil was passed explicitly, use it; else transliterate once
+    if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
+      tamilNameController.text = widget.initialShopNameTamil!;
+      _tamilPrefilled = true;
+    } else {
+      _prefillTamilFromEnglishOnce();
+    }
+  }
+  // @override
+  // void initState() {
+  //   super.initState();
   //
-  //     LocationPermission permission = await Geolocator.checkPermission();
-  //     if (permission == LocationPermission.denied) {
-  //       permission = await Geolocator.requestPermission();
-  //       if (permission == LocationPermission.denied) {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text('Location permission denied.')),
-  //         );
-  //         return;
-  //       }
-  //     }
+  //   // Prefill English name
+  //   if (widget.initialShopNameEnglish != null &&
+  //       widget.initialShopNameEnglish!.isNotEmpty) {
+  //     _shopNameEnglishController.text = widget.initialShopNameEnglish!;
+  //   }
   //
-  //     if (permission == LocationPermission.deniedForever) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Location permissions are permanently denied.'),
-  //         ),
-  //       );
-  //       return;
-  //     }
+  //   // Prefill Tamil name if provided
+  //   if (widget.initialShopNameTamil != null &&
+  //       widget.initialShopNameTamil!.isNotEmpty) {
+  //     tamilNameController.text = widget.initialShopNameTamil!;
+  //   }
   //
-  //     final position = await Geolocator.getCurrentPosition(
-  //       desiredAccuracy: LocationAccuracy.high,
-  //     );
+  //   // If you want to auto-copy English into Tamil by default when Tamil is empty:
+  //   if (tamilNameController.text.isEmpty &&
+  //       _shopNameEnglishController.text.isNotEmpty) {
+  //     // Option A: simple copy (comment out if you only want suggestions)
+  //     tamilNameController.text = _shopNameEnglishController.text;
   //
-  //     setState(() {
-  //       _gpsController.text =
-  //           '${position.latitude.toStringAsFixed(6)}, '
-  //           '${position.longitude.toStringAsFixed(6)}';
-  //     });
-  //
-  //     debugPrint('📍 Current Location → ${_gpsController.text}');
-  //   } catch (e) {
-  //     debugPrint('❌ Error getting location: $e');
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Failed to get current location.')),
-  //     );
+  //     // Option B: if you prefer using your transliteration helper, do it once here:
+  //     // _prefillTamilFromEnglish(_shopNameEnglishController.text);
   //   }
   // }
+
+  // Optional: one-time transliteration
+
+  Future<void> _prefillTamilFromEnglishOnce() async {
+    if (_tamilPrefilled) return;
+    final english = _shopNameEnglishController.text.trim();
+    if (english.isEmpty) return;
+
+    setState(() => isTamilNameLoading = true);
+    try {
+      final result = await TanglishTamilHelper.transliterate(english);
+      if (!mounted) return;
+      if (result.isNotEmpty && tamilNameController.text.trim().isEmpty) {
+        tamilNameController.text = result.first; // pick first suggestion
+      }
+      _tamilPrefilled = true;
+    } catch (_) {
+      // ignore; user can type manually
+    } finally {
+      if (mounted) setState(() => isTamilNameLoading = false);
+    }
+  }
+
+  // Future<void> _prefillTamilFromEnglish(String english) async {
+  //   try {
+  //     final result = await TanglishTamilHelper.transliterate(english);
+  //     if (mounted && result.isNotEmpty) {
+  //       setState(() {
+  //         tamilNameController.text = result.first; // take the first suggestion
+  //       });
+  //     }
+  //   } catch (_) {}
+  // }
+
+  @override
+  void dispose() {
+    _shopNameEnglishController.dispose();
+    _categoryController.dispose();
+    _cityController.dispose();
+    _genderController.dispose();
+    tamilNameController.dispose();
+    addressTamilNameController.dispose();
+    descriptionTamilController.dispose();
+    _gpsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +303,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _shopNameEnglishController,
                         text: 'English',
                         validator: (value) => value == null || value.isEmpty
                             ? 'Please Enter Shop Name in English'
@@ -260,24 +311,30 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 15),
                       CommonContainer.fillingContainer(
-                        onChanged: (value) async {
-                          setState(() => isTamilNameLoading = true);
-                          final result =
-                              await TanglishTamilHelper.transliterate(value);
-
-                          setState(() {
-                            tamilNameSuggestion = result;
-                            isTamilNameLoading = false;
-                          });
-                        },
-
                         controller: tamilNameController,
                         text: 'Tamil',
                         isTamil: true,
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (v) => (v == null || v.isEmpty)
                             ? 'Please Enter Shop Name in Tamil'
                             : null,
+                        onChanged: (value) async {
+                          // your existing suggestion logic can remain
+                          setState(() => isTamilNameLoading = true);
+                          final result = await TanglishTamilHelper.transliterate(value);
+                          setState(() {
+                            tamilNameSuggestion = result;
+                            isTamilNameLoading = false;
+                            _tamilPrefilled = true; // user started typing; stop auto-updates
+                          });
+                        },
                       ),
+                      if (isTamilNameLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+
+
                       if (isTamilNameLoading)
                         const Padding(
                           padding: EdgeInsets.all(8.0),

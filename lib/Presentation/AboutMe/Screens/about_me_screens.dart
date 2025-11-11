@@ -15,8 +15,9 @@ import '../../ShopInfo/Screens/shop_photo_info.dart';
 import '../../Shops Details/Screen/shops_details.dart';
 
 class AboutMeScreens extends StatefulWidget {
-  const AboutMeScreens({super.key});
+  const AboutMeScreens({super.key,this.initialTab = 0});
 
+  final int initialTab;
   @override
   State<AboutMeScreens> createState() => _AboutMeScreensState();
 }
@@ -37,15 +38,30 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
   int selectedIndex = 0;
   int followersSelectedIndex = 0;
   final ScrollController _scrollController = ScrollController();
-  void _scrollToSelected(int index) {
-    const itemWidth = 150.0; // 🔹 Adjust to your item’s approximate width
-    final offset = index * itemWidth - (itemWidth * 1.3);
 
+  void _scrollToSelected(int index) {
+    const itemWidth = 150.0; // adjust if needed
+    final offset = index * itemWidth - (itemWidth * 1.3);
+    final max = _scrollController.position.hasContentDimensions
+        ? _scrollController.position.maxScrollExtent
+        : 0.0;
     _scrollController.animateTo(
-      offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      offset.clamp(0.0, max),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialTab;
+
+    // ensure the selected chip comes into view on first build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelected(selectedIndex);
+    });
   }
 
   final List<ProductItem> _products = [
