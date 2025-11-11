@@ -6,9 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
-import '../../AddProduct/Screens/add_product_list.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../Menu/Screens/subscription_screen.dart';
+import '../../ShopInfo/Screens/shop_category_info.dart';
+
+import 'package:tringo_vendor/Core/Session/registration_session.dart';
 
 class ShopsDetails extends StatefulWidget {
   const ShopsDetails({super.key});
@@ -47,6 +49,12 @@ class _ShopsDetailsState extends State<ShopsDetails> {
 
   @override
   Widget build(BuildContext context) {
+    const String shopDisplayNameTamil =
+        'ஸ்ரீ கிருஷ்ணா ஸ்வீட்ஸ் பிரைவேட் லிமிடெட்';
+    const String shopDisplayName = 'Sri Krishna Sweets Private Limited';
+    final bool showAddBranch =
+        RegistrationSession.instance.businessType == BusinessType.company;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -86,21 +94,23 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                     Column(
                       children: [
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
-                            children: [CommonContainer.doorDelivery(
-                              text: 'Door Delivery',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              textColor: AppColor.skyBlue,
-                            ),],
+                            children: [
+                              CommonContainer.doorDelivery(
+                                text: 'Door Delivery',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                textColor: AppColor.skyBlue,
+                              ),
+                            ],
                           ),
                         ),
                         SizedBox(height: 12),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'Sri Krishna Sweets Private Limited',
+                            shopDisplayName,
                             style: AppTextStyles.mulish(
                               fontSize: 25,
                               fontWeight: FontWeight.bold,
@@ -133,8 +143,8 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                         ),
                         SizedBox(height: 27),
                         SingleChildScrollView(
-                          physics: BouncingScrollPhysics(),
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           scrollDirection: Axis.horizontal,
                           child: CommonContainer.callNowButton(
                             callImage: AppImages.callImage,
@@ -243,27 +253,75 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                                   ),
                                 ],
                               ),
-
                               SizedBox(width: 10),
                               Image.asset(
                                 AppImages.imageContainer2,
                                 height: 250,
                                 width: 310,
                               ),
-
                               SizedBox(width: 10),
-
                               Image.asset(
                                 AppImages.imageContainer3,
                                 height: 250,
                                 width: 310,
                               ),
-
                               SizedBox(width: 10),
                             ],
                           ),
                         ),
-                        SizedBox(height: 25),
+
+                        if (showAddBranch)
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ShopCategoryInfo(
+                                    initialShopNameEnglish: shopDisplayName,
+                                    initialShopNameTamil: shopDisplayNameTamil,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                                vertical: 15,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColor.borderLightGrey,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 20,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        AppImages.addBranch,
+                                        height: 22,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Add Branch',
+                                        style: AppTextStyles.mulish(
+                                          color: AppColor.darkBlue,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        SizedBox(height: 15),
                       ],
                     ),
                   ],
@@ -311,10 +369,6 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                       locations: false,
                       weight: false,
                       horizontalDivider: false,
-                      // weightOptions: const ['300Gm', '500Gm'],
-                      // selectedWeightIndex: selectedWeight,
-                      // onWeightChanged: (i) =>
-                      //     setState(() => selectedWeight = i),
                     ),
                     SizedBox(height: 10),
                     InkWell(
@@ -353,7 +407,6 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                       ),
                     ),
                     SizedBox(height: 40),
-
                     CommonContainer.attractCustomerCard(
                       title: 'Attract More Customers',
                       description: 'Unlock premium to attract more customers',
@@ -361,7 +414,7 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SubscriptionScreen(),
+                            builder: (context) => const SubscriptionScreen(),
                           ),
                         );
                       },
@@ -431,14 +484,17 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.08),
                   blurRadius: 16,
-                  offset: const Offset(0, -6),
+                  offset: Offset(0, -6),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ElevatedButton(
                 onPressed: () {
+                  // Optional: clear the session when closing preview
+                  RegistrationSession.instance.reset();
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(

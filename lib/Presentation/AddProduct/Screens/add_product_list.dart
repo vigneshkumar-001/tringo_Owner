@@ -219,7 +219,9 @@ class _AddProductListState extends State<AddProductList> {
     //  All valid → proceed to next screen
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ProductSearchKeyword()),
+      MaterialPageRoute(
+        builder: (context) => ProductSearchKeyword(isCompany: true),
+      ),
     );
   }
 

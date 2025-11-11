@@ -11,12 +11,13 @@ import '../Const/app_images.dart';
 
 class CommonBottomNavigation extends StatefulWidget {
   final int initialIndex;
-  final int? openReceiptForPlanId;
+  final int? initialAboutMeTab;
   const CommonBottomNavigation({
     super.key,
     this.initialIndex = 0,
-    this.openReceiptForPlanId,
+    this.initialAboutMeTab
   });
+
 
   @override
   CommonBottomNavigationState createState() => CommonBottomNavigationState();
@@ -51,7 +52,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
       HomeScreens(),
       EnquiryScreens(),
       OfferScreens(),
-      AboutMeScreens(),
+      AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0),
       MenuScreens(),
     ];
 
