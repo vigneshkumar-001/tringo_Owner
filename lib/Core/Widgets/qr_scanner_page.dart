@@ -37,7 +37,6 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
       final result = await _controller.analyzeImage(image.path);
 
-      // Handle possible null result safely
       if (result == null || result.barcodes.isEmpty) {
         _showError("Unable to recognise a valid code from uploaded image.");
         return;
