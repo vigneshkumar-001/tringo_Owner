@@ -60,11 +60,12 @@ class Request {
             url,
             data: body,
             options: Options(
-              headers: {"Authorization": token != null ? "Bearer $token" : ""},
-              validateStatus: (status) {
-                // Allow all status codes below 500 to be handled manually
-                return status != null && status < 503;
+              headers: {
+                "Content-Type": "application/json",
+                if (token != null && isTokenRequired)
+                  "Authorization": "Bearer $token",
               },
+              validateStatus: (status) => status != null && status < 503,
             ),
           )
           .timeout(
