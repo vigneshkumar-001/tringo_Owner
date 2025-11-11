@@ -11,8 +11,8 @@ import '../../../Core/Utility/common_Container.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 
 class OwnerInfoScreens extends StatefulWidget {
-  const OwnerInfoScreens({super.key});
-
+  const OwnerInfoScreens({super.key, this.isCompany});
+  final bool? isCompany;
   @override
   State<OwnerInfoScreens> createState() => _OwnerInfoScreensState();
 }

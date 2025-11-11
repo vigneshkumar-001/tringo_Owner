@@ -5,7 +5,10 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
 
+import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
+import '../../Create Surprise Offers/create_surprise_offers.dart';
+import '../../Offer/Screen/offer_screens.dart';
 
 class MenuScreens extends StatefulWidget {
   const MenuScreens({super.key});
@@ -40,12 +43,12 @@ class _MenuScreensState extends State<MenuScreens> {
   ];
 
   final List<Widget> screens = [
+    const CommonBottomNavigation(initialIndex: 1),
+    const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 0),
+    const CommonBottomNavigation(initialIndex: 2),
+    const CreateSurpriseOffers(),
     const SubscriptionScreen(),
-    const SubscriptionScreen(),
-    const CreateAppOffer(),
-    const SubscriptionScreen(),
-    const SubscriptionScreen(),
-    const SubscriptionScreen(),
+    const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 1),
     const SubscriptionScreen(),
     const SubscriptionScreen(),
     const SubscriptionScreen(),
@@ -82,15 +85,15 @@ class _MenuScreensState extends State<MenuScreens> {
 
                 for (int i = 0; i < titles.length; i++) ...[
                   InkWell(
-                    // onTap: () {
-                    //   print('Tapped on ${titles[i]}');
-                    //   // Example: Navigate or trigger Bloc here
-                    //   // Navigator.push(...);
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(builder: (_) => screens[i]),
-                    //   );
-                    // },
+                    onTap: () {
+                      print('Tapped on ${titles[i]}');
+                      // Example: Navigate or trigger Bloc here
+                      // Navigator.push(...);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => screens[i]),
+                      );
+                    },
                     child: Row(
                       children: [
                         Container(
@@ -98,7 +101,7 @@ class _MenuScreensState extends State<MenuScreens> {
                             horizontal: 13,
                             vertical: 15,
                           ),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppColor.brightGray,
                           ),
@@ -108,7 +111,7 @@ class _MenuScreensState extends State<MenuScreens> {
                             color: i == 5 ? AppColor.black : null,
                           ),
                         ),
-                        const SizedBox(width: 15),
+                        SizedBox(width: 15),
                         Text(
                           titles[i],
                           style: AppTextStyles.mulish(
@@ -117,7 +120,7 @@ class _MenuScreensState extends State<MenuScreens> {
                             color: AppColor.darkBlue,
                           ),
                         ),
-                        const Spacer(),
+                        Spacer(),
                         Image.asset(
                           AppImages.rightArrow,
                           color: AppColor.darkGrey,
@@ -174,7 +177,11 @@ class _MenuScreensState extends State<MenuScreens> {
                   },
                   text: Text(
                     'Logout',
-                    style: AppTextStyles.mulish(color: AppColor.red1,fontWeight: FontWeight.w800,fontSize: 16),
+                    style: AppTextStyles.mulish(
+                      color: AppColor.red1,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
                   borderColor: AppColor.red1,
                   buttonColor: AppColor.white,
