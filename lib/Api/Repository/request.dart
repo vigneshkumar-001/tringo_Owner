@@ -13,6 +13,7 @@ class Request {
   ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    String? sessionToken = prefs.getString('sessionToken');
     String? userId = prefs.getString('userId');
 
     // AuthController authController = getx.Get.find();
@@ -32,7 +33,7 @@ class Request {
             (Response<dynamic> response, ResponseInterceptorHandler handler) {
               AppLogger.log.i(body);
               AppLogger.log.i(
-                "sendPostRequest \n API: $url \n RESPONSE: ${response.toString()}",
+                "sendPostRequest \n API: $url \n Token : $token \n RESPONSE: ${response.toString()}",
               );
               return handler.next(response);
             },
@@ -55,16 +56,19 @@ class Request {
       ),
     );
     try {
+      final headers = {
+        "Content-Type": "application/json",
+        if (token != null && isTokenRequired) "Authorization": "Bearer $token",
+        if (sessionToken != null && isTokenRequired)
+          "x-session-token": sessionToken,
+      };
+
       final response = await dio
           .post(
             url,
             data: body,
             options: Options(
-              headers: {
-                "Content-Type": "application/json",
-                if (token != null && isTokenRequired)
-                  "Authorization": "Bearer $token",
-              },
+              headers: headers,
               validateStatus: (status) => status != null && status < 503,
             ),
           )
@@ -74,11 +78,12 @@ class Request {
               throw TimeoutException("Request timed out after 10 seconds");
             },
           );
+      // 🔹 Debug print
 
       AppLogger.log.i(
-        "RESPONSE \n API: $url \n RESPONSE: ${response.toString()}",
+        "RESPONSE \n API: $url \n Token : $token \n session Token : $sessionToken \n Headers : $headers \n RESPONSE: ${response.toString()}",
       );
-      AppLogger.log.i("$token");
+
       AppLogger.log.i("$body");
 
       return response;
