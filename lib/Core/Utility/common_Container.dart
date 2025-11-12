@@ -1158,7 +1158,8 @@ class CommonContainer {
     FocusNode? focusNode,
     Color borderColor = AppColor.red,
     Color? imageColor,
-    VoidCallback? onFieldTap,
+    // VoidCallback? onFieldTap,
+    Future<void> Function()? onFieldTap,
 
     // 🔹 New
     DatePickMode datePickMode = DatePickMode.none,
@@ -1175,12 +1176,10 @@ class CommonContainer {
         String dd(int v) => v.toString().padLeft(2, '0');
         String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
 
-        // -------------------- Tap Handling --------------------
         void _handleTap() async {
-          if (context == null) return;
-
           // Single Date Picker
           if (datePickMode == DatePickMode.single) {
+            if (context == null) return;
             final picked = await showDatePicker(
               context: context!,
               initialDate: DateTime.now(),
@@ -1204,7 +1203,9 @@ class CommonContainer {
               ),
             );
             if (picked != null) {
-              controller?.text = fmt(picked);
+              controller?.text =
+                  '${picked.day.toString().padLeft(2, '0')}-'
+                  '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
               state.didChange(controller?.text);
             }
             return;
@@ -1212,6 +1213,7 @@ class CommonContainer {
 
           // Range Picker
           if (datePickMode == DatePickMode.range) {
+            if (context == null) return;
             final picked = await showDateRangePicker(
               context: context!,
               firstDate: DateTime(2000),
@@ -1238,7 +1240,12 @@ class CommonContainer {
               ),
             );
             if (picked != null) {
-              controller?.text = '${fmt(picked.start)}  to  ${fmt(picked.end)}';
+              controller?.text =
+                  '${picked.start.day.toString().padLeft(2, '0')}-'
+                  '${picked.start.month.toString().padLeft(2, '0')}-${picked.start.year}'
+                  '  to  '
+                  '${picked.end.day.toString().padLeft(2, '0')}-'
+                  '${picked.end.month.toString().padLeft(2, '0')}-${picked.end.year}';
               state.didChange(controller?.text);
             }
             return;
@@ -1246,6 +1253,7 @@ class CommonContainer {
 
           // Dropdown
           if (isDropdown && dropdownItems?.isNotEmpty == true) {
+            if (context == null) return;
             FocusScope.of(context!).unfocus();
             await Future.delayed(const Duration(milliseconds: 100));
             _showDropdownBottomSheet(
@@ -1257,9 +1265,98 @@ class CommonContainer {
             return;
           }
 
-          // Default
-          onFieldTap?.call();
+          // Default (time fields etc.) — no context required
+          if (onFieldTap != null) {
+            await onFieldTap!(); // open your showTimePicker
+            state.didChange(controller?.text); // sync to FormField
+          }
         }
+
+        // -------------------- Tap Handling --------------------
+        // void _handleTap() async {
+        //   if (context == null) return;
+        //
+        //   // Single Date Picker
+        //   if (datePickMode == DatePickMode.single) {
+        //     final picked = await showDatePicker(
+        //       context: context!,
+        //       initialDate: DateTime.now(),
+        //       firstDate: DateTime(1900),
+        //       lastDate: DateTime(2100),
+        //       builder: (ctx, child) => Theme(
+        //         data: Theme.of(ctx).copyWith(
+        //           dialogBackgroundColor: AppColor.scaffoldColor,
+        //           colorScheme: ColorScheme.light(
+        //             primary: AppColor.resendOtp,
+        //             onPrimary: Colors.white,
+        //             onSurface: AppColor.black,
+        //           ),
+        //           textButtonTheme: TextButtonThemeData(
+        //             style: TextButton.styleFrom(
+        //               foregroundColor: AppColor.resendOtp,
+        //             ),
+        //           ),
+        //         ),
+        //         child: child!,
+        //       ),
+        //     );
+        //     if (picked != null) {
+        //       controller?.text = fmt(picked);
+        //       state.didChange(controller?.text);
+        //     }
+        //     return;
+        //   }
+        //
+        //   // Range Picker
+        //   if (datePickMode == DatePickMode.range) {
+        //     final picked = await showDateRangePicker(
+        //       context: context!,
+        //       firstDate: DateTime(2000),
+        //       lastDate: DateTime(2100),
+        //       initialDateRange: DateTimeRange(
+        //         start: DateTime.now(),
+        //         end: DateTime.now().add(const Duration(days: 7)),
+        //       ),
+        //       builder: (ctx, child) => Theme(
+        //         data: Theme.of(ctx).copyWith(
+        //           dialogBackgroundColor: AppColor.scaffoldColor,
+        //           colorScheme: ColorScheme.light(
+        //             primary: AppColor.resendOtp,
+        //             onPrimary: Colors.white,
+        //             onSurface: AppColor.black,
+        //           ),
+        //           textButtonTheme: TextButtonThemeData(
+        //             style: TextButton.styleFrom(
+        //               foregroundColor: AppColor.lightSkyBlue,
+        //             ),
+        //           ),
+        //         ),
+        //         child: child!,
+        //       ),
+        //     );
+        //     if (picked != null) {
+        //       controller?.text = '${fmt(picked.start)}  to  ${fmt(picked.end)}';
+        //       state.didChange(controller?.text);
+        //     }
+        //     return;
+        //   }
+        //
+        //   // Dropdown
+        //   if (isDropdown && dropdownItems?.isNotEmpty == true) {
+        //     FocusScope.of(context!).unfocus();
+        //     await Future.delayed(const Duration(milliseconds: 100));
+        //     _showDropdownBottomSheet(
+        //       context!,
+        //       dropdownItems!,
+        //       controller,
+        //       state,
+        //     );
+        //     return;
+        //   }
+        //
+        //   // Default
+        //   onFieldTap?.call();
+        // }
 
         // -------------------- Input Formatters --------------------
         final effectiveInputFormatters = isMobile || isAadhaar || isPincode
@@ -1483,7 +1580,7 @@ class CommonContainer {
                           ),
                         ),
                       ],
-                      const SizedBox(width: 20),
+                       SizedBox(width: 20),
                       if (imagePath != null)
                         InkWell(
                           onTap: () {
