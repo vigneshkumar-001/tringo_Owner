@@ -16,7 +16,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   int selectedIndex = -1;
-  bool isIndividual = true; // toggle: true = Individual, false = Company
+  bool isIndividual = true;
 
   void _goNext() {
     RegistrationSession.instance.businessType = isIndividual
@@ -69,7 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   isIndividual: isIndividual,
                   onToggle: (value) {
                     setState(() {
-                      isIndividual = value; // Individual/Company toggle
+                      isIndividual = value;
                     });
                   },
                   title: 'I’m Selling Products',
@@ -80,7 +80,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 CommonContainer.sellingProduct(
-                  buttonTap: _goNext, // <-- set session + navigate
+                  buttonTap: _goNext,
                   onToggle: (value) {
                     setState(() {
                       isIndividual = value;
@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onTap: () {
                     setState(() {
                       selectedIndex = 1;
-                      isIndividual = true; // default when selecting card
+                      isIndividual = true;
                     });
                   },
                   title: 'I Do Services',
