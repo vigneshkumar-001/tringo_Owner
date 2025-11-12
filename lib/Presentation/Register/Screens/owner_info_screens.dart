@@ -1,24 +1,32 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Core/Utility/app_loader.dart';
+import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Utility/thanglish_to_tamil.dart';
 
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
+import '../controller/owner_info_notifier.dart';
 
-class OwnerInfoScreens extends StatefulWidget {
+class OwnerInfoScreens extends ConsumerStatefulWidget {
   const OwnerInfoScreens({super.key, this.isCompany});
   final bool? isCompany;
   @override
-  State<OwnerInfoScreens> createState() => _OwnerInfoScreensState();
+  ConsumerState<OwnerInfoScreens> createState() => _OwnerInfoScreensState();
 }
 
-class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
+class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
   final type = RegistrationSession.instance.businessType?.label ?? 'Not set';
   final TextEditingController englishNameController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
@@ -91,6 +99,7 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(ownerInfoNotifierProvider);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -278,7 +287,7 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                       duration: const Duration(milliseconds: 400),
                       transitionBuilder: (child, animation) =>
                           FadeTransition(opacity: animation, child: child),
-                      child: showOtpCard
+                      child: /*showOtpCard
                           ? CommonContainer.otpVerificationCard(
                               last4Digits: mobileController.text.substring(
                                 mobileController.text.length - 4,
@@ -292,33 +301,33 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                               onSubmit: _onSubmitOtp,
                               onBack: () => setState(() => showOtpCard = false),
                             )
-                          : CommonContainer.mobileNumberField(
-                              controller: mobileController,
-                              onChanged: (v) {},
-                              onVerifyTap: () {
-                                if (mobileController.text.length == 10) {
-                                  setState(() => showOtpCard = true);
-                                  _startResendTimer();
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Enter a valid 10-digit mobile number",
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Mobile number required';
-                                }
-                                if (value.length != 10) {
-                                  return 'Enter valid 10-digit number';
-                                }
-                                return null;
-                              },
-                            ),
+                          :*/ CommonContainer.mobileNumberField(
+                        controller: mobileController,
+                        onChanged: (v) {},
+                        onVerifyTap: () {
+                          if (mobileController.text.length == 10) {
+                            setState(() => showOtpCard = true);
+                            _startResendTimer();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Enter a valid 10-digit mobile number",
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Mobile number required';
+                          }
+                          if (value.length != 10) {
+                            return 'Enter valid 10-digit number';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                     const SizedBox(height: 30),
                     Text(
@@ -366,22 +375,76 @@ class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
                       context: context,
                     ),
                     const SizedBox(height: 30),
+
                     CommonContainer.button(
-                      imagePath: AppImages.rightStickArrow,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ShopCategoryInfo(),
-                          ),
-                        );
+                      imagePath: state.isLoading
+                          ? null
+                          : AppImages.rightStickArrow,
+                      text: state.isLoading
+                          ? AppLoader.circularLoader()
+                          : Text('Save & Continue'),
+                      onTap: () async {
+                        final englishName = englishNameController.text.trim();
+                        final tamilName = tamilNameController.text.trim();
+                        final mobile = mobileController.text.trim();
+                        final email = emailIdController.text.trim();
+                        final input = dateOfBirthController.text.trim();
+
+                        String dobForApi = '';
+                        try {
+                          final parsedDate = DateFormat(
+                            'dd-MM-yyyy',
+                          ).parseStrict(input);
+                          dobForApi = DateFormat(
+                            'yyyy-MM-dd',
+                          ).format(parsedDate);
+                        } catch (e) {
+                          // Handle invalid date input if needed
+                          print('Invalid date: $input');
+                        }
+                        final gender = genderController.text.trim();
+
+                        await ref
+                            .read(ownerInfoNotifierProvider.notifier)
+                            .submitOwnerInfo(
+                              ownershipType: type,
+                              businessType: '',
+                              ownerNameTamil: tamilName,
+                              identityDocumentUrl: '',
+                              govtRegisteredName: englishName,
+                              gender: gender,
+                              fullName: englishName,
+                              dateOfBirth: dobForApi,
+                              email: email,
+                              preferredLanguage: '',
+                            );
+
+                        final newState = ref.read(ownerInfoNotifierProvider);
+
+                        if (newState.error != null) {
+                          AppSnackBar.error(context, newState.error!);
+                        } else if (newState.ownerResponse != null) {
+                          // Navigate using GoRouter
+                          context.push(AppRoutes.shopCategoryInfoPath);
+
+                          AppLogger.log.i(
+                            "✅ Owner Info Saved: ${newState.ownerResponse?.toJson()}",
+                          );
+
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => ShopCategoryInfo(),
+                          //   ),
+                          // );
+                        }
                       },
-                      text: Text('Save & Continue'),
                     ),
-                    const SizedBox(height: 30),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 30),
             ],
           ),
         ),
