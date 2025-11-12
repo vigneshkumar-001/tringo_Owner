@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
 
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../controller/login_notifier.dart';
 
@@ -40,10 +42,11 @@ class _OtpScreensState extends ConsumerState<OtpScreens> {
       // OTP verified -> navigate
       else if (next.otpResponse != null) {
         AppSnackBar.success(context, 'OTP verified successfully!');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const RegisterScreen()),
-        );
+        context.goNamed(AppRoutes.register);
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (_) => const RegisterScreen()),
+        // );
         notifier.resetState();
       }
       // Login response (used for resend OTP)

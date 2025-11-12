@@ -1,57 +1,75 @@
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-//
-// import 'package:dartz/dartz.dart';
-// import 'package:flutter_riverpod/legacy.dart';
-// import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
-// import '../../../Api/Repository/failure.dart';
-// import '../model/owner_info_response.dart';
-//
-// class OwnerInfoState {
-//   final bool isLoading;
-//   final OwnerInfoResponse? response;
-//   final String error;
-//
-//   OwnerInfoState({this.isLoading = false, this.response, this.error = ''});
-//
-//   OwnerInfoState copyWith({
-//     bool? isLoading,
-//     OwnerInfoResponse? response,
-//     String? error,
-//   }) {
-//     return OwnerInfoState(
-//       isLoading: isLoading ?? this.isLoading,
-//       response: response ?? this.response,
-//       error: error ?? this.error,
-//     );
-//   }
-// }
-//
-// class OwnerInfoNotifier extends StateNotifier<OwnerInfoState> {
-//   final ApiDataSource dataSource;
-//
-//   OwnerInfoNotifier(this.dataSource) : super(OwnerInfoState());
-//
-//   Future<void> insertOwnerInfo(String phone) async {
-//     state = state.copyWith(isLoading: true, error: '');
-//     final Either<Failure, OwnerInfoResponse> result = await dataSource
-//         .mobileNumberLogin(phone);
-//
-//     result.fold(
-//       (failure) {
-//         state = state.copyWith(isLoading: false, error: failure.message);
-//       },
-//       (response) {
-//         state = state.copyWith(isLoading: false, response: response);
-//       },
-//     );
-//   }
-// }
-//
-// final ownerInfoNotifierProvider =
-//     StateNotifierProvider<OwnerInfoNotifier, OwnerInfoState>(
-//       (ref) => OwnerInfoNotifier(ref.read(apiDataSourceProvider)),
-//     );
-//
-// final apiDataSourceProvider = Provider<ApiDataSource>((ref) {
-//   return ApiDataSource();
-// });
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../Api/DataSource/api_data_source.dart';
+import '../../../Api/Repository/failure.dart';
+import '../../Login/controller/login_notifier.dart';
+import '../model/owner_info_response.dart';
+
+class OwnerInfoState {
+  final bool isLoading;
+  final String? error;
+  final OwnerInfoResponse? ownerResponse;
+
+  const OwnerInfoState({
+    this.isLoading = false,
+    this.error,
+    this.ownerResponse,
+  });
+
+  factory OwnerInfoState.initial() => const OwnerInfoState();
+}
+
+class OwnerInfoNotifier extends Notifier<OwnerInfoState> {
+  late final ApiDataSource api;
+
+  @override
+  OwnerInfoState build() {
+    api = ref.read(apiDataSourceProvider);
+    return OwnerInfoState.initial();
+  }
+
+  /// Register or update owner info
+  Future<void> submitOwnerInfo({
+    required String govtRegisteredName,
+    required String preferredLanguage,
+    required String gender,
+    required String dateOfBirth,
+    required String identityDocumentUrl,
+    required String fullName,
+    required String ownerNameTamil,
+    required String email,
+    required String businessType,
+    required String ownershipType,
+  }) async {
+    state = const OwnerInfoState(isLoading: true);
+
+    final result = await api.ownerInfo(
+      businessType: businessType,
+      ownershipType: ownershipType,
+      email: email,
+      dateOfBirth: dateOfBirth,
+      fullName: fullName,
+      gender: gender,
+      govtRegisteredName: govtRegisteredName,
+      identityDocumentUrl: identityDocumentUrl,
+      ownerNameTamil: ownerNameTamil,
+      preferredLanguage: preferredLanguage,
+    );
+
+    result.fold(
+      (Failure failure) =>
+          state = OwnerInfoState(isLoading: false, error: failure.message),
+      (response) =>
+          state = OwnerInfoState(isLoading: false, ownerResponse: response),
+    );
+  }
+
+  void resetState() {
+    state = OwnerInfoState.initial();
+  }
+}
+
+final ownerInfoNotifierProvider =
+    NotifierProvider.autoDispose<OwnerInfoNotifier, OwnerInfoState>(
+      OwnerInfoNotifier.new,
+    );
