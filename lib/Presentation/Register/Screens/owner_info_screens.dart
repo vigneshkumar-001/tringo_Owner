@@ -7,6 +7,7 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Utility/thanglish_to_tamil.dart';
 
+import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 
@@ -18,6 +19,7 @@ class OwnerInfoScreens extends StatefulWidget {
 }
 
 class _OwnerInfoScreensState extends State<OwnerInfoScreens> {
+  final type = RegistrationSession.instance.businessType?.label ?? 'Not set';
   final TextEditingController englishNameController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
   final TextEditingController emailIdController = TextEditingController();
