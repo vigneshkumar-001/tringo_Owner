@@ -176,7 +176,7 @@ class _OfferScreensState extends State<OfferScreens> {
                     },
                   ),
 
-                  const SizedBox(height: 30),
+                  SizedBox(height: 35),
 
                   // App Offers + actions
                   Row(
@@ -1044,7 +1044,6 @@ class _OfferScreensState extends State<OfferScreens> {
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(24),
-
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),

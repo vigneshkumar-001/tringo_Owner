@@ -11,6 +11,7 @@ import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
 import '../../Create Surprise Offers/create_surprise_offers.dart';
 import '../../Enquiry/Screens/enquiry_screens.dart';
@@ -51,6 +52,7 @@ class _HomeScreensState extends State<HomeScreens> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isPremium = RegistrationSession.instance.isPremium;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -405,80 +407,80 @@ class _HomeScreensState extends State<HomeScreens> {
                           ],
                         ),
                       ),
-
-                      Positioned(
-                        bottom: -7,
-
-                        left: 30,
-                        right: 30,
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubscriptionScreen(),
+                      if (!isPremium) ...[
+                        Positioned(
+                          bottom: -7,
+                          left: 30,
+                          right: 30,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SubscriptionScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 18,
                               ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 18,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(25),
-                                topLeft: Radius.circular(25),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(25),
+                                  topLeft: Radius.circular(25),
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Upgrade',
-                                  style: AppTextStyles.mulish(
-                                    fontSize: 13,
-                                    color: AppColor.skyBlue,
-                                    fontWeight: FontWeight.w800,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Upgrade',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 13,
+                                      color: AppColor.skyBlue,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'to Conquer Market',
-                                  style: AppTextStyles.mulish(
-                                    fontSize: 13,
-                                    color: AppColor.black,
-                                    fontWeight: FontWeight.w800,
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'to Conquer Market',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 13,
+                                      color: AppColor.black,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 10),
-                                Image.asset(
-                                  AppImages.rightStickArrow,
-                                  height: 13,
-                                  color: AppColor.darkBlue,
-                                ),
-                              ],
+                                  SizedBox(width: 10),
+                                  Image.asset(
+                                    AppImages.rightStickArrow,
+                                    height: 13,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        bottom: -09,
-                        left: 45,
+                        Positioned(
+                          bottom: -09,
+                          left: 45,
 
-                        child: Center(
-                          child: Image.asset(
-                            AppImages.upgrade,
-                            height: 84,
-                            width: 71,
+                          child: Center(
+                            child: Image.asset(
+                              AppImages.upgrade,
+                              height: 84,
+                              width: 71,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
-                SizedBox(height: 140 ),
+                SizedBox(height: 140),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Row(
@@ -500,10 +502,15 @@ class _HomeScreensState extends State<HomeScreens> {
                       ),
                       CommonContainer.offerCardContainer(
                         onTap: () {
+                          final isPremium =
+                              RegistrationSession.instance.isPremium;
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CreateSurpriseOffers(),
+                              builder: (_) => isPremium
+                                  ? SubscriptionScreen() //  premium → Subscription
+                                  : CreateSurpriseOffers(), //  non-premium → Create Surprise
                             ),
                           );
                         },
@@ -513,6 +520,22 @@ class _HomeScreensState extends State<HomeScreens> {
                         cardImage: AppImages.surpriseCard,
                         cardImage1: AppImages.surprise,
                       ),
+
+                      // CommonContainer.offerCardContainer(
+                      //   onTap: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) => CreateSurpriseOffers(),
+                      //       ),
+                      //     );
+                      //   },
+                      //   arrowColor: AppColor.surpriseOfferArrow,
+                      //   isSurpriseCard: true,
+                      //   tittle: 'Surprise',
+                      //   cardImage: AppImages.surpriseCard,
+                      //   cardImage1: AppImages.surprise,
+                      // ),
                     ],
                   ),
                 ),
@@ -1158,8 +1181,8 @@ class _HomeScreensState extends State<HomeScreens> {
                                               ),
                                             ),
                                           ),
-                                            SizedBox(width: 10),
-                                            Text(
+                                          SizedBox(width: 10),
+                                          Text(
                                             "2 Qty",
                                             style: AppTextStyles.mulish(
                                               fontSize: 15,

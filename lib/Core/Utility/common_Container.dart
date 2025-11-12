@@ -802,35 +802,35 @@ class CommonContainer {
     required String title,
     required String description,
     required bool isSelected,
-    required bool isIndividual,
+    required bool? selectedKind, // null until user chooses
     bool isSellingCard = true,
-    required ValueChanged<bool> onToggle,
+    required ValueChanged<bool?> onToggle, // true/false/null
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 220),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: isSelected
-              ? const Border(
+              ? Border(
                   bottom: BorderSide(width: 8, color: Colors.black),
                   top: BorderSide(width: 2, color: Colors.black),
                   left: BorderSide(width: 2, color: Colors.black),
                   right: BorderSide(width: 2, color: Colors.black),
                 )
-              : Border.all(color: const Color(0xffD0D0D0), width: 1.5),
+              : Border.all(color: Color(0xffD0D0D0), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Top Icon ---
+            // Icon
             Image.asset(image, height: 50, width: 50),
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
-            // --- Title ---
+            // Title with bold second half
             RichText(
               text: TextSpan(
                 text: title.split(' ').take(2).join(' ') + ' ',
@@ -851,12 +851,11 @@ class CommonContainer {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
-            // --- Description ---
             Text(
               description,
-              style: TextStyle(
+              style: AppTextStyles.mulish(
                 fontSize: 13,
                 color: Colors.grey[600],
                 height: 1.5,
@@ -864,9 +863,8 @@ class CommonContainer {
             ),
 
             if (isSellingCard) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
-              // If a selection has been made → show full card + button
               if (isSelected) ...[
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -874,171 +872,179 @@ class CommonContainer {
                     color: const Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => onToggle(true),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            decoration: BoxDecoration(
-                              color: isIndividual
-                                  ? Colors.white
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: isIndividual
-                                  ? [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        offset: const Offset(0, 2),
-                                        blurRadius: 10,
-                                      ),
-                                    ]
-                                  : [],
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Individual",
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                  child: Builder(
+                    builder: (_) {
+                      final bool isIndiv = selectedKind == true;
+                      final bool isComp = selectedKind == false;
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // --- Individual ---
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => onToggle(true),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: isIndiv
+                                      ? Colors.white
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: isIndiv
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.08,
+                                            ),
+                                            offset: Offset(0, 2),
+                                            blurRadius: 10,
+                                          ),
+                                        ]
+                                      : [],
                                 ),
-                                if (isIndividual)
-                                  Text(
-                                    "Selected",
-                                    style: AppTextStyles.mulish(
-                                      color: Colors.grey,
-                                      fontSize: 12,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "Individual",
+                                      style: AppTextStyles.mulish(
+                                        fontWeight: isIndiv
+                                            ? FontWeight.w800
+                                            : FontWeight.normal, // << change
+                                        color: Colors.black,
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                    if (isIndiv)
+                                      Text(
+                                        "Selected",
+                                        style: AppTextStyles.mulish(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => onToggle(false),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            decoration: BoxDecoration(
-                              color: !isIndividual
-                                  ? Colors.white
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: !isIndividual
-                                  ? [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        offset: const Offset(0, 2),
-                                        blurRadius: 10,
-                                      ),
-                                    ]
-                                  : [],
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Company",
+
+                          // --- Center "or" chip: only BEFORE user chooses ---
+                          if (selectedKind == null)
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 15,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 5,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  "or",
                                   style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                if (!isIndividual)
-                                  Text(
-                                    "Selected",
-                                    style: AppTextStyles.mulish(
-                                      color: Colors.grey,
-                                      fontSize: 12,
+                              ),
+                            ),
+
+                          // --- Company ---
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => onToggle(false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isComp
+                                      ? Colors.white
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: isComp
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.08,
+                                            ),
+                                            offset: Offset(0, 2),
+                                            blurRadius: 10,
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "Company",
+                                      style: AppTextStyles.mulish(
+                                        fontWeight: isComp
+                                            ? FontWeight.w800
+                                            : FontWeight.normal, // << change
+                                        color: Colors.black,
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                    if (isComp)
+                                      Text(
+                                        "Selected",
+                                        style: AppTextStyles.mulish(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                 ),
+
                 SizedBox(height: 20),
-                // --- Save & Continue Button ---
-                GestureDetector(
-                  onTap: buttonTap,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Save & Continue",
-                      style: AppTextStyles.mulish(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+
+                if (selectedKind != null)
+                  GestureDetector(
+                    onTap: buttonTap,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                // --- Default Simple Row (when not selected) ---
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "Individual",
-                        style: AppTextStyles.mulish(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Save & Continue",
+                            style: AppTextStyles.mulish(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          "or",
-                          style: AppTextStyles.mulish(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
                           ),
-                        ),
+                          SizedBox(width: 12),
+                          Image.asset(AppImages.rightStickArrow, height: 20),
+                        ],
                       ),
-                      Text(
-                        "Company",
-                        style: AppTextStyles.mulish(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+              ] else ...[
+                // When not selected: show NOTHING (matches screenshot-1)
+                SizedBox.shrink(),
               ],
             ],
           ],
