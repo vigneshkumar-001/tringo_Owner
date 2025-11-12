@@ -15,6 +15,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   int selectedIndex = -1;
+  bool isIndividual = true;
 
   bool? selectedKind;
 
