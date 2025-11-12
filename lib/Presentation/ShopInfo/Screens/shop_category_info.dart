@@ -28,8 +28,10 @@ class ShopCategoryInfo extends StatefulWidget {
 class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   final _formKey = GlobalKey<FormState>();
 
-
-  final TextEditingController _shopNameEnglishController = TextEditingController();
+  final TextEditingController _shopNameEnglishController =
+      TextEditingController();
+  final TextEditingController _openTimeController = TextEditingController();
+  final TextEditingController _closeTimeController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
@@ -69,6 +71,14 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   //     );
   //   }
   // }
+
+  TimeOfDay? _openTod;
+  TimeOfDay? _closeTod;
+  int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+  bool validateTimes() {
+    if (_openTod == null || _closeTod == null) return false;
+    return _toMinutes(_closeTod!) > _toMinutes(_openTod!);
+  }
 
   Future<void> _getCurrentLocation() async {
     try {
@@ -119,6 +129,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       );
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -320,11 +331,13 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         onChanged: (value) async {
                           // your existing suggestion logic can remain
                           setState(() => isTamilNameLoading = true);
-                          final result = await TanglishTamilHelper.transliterate(value);
+                          final result =
+                              await TanglishTamilHelper.transliterate(value);
                           setState(() {
                             tamilNameSuggestion = result;
                             isTamilNameLoading = false;
-                            _tamilPrefilled = true; // user started typing; stop auto-updates
+                            _tamilPrefilled =
+                                true; // user started typing; stop auto-updates
                           });
                         },
                       ),
@@ -333,7 +346,6 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                           padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-
 
                       if (isTamilNameLoading)
                         const Padding(
@@ -568,7 +580,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 25),
                       Text(
-                        'Alternate Mobile Number',
+                        'Whatsapp Number',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
@@ -577,9 +589,64 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         isMobile: true,
                         text: 'Mobile No',
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Alternate Mobile Number'
+                            ? 'Please Enter Whatsapp Number'
                             : null,
                       ),
+                      SizedBox(height: 25),
+                      Text(
+                        'Open Time',
+                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      ),
+                      SizedBox(height: 10),
+                      CommonContainer.fillingContainer(
+                        controller: _openTimeController,
+                        text: '',
+                        imagePath: AppImages.clock,
+                        imageWidth: 25,
+                        readOnly: true,
+                        onFieldTap: () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+                          if (picked != null) {
+                            _openTimeController.text = picked.format(context);
+                            setState(
+                              () => _openTod = picked,
+                            ); // if you keep a TimeOfDay for validation
+                          }
+                        },
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'Please select Open Time'
+                            : null,
+                      ),
+                      SizedBox(height: 25),
+                      Text(
+                        'Close Time',
+                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      ),
+                      SizedBox(height: 10),
+                      CommonContainer.fillingContainer(
+                        controller: _closeTimeController,
+                        text: '',
+                        readOnly: true,
+                        imagePath: AppImages.clock,
+                        imageWidth: 25,
+                        onFieldTap: () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+                          if (picked != null) {
+                            _closeTimeController.text = picked.format(context);
+                            setState(() => _closeTod = picked);
+                          }
+                        },
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'Please select Close Time'
+                            : null,
+                      ),
+
                       SizedBox(height: 25),
                       Text(
                         'Email Id',
@@ -610,6 +677,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                             ? 'Please select a Door Delivery'
                             : null,
                       ),
+
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
@@ -651,52 +719,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 36),
 
-                      // SizedBox(height: 30),
-                      // CommonContainer.button(
-                      //   buttonColor: AppColor.black,
-                      //   // onTap: _onSubmit,
-                      //   onTap: () {
-                      //     Navigator.push(
-                      //       context,
-                      //       MaterialPageRoute(
-                      //         builder: (context) => ShopPhotoInfo(),
-                      //       ),
-                      //     );
-                      //   },
-                      //   text: Text(
-                      //     widget.pages == "AboutMeScreens"
-                      //         ? 'UpDate'
-                      //         : 'Save & Continue',
-                      //     style: AppTextStyles.mulish(
-                      //       fontSize: 18,
-                      //       fontWeight: FontWeight.w700,
-                      //     ),
-                      //   ),
-                      //   imagePath: AppImages.rightStickArrow,
-                      //   imgHeight: 20,
-                      // ),
-                      // if (widget.pages == "AboutMeScreens")
-                      //   CommonContainer.button(
-                      //     buttonColor: AppColor.black,
-                      //     // onTap: _onSubmit,
-                      //     onTap: () {
-                      //       Navigator.push(
-                      //         context,
-                      //         MaterialPageRoute(
-                      //           builder: (context) => AboutMeScreens(),
-                      //         ),
-                      //       );
-                      //     },
-                      //     text: Text(
-                      //       'UpDate',
-                      //       style: AppTextStyles.mulish(
-                      //         fontSize: 18,
-                      //         fontWeight: FontWeight.w700,
-                      //       ),
-                      //     ),
-                      //     imagePath: AppImages.rightStickArrow,
-                      //     imgHeight: 20,
-                      //   ),
+
                     ],
                   ),
                 ),
