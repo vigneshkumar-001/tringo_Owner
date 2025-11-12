@@ -3,5 +3,6 @@ class ApiUrl {
   static const String register = "${base}api/v1/auth/request-otp";
   static const String verifyOtp = "${base}api/v1/auth/verify-otp";
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
+  static const String ownerInfo = "${base}api/v1/business";
 
 }
