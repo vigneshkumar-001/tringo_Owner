@@ -28,7 +28,10 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 13),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 25,
+                        vertical: 13,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColor.border),
                         shape: BoxShape.circle,
@@ -155,7 +158,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                   SizedBox(height: 20),
                   SingleChildScrollView(
                     physics: BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 30),
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
@@ -268,7 +271,7 @@ class _ComparisonCard extends StatelessWidget {
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 6.0),
       child: Container(
         decoration: BoxDecoration(
           color: AppColor.white, // your container color stays

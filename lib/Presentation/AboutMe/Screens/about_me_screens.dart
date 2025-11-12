@@ -15,7 +15,7 @@ import '../../ShopInfo/Screens/shop_photo_info.dart';
 import '../../Shops Details/Screen/shops_details.dart';
 
 class AboutMeScreens extends StatefulWidget {
-  const AboutMeScreens({super.key,this.initialTab = 0});
+  const AboutMeScreens({super.key, this.initialTab = 0});
 
   final int initialTab;
   @override
@@ -37,6 +37,7 @@ class ProductItem {
 class _AboutMeScreensState extends State<AboutMeScreens> {
   int selectedIndex = 0;
   int followersSelectedIndex = 0;
+  int selectedWeight = 0;
   final ScrollController _scrollController = ScrollController();
 
   void _scrollToSelected(int index) {
@@ -51,7 +52,6 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
       curve: Curves.easeInOut,
     );
   }
-
 
   @override
   void initState() {
@@ -81,7 +81,7 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
     {'icon': AppImages.analytics, 'label': 'Analytics'},
     {'icon': AppImages.groupPeople, 'label': 'Followers'},
   ];
-  int selectedWeight = 0; // default
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

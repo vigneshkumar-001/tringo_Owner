@@ -52,8 +52,16 @@ class _ShopsDetailsState extends State<ShopsDetails> {
     const String shopDisplayNameTamil =
         'ஸ்ரீ கிருஷ்ணா ஸ்வீட்ஸ் பிரைவேட் லிமிடெட்';
     const String shopDisplayName = 'Sri Krishna Sweets Private Limited';
-    final bool showAddBranch =
+    // final bool showAddBranch =
+    //     RegistrationSession.instance.businessType == BusinessType.company;
+    // Session-based flags
+    final bool isCompany =
         RegistrationSession.instance.businessType == BusinessType.company;
+    final bool isIndividual =
+        RegistrationSession.instance.businessType == BusinessType.individual;
+
+    final bool showAddBranch = isCompany; // company-only
+    // IMPORTANT: Attract card is ONLY for Individual (per your requirement)
 
     return Scaffold(
       body: SafeArea(
@@ -407,19 +415,20 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                       ),
                     ),
                     SizedBox(height: 40),
-                    CommonContainer.attractCustomerCard(
-                      title: 'Attract More Customers',
-                      description: 'Unlock premium to attract more customers',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SubscriptionScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 48),
+                    if (isIndividual)
+                      CommonContainer.attractCustomerCard(
+                        title: 'Attract More Customers',
+                        description: 'Unlock premium to attract more customers',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SubscriptionScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    SizedBox(height: 40),
                     Row(
                       children: [
                         Image.asset(
@@ -492,14 +501,15 @@ class _ShopsDetailsState extends State<ShopsDetails> {
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ElevatedButton(
                 onPressed: () {
-                  // Optional: clear the session when closing preview
-                  RegistrationSession.instance.reset();
-
-                  Navigator.push(
+                  RegistrationSession.instance
+                      .reset(); // becomes non-premium again
+                  Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CommonBottomNavigation(initialIndex: 0),
+                      builder: (_) =>
+                          const CommonBottomNavigation(initialIndex: 0),
                     ),
+                    (route) => false, // clears back stack
                   );
                 },
                 style: ElevatedButton.styleFrom(
