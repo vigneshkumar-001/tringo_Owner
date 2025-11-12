@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
 import '../model/login_response.dart';
@@ -62,27 +63,43 @@ class LoginNotifier extends Notifier<LoginState> {
       },
     );
   }
-
-  Future<void> verifyOtp({required String contact, required String otp}) async {
+  Future<void> verifyOtp({
+    required String contact,
+    required String otp,
+  }) async {
     state = const LoginState(isLoading: true);
 
     final result = await api.otp(contact: contact, otp: otp);
 
     result.fold(
-      (failure) => state = LoginState(isLoading: false, error: failure.message),
-      (OtpResponse response) async {
+          (failure) => state = LoginState(isLoading: false, error: failure.message),
+          (OtpResponse response) async {
         final data = response.data;
 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', data?.accessToken ?? '');
+
+        await prefs.setString('token', data?.accessToken ?? '');
         await prefs.setString('refreshToken', data?.refreshToken ?? '');
         await prefs.setString('sessionToken', data?.sessionToken ?? '');
         await prefs.setString('role', data?.role ?? '');
+
+        // ✅ Print what was actually stored
+        final accessToken = prefs.getString('token');
+        final refreshToken = prefs.getString('refreshToken');
+        final sessionToken = prefs.getString('sessionToken');
+        final role = prefs.getString('role');
+
+        AppLogger.log.i('✅ SharedPreferences stored successfully:');
+        AppLogger.log.i('token → $accessToken');
+        AppLogger.log.i('refreshToken → $refreshToken');
+        AppLogger.log.i('sessionToken → $sessionToken');
+        AppLogger.log.i('role → $role');
 
         state = LoginState(isLoading: false, otpResponse: response);
       },
     );
   }
+
 }
 
 /// --- PROVIDERS ---
