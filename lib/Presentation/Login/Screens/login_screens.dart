@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Presentation/Login/Screens/otp_screens.dart';
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../Login/controller/login_notifier.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -25,15 +27,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         AppSnackBar.error(context, next.error!);
       } else if (next.loginResponse != null) {
         AppSnackBar.success(context, 'OTP sent successfully!');
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                OtpScreens(phoneNumber: phoneController.text.trim()),
-          ),
-        ).then((_) {
-          ref.read(loginNotifierProvider.notifier).resetState();
-        });
+        context.goNamed(AppRoutes.otp, extra: phoneController.text.trim());
+        ref.read(loginNotifierProvider.notifier).resetState();
       }
     });
 

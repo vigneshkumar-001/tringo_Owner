@@ -28,8 +28,8 @@ class ShopCategoryInfo extends StatefulWidget {
 class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   final _formKey = GlobalKey<FormState>();
 
-
-  final TextEditingController _shopNameEnglishController = TextEditingController();
+  final TextEditingController _shopNameEnglishController =
+      TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
@@ -119,6 +119,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       );
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -320,11 +321,13 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         onChanged: (value) async {
                           // your existing suggestion logic can remain
                           setState(() => isTamilNameLoading = true);
-                          final result = await TanglishTamilHelper.transliterate(value);
+                          final result =
+                              await TanglishTamilHelper.transliterate(value);
                           setState(() {
                             tamilNameSuggestion = result;
                             isTamilNameLoading = false;
-                            _tamilPrefilled = true; // user started typing; stop auto-updates
+                            _tamilPrefilled =
+                                true; // user started typing; stop auto-updates
                           });
                         },
                       ),
@@ -333,7 +336,6 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                           padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-
 
                       if (isTamilNameLoading)
                         const Padding(
