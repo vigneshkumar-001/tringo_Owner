@@ -52,8 +52,25 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.shopCategoryInfoPath,
       name: AppRoutes.shopCategoryInfo,
-      builder: (context, state) => const ShopCategoryInfo(),
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>? ?? {};
+        final isService = args['isService'] as bool? ?? false;
+        final isIndividual = args['isIndividual'] as bool? ?? true;
+
+        return ShopCategoryInfo(
+          isService: isService,
+          isIndividual: isIndividual,
+          initialShopNameEnglish: args['initialShopNameEnglish'] as String?,
+          initialShopNameTamil: args['initialShopNameTamil'] as String?,
+          pages: args['pages'] as String?,
+        );
+      },
     ),
 
+    // GoRoute(
+    //   path: AppRoutes.shopCategoryInfoPath,
+    //   name: AppRoutes.shopCategoryInfo,
+    //   builder: (context, state) => const ShopCategoryInfo(),
+    // ),
   ],
 );

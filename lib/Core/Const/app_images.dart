@@ -81,4 +81,5 @@ class AppImages {
   static String customerImage2 = 'Assets/Images/Customer Image 2.png';
   static String addBranch = 'Assets/Images/Add_Branch.png';
   static String clock = 'Assets/Images/Clock.png';
+  static String uploadImage = 'Assets/Images/UploadImage.png';
 }
