@@ -20,7 +20,14 @@ import '../../ShopInfo/Screens/shop_category_info.dart';
 import '../controller/owner_info_notifier.dart';
 
 class OwnerInfoScreens extends ConsumerStatefulWidget {
-  const OwnerInfoScreens({super.key, this.isCompany});
+  final bool ? isService;
+  final bool ? isIndividual;
+  const OwnerInfoScreens({
+    super.key,
+    this.isCompany,
+   this.isService,
+   this.isIndividual,
+  });
   final bool? isCompany;
   @override
   ConsumerState<OwnerInfoScreens> createState() => _OwnerInfoScreensState();
@@ -428,7 +435,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           context.push(AppRoutes.shopCategoryInfoPath);
 
                           AppLogger.log.i(
-                            "✅ Owner Info Saved: ${newState.ownerResponse?.toJson()}",
+                            " Owner Info Saved: ${newState.ownerResponse?.toJson()}",
                           );
 
                           // Navigator.push(

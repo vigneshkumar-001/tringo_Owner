@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
@@ -14,11 +17,15 @@ class ShopCategoryInfo extends StatefulWidget {
   final String? pages;
   final String? initialShopNameEnglish;
   final String? initialShopNameTamil;
+  final bool? isService;
+  final bool? isIndividual;
   const ShopCategoryInfo({
     super.key,
     this.pages,
     this.initialShopNameEnglish,
     this.initialShopNameTamil,
+    this.isService,
+    this.isIndividual,
   });
 
   @override
@@ -79,6 +86,17 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   //     );
   //   }
   // }
+
+  File? _selectedImage;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() => _selectedImage = File(pickedFile.path));
+    }
+  }
 
   TimeOfDay? _openTod;
   TimeOfDay? _closeTod;
@@ -674,23 +692,72 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                             : null,
                       ),
                       SizedBox(height: 25),
-                      Text(
-                        'Door Delivery',
-                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
-                      ),
-                      SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        imagePath: AppImages.downArrow,
-                        verticalDivider: false,
-                        controller: _genderController,
-                        isDropdown: true,
-                        dropdownItems: cities,
-                        context: context,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a Door Delivery'
-                            : null,
-                      ),
+                      if (!widget.isService!) ...[
+                        // Selling Product: show Door Delivery
+                        Text(
+                          'Door Delivery',
+                          style: AppTextStyles.mulish(
+                            color: AppColor.mildBlack,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        CommonContainer.fillingContainer(
+                          imagePath: AppImages.downArrow,
+                          verticalDivider: false,
+                          controller: _genderController,
+                          isDropdown: true,
+                          dropdownItems: cities,
+                          context: context,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please select a Door Delivery'
+                              : null,
+                        ),
+                      ] else ...[
+                        // Service: show image picker container
+                        Text(
+                          'Upload Image',
+                          style: AppTextStyles.mulish(
+                            color: AppColor.mildBlack,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            height: 150,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: AppColor.lightGray,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey),
+                            ),
+                            child: _selectedImage != null
+                                ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                                : Icon(
+                                    Icons.camera_alt,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                          ),
+                        ),
+                      ],
 
+                      // Text(
+                      //   'Door Delivery',
+                      //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      // ),
+                      // SizedBox(height: 10),
+                      // CommonContainer.fillingContainer(
+                      //   imagePath: AppImages.downArrow,
+                      //   verticalDivider: false,
+                      //   controller: _genderController,
+                      //   isDropdown: true,
+                      //   dropdownItems: cities,
+                      //   context: context,
+                      //   validator: (value) => value == null || value.isEmpty
+                      //       ? 'Please select a Door Delivery'
+                      //       : null,
+                      // ),
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,

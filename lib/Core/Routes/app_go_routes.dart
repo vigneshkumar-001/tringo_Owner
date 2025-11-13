@@ -54,6 +54,5 @@ final goRouter = GoRouter(
       name: AppRoutes.shopCategoryInfo,
       builder: (context, state) => const ShopCategoryInfo(),
     ),
-
   ],
 );
