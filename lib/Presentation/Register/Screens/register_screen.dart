@@ -32,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   //     MaterialPageRoute(builder: (_) => const OwnerInfoScreens()),
   //   );
   // }
+
   void _goNext() {
     if (selectedKind == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -40,15 +41,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    RegistrationSession.instance.businessType = selectedKind!
+    final isIndividual = selectedKind!;
+    final businessType = isIndividual
         ? BusinessType.individual
         : BusinessType.company;
 
+    RegistrationSession.instance.businessType = businessType;
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const OwnerInfoScreens()),
+      MaterialPageRoute(
+        builder: (_) => OwnerInfoScreens(
+          isService: selectedIndex == 1, // 0=Product, 1=Service
+          isIndividual: isIndividual,
+        ),
+      ),
     );
   }
+
+  // void _goNext() {
+  //   if (selectedKind == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please select your business type.')),
+  //     );
+  //     return;
+  //   }
+  //
+  //   RegistrationSession.instance.businessType = selectedKind!
+  //       ? BusinessType.individual
+  //       : BusinessType.company;
+  //
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (_) => const OwnerInfoScreens()),
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -72,14 +99,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Navigator.maybePop(context);
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 Text('Choose', style: AppTextStyles.textWithBold(fontSize: 28)),
                 Text(
                   'your business type',
                   style: AppTextStyles.textWithBold(fontSize: 28),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
 
                 Text(
                   'Connect your business to millions of customers. Whether you sell products or services, our platform helps you grow.',
@@ -88,7 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fontWeight: FontWeight.normal,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 CommonContainer.sellingProduct(
                   image: AppImages.sell,
@@ -110,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   buttonTap: _goNext,
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 CommonContainer.sellingProduct(
                   image: AppImages.service,

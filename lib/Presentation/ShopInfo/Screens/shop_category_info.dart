@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -20,11 +24,15 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? pages;
   final String? initialShopNameEnglish;
   final String? initialShopNameTamil;
+  final bool? isService;
+  final bool? isIndividual;
   const ShopCategoryInfo({
     super.key,
     this.pages,
     this.initialShopNameEnglish,
     this.initialShopNameTamil,
+    required this.isService,
+    required this.isIndividual,
   });
 
   @override
@@ -35,8 +43,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   final _formKey = GlobalKey<FormState>();
   List<ShopCategoryListData>? _selectedCategoryChildren;
 
-  final TextEditingController _shopNameEnglishController =
-      TextEditingController();
   final TextEditingController _openTimeController = TextEditingController();
   final TextEditingController _closeTimeController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
@@ -44,11 +50,21 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
+  final TextEditingController _gpsController = TextEditingController();
+  final TextEditingController _whatsappController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController addressTamilNameController =
       TextEditingController();
   final TextEditingController descriptionTamilController =
       TextEditingController();
-  final TextEditingController _gpsController = TextEditingController();
+  final TextEditingController _shopNameEnglishController =
+      TextEditingController();
+  final TextEditingController _descriptionEnglishController =
+      TextEditingController();
+  final TextEditingController _addressEnglishController =
+      TextEditingController();
+  final TextEditingController _primaryMobileController =
+      TextEditingController();
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
   final List<String> cities = ['Madurai', 'Chennai', 'Coimbatore'];
@@ -62,6 +78,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   bool isAddressLoading = false;
   bool _isSubmitted = false;
   bool _gpsFetched = false;
+  bool _timetableInvalid = false;
   void _showCategoryBottomSheet(
     BuildContext context,
     List<ShopCategoryListData>? categories,
@@ -335,6 +352,21 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
         );
       },
     );
+  }
+
+  File? _selectedImage;
+  XFile? _permanentImage;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() {
+        _permanentImage = pickedFile;
+        _timetableInvalid = false; // if you use this as error flag
+      });
+    }
   }
 
   TimeOfDay? _openTod;
@@ -723,6 +755,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _descriptionEnglishController,
                         maxLine: 4,
                         text: 'English',
                         validator: (value) => value == null || value.isEmpty
@@ -796,6 +829,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _addressEnglishController,
                         maxLine: 4,
                         text: 'English',
                         validator: (value) => value == null || value.isEmpty
@@ -903,6 +937,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _primaryMobileController,
                         verticalDivider: true,
                         isMobile: true,
                         text: 'Mobile No',
@@ -917,7 +952,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
-
+                        controller: _whatsappController,
                         verticalDivider: true,
                         isMobile: true,
                         text: 'Mobile No',
@@ -987,6 +1022,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _emailController,
                         verticalDivider: true,
                         text: 'Email Id',
                         validator: (value) => value == null || value.isEmpty
@@ -994,23 +1030,164 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             : null,
                       ),
                       SizedBox(height: 25),
-                      Text(
-                        'Door Delivery',
-                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
-                      ),
-                      SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        imagePath: AppImages.downArrow,
-                        verticalDivider: false,
-                        controller: _genderController,
-                        isDropdown: true,
-                        dropdownItems: cities,
-                        context: context,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a Door Delivery'
-                            : null,
-                      ),
+                      if (!(widget.isService ?? false)) ...[
+                        // Selling Product: show Door Delivery
+                        Text(
+                          'Door Delivery',
+                          style: AppTextStyles.mulish(
+                            color: AppColor.mildBlack,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        CommonContainer.fillingContainer(
+                          imagePath: AppImages.downArrow,
+                          verticalDivider: false,
+                          controller: _genderController,
+                          isDropdown: true,
+                          dropdownItems: cities,
+                          context: context,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please select a Door Delivery'
+                              : null,
+                        ),
+                      ] else ...[
+                        // Service: show image picker container
+                        Text(
+                          'Upload Image',
+                          style: AppTextStyles.mulish(
+                            color: AppColor.mildBlack,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: DottedBorder(
+                            borderType: BorderType.RRect,
+                            radius: Radius.circular(20),
+                            color: _timetableInvalid
+                                ? Colors.red
+                                : AppColor.mediumLightGray,
+                            strokeWidth: 1.5,
+                            dashPattern: [6, 2],
+                            padding: EdgeInsets.all(1),
+                            child: Container(
+                              height: 160,
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColor.white3,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: _permanentImage == null
+                                  ? Center(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Image.asset(
+                                            AppImages.uploadImage,
+                                            height: 30,
+                                          ),
+                                          SizedBox(width: 10),
+                                          Text(
+                                            'Upload',
+                                            style: AppTextStyles.mulish(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColor.mediumLightGray,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Row(
+                                      children: [
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            child: Image.file(
+                                              File(_permanentImage!.path),
+                                              height: 140,
+                                              fit: BoxFit
+                                                  .cover, // fills available width safely
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              _permanentImage = null;
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 35.0,
+                                            ),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Image.asset(
+                                                  AppImages.closeImage,
+                                                  height: 26,
+                                                  color: AppColor.mediumGray,
+                                                ),
+                                                Text(
+                                                  'Clear',
+                                                  style: AppTextStyles.mulish(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: AppColor
+                                                        .mediumLightGray,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ),
+                        // GestureDetector(
+                        //   onTap: _pickImage,
+                        //   child: Container(
+                        //     height: 150,
+                        //     width: double.infinity,
+                        //     decoration: BoxDecoration(
+                        //       color: AppColor.lightGray,
+                        //       borderRadius: BorderRadius.circular(12),
+                        //       border: Border.all(color: Colors.grey),
+                        //     ),
+                        //     child: _selectedImage != null
+                        //         ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                        //         : Icon(
+                        //             Icons.camera_alt,
+                        //             size: 50,
+                        //             color: Colors.grey,
+                        //           ),
+                        //   ),
+                        // ),
+                      ],
 
+                      // Text(
+                      //   'Door Delivery',
+                      //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      // ),
+                      // SizedBox(height: 10),
+                      // CommonContainer.fillingContainer(
+                      //   imagePath: AppImages.downArrow,
+                      //   verticalDivider: false,
+                      //   controller: _genderController,
+                      //   isDropdown: true,
+                      //   dropdownItems: cities,
+                      //   context: context,
+                      //   validator: (value) => value == null || value.isEmpty
+                      //       ? 'Please select a Door Delivery'
+                      //       : null,
+                      // ),
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,

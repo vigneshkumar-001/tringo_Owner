@@ -20,7 +20,14 @@ import '../../ShopInfo/Screens/shop_category_info.dart';
 import '../controller/owner_info_notifier.dart';
 
 class OwnerInfoScreens extends ConsumerStatefulWidget {
-  const OwnerInfoScreens({super.key, this.isCompany});
+  final bool ? isService;
+  final bool ? isIndividual;
+  const OwnerInfoScreens({
+    super.key,
+    this.isCompany,
+   this.isService,
+   this.isIndividual,
+  });
   final bool? isCompany;
   @override
   ConsumerState<OwnerInfoScreens> createState() => _OwnerInfoScreensState();
@@ -425,10 +432,16 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           AppSnackBar.error(context, newState.error!);
                         } else if (newState.ownerResponse != null) {
                           // Navigate using GoRouter
-                          context.push(AppRoutes.shopCategoryInfoPath);
+                          context.push(AppRoutes.shopCategoryInfoPath,  extra: {
+                            'isService': widget.isService,          //  from RegisterScreen
+                            'isIndividual': widget.isIndividual,
+                            'initialShopNameEnglish': englishNameController.text.trim(),
+                            'initialShopNameTamil': tamilNameController.text.trim(),
+                            'pages': 'OwnerInfoScreens', // if needed
+                          },);
 
                           AppLogger.log.i(
-                            "✅ Owner Info Saved: ${newState.ownerResponse?.toJson()}",
+                            " Owner Info Saved: ${newState.ownerResponse?.toJson()}",
                           );
 
                           // Navigator.push(

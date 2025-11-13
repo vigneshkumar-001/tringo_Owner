@@ -8,7 +8,6 @@ enum BusinessType {
   };
 }
 
-
 class RegistrationSession {
   RegistrationSession._();
   static final RegistrationSession instance = RegistrationSession._();
