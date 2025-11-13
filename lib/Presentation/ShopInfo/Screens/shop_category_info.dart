@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Presentation/ShopInfo/Controller/shop_notifier.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
 
+import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
 import '../../AboutMe/Screens/about_me_screens.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 
-class ShopCategoryInfo extends StatefulWidget {
+class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? pages;
   final String? initialShopNameEnglish;
   final String? initialShopNameTamil;
@@ -22,17 +28,19 @@ class ShopCategoryInfo extends StatefulWidget {
   });
 
   @override
-  State<ShopCategoryInfo> createState() => _ShopCategoryInfotate();
+  ConsumerState<ShopCategoryInfo> createState() => _ShopCategoryInfotate();
 }
 
-class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
+class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   final _formKey = GlobalKey<FormState>();
+  List<ShopCategoryListData>? _selectedCategoryChildren;
 
   final TextEditingController _shopNameEnglishController =
       TextEditingController();
   final TextEditingController _openTimeController = TextEditingController();
   final TextEditingController _closeTimeController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
@@ -52,25 +60,282 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   bool isTamilNameLoading = false;
   bool isDescriptionTamilLoading = false;
   bool isAddressLoading = false;
-  bool _isSubmitted = false; // Add this at class level
+  bool _isSubmitted = false;
   bool _gpsFetched = false;
+  void _showCategoryBottomSheet(
+    BuildContext context,
+    List<ShopCategoryListData>? categories,
+    TextEditingController controller, {
+    bool isLoading = false,
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final searchController = TextEditingController();
+        List<ShopCategoryListData> filtered = List.from(categories ?? []);
 
-  // void _onSubmit() {
-  //   setState(() => _isSubmitted = true); // Mark that user clicked submit
-  //
-  //   if (_formKey.currentState!.validate()) {
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(builder: (_) => ShopPhotoInfo()),
-  //     ).then((_) {
-  //       Navigator.pop(context, true);
-  //     });
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Please fill all required fields')),
-  //     );
-  //   }
-  // }
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.8,
+              minChildSize: 0.4,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                if (isLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                if (categories == null || categories.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'No categories found',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: SizedBox(
+                        width: 40,
+                        height: 4,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'Select Category',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // 🔹 Search Field (no divider / underline)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (value) {
+                          setModalState(() {
+                            filtered = categories
+                                .where(
+                                  (c) => c.name.toLowerCase().contains(
+                                    value.toLowerCase(),
+                                  ),
+                                )
+                                .toList();
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search category...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none, // ❌ No divider line
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final category = filtered[index];
+                          return ListTile(
+                            title: Text(category.name),
+                            trailing: category.children.isNotEmpty
+                                ? const Icon(Icons.arrow_forward_ios, size: 14)
+                                : null,
+                            onTap: () {
+                              Navigator.pop(context);
+
+                              setState(() {
+                                controller.text = category.name;
+                              });
+                              if (onCategorySelected != null) {
+                                onCategorySelected(category);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showCategoryChildrenBottomSheet(
+    BuildContext context,
+    List<ShopCategoryListData> children,
+    TextEditingController controller,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        final searchController = TextEditingController();
+        List<ShopCategoryListData> filtered = List.from(children);
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              builder: (context, scrollController) {
+                return Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: SizedBox(
+                        width: 40,
+                        height: 4,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'Select Subcategory',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // 🔹 Search field with no underline
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (value) {
+                          setModalState(() {
+                            filtered = children
+                                .where(
+                                  (c) => c.name.toLowerCase().contains(
+                                    value.toLowerCase(),
+                                  ),
+                                )
+                                .toList();
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search subcategory...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none, // ❌ No divider
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No subcategories found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: scrollController,
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                final child = filtered[index];
+                                return ListTile(
+                                  title: Text(child.name),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    setState(() {
+                                      controller.text = child.name;
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
   TimeOfDay? _openTod;
   TimeOfDay? _closeTod;
@@ -133,7 +398,9 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
+    });
     // Prefill English (from nav param)
     if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
       _shopNameEnglishController.text = widget.initialShopNameEnglish!;
@@ -147,34 +414,6 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
       _prefillTamilFromEnglishOnce();
     }
   }
-  // @override
-  // void initState() {
-  //   super.initState();
-  //
-  //   // Prefill English name
-  //   if (widget.initialShopNameEnglish != null &&
-  //       widget.initialShopNameEnglish!.isNotEmpty) {
-  //     _shopNameEnglishController.text = widget.initialShopNameEnglish!;
-  //   }
-  //
-  //   // Prefill Tamil name if provided
-  //   if (widget.initialShopNameTamil != null &&
-  //       widget.initialShopNameTamil!.isNotEmpty) {
-  //     tamilNameController.text = widget.initialShopNameTamil!;
-  //   }
-  //
-  //   // If you want to auto-copy English into Tamil by default when Tamil is empty:
-  //   if (tamilNameController.text.isEmpty &&
-  //       _shopNameEnglishController.text.isNotEmpty) {
-  //     // Option A: simple copy (comment out if you only want suggestions)
-  //     tamilNameController.text = _shopNameEnglishController.text;
-  //
-  //     // Option B: if you prefer using your transliteration helper, do it once here:
-  //     // _prefillTamilFromEnglish(_shopNameEnglishController.text);
-  //   }
-  // }
-
-  // Optional: one-time transliteration
 
   Future<void> _prefillTamilFromEnglishOnce() async {
     if (_tamilPrefilled) return;
@@ -220,8 +459,23 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
     super.dispose();
   }
 
+  void showCustomSnackBar(BuildContext context, CustomSnackBar snackBar) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          behavior: SnackBarBehavior.floating,
+          content: snackBar,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(shopCategoryNotifierProvider);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -271,29 +525,107 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        imagePath: AppImages.downArrow,
-                        verticalDivider: false,
-                        controller: _categoryController,
-                        isDropdown: true,
-                        dropdownItems: categories,
-                        context: context,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a category'
-                            : null,
+                      GestureDetector(
+                        onTap: () {
+                          final categoriesList =
+                              state.shopCategoryListResponse?.data ?? [];
+                          if (categoriesList.isNotEmpty) {
+                            _showCategoryBottomSheet(
+                              context,
+                              categoriesList,
+                              _categoryController,
+                              onCategorySelected: (selectedCategory) {
+                                _selectedCategoryChildren =
+                                    selectedCategory.children;
+                                _subCategoryController.clear();
+                              },
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 19,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColor.lightGray,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _categoryController.text.isEmpty
+                                        ? ""
+                                        : _categoryController.text,
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                                Image.asset(AppImages.downArrow, height: 30),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                       SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        imagePath: AppImages.downArrow,
-                        verticalDivider: false,
-                        controller: _cityController,
-                        isDropdown: true,
-                        dropdownItems: cities,
-                        context: context,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a city'
-                            : null,
+
+                      GestureDetector(
+                        onTap: () {
+                          if (_categoryController.text.isEmpty) {
+                            AppSnackBar.info(
+                              context,
+                              'Please select a category first',
+                            );
+                          }
+                          _showCategoryChildrenBottomSheet(
+                            context,
+                            _selectedCategoryChildren!,
+                            _subCategoryController,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 19,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColor.lightGray,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _subCategoryController.text.isEmpty
+                                        ? " "
+                                        : _subCategoryController.text,
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                      color: _subCategoryController.text.isEmpty
+                                          ? Colors.grey
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                Image.asset(AppImages.downArrow, height: 30),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
+
                       SizedBox(height: 25),
                       Row(
                         children: [
@@ -585,6 +917,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+
                         verticalDivider: true,
                         isMobile: true,
                         text: 'Mobile No',
@@ -681,7 +1014,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
-                        onTap: () {
+                        onTap: () async {
                           if (widget.pages == "AboutMeScreens") {
                             // If coming from AboutMeScreens, treat this as an update flow
                             // Example: gather updated data to return
@@ -691,35 +1024,56 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                               'tamilName': tamilNameController.text,
                             };
 
-                            Navigator.pop(
-                              context,
-                              updatedData,
-                            ); // return data back
+                            Navigator.pop(context, updatedData);
                           } else {
-                            // Normal flow: move to next step
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ShopPhotoInfo(),
-                              ),
+                            await ref
+                                .read(shopCategoryNotifierProvider.notifier)
+                                .shopCategoryInfo(
+                                  addressEn: _shopNameEnglishController.text
+                                      .trim(),
+                                  addressTa: tamilNameController.text.trim(),
+                                  alternatePhone: '',
+                                  category: _categoryController.text.trim(),
+                                  contactEmail: '',
+                                  descriptionEn: '',
+                                  descriptionTa: '',
+                                  doorDelivery: true,
+                                  englishName: '',
+                                  gpsLatitude: 0.0,
+                                  gpsLongitude: 0.0,
+                                  primaryPhone: '',
+                                  subCategory: '',
+                                  tamilName: '',
+                                );
+
+                            final newState = ref.read(
+                              shopCategoryNotifierProvider,
                             );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => const ShopPhotoInfo(),
+                            //   ),
+                            // );
                           }
                         },
-                        text: Text(
-                          widget.pages == "AboutMeScreens"
-                              ? 'Update'
-                              : 'Save & Continue',
-                          style: AppTextStyles.mulish(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        imagePath: AppImages.rightStickArrow,
+                        text: state.isLoading
+                            ? AppLoader.circularLoader()
+                            : Text(
+                                widget.pages == "AboutMeScreens"
+                                    ? 'Update'
+                                    : 'Save & Continue',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                        imagePath: state.isLoading
+                            ? null
+                            : AppImages.rightStickArrow,
                         imgHeight: 20,
                       ),
                       SizedBox(height: 36),
-
-
                     ],
                   ),
                 ),
