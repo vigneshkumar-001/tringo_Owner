@@ -28,19 +28,27 @@ class ShopCategoryInfo extends StatefulWidget {
 class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _shopNameEnglishController =
-      TextEditingController();
   final TextEditingController _openTimeController = TextEditingController();
   final TextEditingController _closeTimeController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
+  final TextEditingController _gpsController = TextEditingController();
+  final TextEditingController _whatsappController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController addressTamilNameController =
       TextEditingController();
   final TextEditingController descriptionTamilController =
       TextEditingController();
-  final TextEditingController _gpsController = TextEditingController();
+  final TextEditingController _shopNameEnglishController =
+      TextEditingController();
+  final TextEditingController _descriptionEnglishController =
+      TextEditingController();
+  final TextEditingController _addressEnglishController =
+      TextEditingController();
+  final TextEditingController _primaryMobileController =
+      TextEditingController();
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
   final List<String> cities = ['Madurai', 'Chennai', 'Coimbatore'];
@@ -391,6 +399,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _descriptionEnglishController,
                         maxLine: 4,
                         text: 'English',
                         validator: (value) => value == null || value.isEmpty
@@ -464,6 +473,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _addressEnglishController,
                         maxLine: 4,
                         text: 'English',
                         validator: (value) => value == null || value.isEmpty
@@ -571,6 +581,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _primaryMobileController,
                         verticalDivider: true,
                         isMobile: true,
                         text: 'Mobile No',
@@ -585,6 +596,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _whatsappController,
                         verticalDivider: true,
                         isMobile: true,
                         text: 'Mobile No',
@@ -654,6 +666,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        controller: _emailController,
                         verticalDivider: true,
                         text: 'Email Id',
                         validator: (value) => value == null || value.isEmpty
@@ -718,8 +731,6 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         imgHeight: 20,
                       ),
                       SizedBox(height: 36),
-
-
                     ],
                   ),
                 ),
