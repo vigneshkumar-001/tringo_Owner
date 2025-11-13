@@ -417,6 +417,8 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                                 MaterialPageRoute(
                                   builder: (context) => const ShopCategoryInfo(
                                     pages: "AboutMeScreens",
+                                    isService: true,      // <-- pass the actual value
+                                    isIndividual: false,
                                   ),
                                 ),
                               );
@@ -459,6 +461,8 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                                 MaterialPageRoute(
                                   builder: (context) => const ShopCategoryInfo(
                                     pages: "AboutMeScreens",
+                                    isService: true,      // <-- pass the actual value
+                                    isIndividual: false,
                                   ),
                                 ),
                               );
@@ -1209,6 +1213,8 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                               MaterialPageRoute(
                                 builder: (context) => const ShopCategoryInfo(
                                   pages: "AboutMeScreens",
+                                  isService: true,      // <-- pass the actual value
+                                  isIndividual: false,
                                 ),
                               ),
                             );
@@ -1251,6 +1257,8 @@ class _AboutMeScreensState extends State<AboutMeScreens> {
                               MaterialPageRoute(
                                 builder: (context) => const ShopCategoryInfo(
                                   pages: "AboutMeScreens",
+                                  isService: true, // <-- pass the actual value
+                                  isIndividual: false,
                                 ),
                               ),
                             );

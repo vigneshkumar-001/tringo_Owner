@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,8 +25,8 @@ class ShopCategoryInfo extends StatefulWidget {
     this.pages,
     this.initialShopNameEnglish,
     this.initialShopNameTamil,
-    this.isService,
-    this.isIndividual,
+    required this.isService,
+    required this.isIndividual,
   });
 
   @override
@@ -69,6 +70,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   bool isAddressLoading = false;
   bool _isSubmitted = false; // Add this at class level
   bool _gpsFetched = false;
+  bool _timetableInvalid = false;
 
   // void _onSubmit() {
   //   setState(() => _isSubmitted = true); // Mark that user clicked submit
@@ -88,13 +90,17 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
   // }
 
   File? _selectedImage;
+  XFile? _permanentImage;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
-      setState(() => _selectedImage = File(pickedFile.path));
+      setState(() {
+        _permanentImage = pickedFile;
+        _timetableInvalid = false; // if you use this as error flag
+      });
     }
   }
 
@@ -692,7 +698,7 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                             : null,
                       ),
                       SizedBox(height: 25),
-                      if (!widget.isService!) ...[
+                      if (!(widget.isService ?? false)) ...[
                         // Selling Product: show Door Delivery
                         Text(
                           'Door Delivery',
@@ -723,23 +729,115 @@ class _ShopCategoryInfotate extends State<ShopCategoryInfo> {
                         SizedBox(height: 10),
                         GestureDetector(
                           onTap: _pickImage,
-                          child: Container(
-                            height: 150,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: AppColor.lightGray,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey),
+                          child: DottedBorder(
+                            borderType: BorderType.RRect,
+                            radius: Radius.circular(20),
+                            color: _timetableInvalid
+                                ? Colors.red
+                                : AppColor.mediumLightGray,
+                            strokeWidth: 1.5,
+                            dashPattern: [6, 2],
+                            padding: EdgeInsets.all(1),
+                            child: Container(
+                              height: 160,
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColor.white3,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: _permanentImage == null
+                                  ? Center(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Image.asset(
+                                            AppImages.uploadImage,
+                                            height: 30,
+                                          ),
+                                          SizedBox(width: 10),
+                                          Text(
+                                            'Upload',
+                                            style: AppTextStyles.mulish(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColor.mediumLightGray,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Row(
+                                      children: [
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            child: Image.file(
+                                              File(_permanentImage!.path),
+                                              height: 140,
+                                              fit: BoxFit
+                                                  .cover, // fills available width safely
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              _permanentImage = null;
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 35.0,
+                                            ),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Image.asset(
+                                                  AppImages.closeImage,
+                                                  height: 26,
+                                                  color: AppColor.mediumGray,
+                                                ),
+                                                Text(
+                                                  'Clear',
+                                                  style: AppTextStyles.mulish(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: AppColor
+                                                        .mediumLightGray,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                             ),
-                            child: _selectedImage != null
-                                ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                                : Icon(
-                                    Icons.camera_alt,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
                           ),
                         ),
+                        // GestureDetector(
+                        //   onTap: _pickImage,
+                        //   child: Container(
+                        //     height: 150,
+                        //     width: double.infinity,
+                        //     decoration: BoxDecoration(
+                        //       color: AppColor.lightGray,
+                        //       borderRadius: BorderRadius.circular(12),
+                        //       border: Border.all(color: Colors.grey),
+                        //     ),
+                        //     child: _selectedImage != null
+                        //         ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                        //         : Icon(
+                        //             Icons.camera_alt,
+                        //             size: 50,
+                        //             color: Colors.grey,
+                        //           ),
+                        //   ),
+                        // ),
                       ],
 
                       // Text(

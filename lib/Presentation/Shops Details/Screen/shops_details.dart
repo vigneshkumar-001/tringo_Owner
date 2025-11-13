@@ -287,6 +287,8 @@ class _ShopsDetailsState extends State<ShopsDetails> {
                                   builder: (context) => const ShopCategoryInfo(
                                     initialShopNameEnglish: shopDisplayName,
                                     initialShopNameTamil: shopDisplayNameTamil,
+                                    isService: true,      // <-- pass the actual value
+                                    isIndividual: false,
                                   ),
                                 ),
                               );
