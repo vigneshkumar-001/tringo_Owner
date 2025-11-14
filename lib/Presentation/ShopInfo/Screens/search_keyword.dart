@@ -1,24 +1,30 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../Controller/shop_notifier.dart';
 
-class SearchKeyword extends StatefulWidget {
+class SearchKeyword extends ConsumerStatefulWidget {
   const SearchKeyword({super.key});
 
   @override
-  State<SearchKeyword> createState() => _SearchKeywordState();
+  ConsumerState<SearchKeyword> createState() => _SearchKeywordState();
 }
 
-class _SearchKeywordState extends State<SearchKeyword> {
+class _SearchKeywordState extends ConsumerState<SearchKeyword> {
   final TextEditingController _searchKeywordController =
       TextEditingController();
 
-  final List<String> _keywords = []; // Only added/typed ones
+  final List<String> _keywords = [];
   final List<String> _recommendedKeywords = [
     'Saravana store',
     'Textile near me',
@@ -62,13 +68,13 @@ class _SearchKeywordState extends State<SearchKeyword> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(shopCategoryNotifierProvider);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -276,26 +282,75 @@ class _SearchKeywordState extends State<SearchKeyword> {
                     SizedBox(height: 30),
 
                     //  Save & Continue
+                    // CommonContainer.button(
+                    //   buttonColor: AppColor.black,
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => ProductCategoryScreens(),
+                    //       ),
+                    //     );
+                    //   },
+                    //   text: Text(
+                    //     'Save & Continue',
+                    //     style: AppTextStyles.mulish(
+                    //       fontSize: 18,
+                    //       fontWeight: FontWeight.w700,
+                    //     ),
+                    //   ),
+                    //   imagePath: AppImages.rightStickArrow,
+                    //   imgHeight: 20,
+                    // ),
                     CommonContainer.button(
                       buttonColor: AppColor.black,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductCategoryScreens(),
-                          ),
-                        );
+                      onTap: () async {
+                        if (_keywords.isEmpty) {
+                          AppSnackBar.error(
+                            context,
+                            'Please add at least one keyword',
+                          );
+                          return;
+                        }
+
+                        // Call the API with the keywords list
+                        final result = await ref
+                            .read(shopCategoryNotifierProvider.notifier)
+                            .searchKeywords(keywords: _keywords);
+
+                        // Check state or API response, then navigate
+                        final state = ref.read(shopCategoryNotifierProvider);
+                        if (result) {
+                          context.pushNamed(
+                            AppRoutes.productCategoryScreens,
+                            extra: 'SearchKeyword',
+                          );
+                          // Only navigate if API call is successful
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => ProductCategoryScreens(),
+                          //   ),
+                          // );
+                        } else if (state.error != null) {
+                          AppSnackBar.error(context, state.error!);
+                        }
                       },
-                      text: Text(
-                        'Save & Continue',
-                        style: AppTextStyles.mulish(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      imagePath: AppImages.rightStickArrow,
+                      text: state.isLoading
+                          ? const ThreeDotsLoader()
+                          : Text(
+                              'Save & Continue',
+                              style: AppTextStyles.mulish(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                      imagePath: state.isLoading
+                          ? null
+                          : AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
+
                     SizedBox(height: 36),
                   ],
                 ),

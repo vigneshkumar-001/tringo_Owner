@@ -159,22 +159,16 @@ class _OverlayHomePageState extends State<OverlayHomePage> {
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 
-
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
-import 'package:tringo_vendor/Presentation/Login/Screens/login_screens.dart';
-import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
-import 'package:tringo_vendor/sample_screen.dart';
-
-
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget  {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
@@ -183,13 +177,11 @@ class MyApp extends ConsumerWidget  {
       designSize: const Size(360, 690),
       builder: (context, child) {
         return MaterialApp.router(
-          routerConfig:goRouter,
+          routerConfig: goRouter,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
-
         );
       },
-
     );
   }
 }

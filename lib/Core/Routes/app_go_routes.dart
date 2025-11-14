@@ -4,7 +4,12 @@ import 'package:tringo_vendor/Presentation/Login/Screens/login_screens.dart';
 import 'package:tringo_vendor/Presentation/Login/Screens/otp_screens.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.dart';
+import 'package:tringo_vendor/Presentation/ShopInfo/Screens/search_keyword.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_category_info.dart';
+import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+
+import '../../Presentation/AddProduct/Screens/add_product_list.dart';
+import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
 
 class AppRoutes {
   static const String login = 'login';
@@ -12,16 +17,24 @@ class AppRoutes {
   static const String register = 'register';
   static const String ownerInfo = 'ownerInfo';
   static const String shopCategoryInfo = 'ShopCategoryInfo';
+  static const String shopPhotoInfo = 'ShopPhotoInfo';
+  static const String searchKeyword = 'SearchKeyword';
+  static const String productCategoryScreens = 'ProductCategoryScreens';
+  static const String addProductList = 'AddProductList';
 
   static const String loginPath = '/login';
   static const String otpPath = '/otp';
   static const String registerPath = '/register';
   static const String ownerInfoPath = '/owner-info';
   static const String shopCategoryInfoPath = '/ShopCategoryInfo';
+  static const String shopPhotoInfoPath = '/ShopPhotoInfo';
+  static const String searchKeywordPath = '/SearchKeyword';
+  static const String productCategoryScreensPath = '/ProductCategoryScreens';
+  static const String addProductListPath = '/AddProductList';
 }
 
 final goRouter = GoRouter(
-  initialLocation: AppRoutes.shopCategoryInfoPath,
+  initialLocation: AppRoutes.loginPath,
   routes: [
     GoRoute(
       path: AppRoutes.loginPath,
@@ -67,10 +80,29 @@ final goRouter = GoRouter(
       },
     ),
 
-    // GoRoute(
-    //   path: AppRoutes.shopCategoryInfoPath,
-    //   name: AppRoutes.shopCategoryInfo,
-    //   builder: (context, state) => const ShopCategoryInfo(),
-    // ),
+    GoRoute(
+      path: AppRoutes.shopPhotoInfoPath,
+      name: AppRoutes.shopPhotoInfo,
+      builder: (context, state) {
+        final pageName = state.extra as String? ?? '';
+        return ShopPhotoInfo(pages: pageName);
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.searchKeywordPath,
+      name: AppRoutes.searchKeyword,
+      builder: (context, state) => const SearchKeyword(),
+    ),
+    GoRoute(
+      path: AppRoutes.productCategoryScreensPath,
+      name: AppRoutes.productCategoryScreens,
+      builder: (context, state) => const ProductCategoryScreens(),
+    ),
+    GoRoute(
+      path: AppRoutes.addProductListPath,
+      name: AppRoutes.addProductList,
+      builder: (context, state) => const AddProductList(),
+    ),
   ],
 );
