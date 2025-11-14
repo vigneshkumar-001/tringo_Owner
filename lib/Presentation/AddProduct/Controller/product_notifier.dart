@@ -170,7 +170,11 @@ class ProductNotifier extends Notifier<ProductState> {
         state = ProductState(isLoading: false, error: failure.message);
         success = false;
       },
-          (response) {
+          (response) async {
+
+            // final prefs = await SharedPreferences.getInstance();
+            // await prefs.remove('product_id');
+
         state = ProductState(
           isLoading: false,
           productResponse: response,

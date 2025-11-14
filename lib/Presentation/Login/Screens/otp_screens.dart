@@ -126,27 +126,74 @@
 // }
 ///
 ///
+///
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../controller/login_notifier.dart';
 
-class OtpScreen extends StatefulWidget {
+class OtpScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
   const OtpScreen({super.key, required this.phoneNumber});
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  ConsumerState<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends ConsumerState<OtpScreen> {
   final TextEditingController otp = TextEditingController();
   String? otpError;
   String verifyCode = '';
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(loginNotifierProvider.notifier).resetState();
+    });
+  }
+
+  String? lastLoginPage;
+  @override
   Widget build(BuildContext context) {
+    final state = ref.watch(loginNotifierProvider);
+    final notifier = ref.read(loginNotifierProvider.notifier);
+
+    ref.listen<LoginState>(loginNotifierProvider, (_, next) {
+      final notifier = ref.read(loginNotifierProvider.notifier);
+      // Current error
+      if (next.error != null) {
+        AppSnackBar.error(context, next.error!);
+        notifier.resetState();
+      }
+      // OTP verified -> navigate
+      else if (next.otpResponse != null) {
+        AppSnackBar.success(context, 'OTP verified successfully!');
+        context.goNamed(AppRoutes.register);
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (_) => const RegisterScreen())
+        // );
+        notifier.resetState();
+      }
+      // Login response (used for resend OTP)
+      else if (next.loginResponse != null) {
+        // Check if this was a resend OTP request
+        if (lastLoginPage == 'resendOtp') {
+          AppSnackBar.success(context, 'OTP resent successfully!');
+        }
+        lastLoginPage = null; // reset after handling
+        notifier.resetState();
+      }
+    });
     String mobileNumber = widget.phoneNumber ?? '';
     String maskMobileNumber;
 
@@ -350,6 +397,19 @@ class _OtpScreenState extends State<OtpScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 35),
                       child: CommonContainer.button(
                         onTap: () {
+                          final Otp = otp.text.trim();
+                          if (Otp.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter phone number'),
+                              ),
+                            );
+                            return;
+                          }
+                          notifier.verifyOtp(
+                            contact: widget.phoneNumber,
+                            otp: Otp,
+                          );
                           //   Navigator.push(
                           //     context,
                           //     MaterialPageRoute(
@@ -357,7 +417,9 @@ class _OtpScreenState extends State<OtpScreen> {
                           //     ),
                           //   );
                         },
-                        text: Text('Verify Now'),
+                        text: state.isLoading
+                            ? ThreeDotsLoader()
+                            : Text('Verify Now'),
                       ),
                     ),
                     SizedBox(height: 50),
