@@ -340,6 +340,7 @@ class CommonContainer {
     FontWeight titleWeight = FontWeight.w800,
     bool Verify = false,
     bool locations = false,
+    bool doorDelivery = false,
     bool weight = false,
     bool Ad = false,
     VoidCallback? onTap,
@@ -424,12 +425,13 @@ class CommonContainer {
                         children: [
                           // if (Verify) CommonContainer.verifyTick(),
                           // SizedBox(width: 5),
+                          doorDelivery?
                           CommonContainer.doorDelivery(
                             text: 'Door Delivery',
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
                             textColor: AppColor.skyBlue,
-                          ),
+                          ): SizedBox.shrink(),
                         ],
                       ),
                       SizedBox(height: 12),
