@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/Shops%20Details/controller/shop_details_notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -72,20 +73,23 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                  Text(
+                Text(
                   'No data available. Please try again later.',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.mulish(fontSize: 18),
                 ),
                 const SizedBox(height: 16),
-                CommonContainer.button(onTap: state.isLoading
-                    ? null
-                    :() {
-                  // retry API call
-                  ref
-                      .read(shopDetailsNotifierProvider.notifier)
-                      .fetchShopDetails();
-                }, text: Text('Try Again')),
+                CommonContainer.button(
+                  onTap: state.isLoading
+                      ? null
+                      : () {
+                          // retry API call
+                          ref
+                              .read(shopDetailsNotifierProvider.notifier)
+                              .fetchShopDetails();
+                        },
+                  text: Text('Try Again'),
+                ),
                 // ElevatedButton(
                 //   onPressed: state.isLoading
                 //       ? null
@@ -219,49 +223,53 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                           ),
                           const SizedBox(height: 27),
 
-                          // Call now row (no extra scroll view)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: CommonContainer.callNowButton(
-                              callImage: AppImages.callImage,
-                              callText: 'Call Now',
-                              whatsAppIcon: true,
-                              whatsAppOnTap: () {},
-                              messageOnTap: () {},
-                              MessageIcon: true,
-                              mapText: 'Map',
-                              mapOnTap: () => _openMap(
-                                shop?.shopGpsLatitude.toString() ?? '',
-                                shop?.shopGpsLongitude.toString() ?? '',
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
                               ),
-                              mapImage: AppImages.locationImage,
-                              callIconSize: 21,
-                              callTextSize: 16,
-                              mapIconSize: 21,
-                              mapTextSize: 16,
-                              messagesIconSize: 23,
-                              whatsAppIconSize: 23,
-                              fireIconSize: 23,
-                              callNowPadding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 12,
+                              child: CommonContainer.callNowButton(
+                                callImage: AppImages.callImage,
+                                callText: 'Call Now',
+                                whatsAppIcon: true,
+                                whatsAppOnTap: () {},
+                                messageOnTap: () {},
+                                MessageIcon: true,
+                                mapText: 'Map',
+                                mapOnTap: () => _openMap(
+                                  shop?.shopGpsLatitude.toString() ?? '',
+                                  shop?.shopGpsLongitude.toString() ?? '',
+                                ),
+                                mapImage: AppImages.locationImage,
+                                callIconSize: 21,
+                                callTextSize: 16,
+                                mapIconSize: 21,
+                                mapTextSize: 16,
+                                messagesIconSize: 23,
+                                whatsAppIconSize: 23,
+                                fireIconSize: 23,
+                                callNowPadding: const EdgeInsets.symmetric(
+                                  horizontal: 30,
+                                  vertical: 12,
+                                ),
+                                mapBoxPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                iconContainerPadding:
+                                    const EdgeInsets.symmetric(
+                                      horizontal: 22,
+                                      vertical: 13,
+                                    ),
+                                messageContainer: true,
+                                mapBox: true,
                               ),
-                              mapBoxPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              iconContainerPadding: const EdgeInsets.symmetric(
-                                horizontal: 22,
-                                vertical: 13,
-                              ),
-                              messageContainer: true,
-                              mapBox: true,
                             ),
                           ),
 
                           const SizedBox(height: 20),
 
-                          // 🔥 Replace horizontal ListView.builder with SingleChildScrollView + Row
                           SizedBox(
                             height: 250,
                             child: SingleChildScrollView(
@@ -286,9 +294,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                           ),
                                           // --- Replace Image.network with CachedNetworkImage ---
                                           child: CachedNetworkImage(
-                                            imageUrl:
-                                                imageData?.url ??
-                                                '', // Use the URL from your data
+                                            imageUrl: imageData?.url ?? '',
                                             height: 230,
                                             width: 310,
                                             fit: BoxFit.cover,
@@ -298,9 +304,8 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                                   width: 310,
                                                   height: 230,
                                                   color: Colors.grey[300],
-                                                  child: const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
+                                                  child: Center(
+                                                    child: ThreeDotsLoader(),
                                                   ),
                                                 ),
                                             // The errorWidget is shown if the image fails to load
@@ -444,7 +449,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                // ... rest of your "Offer Products" / reviews / bottom part unchanged
+
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
@@ -469,24 +474,39 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      CommonContainer.foodList(
-                        fontSize: 14,
-                        titleWeight: FontWeight.w700,
-                        onTap: () {},
-                        imageWidth: 130,
-                        image: AppImages.snacks1,
-                        foodName: '',
-                        ratingStar: '4.5',
-                        ratingCount: '16',
-                        offAmound: '₹79',
-                        oldAmound: '₹110',
-                        km: '',
-                        location: '',
-                        Verify: false,
-                        locations: false,
-                        weight: false,
-                        horizontalDivider: false,
+                      const SizedBox(height: 16),
+
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: shop?.products.length ?? 0,
+                        itemBuilder: (context, index) {
+                          final data = shop?.products[index];
+
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: CommonContainer.foodList(
+                              fontSize: 14,
+                              titleWeight: FontWeight.w700,
+                              onTap: () {},
+                              imageWidth: 130,
+                              image: AppImages.snacks1,
+                              foodName: data?.englishName.toString() ?? '',
+                              ratingStar: '4.5',
+                              ratingCount: '16',
+                              offAmound: '₹79',
+                              oldAmound: '₹110',
+                              km: '',
+                              location: '',
+                              Verify: false,
+                              locations: false,
+                              weight: false,
+                              horizontalDivider: false,
+                            ),
+                          );
+                        },
                       ),
+
                       const SizedBox(height: 10),
                       InkWell(
                         onTap: () {
