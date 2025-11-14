@@ -65,16 +65,50 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
 
     if (state.error != null) {
       debugPrint('Shop details error: ${state.error}');
-      return const Scaffold(
+      return Scaffold(
         body: Center(
-          child: Text(
-            'No data available. Please try again later.',
-            style: TextStyle(fontSize: 16),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                  Text(
+                  'No data available. Please try again later.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.mulish(fontSize: 18),
+                ),
+                const SizedBox(height: 16),
+                CommonContainer.button(onTap: state.isLoading
+                    ? null
+                    :() {
+                  // retry API call
+                  ref
+                      .read(shopDetailsNotifierProvider.notifier)
+                      .fetchShopDetails();
+                }, text: Text('Try Again')),
+                // ElevatedButton(
+                //   onPressed: state.isLoading
+                //       ? null
+                //       : () {
+                //           // retry API call
+                //           ref
+                //               .read(shopDetailsNotifierProvider.notifier)
+                //               .fetchShopDetails();
+                //         },
+                //   child: state.isLoading
+                //       ? const SizedBox(
+                //           width: 16,
+                //           height: 16,
+                //           child: CircularProgressIndicator(strokeWidth: 2),
+                //         )
+                //       : const Text('Try again'),
+                // ),
+              ],
+            ),
           ),
         ),
       );
     }
-
 
     final shop = state.shopDetailsResponse?.data;
 
@@ -236,104 +270,112 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 horizontal: 15,
                               ),
                               child: Row(
-                                children: List.generate(
-                                  shop?.shopImages.length ?? 0,
-                                  (index) {
-                                    final imageData = shop?.shopImages[index];
+                                children: List.generate(shop?.shopImages.length ?? 0, (
+                                  index,
+                                ) {
+                                  final imageData = shop?.shopImages[index];
 
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 10.0,
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          ClipRRect(
-                                            clipBehavior: Clip.antiAlias,
-                                            borderRadius: BorderRadius.circular(20),
-                                            // --- Replace Image.network with CachedNetworkImage ---
-                                            child: CachedNetworkImage(
-                                              imageUrl: imageData?.url ?? '', // Use the URL from your data
-                                              height: 230,
-                                              width: 310,
-                                              fit: BoxFit.cover,
-                                              // The placeholder is used while the image is loading
-                                              placeholder: (context, url) => Container(
-                                                width: 310,
-                                                height: 230,
-                                                color: Colors.grey[300],
-                                                child: const Center(child: CircularProgressIndicator()),
-                                              ),
-                                              // The errorWidget is shown if the image fails to load
-                                              errorWidget: (context, url, error) => Container(
-                                                width: 310,
-                                                height: 230,
-                                                color: Colors.grey[300],
-                                                child: const Icon(Icons.broken_image, color: Colors.grey),
-                                              ),
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 10.0),
+                                    child: Stack(
+                                      children: [
+                                        ClipRRect(
+                                          clipBehavior: Clip.antiAlias,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          // --- Replace Image.network with CachedNetworkImage ---
+                                          child: CachedNetworkImage(
+                                            imageUrl:
+                                                imageData?.url ??
+                                                '', // Use the URL from your data
+                                            height: 230,
+                                            width: 310,
+                                            fit: BoxFit.cover,
+                                            // The placeholder is used while the image is loading
+                                            placeholder: (context, url) =>
+                                                Container(
+                                                  width: 310,
+                                                  height: 230,
+                                                  color: Colors.grey[300],
+                                                  child: const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  ),
+                                                ),
+                                            // The errorWidget is shown if the image fails to load
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    Container(
+                                                      width: 310,
+                                                      height: 230,
+                                                      color: Colors.grey[300],
+                                                      child: const Icon(
+                                                        Icons.broken_image,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 20,
+                                          left: 15,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColor.scaffoldColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  '4.1', // TODO: dynamic rating
+                                                  style: AppTextStyles.mulish(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                    color: AppColor.darkBlue,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 5),
+                                                Image.asset(
+                                                  AppImages.starImage,
+                                                  height: 9,
+                                                  color: AppColor.green,
+                                                ),
+                                                const SizedBox(width: 5),
+                                                Container(
+                                                  width: 1.5,
+                                                  height: 11,
+                                                  decoration: BoxDecoration(
+                                                    color: AppColor.darkBlue
+                                                        .withOpacity(0.2),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          1,
+                                                        ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  '16', // TODO: dynamic count
+                                                  style: AppTextStyles.mulish(
+                                                    fontSize: 12,
+                                                    color: AppColor.darkBlue,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          Positioned(
-                                            top: 20,
-                                            left: 15,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: AppColor.scaffoldColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    '4.1', // TODO: dynamic rating
-                                                    style: AppTextStyles.mulish(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
-                                                      color: AppColor.darkBlue,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 5),
-                                                  Image.asset(
-                                                    AppImages.starImage,
-                                                    height: 9,
-                                                    color: AppColor.green,
-                                                  ),
-                                                  const SizedBox(width: 5),
-                                                  Container(
-                                                    width: 1.5,
-                                                    height: 11,
-                                                    decoration: BoxDecoration(
-                                                      color: AppColor.darkBlue
-                                                          .withOpacity(0.2),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            1,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 5),
-                                                  Text(
-                                                    '16', // TODO: dynamic count
-                                                    style: AppTextStyles.mulish(
-                                                      fontSize: 12,
-                                                      color: AppColor.darkBlue,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
                               ),
                             ),
                           ),
