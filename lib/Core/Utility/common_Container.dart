@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 
@@ -367,22 +368,29 @@ class CommonContainer {
               children: [
                 Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        height: 130, // desired height
-                        width: 130, // desired width
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          clipBehavior: Clip.hardEdge,
-                          child: Image.asset(image),
-                        ),
-                      ),
-                    ),
-
+            ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+      child: CachedNetworkImage(
+        imageUrl: image,                // 👈 your URL string here
+        width: 130,
+        height: 130,
+        fit: BoxFit.cover,              // same effect as FittedBox.cover
+        placeholder: (context, url) => Container(
+          width: 130,
+          height: 130,
+          color: Colors.grey[300],
+          child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          width: 130,
+          height: 130,
+          color: Colors.grey[300],
+          child: const Icon(Icons.broken_image, color: Colors.grey),
+        ),
+      ),
+    ),
                     // if (Ad)
                     //   Positioned(
                     //     bottom: 10,
