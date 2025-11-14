@@ -26,7 +26,7 @@ class _SearchKeywordState extends State<SearchKeyword> {
     'Mens Clothing',
     'Trending costumes',
   ];
-
+  int selectedIndex = 0;
   bool _showRecommended = false;
 
   void _addKeyword(String keyword) {
@@ -282,7 +282,9 @@ class _SearchKeywordState extends State<SearchKeyword> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ProductCategoryScreens(),
+                            builder: (context) => ProductCategoryScreens(
+                              isService: selectedIndex == 1,
+                            ),
                           ),
                         );
                       },
