@@ -12,7 +12,7 @@ import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import 'add_product_list.dart';
 
-class ProductCategoryScreens extends StatefulWidget {
+class ProductCategoryScreens extends ConsumerStatefulWidget {
   final bool? isService;
   final bool? isIndividual;
   const ProductCategoryScreens({super.key, this.isService, this.isIndividual});
