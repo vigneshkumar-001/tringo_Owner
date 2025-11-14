@@ -85,6 +85,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   bool _isSubmitted = false;
   bool _gpsFetched = false;
   bool _timetableInvalid = false;
+  bool _isFetchingGps = false;
 
   void _showCategoryBottomSheet(
     BuildContext context,
@@ -92,7 +93,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     TextEditingController controller, {
     bool isLoading = false,
 
-    void Function(ShopCategoryListData selectedCategory)? onCategorySelected}) {
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -241,8 +243,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  )
-  {
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -876,7 +877,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                 onTap: () {
                                   print("Selected suggestion: $suggestion");
                                   TanglishTamilHelper.applySuggestion(
-                                    controller: descriptionTamilController,
+                                    controller: addressTamilNameController,
                                     suggestion: suggestion,
                                     onSuggestionApplied: () {
                                       setState(
@@ -899,15 +900,33 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       SizedBox(height: 10),
 
                       GestureDetector(
-                        onTap: _getCurrentLocation,
+                        onTap: () async {
+                          setState(
+                            () => _isFetchingGps = true,
+                          ); // new bool to track loading
+                          await _getCurrentLocation();
+                          setState(() => _isFetchingGps = false);
+                        },
                         child: AbsorbPointer(
                           child: CommonContainer.fillingContainer(
                             controller: _gpsController,
-                            text: 'Get by GPS',
+                            text: _isFetchingGps
+                                ? '' // hide text while loader shows
+                                : 'Get by GPS',
                             textColor: _gpsController.text.isEmpty
                                 ? AppColor.skyBlue
                                 : AppColor.mildBlack,
                             textFontWeight: FontWeight.w700,
+                            suffixWidget: _isFetchingGps
+                                ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColor.skyBlue,
+                                    ),
+                                  )
+                                : null,
                             validator: (value) {
                               if (!_isSubmitted) return null;
                               return _gpsFetched
@@ -918,13 +937,24 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         ),
                       ),
 
-                      // CommonContainer.fillingContainer(
-                      //   text: 'Get by GPS',
-                      //   textColor: AppColor.skyBlue,
-                      //   textFontWeight: FontWeight.w700,
-                      //   validator: (value) => value == null || value.isEmpty
-                      //       ? 'Please select a GPS Location'
-                      //       : null,
+                      // GestureDetector(
+                      //   onTap: _getCurrentLocation,
+                      //   child: AbsorbPointer(
+                      //     child: CommonContainer.fillingContainer(
+                      //       controller: _gpsController,
+                      //       text: 'Get by GPS',
+                      //       textColor: _gpsController.text.isEmpty
+                      //           ? AppColor.skyBlue
+                      //           : AppColor.mildBlack,
+                      //       textFontWeight: FontWeight.w700,
+                      //       validator: (value) {
+                      //         if (!_isSubmitted) return null;
+                      //         return _gpsFetched
+                      //             ? null
+                      //             : 'Please get GPS location';
+                      //       },
+                      //     ),
+                      //   ),
                       // ),
                       SizedBox(height: 25),
                       Text(

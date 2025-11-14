@@ -1554,6 +1554,11 @@ class CommonContainer {
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
+
+                      if (suffixWidget != null) ...[
+                         SizedBox(width: 8),
+                        suffixWidget,
+                      ],
                       if (text != null) ...[
                         const SizedBox(width: 10),
                         Text(
