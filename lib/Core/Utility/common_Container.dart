@@ -1052,6 +1052,7 @@ class CommonContainer {
       ),
     );
   }
+
   static button2({
     BuildContext? context,
     VoidCallback? onTap,
@@ -1070,11 +1071,12 @@ class CommonContainer {
         width: width,
         height: height,
         child: Container(
-
           decoration: BoxDecoration(
-            color: isBorder ? AppColor.white : AppColor.black ,
+            color: isBorder ? AppColor.white : AppColor.black,
 
-            border: isBorder ? Border.all(color: Color(0xff3F5FF2), width: 2) : null,
+            border: isBorder
+                ? Border.all(color: Color(0xff3F5FF2), width: 2)
+                : null,
             borderRadius: BorderRadius.circular(18),
           ),
           child: ElevatedButton(
@@ -1090,28 +1092,29 @@ class CommonContainer {
             child: loader != null
                 ? loader // Show loader instead of text
                 : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  text,
-                  style: TextStyle(
-                    fontFamily: "Roboto-normal",
-                    fontSize: 16.sp,
-                    color: textColor,
-                    fontWeight: FontWeight.bold,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        text,
+                        style: TextStyle(
+                          fontFamily: "Roboto-normal",
+                          fontSize: 16.sp,
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (image != null) ...[
+                        SizedBox(width: 15),
+                        Image.asset(image, height: 20),
+                      ],
+                    ],
                   ),
-                ),
-                if (image != null) ...[
-                  SizedBox(width: 15),
-                  Image.asset(image, height: 20),
-                ]
-              ],
-            ),
           ),
         ),
       ),
     );
   }
+
   static Widget button({
     required GestureTapCallback? onTap,
     required Widget text,
@@ -1139,13 +1142,13 @@ class CommonContainer {
           fixedSize: Size(150.w, 45.h),
           shape: hasBorder
               ? RoundedRectangleBorder(
-            side: const BorderSide(color: Color(0xff3F5FF2)),
-            borderRadius: BorderRadius.circular(borderRadius!),
-          )
+                  side: const BorderSide(color: Color(0xff3F5FF2)),
+                  borderRadius: BorderRadius.circular(borderRadius!),
+                )
               : RoundedRectangleBorder(
-            side: BorderSide(color: borderColor ?? Colors.transparent),
-            borderRadius: BorderRadius.circular(borderRadius!),
-          ),
+                  side: BorderSide(color: borderColor ?? Colors.transparent),
+                  borderRadius: BorderRadius.circular(borderRadius!),
+                ),
         ),
 
         child: isLoading == true

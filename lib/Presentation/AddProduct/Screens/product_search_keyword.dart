@@ -1,10 +1,12 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Controller/product_notifier.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
@@ -327,17 +329,17 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                         // Check state or API response, then navigate
                         final state = ref.read(productNotifierProvider);
                         if (result) {
-                          // context.pushNamed(
-                          //   AppRoutes.productCategoryScreens,
-                          //   extra: 'SearchKeyword',
-                          // );
+                            context.pushNamed(
+                              AppRoutes.shopsDetails,
+
+                            );
                           // Only navigate if API call is successful
-                           Navigator.push(
-                             context,
-                             MaterialPageRoute(
-                               builder: (context) => ShopsDetails(),
-                             ),
-                           );
+                          //  Navigator.push(
+                          //    context,
+                          //    MaterialPageRoute(
+                          //      builder: (context) => ShopsDetails(),
+                          //    ),
+                          //  );
                         } else if (state.error != null) {
                           AppSnackBar.error(context, state.error!);
                         }
