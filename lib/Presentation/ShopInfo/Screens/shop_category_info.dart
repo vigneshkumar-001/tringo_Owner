@@ -4,16 +4,19 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Controller/shop_notifier.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
 
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
@@ -48,11 +51,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _doorDeliveryController = TextEditingController();
   final TextEditingController tamilNameController = TextEditingController();
   final TextEditingController _gpsController = TextEditingController();
   final TextEditingController _whatsappController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+
   final TextEditingController addressTamilNameController =
       TextEditingController();
   final TextEditingController descriptionTamilController =
@@ -67,12 +71,14 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       TextEditingController();
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
-  final List<String> cities = ['Madurai', 'Chennai', 'Coimbatore'];
+  final List<String> doorDelivery = ['true', 'false'];
 
   List<String> tamilNameSuggestion = [];
   List<String> descriptionTamilSuggestion = [];
   List<String> addressTamilSuggestion = [];
   bool _tamilPrefilled = false;
+  String categorySlug = '';
+  String subCategorySlug = '';
   bool isTamilNameLoading = false;
   bool isDescriptionTamilLoading = false;
   bool isAddressLoading = false;
@@ -210,6 +216,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                               setState(() {
                                 controller.text = category.name;
+                                categorySlug = category.slug;
                               });
                               if (onCategorySelected != null) {
                                 onCategorySelected(category);
@@ -338,6 +345,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     Navigator.pop(context);
                                     setState(() {
                                       controller.text = child.name;
+                                      subCategorySlug = child.slug;
                                     });
                                   },
                                 );
@@ -433,17 +441,18 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
     });
-    // Prefill English (from nav param)
-    if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
-      _shopNameEnglishController.text = widget.initialShopNameEnglish!;
-    }
+    if (widget.pages == "AboutMeScreens") {
+      if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
+        _shopNameEnglishController.text = widget.initialShopNameEnglish!;
+      }
 
-    // If Tamil was passed explicitly, use it; else transliterate once
-    if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
-      tamilNameController.text = widget.initialShopNameTamil!;
-      _tamilPrefilled = true;
-    } else {
-      _prefillTamilFromEnglishOnce();
+      // If Tamil was passed explicitly, use it; else transliterate once
+      if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
+        tamilNameController.text = widget.initialShopNameTamil!;
+        _tamilPrefilled = true;
+      } else {
+        _prefillTamilFromEnglishOnce();
+      }
     }
   }
 
@@ -483,26 +492,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     _shopNameEnglishController.dispose();
     _categoryController.dispose();
     _cityController.dispose();
-    _genderController.dispose();
+    _doorDeliveryController.dispose();
     tamilNameController.dispose();
     addressTamilNameController.dispose();
     descriptionTamilController.dispose();
     _gpsController.dispose();
     super.dispose();
-  }
-
-  void showCustomSnackBar(BuildContext context, CustomSnackBar snackBar) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          behavior: SnackBarBehavior.floating,
-          content: snackBar,
-          duration: const Duration(seconds: 2),
-        ),
-      );
   }
 
   @override
@@ -1042,9 +1037,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         CommonContainer.fillingContainer(
                           imagePath: AppImages.downArrow,
                           verticalDivider: false,
-                          controller: _genderController,
+                          controller: _doorDeliveryController,
                           isDropdown: true,
-                          dropdownItems: cities,
+                          dropdownItems: doorDelivery,
                           context: context,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Please select a Door Delivery'
@@ -1203,39 +1198,80 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                             Navigator.pop(context, updatedData);
                           } else {
-                            await ref
+                            // AppLogger.log.i( _addressEnglishController.text);
+                            // AppLogger.log.i( addressTamilNameController.text);
+                            // AppLogger.log.i( _whatsappController.text);
+                            // AppLogger.log.i( _categoryController.text);
+                            // AppLogger.log.i( _emailController.text);
+                            // AppLogger.log.i( _descriptionEnglishController.text);
+                            // AppLogger.log.i( descriptionTamilController.text);
+                            // AppLogger.log.i( _primaryMobileController.text);
+                            // AppLogger.log.i( _subCategoryController.text);
+                            AppLogger.log.i(_gpsController.text);
+                            final gpsText = _gpsController.text.trim();
+                            double latitude = 0.0;
+                            double longitude = 0.0;
+
+                            if (gpsText.isNotEmpty && gpsText.contains(',')) {
+                              final parts = gpsText.split(',');
+                              latitude =
+                                  double.tryParse(parts[0].trim()) ?? 0.0;
+                              longitude =
+                                  double.tryParse(parts[1].trim()) ?? 0.0;
+                            }
+
+                            final response = await ref
                                 .read(shopCategoryNotifierProvider.notifier)
                                 .shopCategoryInfo(
-                                  addressEn: _shopNameEnglishController.text
+                                  addressEn: _addressEnglishController.text
                                       .trim(),
-                                  addressTa: tamilNameController.text.trim(),
-                                  alternatePhone: '',
-                                  category: _categoryController.text.trim(),
-                                  contactEmail: '',
-                                  descriptionEn: '',
-                                  descriptionTa: '',
+                                  addressTa: addressTamilNameController.text
+                                      .trim(),
+                                  alternatePhone: _whatsappController.text
+                                      .trim(),
+                                  category: categorySlug,
+                                  contactEmail: _emailController.text.trim(),
+                                  descriptionEn: _descriptionEnglishController
+                                      .text
+                                      .trim(),
+                                  descriptionTa: descriptionTamilController.text
+                                      .trim(),
                                   doorDelivery: true,
-                                  englishName: '',
-                                  gpsLatitude: 0.0,
-                                  gpsLongitude: 0.0,
-                                  primaryPhone: '',
-                                  subCategory: '',
-                                  tamilName: '',
+                                  englishName: _shopNameEnglishController.text
+                                      .trim(),
+                                  gpsLatitude: latitude,
+                                  gpsLongitude: longitude,
+                                  primaryPhone: _primaryMobileController.text
+                                      .trim(),
+                                  subCategory: subCategorySlug,
+                                  tamilName: tamilNameController.text.trim(),
                                 );
 
                             final newState = ref.read(
                               shopCategoryNotifierProvider,
                             );
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => const ShopPhotoInfo(),
-                            //   ),
-                            // );
+
+                            if (newState.error != null &&
+                                newState.error!.isNotEmpty) {
+                              AppSnackBar.error(
+                                context,
+                                newState.error!,
+                              ); // ✅ show API error
+                            } else if (response != null) {
+                              context.pushNamed(
+                                AppRoutes.shopPhotoInfo,
+                                extra: 'shopCategory',
+                              );
+                            } else {
+                              AppSnackBar.error(
+                                context,
+                                "Unexpected error, please try again",
+                              );
+                            }
                           }
                         },
                         text: state.isLoading
-                            ? AppLoader.circularLoader()
+                            ? const ThreeDotsLoader()
                             : Text(
                                 widget.pages == "AboutMeScreens"
                                     ? 'Update'
@@ -1248,7 +1284,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         imagePath: state.isLoading
                             ? null
                             : AppImages.rightStickArrow,
-                        imgHeight: 20,
                       ),
                       SizedBox(height: 36),
                     ],
