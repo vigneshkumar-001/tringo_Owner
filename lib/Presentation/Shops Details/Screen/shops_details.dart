@@ -52,6 +52,15 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
     }
   }
 
+  void _openDialer(String phoneNumber) async {
+    final uri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      print('Could not launch dialer for $phoneNumber');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -230,6 +239,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 horizontal: 16,
                               ),
                               child: CommonContainer.callNowButton(
+                                // callOnTap: () => _openDialer(shop?.primaryPhone ?? ''),
                                 callImage: AppImages.callImage,
                                 callText: 'Call Now',
                                 whatsAppIcon: true,
