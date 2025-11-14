@@ -37,7 +37,8 @@ class LoginState {
   }
 }
 
-/// --- NOTIFIER ---
+
+
 class LoginNotifier extends Notifier<LoginState> {
   late final ApiDataSource api;
 
