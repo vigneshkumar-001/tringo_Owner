@@ -1052,7 +1052,66 @@ class CommonContainer {
       ),
     );
   }
+  static button2({
+    BuildContext? context,
+    VoidCallback? onTap,
+    required String text,
+    Widget? loader,
+    double fontSize = 16,
+    Color? textColor = Colors.white,
+    bool isBorder = false,
+    FontWeight? fontWeight = FontWeight.w700,
+    double? width = 200,
+    double? height = 60,
+    String? image,
+  }) {
+    return Center(
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Container(
 
+          decoration: BoxDecoration(
+            color: isBorder ? AppColor.white : AppColor.black ,
+
+            border: isBorder ? Border.all(color: Color(0xff3F5FF2), width: 2) : null,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: ElevatedButton(
+            style: ButtonStyle(
+              padding: MaterialStateProperty.all(EdgeInsets.zero),
+              shape: MaterialStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              elevation: MaterialStateProperty.all(0),
+              backgroundColor: MaterialStateProperty.all(Colors.transparent),
+            ),
+            onPressed: onTap,
+            child: loader != null
+                ? loader // Show loader instead of text
+                : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontFamily: "Roboto-normal",
+                    fontSize: 16.sp,
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (image != null) ...[
+                  SizedBox(width: 15),
+                  Image.asset(image, height: 20),
+                ]
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
   static Widget button({
     required GestureTapCallback? onTap,
     required Widget text,
@@ -1075,21 +1134,20 @@ class CommonContainer {
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
           foregroundColor: foreGroundColor,
-
-          shape: hasBorder
-              ? RoundedRectangleBorder(
-                  side: BorderSide(color: Color(0xff3F5FF2)),
-                  borderRadius: BorderRadius.circular(borderRadius!),
-                )
-              : RoundedRectangleBorder(
-                  side: BorderSide(color: borderColor ?? Colors.transparent),
-
-                  borderRadius: BorderRadius.circular(borderRadius!),
-                ),
+          backgroundColor: buttonColor,
           elevation: 0,
           fixedSize: Size(150.w, 45.h),
-          backgroundColor: buttonColor,
+          shape: hasBorder
+              ? RoundedRectangleBorder(
+            side: const BorderSide(color: Color(0xff3F5FF2)),
+            borderRadius: BorderRadius.circular(borderRadius!),
+          )
+              : RoundedRectangleBorder(
+            side: BorderSide(color: borderColor ?? Colors.transparent),
+            borderRadius: BorderRadius.circular(borderRadius!),
+          ),
         ),
+
         child: isLoading == true
             ? SizedBox(
                 width: 20,

@@ -85,13 +85,14 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   bool _isSubmitted = false;
   bool _gpsFetched = false;
   bool _timetableInvalid = false;
+
   void _showCategoryBottomSheet(
     BuildContext context,
     List<ShopCategoryListData>? categories,
     TextEditingController controller, {
     bool isLoading = false,
-    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  }) {
+
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -240,7 +241,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  ) {
+  )
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
