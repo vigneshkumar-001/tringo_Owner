@@ -32,7 +32,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
     'Mens Clothing',
     'Trending costumes',
   ];
-
+  int selectedIndex = 0;
   bool _showRecommended = false;
 
   void _addKeyword(String keyword) {
