@@ -82,4 +82,12 @@ class AppImages {
   static String addBranch = 'Assets/Images/Add_Branch.png';
   static String clock = 'Assets/Images/Clock.png';
   static String uploadImage = 'Assets/Images/UploadImage.png';
+  static String logo = 'Assets/Images/Logo.png';
+  static String splashScreen = 'Assets/Images/Splash_Screen.png';
+  static String loginBCImage = 'Assets/Images/Login_backround_Image.png';
+  static String simImage = 'Assets/Images/SIM_Image.png';
+  static String simBCImage = 'Assets/Images/SIM_Backround_Image.png';
+  static String tickImage = 'Assets/Images/Tick_Image.png';
+  static String whatsAppBlack = 'Assets/Images/WhatsApp_Black.png';
+  static String loginScreenBottom = 'Assets/Images/Login_Screen_Bottom.png';
 }
