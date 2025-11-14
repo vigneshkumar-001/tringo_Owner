@@ -63,6 +63,15 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopDetailsNotifierProvider);
+    if (state.isLoading) {
+      return Skeletonizer(
+        enabled: true,
+        enableSwitchAnimation: true,
+        child: Scaffold(
+          body: SafeArea(child: Center(child: ThreeDotsLoader())),
+        ),
+      );
+    }
 
     if (state.error != null) {
       debugPrint('Shop details error: ${state.error}');
@@ -83,7 +92,6 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                   onTap: state.isLoading
                       ? null
                       : () {
-                          // retry API call
                           ref
                               .read(shopDetailsNotifierProvider.notifier)
                               .fetchShopDetails();
@@ -162,7 +170,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                             ),
                             const Spacer(),
                             CommonContainer.gradientContainer(
-                              text: 'Sweets & Bakery',
+                              text: shop?.category.toString() ?? '',
                               textColor: AppColor.skyBlue,
                               fontWeight: FontWeight.w700,
                             ),
@@ -178,7 +186,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                             child: Row(
                               children: [
                                 CommonContainer.doorDelivery(
-                                  text: 'Door Delivery',
+                                  text: (shop?.shopDoorDelivery ?? false)
+                                      ? 'Door Delivery'
+                                      : '',
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
                                   textColor: AppColor.skyBlue,
@@ -478,20 +488,27 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
 
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: shop?.products.length ?? 0,
                         itemBuilder: (context, index) {
                           final data = shop?.products[index];
+                          final media =
+                              data?.media; // media list for this product
+
+                          // Safely pick an image URL
+                          final imageUrl = (media != null && media.isNotEmpty)
+                              ? (media.first.url ?? '') // media[0]
+                              : '';
 
                           return Padding(
                             padding: const EdgeInsets.only(right: 10),
                             child: CommonContainer.foodList(
                               fontSize: 14,
-                              doorDelivery: false,
+                              doorDelivery: data?.doorDelivery ?? false,
                               titleWeight: FontWeight.w700,
                               onTap: () {},
                               imageWidth: 130,
-                              image: AppImages.snacks1,
+                              image: imageUrl, // 👈 use safe image url
                               foodName: data?.englishName.toString() ?? '',
                               ratingStar: data?.rating.toString() ?? '',
                               ratingCount: data?.ratingCount.toString() ?? '',
@@ -580,35 +597,74 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 21),
-                      Row(
-                        children: [
-                          Text(
-                            '4.5',
-                            style: AppTextStyles.mulish(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 33,
-                              color: AppColor.darkBlue,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Image.asset(
-                            AppImages.starImage,
-                            height: 30,
-                            color: AppColor.green,
-                          ),
-                        ],
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Builder(
+                          builder: (context) {
+                            final reviews = shop?.reviews ?? [];
+
+                            if (reviews.isEmpty) {
+                              return const Center(
+                                child: Text(
+                                  'No reviews found',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return ListView.builder(
+                              itemCount: reviews.length,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                final data = reviews[index];
+                                final reviewText = data is String
+                                    ? data
+                                    : data.toString();
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          data,
+                                          style: AppTextStyles.mulish(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 33,
+                                            color: AppColor.darkBlue,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Image.asset(
+                                          AppImages.starImage,
+                                          height: 30,
+                                          color: AppColor.green,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Based on 58 reviews',
+                                      style: AppTextStyles.mulish(
+                                        color: AppColor.gray84,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    CommonContainer.reviewBox(),
+                                    const SizedBox(height: 17),
+                                    CommonContainer.reviewBox(),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Based on 58 reviews',
-                        style: AppTextStyles.mulish(color: AppColor.gray84),
-                      ),
-                      const SizedBox(height: 20),
-                      CommonContainer.reviewBox(),
-                      const SizedBox(height: 17),
-                      CommonContainer.reviewBox(),
-                      const SizedBox(height: 78),
                     ],
                   ),
                 ),
