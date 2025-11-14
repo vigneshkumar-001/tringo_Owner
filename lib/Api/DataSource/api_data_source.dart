@@ -15,6 +15,7 @@ import 'package:tringo_vendor/Presentation/ShopInfo/model/search_keywords_respon
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_response.dart';
+import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
 
 import '../../Presentation/Register/model/owner_info_response.dart';
 import '../../Presentation/ShopInfo/model/user_image_response.dart';
@@ -202,6 +203,7 @@ class ApiDataSource extends BaseApiDataSource {
       final url = (shopId != null && shopId.isNotEmpty)
           ? ApiUrl.updateShop(shopId: shopId)
           : ApiUrl.shop;
+
       // final url = ApiUrl.shop;
       final payload = {
         "category": category,
@@ -430,7 +432,13 @@ class ApiDataSource extends BaseApiDataSource {
       final prefs = await SharedPreferences.getInstance();
 
       final shopId = prefs.getString('shop_id');
-      String url = ApiUrl.addProducts(shopId:shopId?? '' );
+      final productId = prefs.getString('product_id');
+
+      final url = (productId != null && productId.isNotEmpty)
+          ? ApiUrl.updateProducts(productId: productId)
+          : ApiUrl.addProducts(shopId: shopId ?? '');
+
+      // String url = ApiUrl.addProducts(shopId:shopId?? '' );
 
       final payload = {
         "category": category,
@@ -442,18 +450,6 @@ class ApiDataSource extends BaseApiDataSource {
         "offerValue": "$offerValue%",
         "description": description,
         "doorDelivery": true,
-        "readyTimeMinutes": 5,
-        "features": [
-          {"label": "Display", "value": "6.7\" AMOLED"},
-          {"label": "Battery", "value": "5000mAh"},
-        ],
-        "keywords": [
-          "Face tissue",
-          "Paper product",
-          "Bathroom product",
-          "Paper",
-          "Face towel",
-        ],
       };
 
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
@@ -466,6 +462,179 @@ class ApiDataSource extends BaseApiDataSource {
         if (response.statusCode == 200 || response.statusCode == 201) {
           if (response.data['status'] == true) {
             return Right(ProductResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      print(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ShopCategoryListResponse>>
+  getProductCategories() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final shopId = prefs.getString('shop_id');
+      String url = ApiUrl.productCategoryList(shopId: shopId ?? '');
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return Right(ShopCategoryListResponse.fromJson(response.data));
+          // if (response.data['status'] == true) {
+          //   return Right(ShopCategoryListResponse.fromJson(response.data));
+          // } else {
+          //   return Left(
+          //     ServerFailure(response.data['message'] ?? "Login failed"),
+          //   );
+          // }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      print(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ProductResponse>> updateProducts({
+    required List<String> images,
+    required List<Map<String, String>> features,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final productId = prefs.getString('product_id') ?? '';
+
+      String url = ApiUrl.updateProducts(productId: productId);
+
+      // ✅ Use the actual images + features passed from caller
+      final payload = {"images": images, "features": features};
+
+      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+      AppLogger.log.i(payload);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(ProductResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Update failed"),
+            );
+          }
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ProductResponse>> updateSearchKeyWords({
+    required List<String> keywords,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final productId = prefs.getString('product_id') ?? '';
+
+      String url = ApiUrl.updateProducts(productId: productId);
+
+      // ✅ Use the actual images + features passed from caller
+      final payload = {"keywords": keywords};
+
+      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+      AppLogger.log.i(payload);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(ProductResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Update failed"),
+            );
+          }
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ShopDetailsResponse>> getShopDetails() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final shopId = prefs.getString('shop_id');
+      final productId = prefs.getString('product_id');
+
+      final url = ApiUrl.shopDetails(shopId: shopId ?? '');
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(ShopDetailsResponse.fromJson(response.data));
           } else {
             return Left(
               ServerFailure(response.data['message'] ?? "Login failed"),
