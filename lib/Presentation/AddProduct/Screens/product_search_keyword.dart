@@ -1,25 +1,29 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tringo_vendor/Presentation/AddProduct/Controller/product_notifier.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Session/registration_session.dart';
+import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../Shops Details/Screen/shops_details.dart';
 
-class ProductSearchKeyword extends StatefulWidget {
+class ProductSearchKeyword extends ConsumerStatefulWidget {
   final bool? isCompany;
   const ProductSearchKeyword({super.key,  this.isCompany,});
   bool get isCompanyResolved =>
       isCompany ?? (RegistrationSession.instance.businessType == BusinessType.company);
 
   @override
-  State<ProductSearchKeyword> createState() => _ProductSearchKeywordState();
+  ConsumerState<ProductSearchKeyword> createState() => _ProductSearchKeywordState();
 }
 
-class _ProductSearchKeywordState extends State<ProductSearchKeyword> {
+class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
   final TextEditingController _searchKeywordController =
       TextEditingController();
 
@@ -67,6 +71,7 @@ class _ProductSearchKeywordState extends State<ProductSearchKeyword> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(productNotifierProvider);
     final bool isCompany = widget.isCompanyResolved;
     return Scaffold(
       body: SafeArea(
@@ -281,25 +286,74 @@ class _ProductSearchKeywordState extends State<ProductSearchKeyword> {
 
                     SizedBox(height: 30),
 
-                    //  Save & Continue
+                    // //  Save & Continue
+                    // CommonContainer.button(
+                    //   buttonColor: AppColor.black,
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => ShopsDetails(),
+                    //       ),
+                    //     );
+                    //   },
+                    //   text: Text(
+                    //     'Preview Shop & Product',
+                    //     style: AppTextStyles.mulish(
+                    //       fontSize: 18,
+                    //       fontWeight: FontWeight.w700,
+                    //     ),
+                    //   ),
+                    //   imagePath: AppImages.rightStickArrow,
+                    //   imgHeight: 20,
+                    // ),
+
                     CommonContainer.button(
                       buttonColor: AppColor.black,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ShopsDetails(),
-                          ),
-                        );
+                      onTap: () async {
+                        if (_keywords.isEmpty) {
+                          AppSnackBar.error(
+                            context,
+                            'Please add at least one keyword',
+                          );
+                          return;
+                        }
+
+                        // Call the API with the keywords list
+                        final result = await ref
+                            .read(productNotifierProvider.notifier)
+                            .updateProductSearchWords(keywords: _keywords);
+
+                        // Check state or API response, then navigate
+                        final state = ref.read(productNotifierProvider);
+                        if (result) {
+                          // context.pushNamed(
+                          //   AppRoutes.productCategoryScreens,
+                          //   extra: 'SearchKeyword',
+                          // );
+                          // Only navigate if API call is successful
+                           Navigator.push(
+                             context,
+                             MaterialPageRoute(
+                               builder: (context) => ShopsDetails(),
+                             ),
+                           );
+                        } else if (state.error != null) {
+                          AppSnackBar.error(context, state.error!);
+                        }
                       },
-                      text: Text(
+                      text: state.isLoading
+                          ? const ThreeDotsLoader()
+                          : Text(
                         'Preview Shop & Product',
                         style: AppTextStyles.mulish(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      imagePath: AppImages.rightStickArrow,
+                      imagePath: state.isLoading
+                          ? null
+                          : AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
                     SizedBox(height: 36),

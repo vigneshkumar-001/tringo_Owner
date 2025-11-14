@@ -1,20 +1,23 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Screens/product_search_keyword.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../Controller/product_notifier.dart';
 
-class AddProductList extends StatefulWidget {
+class AddProductList extends ConsumerStatefulWidget {
   const AddProductList({super.key});
 
   @override
-  State<AddProductList> createState() => _AddProductListState();
+  ConsumerState<AddProductList> createState() => _AddProductListState();
 }
 
-class _AddProductListState extends State<AddProductList> {
+class _AddProductListState extends ConsumerState<AddProductList> {
   final ImagePicker _picker = ImagePicker();
   final _formKey = GlobalKey<FormState>();
 
@@ -197,36 +200,48 @@ class _AddProductListState extends State<AddProductList> {
     );
   }
 
-  void _validateAndSubmit() {
-    // bool imageValid = true;
-    // if (_pickedImages[0] == null) {
-    //   imageValid = false;
-    //   _hasError[0] = true;
-    // }
-    //
-    // final formValid = _formKey.currentState?.validate() ?? false;
-    // setState(() {}); // Refresh borders / error text
-    //
-    // if (!imageValid) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text("Please add required product image")),
-    //   );
-    //   return;
-    // }
-    //
-    // if (!formValid) return;
-
-    //  All valid → proceed to next screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProductSearchKeyword(isCompany: true),
-      ),
-    );
-  }
+  // void _validateAndSubmit() async {
+  //   // Validate features
+  //   final formValid = _formKey.currentState?.validate() ?? false;
+  //   setState(() {});
+  //   if (!formValid) return;
+  //
+  //   // Collect features
+  //   final features = _featureControllers.map((item) {
+  //     return {
+  //       "label": item['heading']!.text.trim(),
+  //       "value": item['answer']!.text.trim(),
+  //     };
+  //   }).toList();
+  //
+  //   final notifier = ref.read(productNotifierProvider.notifier);
+  //
+  //
+  //   final success = await notifier.uploadProductImages(
+  //     images: _pickedImages,
+  //     features: features,
+  //     context: context,
+  //   );
+  //
+  //   if (!success) {
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(const SnackBar(content: Text("Failed. Try again.")));
+  //     return;
+  //   }
+  //
+  //
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => ProductSearchKeyword(isCompany: true),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(productNotifierProvider);
     return Scaffold(
       body: SafeArea(
         child: Form(
@@ -317,18 +332,52 @@ class _AddProductListState extends State<AddProductList> {
 
                       SizedBox(height: 30),
 
-                      CommonContainer.button(
-                        buttonColor: AppColor.black,
-                        onTap: _validateAndSubmit,
-                        text: Text(
-                          'Save & Continue',
-                          style: AppTextStyles.mulish(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        imagePath: AppImages.rightStickArrow,
-                        imgHeight: 20,
+                      CommonContainer.button2(
+                        width: double.infinity,
+                        onTap: () async {
+                          final formValid =
+                              _formKey.currentState?.validate() ?? false;
+                          setState(() {});
+                          if (!formValid) return;
+
+                          // Collect features
+                          final features = _featureControllers.map((item) {
+                            return {
+                              "label": item['heading']!.text.trim(),
+                              "value": item['answer']!.text.trim(),
+                            };
+                          }).toList();
+
+                          final notifier = ref.read(
+                            productNotifierProvider.notifier,
+                          );
+
+                          final success = await notifier.uploadProductImages(
+                            images: _pickedImages,
+                            features: features,
+                            context: context,
+                          );
+
+                          if (!success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Failed. Try again."),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // SUCCESS → Navigate
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ProductSearchKeyword(isCompany: true),
+                            ),
+                          );
+                        },
+                        loader: state.isLoading ? ThreeDotsLoader() : null,
+                        text: 'Save & Continue',
                       ),
 
                       SizedBox(height: 36),
