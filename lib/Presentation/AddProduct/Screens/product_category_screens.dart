@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
+import 'package:tringo_vendor/Presentation/AddProduct/Controller/product_notifier.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
@@ -12,13 +18,16 @@ class ProductCategoryScreens extends StatefulWidget {
   const ProductCategoryScreens({super.key, this.isService, this.isIndividual});
 
   @override
-  State<ProductCategoryScreens> createState() => _ProductCategoryScreensState();
+  ConsumerState<ProductCategoryScreens> createState() =>
+      _ProductCategoryScreensState();
 }
 
-class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
+class _ProductCategoryScreensState
+    extends ConsumerState<ProductCategoryScreens> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _offerController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
@@ -27,8 +36,16 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
   final TextEditingController _offerPriceController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
-  final List<String> cities = ['Madurai', 'Chennai', 'Coimbatore'];
+  final List<String> categories = [
+    'product-mobile-devices',
+    'Clothing',
+    'Groceries',
+  ];
+  final List<String> cities = [
+    'product-mobile-smartphones',
+    'Chennai',
+    'Coimbatore',
+  ];
   final List<String> offers = [
     'First App Offer',
     'Second App Offer',
@@ -66,6 +83,7 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(productNotifierProvider);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -139,12 +157,12 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
                       CommonContainer.fillingContainer(
                         imagePath: AppImages.downArrow,
                         verticalDivider: false,
-                        controller: _cityController,
+                        controller: _subCategoryController,
                         isDropdown: true,
                         dropdownItems: cities,
                         context: context,
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a city'
+                            ? 'Please select a sub category'
                             : null,
                       ),
                       SizedBox(height: 25),
@@ -174,6 +192,7 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
 
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        keyboardType: TextInputType.number,
                         verticalDivider: false,
                         controller: _productPriceController,
                         validator: (value) => value == null || value.isEmpty
@@ -239,15 +258,59 @@ class _ProductCategoryScreensState extends State<ProductCategoryScreens> {
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
-                        onTap: _validateAndContinue,
-                        text: Text(
-                          'Save & Continue',
-                          style: AppTextStyles.mulish(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        imagePath: AppImages.rightStickArrow,
+                        onTap: () async {
+                          final priceText = _productPriceController.text.trim();
+                          final price = int.tryParse(priceText);
+
+                          if (_formKey.currentState!.validate()) {
+                            final success = await ref
+                                .read(productNotifierProvider.notifier)
+                                .addProduct(
+                                  category: _categoryController.text.trim(),
+                                  subCategory: _subCategoryController.text
+                                      .trim(),
+                                  englishName: _productNameController.text
+                                      .trim(),
+                                  price: price ?? 0,
+                                  offerLabel: _offerController.text.trim(),
+                                  offerValue: _offerPriceController.text.trim(),
+                                  description: _descriptionController.text
+                                      .trim(),
+                                );
+                            if (success) {
+                              context.pushNamed(AppRoutes.addProductList);
+                            } else {
+                              final err = ref
+                                  .read(productNotifierProvider)
+                                  .error;
+                              if (err != null && err.isNotEmpty) {
+                                AppSnackBar.error(context, err);
+                              } else {
+                                AppSnackBar.error(
+                                  context,
+                                  'Something went wrong',
+                                );
+                              }
+                            }
+                          } else {
+                            AppSnackBar.info(
+                              context,
+                              'Please fill all required fields correctly.',
+                            );
+                          }
+                        },
+                        text: state.isLoading
+                            ? const ThreeDotsLoader()
+                            : Text(
+                                'Save & Continue',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                        imagePath: state.isLoading
+                            ? null
+                            : AppImages.rightStickArrow,
                         imgHeight: 20,
                       ),
                       SizedBox(height: 36),

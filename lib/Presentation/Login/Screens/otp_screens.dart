@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../controller/login_notifier.dart';
 
@@ -111,11 +112,7 @@ class _OtpScreensState extends ConsumerState<OtpScreens> {
                       notifier. loginUser( phoneNumber: widget.phoneNumber,page: 'resendOtp');
                     },
               child: state.isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const ThreeDotsLoader()
                   : const Text('Resend Otp Submit'),
             ),
             const SizedBox(height: 20),

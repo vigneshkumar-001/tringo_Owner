@@ -1,24 +1,29 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tringo_vendor/Core/Utility/app_loader.dart';
+import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/search_keyword.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../Controller/shop_notifier.dart';
 
-class ShopPhotoInfo extends StatefulWidget {
+class ShopPhotoInfo extends ConsumerStatefulWidget {
   final String? pages;
-  const ShopPhotoInfo({super.key, this.pages});
+  const ShopPhotoInfo({super.key, this.pages = ''});
 
   @override
-  State<ShopPhotoInfo> createState() => _ShopPhotoInfoState();
+  ConsumerState<ShopPhotoInfo> createState() => _ShopPhotoInfoState();
 }
 
-
-class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
+class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
   final ImagePicker _picker = ImagePicker();
 
   // 4 containers = 4 image slots
@@ -138,7 +143,7 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
     );
   }
 
-  void _validateAndContinue() {
+  Future<void> _validateAndContinue() async {
     // bool valid = true;
     // setState(() {
     //   for (int i = 0; i < _pickedImages.length; i++) {
@@ -160,17 +165,21 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
     //   );
     //   return;
     // }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SearchKeyword()),
-    );
 
     //  All images valid → proceed to next screen or API upload
     debugPrint('All images selected. Proceed.');
   }
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = ref.watch(shopCategoryNotifierProvider);
+    final notifier = ref.read(shopCategoryNotifierProvider.notifier);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -225,7 +234,7 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                       title: 'Shop Outside Photo',
                       image: AppImages.iImage,
                       infoMessage:
-                      'Please upload a clear photo of your shop signboard showing the name clearly.',
+                          'Please upload a clear photo of your shop signboard showing the name clearly.',
                     ),
                     SizedBox(height: 10),
                     _addImageContainer(index: 1),
@@ -235,7 +244,7 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                       title: 'Shop Inside Photo',
                       image: AppImages.iImage,
                       infoMessage:
-                      'Please upload a clear photo of your shop signboard showing the name clearly.',
+                          'Please upload a clear photo of your shop signboard showing the name clearly.',
                     ),
                     SizedBox(height: 10),
                     _addImageContainer(index: 2),
@@ -244,7 +253,7 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                     SizedBox(height: 30),
                     CommonContainer.button(
                       buttonColor: AppColor.black,
-                      onTap: () {
+                      onTap: () async {
                         if (widget.pages == "AboutMeScreens") {
                           // Example: collect image data before returning
                           final updatedPhotos = _pickedImages
@@ -252,19 +261,57 @@ class _ShopPhotoInfoState extends State<ShopPhotoInfo> {
                               .map((f) => f!.path)
                               .toList();
 
-                          Navigator.pop(context, updatedPhotos); // Return to AboutMeScreens
+                          Navigator.pop(
+                            context,
+                            updatedPhotos,
+                          ); // Return to AboutMeScreens
                         } else {
-                          _validateAndContinue(); // Normal flow for new registrations
+                          if (_pickedImages.every((img) => img == null)) {
+                            AppSnackBar.error(
+                              context,
+                              'Please select all required images',
+                            );
+                            return;
+                          }
+
+                          final success = await ref
+                              .read(shopCategoryNotifierProvider.notifier)
+                              .uploadShopImages(
+                                images: _pickedImages,
+
+                                context: context,
+                              );
+                          if (success) {
+                            context.pushNamed(AppRoutes.searchKeyword);
+                          } else {
+                            final err = ref
+                                .read(shopCategoryNotifierProvider)
+                                .error;
+                            if (err != null && err.isNotEmpty) {
+                              AppSnackBar.error(context, err);
+                            } else {
+                              AppSnackBar.error(
+                                context,
+                                'Image upload failed. Please try again.',
+                              );
+                            }
+                          }
                         }
                       },
-                      text: Text(
-                        widget.pages == "AboutMeScreens" ? 'Update' : 'Save & Continue',
-                        style: AppTextStyles.mulish(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      imagePath: AppImages.rightStickArrow,
+                      text: state.isLoading
+                          ? const ThreeDotsLoader()
+                          : Text(
+                              widget.pages == "AboutMeScreens"
+                                  ? 'Update'
+                                  : 'Save & Continue',
+                              style: AppTextStyles.mulish(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                      imagePath: state.isLoading
+                          ? null
+                          : AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
 
