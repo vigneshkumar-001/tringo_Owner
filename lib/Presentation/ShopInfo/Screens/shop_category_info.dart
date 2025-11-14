@@ -362,7 +362,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     );
   }
 
-  File? _selectedImage;
   XFile? _permanentImage;
 
   Future<void> _pickImage() async {

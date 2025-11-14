@@ -12,8 +12,10 @@ import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import 'add_product_list.dart';
 
-class ProductCategoryScreens extends ConsumerStatefulWidget {
-  const ProductCategoryScreens({super.key});
+class ProductCategoryScreens extends StatefulWidget {
+  final bool? isService;
+  final bool? isIndividual;
+  const ProductCategoryScreens({super.key, this.isService, this.isIndividual});
 
   @override
   ConsumerState<ProductCategoryScreens> createState() =>
@@ -114,11 +116,21 @@ class _ProductCategoryScreensState
                 SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.addProduct,
-                  text: 'Add Product',
+                  text: widget.isService == true
+                      ? 'Add Service'
+                      : 'Add Product',
                   imageHeight: 85,
                   gradientColor: AppColor.lavenderMist,
                   value: 0.8,
                 ),
+
+                // CommonContainer.registerTopContainer(
+                //   image: AppImages.addProduct,
+                //   text: 'Add Product',
+                //   imageHeight: 85,
+                //   gradientColor: AppColor.lavenderMist,
+                //   value: 0.8,
+                // ),
                 SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -167,10 +179,17 @@ class _ProductCategoryScreensState
                             : null,
                       ),
                       SizedBox(height: 25),
+                      // Text(
+                      //   'Product price',
+                      //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      // ),
                       Text(
-                        'Product price',
+                        widget.isService == true
+                            ? 'Start From'
+                            : 'Product price',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
+
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         keyboardType: TextInputType.number,
