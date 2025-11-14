@@ -6,6 +6,7 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Presentation/Login/Screens/otp_screens.dart';
 import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Utility/app_loader.dart';
 import '../../Login/controller/login_notifier.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -60,11 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       notifier.loginUser(phoneNumber: phone);
                     },
               child: state.isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const ThreeDotsLoader()
                   : const Text('Login'),
             ),
             const SizedBox(height: 20),
