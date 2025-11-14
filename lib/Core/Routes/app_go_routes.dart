@@ -10,6 +10,7 @@ import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart
 
 import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
+import '../../Presentation/Shops Details/Screen/shops_details.dart';
 
 class AppRoutes {
   static const String login = 'login';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String searchKeyword = 'SearchKeyword';
   static const String productCategoryScreens = 'ProductCategoryScreens';
   static const String addProductList = 'AddProductList';
+  static const String shopsDetails = 'ShopsDetails';
 
   static const String loginPath = '/login';
   static const String otpPath = '/otp';
@@ -31,10 +33,11 @@ class AppRoutes {
   static const String searchKeywordPath = '/SearchKeyword';
   static const String productCategoryScreensPath = '/ProductCategoryScreens';
   static const String addProductListPath = '/AddProductList';
+  static const String shopsDetailsPath = '/ShopsDetails';
 }
 
 final goRouter = GoRouter(
-  initialLocation: AppRoutes.loginPath,
+  initialLocation: AppRoutes.shopsDetailsPath,
   routes: [
     GoRoute(
       path: AppRoutes.loginPath,
@@ -103,6 +106,11 @@ final goRouter = GoRouter(
       path: AppRoutes.addProductListPath,
       name: AppRoutes.addProductList,
       builder: (context, state) => const AddProductList(),
+    ),
+    GoRoute(
+      path: AppRoutes.shopsDetailsPath,
+      name: AppRoutes.shopsDetails,
+      builder: (context, state) => const ShopsDetails(),
     ),
   ],
 );

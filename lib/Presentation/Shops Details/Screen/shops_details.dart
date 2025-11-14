@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_vendor/Presentation/Shops%20Details/controller/shop_details_notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Const/app_color.dart';
@@ -12,18 +16,18 @@ import '../../ShopInfo/Screens/shop_category_info.dart';
 
 import 'package:tringo_vendor/Core/Session/registration_session.dart';
 
-class ShopsDetails extends StatefulWidget {
+class ShopsDetails extends ConsumerStatefulWidget {
   const ShopsDetails({super.key});
 
   @override
-  State<ShopsDetails> createState() => _ShopsDetailsState();
+  ConsumerState<ShopsDetails> createState() => _ShopsDetailsState();
 }
 
-class _ShopsDetailsState extends State<ShopsDetails> {
+class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
   int selectedIndex = 0;
   int selectedWeight = 0; // default
 
-  Future<void> _openMap(double latitude, double longitude) async {
+  Future<void> _openMap(String latitude, String longitude) async {
     final Uri googleMapUrl = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
     );
@@ -48,485 +52,552 @@ class _ShopsDetailsState extends State<ShopsDetails> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(shopDetailsNotifierProvider.notifier).fetchShopDetails();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = ref.watch(shopDetailsNotifierProvider);
+
+    if (state.error != null) {
+      debugPrint('Shop details error: ${state.error}');
+      return const Scaffold(
+        body: Center(
+          child: Text(
+            'No data available. Please try again later.',
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+
+    final shop = state.shopDetailsResponse?.data;
+
+    if (shop == null && !state.isLoading) {
+      return const Scaffold(body: Center(child: Text('No shop data found')));
+    }
+
     const String shopDisplayNameTamil =
         'ஸ்ரீ கிருஷ்ணா ஸ்வீட்ஸ் பிரைவேட் லிமிடெட்';
     const String shopDisplayName = 'Sri Krishna Sweets Private Limited';
-    // final bool showAddBranch =
-    //     RegistrationSession.instance.businessType == BusinessType.company;
-    // Session-based flags
+
     final bool isCompany =
         RegistrationSession.instance.businessType == BusinessType.company;
     final bool isIndividual =
         RegistrationSession.instance.businessType == BusinessType.individual;
 
     final bool showAddBranch = isCompany; // company-only
-    // IMPORTANT: Attract card is ONLY for Individual (per your requirement)
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                    colors: [AppColor.scaffoldColor, AppColor.leftArrow],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+    return Skeletonizer(
+      enabled: state.isLoading,
+      enableSwitchAnimation: true,
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      colors: [AppColor.scaffoldColor, AppColor.leftArrow],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      child: Row(
-                        children: [
-                          CommonContainer.topLeftArrow(
-                            onTap: () => Navigator.pop(context),
-                          ),
-                          Spacer(),
-                          CommonContainer.gradientContainer(
-                            text: 'Sweets & Bakery',
-                            textColor: AppColor.skyBlue,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            children: [
-                              CommonContainer.doorDelivery(
-                                text: 'Door Delivery',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                textColor: AppColor.skyBlue,
-                              ),
-                            ],
-                          ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
                         ),
-                        SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            shopDisplayName,
-                            style: AppTextStyles.mulish(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                              color: AppColor.darkBlue,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                AppImages.locationImage,
-                                height: 15,
-                                color: AppColor.darkGrey,
-                              ),
-                              SizedBox(width: 3),
-                              Expanded(
-                                child: Text(
-                                  '12, 2, Tirupparankunram Rd, kunram ',
-                                  style: AppTextStyles.mulish(
-                                    color: AppColor.darkGrey,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 27),
-                        SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          scrollDirection: Axis.horizontal,
-                          child: CommonContainer.callNowButton(
-                            callImage: AppImages.callImage,
-                            callText: 'Call Now',
-                            whatsAppIcon: true,
-                            whatsAppOnTap: () {},
-                            messageOnTap: () {},
-                            MessageIcon: true,
-                            mapText: 'Map',
-                            mapOnTap: () =>
-                                _openMap(9.91878153068342, 78.11575595524265),
-                            mapImage: AppImages.locationImage,
-                            callIconSize: 21,
-                            callTextSize: 16,
-                            mapIconSize: 21,
-                            mapTextSize: 16,
-                            messagesIconSize: 23,
-                            whatsAppIconSize: 23,
-                            fireIconSize: 23,
-                            callNowPadding: EdgeInsets.symmetric(
-                              horizontal: 30,
-                              vertical: 12,
-                            ),
-                            mapBoxPadding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            iconContainerPadding: EdgeInsets.symmetric(
-                              horizontal: 22,
-                              vertical: 13,
-                            ),
-                            messageContainer: true,
-                            mapBox: true,
-                          ),
-                        ),
-                        SizedBox(height: 20),
-                        SingleChildScrollView(
-                          physics: BouncingScrollPhysics(),
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              Stack(
-                                children: [
-                                  ClipRRect(
-                                    clipBehavior: Clip.antiAlias,
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Image.asset(
-                                      AppImages.imageContainer1,
-                                      height: 230,
-                                      width: 310,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 20,
-                                    left: 15,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColor.scaffoldColor,
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            '4.1',
-                                            style: AppTextStyles.mulish(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              color: AppColor.darkBlue,
-                                            ),
-                                          ),
-                                          SizedBox(width: 5),
-                                          Image.asset(
-                                            AppImages.starImage,
-                                            height: 9,
-                                            color: AppColor.green,
-                                          ),
-                                          SizedBox(width: 5),
-                                          Container(
-                                            width: 1.5,
-                                            height: 11,
-                                            decoration: BoxDecoration(
-                                              color: AppColor.darkBlue
-                                                  .withOpacity(0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(1),
-                                            ),
-                                          ),
-                                          SizedBox(width: 5),
-                                          Text(
-                                            '16',
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.darkBlue,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(width: 10),
-                              Image.asset(
-                                AppImages.imageContainer2,
-                                height: 250,
-                                width: 310,
-                              ),
-                              SizedBox(width: 10),
-                              Image.asset(
-                                AppImages.imageContainer3,
-                                height: 250,
-                                width: 310,
-                              ),
-                              SizedBox(width: 10),
-                            ],
-                          ),
-                        ),
-
-                        if (showAddBranch)
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ShopCategoryInfo(
-                                    initialShopNameEnglish: shopDisplayName,
-                                    initialShopNameTamil: shopDisplayNameTamil,
-                                    isService: true,      // <-- pass the actual value
-                                    isIndividual: false,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 15,
-                              ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColor.borderLightGrey,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 20,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        AppImages.addBranch,
-                                        height: 22,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Add Branch',
-                                        style: AppTextStyles.mulish(
-                                          color: AppColor.darkBlue,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        SizedBox(height: 15),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 40),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Image.asset(
-                          AppImages.fireImage,
-                          height: 35,
-                          color: AppColor.darkBlue,
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          'Offer Products',
-                          style: AppTextStyles.mulish(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                            color: AppColor.darkBlue,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    CommonContainer.foodList(
-                      fontSize: 14,
-                      titleWeight: FontWeight.w700,
-                      onTap: () {},
-                      imageWidth: 130,
-                      image: AppImages.snacks1,
-                      foodName: 'Badam Mysurpa',
-                      ratingStar: '4.5',
-                      ratingCount: '16',
-                      offAmound: '₹79',
-                      oldAmound: '₹110',
-                      km: '',
-                      location: '',
-                      Verify: false,
-                      locations: false,
-                      weight: false,
-                      horizontalDivider: false,
-                    ),
-                    SizedBox(height: 10),
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductCategoryScreens(),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: AppColor.lightGray,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 22.5),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              AppImages.addListImage,
-                              height: 22,
-                              color: AppColor.darkBlue,
+                            CommonContainer.topLeftArrow(
+                              onTap: () => Navigator.pop(context),
                             ),
-                            SizedBox(width: 9),
-                            Text(
-                              'Add Product',
-                              style: AppTextStyles.mulish(
-                                color: AppColor.darkBlue,
-                              ),
+                            const Spacer(),
+                            CommonContainer.gradientContainer(
+                              text: 'Sweets & Bakery',
+                              textColor: AppColor.skyBlue,
+                              fontWeight: FontWeight.w700,
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    SizedBox(height: 40),
-                    if (isIndividual)
-                      CommonContainer.attractCustomerCard(
-                        title: 'Attract More Customers',
-                        description: 'Unlock premium to attract more customers',
+                      const SizedBox(height: 15),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: [
+                                CommonContainer.doorDelivery(
+                                  text: 'Door Delivery',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  textColor: AppColor.skyBlue,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              shop?.shopEnglishName.toString() ?? '',
+                              style: AppTextStyles.mulish(
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                                color: AppColor.darkBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  AppImages.locationImage,
+                                  height: 15,
+                                  color: AppColor.darkGrey,
+                                ),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    '${shop?.shopCity.toString() ?? ''},${shop?.shopCountry.toString() ?? ''}',
+                                    style: AppTextStyles.mulish(
+                                      color: AppColor.darkGrey,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 27),
+
+                          // Call now row (no extra scroll view)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: CommonContainer.callNowButton(
+                              callImage: AppImages.callImage,
+                              callText: 'Call Now',
+                              whatsAppIcon: true,
+                              whatsAppOnTap: () {},
+                              messageOnTap: () {},
+                              MessageIcon: true,
+                              mapText: 'Map',
+                              mapOnTap: () => _openMap(
+                                shop?.shopGpsLatitude.toString() ?? '',
+                                shop?.shopGpsLongitude.toString() ?? '',
+                              ),
+                              mapImage: AppImages.locationImage,
+                              callIconSize: 21,
+                              callTextSize: 16,
+                              mapIconSize: 21,
+                              mapTextSize: 16,
+                              messagesIconSize: 23,
+                              whatsAppIconSize: 23,
+                              fireIconSize: 23,
+                              callNowPadding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 12,
+                              ),
+                              mapBoxPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              iconContainerPadding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                                vertical: 13,
+                              ),
+                              messageContainer: true,
+                              mapBox: true,
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // 🔥 Replace horizontal ListView.builder with SingleChildScrollView + Row
+                          SizedBox(
+                            height: 250,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
+                              child: Row(
+                                children: List.generate(
+                                  shop?.shopImages.length ?? 0,
+                                  (index) {
+                                    final imageData = shop?.shopImages[index];
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 10.0,
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          ClipRRect(
+                                            clipBehavior: Clip.antiAlias,
+                                            borderRadius: BorderRadius.circular(20),
+                                            // --- Replace Image.network with CachedNetworkImage ---
+                                            child: CachedNetworkImage(
+                                              imageUrl: imageData?.url ?? '', // Use the URL from your data
+                                              height: 230,
+                                              width: 310,
+                                              fit: BoxFit.cover,
+                                              // The placeholder is used while the image is loading
+                                              placeholder: (context, url) => Container(
+                                                width: 310,
+                                                height: 230,
+                                                color: Colors.grey[300],
+                                                child: const Center(child: CircularProgressIndicator()),
+                                              ),
+                                              // The errorWidget is shown if the image fails to load
+                                              errorWidget: (context, url, error) => Container(
+                                                width: 310,
+                                                height: 230,
+                                                color: Colors.grey[300],
+                                                child: const Icon(Icons.broken_image, color: Colors.grey),
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 20,
+                                            left: 15,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppColor.scaffoldColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(30),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    '4.1', // TODO: dynamic rating
+                                                    style: AppTextStyles.mulish(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 14,
+                                                      color: AppColor.darkBlue,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Image.asset(
+                                                    AppImages.starImage,
+                                                    height: 9,
+                                                    color: AppColor.green,
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Container(
+                                                    width: 1.5,
+                                                    height: 11,
+                                                    decoration: BoxDecoration(
+                                                      color: AppColor.darkBlue
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            1,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Text(
+                                                    '16', // TODO: dynamic count
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 12,
+                                                      color: AppColor.darkBlue,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          if (showAddBranch)
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ShopCategoryInfo(
+                                          initialShopNameEnglish:
+                                              shopDisplayName,
+                                          initialShopNameTamil:
+                                              shopDisplayNameTamil,
+                                          isService: true,
+                                          isIndividual: false,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 15,
+                                  vertical: 15,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColor.borderLightGrey,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(22),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          AppImages.addBranch,
+                                          height: 22,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'Add Branch',
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.darkBlue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 15),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+                // ... rest of your "Offer Products" / reviews / bottom part unchanged
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Image.asset(
+                            AppImages.fireImage,
+                            height: 35,
+                            color: AppColor.darkBlue,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Offer Products',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      CommonContainer.foodList(
+                        fontSize: 14,
+                        titleWeight: FontWeight.w700,
+                        onTap: () {},
+                        imageWidth: 130,
+                        image: AppImages.snacks1,
+                        foodName: '',
+                        ratingStar: '4.5',
+                        ratingCount: '16',
+                        offAmound: '₹79',
+                        oldAmound: '₹110',
+                        km: '',
+                        location: '',
+                        Verify: false,
+                        locations: false,
+                        weight: false,
+                        horizontalDivider: false,
+                      ),
+                      const SizedBox(height: 10),
+                      InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SubscriptionScreen(),
+                              builder: (context) =>
+                                  const ProductCategoryScreens(),
                             ),
                           );
                         },
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppColor.lightGray,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 22.5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                AppImages.addListImage,
+                                height: 22,
+                                color: AppColor.darkBlue,
+                              ),
+                              const SizedBox(width: 9),
+                              Text(
+                                'Add Product',
+                                style: AppTextStyles.mulish(
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    SizedBox(height: 40),
-                    Row(
-                      children: [
-                        Image.asset(
-                          AppImages.reviewImage,
-                          height: 27.08,
-                          width: 26,
+                      const SizedBox(height: 40),
+                      if (isIndividual)
+                        CommonContainer.attractCustomerCard(
+                          title: 'Attract More Customers',
+                          description:
+                              'Unlock premium to attract more customers',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SubscriptionScreen(),
+                              ),
+                            );
+                          },
                         ),
-                        SizedBox(width: 10),
-                        Text(
-                          'Reviews',
-                          style: AppTextStyles.mulish(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColor.darkBlue,
+                      const SizedBox(height: 40),
+                      Row(
+                        children: [
+                          Image.asset(
+                            AppImages.reviewImage,
+                            height: 27.08,
+                            width: 26,
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 21),
-                    Row(
-                      children: [
-                        Text(
-                          '4.5',
-                          style: AppTextStyles.mulish(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 33,
-                            color: AppColor.darkBlue,
+                          const SizedBox(width: 10),
+                          Text(
+                            'Reviews',
+                            style: AppTextStyles.mulish(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColor.darkBlue,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 10),
-                        Image.asset(
-                          AppImages.starImage,
-                          height: 30,
-                          color: AppColor.green,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Based on 58 reviews',
-                      style: AppTextStyles.mulish(color: AppColor.gray84),
-                    ),
-                    SizedBox(height: 20),
-                    CommonContainer.reviewBox(),
-                    SizedBox(height: 17),
-                    CommonContainer.reviewBox(),
-                    SizedBox(height: 78),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Material(
-        color: Colors.transparent,
-        child: SafeArea(
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColor.scaffoldColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 16,
-                  offset: Offset(0, -6),
+                        ],
+                      ),
+                      const SizedBox(height: 21),
+                      Row(
+                        children: [
+                          Text(
+                            '4.5',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 33,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Image.asset(
+                            AppImages.starImage,
+                            height: 30,
+                            color: AppColor.green,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Based on 58 reviews',
+                        style: AppTextStyles.mulish(color: AppColor.gray84),
+                      ),
+                      const SizedBox(height: 20),
+                      CommonContainer.reviewBox(),
+                      const SizedBox(height: 17),
+                      CommonContainer.reviewBox(),
+                      const SizedBox(height: 78),
+                    ],
+                  ),
                 ),
               ],
             ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: ElevatedButton(
-                onPressed: () {
-                  RegistrationSession.instance
-                      .reset(); // becomes non-premium again
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const CommonBottomNavigation(initialIndex: 0),
-                    ),
-                    (route) => false, // clears back stack
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        bottomNavigationBar: Material(
+          color: Colors.transparent,
+          child: SafeArea(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColor.scaffoldColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, -6),
                   ),
-                  elevation: 0,
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                child: Text(
-                  'Close Preview',
-                  style: AppTextStyles.mulish(
-                    color: AppColor.scaffoldColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                child: ElevatedButton(
+                  onPressed: () {
+                    RegistrationSession.instance.reset();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const CommonBottomNavigation(initialIndex: 0),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Close Preview',
+                    style: AppTextStyles.mulish(
+                      color: AppColor.scaffoldColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -536,4 +607,624 @@ class _ShopsDetailsState extends State<ShopsDetails> {
       ),
     );
   }
+
+  /*  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(shopDetailsNotifierProvider);
+
+    if (state.error != null) {
+      return Scaffold(body: Center(child: Text(state.error!)));
+    }
+
+    final shop = state.shopDetailsResponse?.data;
+
+    if (shop == null && !state.isLoading) {
+      return const Scaffold(body: Center(child: Text('No shop data found')));
+    }
+
+    const String shopDisplayNameTamil =
+        'ஸ்ரீ கிருஷ்ணா ஸ்வீட்ஸ் பிரைவேட் லிமிடெட்';
+    const String shopDisplayName = 'Sri Krishna Sweets Private Limited';
+
+    final bool isCompany =
+        RegistrationSession.instance.businessType == BusinessType.company;
+    final bool isIndividual =
+        RegistrationSession.instance.businessType == BusinessType.individual;
+
+    final bool showAddBranch = isCompany; // company-only
+
+    return Skeletonizer(
+      enabled: state.isLoading,
+      enableSwitchAnimation: true,
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      colors: [AppColor.scaffoldColor, AppColor.leftArrow],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        child: Row(
+                          children: [
+                            CommonContainer.topLeftArrow(
+                              onTap: () => Navigator.pop(context),
+                            ),
+                            const Spacer(),
+                            CommonContainer.gradientContainer(
+                              text: 'Sweets & Bakery',
+                              textColor: AppColor.skyBlue,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: [
+                                CommonContainer.doorDelivery(
+                                  text: 'Door Delivery',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  textColor: AppColor.skyBlue,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              shop?.shopEnglishName.toString() ?? '',
+                              style: AppTextStyles.mulish(
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                                color: AppColor.darkBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  AppImages.locationImage,
+                                  height: 15,
+                                  color: AppColor.darkGrey,
+                                ),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    '${shop?.shopCity.toString() ?? ''},${shop?.shopCountry.toString() ?? ''}',
+                                    style: AppTextStyles.mulish(
+                                      color: AppColor.darkGrey,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 27),
+                          SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            scrollDirection: Axis.horizontal,
+                            child: CommonContainer.callNowButton(
+                              callImage: AppImages.callImage,
+                              callText: 'Call Now',
+                              whatsAppIcon: true,
+                              whatsAppOnTap: () {},
+                              messageOnTap: () {},
+                              MessageIcon: true,
+                              mapText: 'Map',
+                              mapOnTap: () => _openMap(
+                                shop?.shopGpsLatitude.toString() ?? '',
+                                shop?.shopGpsLongitude.toString() ?? '',
+                              ),
+                              mapImage: AppImages.locationImage,
+                              callIconSize: 21,
+                              callTextSize: 16,
+                              mapIconSize: 21,
+                              mapTextSize: 16,
+                              messagesIconSize: 23,
+                              whatsAppIconSize: 23,
+                              fireIconSize: 23,
+                              callNowPadding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 12,
+                              ),
+                              mapBoxPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              iconContainerPadding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                                vertical: 13,
+                              ),
+                              messageContainer: true,
+                              mapBox: true,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          const SizedBox(height: 20),
+
+                          // ... inside your Column
+                          const SizedBox(height: 20),
+
+                          SizedBox(
+                            height:
+                                250, // This constraint is correct and necessary.
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
+                              // `shrinkWrap: true` is not needed here and can be removed.
+                              // The SizedBox already constrains the height.
+                              physics: const BouncingScrollPhysics(),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: shop?.shopImages.length ?? 0,
+                              itemBuilder: (context, index) {
+                                // Get the specific image data for the current index.
+                                final image_data = shop?.shopImages[index];
+
+                                // The itemBuilder should return a single root widget for the list item.
+                                // Here, we'll add padding with a SizedBox.
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: 10.0,
+                                  ), // Spacing between items
+                                  child: Stack(
+                                    children: [
+                                      // ... inside your Column, replacing the existing SizedBox with the ListView
+
+                                      SizedBox(
+                                        height: 250, // This constraint is correct and necessary.
+                                        child: ListView.builder(
+                                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                                          physics: const BouncingScrollPhysics(),
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: shop?.shopImages.length ?? 0,
+                                          itemBuilder: (context, index) {
+                                            // Get the specific image data for the current index.
+                                            final imageData = shop?.shopImages[index];
+
+                                            // The itemBuilder should return a single root widget for the list item.
+                                            return Padding(
+                                              padding: const EdgeInsets.only(right: 10.0), // Spacing between items
+                                              child: Stack(
+                                                children: [
+                                                  ClipRRect(
+                                                    clipBehavior: Clip.antiAlias,
+                                                    borderRadius: BorderRadius.circular(20),
+                                                    // --- Replace Image.network with CachedNetworkImage ---
+                                                    child: CachedNetworkImage(
+                                                      imageUrl: imageData?.url ?? '', // Use the URL from your data
+                                                      height: 230,
+                                                      width: 310,
+                                                      fit: BoxFit.cover,
+                                                      // The placeholder is used while the image is loading
+                                                      placeholder: (context, url) => Container(
+                                                        width: 310,
+                                                        height: 230,
+                                                        color: Colors.grey[300],
+                                                        child: const Center(child: CircularProgressIndicator()),
+                                                      ),
+                                                      // The errorWidget is shown if the image fails to load
+                                                      errorWidget: (context, url, error) => Container(
+                                                        width: 310,
+                                                        height: 230,
+                                                        color: Colors.grey[300],
+                                                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    top: 20,
+                                                    left: 15,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColor.scaffoldColor,
+                                                        borderRadius: BorderRadius.circular(30),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            '4.1', // This should likely be dynamic from your data
+                                                            style: AppTextStyles.mulish(
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 14,
+                                                              color: AppColor.darkBlue,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 5),
+                                                          Image.asset(
+                                                            AppImages.starImage,
+                                                            height: 9,
+                                                            color: AppColor.green,
+                                                          ),
+                                                          const SizedBox(width: 5),
+                                                          Container(
+                                                            width: 1.5,
+                                                            height: 11,
+                                                            decoration: BoxDecoration(
+                                                              color: AppColor.darkBlue.withOpacity(0.2),
+                                                              borderRadius: BorderRadius.circular(1),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 5),
+                                                          Text(
+                                                            '16', // This should also be dynamic
+                                                            style: AppTextStyles.mulish(
+                                                              fontSize: 12,
+                                                              color: AppColor.darkBlue,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+
+                                      Positioned(
+                                        top: 20,
+                                        left: 15,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColor.scaffoldColor,
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '4.1', // This should likely be dynamic from your data
+                                                style: AppTextStyles.mulish(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                  color: AppColor.darkBlue,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Image.asset(
+                                                AppImages.starImage,
+                                                height: 9,
+                                                color: AppColor.green,
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Container(
+                                                width: 1.5,
+                                                height: 11,
+                                                decoration: BoxDecoration(
+                                                  color: AppColor.darkBlue
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(1),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                '16', // This should also be dynamic
+                                                style: AppTextStyles.mulish(
+                                                  fontSize: 12,
+                                                  color: AppColor.darkBlue,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                          //...
+                          if (showAddBranch)
+                            //...
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ShopCategoryInfo(
+                                          initialShopNameEnglish:
+                                              shopDisplayName,
+                                          initialShopNameTamil:
+                                              shopDisplayNameTamil,
+                                          isService: true,
+                                          isIndividual: false,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 15,
+                                  vertical: 15,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColor.borderLightGrey,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(22),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          AppImages.addBranch,
+                                          height: 22,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'Add Branch',
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.darkBlue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 15),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Image.asset(
+                            AppImages.fireImage,
+                            height: 35,
+                            color: AppColor.darkBlue,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Offer Products',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      CommonContainer.foodList(
+                        fontSize: 14,
+                        titleWeight: FontWeight.w700,
+                        onTap: () {},
+                        imageWidth: 130,
+                        image: AppImages.snacks1,
+                        foodName: '',
+                        ratingStar: '4.5',
+                        ratingCount: '16',
+                        offAmound: '₹79',
+                        oldAmound: '₹110',
+                        km: '',
+                        location: '',
+                        Verify: false,
+                        locations: false,
+                        weight: false,
+                        horizontalDivider: false,
+                      ),
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ProductCategoryScreens(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppColor.lightGray,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 22.5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                AppImages.addListImage,
+                                height: 22,
+                                color: AppColor.darkBlue,
+                              ),
+                              const SizedBox(width: 9),
+                              Text(
+                                'Add Product',
+                                style: AppTextStyles.mulish(
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      if (isIndividual)
+                        CommonContainer.attractCustomerCard(
+                          title: 'Attract More Customers',
+                          description:
+                              'Unlock premium to attract more customers',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SubscriptionScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 40),
+                      Row(
+                        children: [
+                          Image.asset(
+                            AppImages.reviewImage,
+                            height: 27.08,
+                            width: 26,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Reviews',
+                            style: AppTextStyles.mulish(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 21),
+                      Row(
+                        children: [
+                          Text(
+                            '4.5',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 33,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Image.asset(
+                            AppImages.starImage,
+                            height: 30,
+                            color: AppColor.green,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Based on 58 reviews',
+                        style: AppTextStyles.mulish(color: AppColor.gray84),
+                      ),
+                      const SizedBox(height: 20),
+                      CommonContainer.reviewBox(),
+                      const SizedBox(height: 17),
+                      CommonContainer.reviewBox(),
+                      const SizedBox(height: 78),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: Material(
+          color: Colors.transparent,
+          child: SafeArea(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColor.scaffoldColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    RegistrationSession.instance
+                        .reset(); // becomes non-premium again
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const CommonBottomNavigation(initialIndex: 0),
+                      ),
+                      (route) => false, // clears back stack
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Close Preview',
+                    style: AppTextStyles.mulish(
+                      color: AppColor.scaffoldColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }*/
 }
