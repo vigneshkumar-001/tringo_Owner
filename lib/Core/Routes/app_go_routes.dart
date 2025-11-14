@@ -46,7 +46,7 @@ final goRouter = GoRouter(
       name: AppRoutes.otp,
       builder: (context, state) {
         final phone = state.extra as String?;
-        return OtpScreens(phoneNumber: phone ?? '');
+        return OtpScreen(phoneNumber: phone ?? '');
       },
     ),
     GoRoute(
