@@ -1,19 +1,30 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
+import 'package:tringo_vendor/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_response.dart';
-import '../../../Api/Repository/failure.dart';
+import '../model/shop_info_photos_response.dart';
 
 class ShopCategoryState {
   final bool isLoading;
+  final String? imageUrl;
   final String? error;
   final ShopCategoryResponse? shopCategoryResponse;
   final ShopCategoryListResponse? shopCategoryListResponse;
+  final ShopPhotoResponse? shopPhotoResponse;
+  final ShopCategoryApiResponse? shopCategoryApiResponse;
 
   const ShopCategoryState({
     this.isLoading = false,
     this.error,
     this.shopCategoryResponse,
+    this.shopPhotoResponse,
+    this.shopCategoryApiResponse,
+    this.imageUrl,
     this.shopCategoryListResponse,
   });
 
@@ -26,7 +37,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
   @override
   ShopCategoryState build() => ShopCategoryState.initial();
 
-  Future<void> shopCategoryInfo({
+  Future<ShopCategoryResponse?> shopCategoryInfo({
     required String category,
     required String subCategory,
     required String englishName,
@@ -61,21 +72,28 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       doorDelivery: doorDelivery,
     );
 
-    result.fold(
-      (Failure failure) =>
-          state = ShopCategoryState(isLoading: false, error: failure.message),
-      (response) => state = ShopCategoryState(
-        isLoading: false,
-        shopCategoryResponse: response,
-      ),
+    return result.fold(
+      (failure) {
+        state = ShopCategoryState(isLoading: false, error: failure.message);
+        return null;
+      },
+      (response) async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('shop_id', response.id);
+
+        state = ShopCategoryState(
+          isLoading: false,
+          shopCategoryResponse: response,
+        );
+        return response;
+      },
     );
   }
 
   Future<void> fetchCategories() async {
     state = const ShopCategoryState(isLoading: true);
 
-    final result = await apiDataSource
-        .getShopCategories(); // Implement this API in ApiDataSource
+    final result = await apiDataSource.getShopCategories();
 
     result.fold(
       (failure) =>
@@ -85,6 +103,91 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         shopCategoryListResponse: response,
       ),
     );
+  }
+
+  /// Returns true on success; false otherwise.
+  /// No SnackBars here — let the UI decide what to show.
+  Future<bool> uploadShopImages({
+    required List<File?> images,
+    required BuildContext context,
+  }) async {
+    if (images.isEmpty || images.every((e) => e == null)) {
+      state = const ShopCategoryState(
+        isLoading: false,
+        error: 'No images selected',
+      );
+      return false;
+    }
+
+    state = const ShopCategoryState(isLoading: true);
+
+    final types = ["SIGN_BOARD", "OUTSIDE", "INSIDE", "INSIDE"];
+    final List<Map<String, String>> items = [];
+
+    for (int i = 0; i < images.length; i++) {
+      final file = images[i];
+      if (file == null) continue;
+
+      final uploadResult = await apiDataSource.userProfileUpload(
+        imageFile: file,
+      );
+
+      final uploadedUrl = uploadResult.fold<String?>(
+        (failure) => null,
+        (success) => success.message,
+      );
+
+      if (uploadedUrl != null) {
+        items.add({"type": types[i], "url": uploadedUrl});
+      }
+    }
+
+    if (items.isEmpty) {
+      state = const ShopCategoryState(isLoading: false, error: 'Upload failed');
+      return false;
+    }
+
+    final apiResult = await apiDataSource.shopPhotoUpload(items: items);
+
+    return apiResult.fold(
+      (failure) {
+        state = ShopCategoryState(isLoading: false, error: failure.message);
+        return false;
+      },
+      (response) {
+        state = ShopCategoryState(
+          isLoading: false,
+          shopPhotoResponse: response,
+        );
+        return response.status == true;
+      },
+    );
+
+    // IMPORTANT: do NOT reset state again; that would erase success/error.
+  }
+
+  Future<bool> searchKeywords({required List<String> keywords}) async {
+    state = const ShopCategoryState(isLoading: true);
+
+    final result = await apiDataSource.searchKeywords(keywords: keywords);
+
+    bool success = false;
+
+    result.fold(
+      (failure) {
+        state = ShopCategoryState(isLoading: false, error: failure.message);
+        success = false;
+      },
+      (response) {
+        state = ShopCategoryState(
+          isLoading: false,
+          shopCategoryApiResponse: response,
+        );
+        success = true;
+      },
+    );
+
+    return success;
   }
 
   void resetState() {

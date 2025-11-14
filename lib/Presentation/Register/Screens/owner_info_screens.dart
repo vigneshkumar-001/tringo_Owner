@@ -388,7 +388,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           ? null
                           : AppImages.rightStickArrow,
                       text: state.isLoading
-                          ? AppLoader.circularLoader()
+                          ? const ThreeDotsLoader()
                           : Text('Save & Continue'),
                       onTap: () async {
                         final englishName = englishNameController.text.trim();
