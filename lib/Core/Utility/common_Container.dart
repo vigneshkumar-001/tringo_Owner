@@ -1160,6 +1160,7 @@ class CommonContainer {
     Color? imageColor,
     // VoidCallback? onFieldTap,
     Future<void> Function()? onFieldTap,
+    Widget? suffixWidget,
 
     // 🔹 New
     DatePickMode datePickMode = DatePickMode.none,

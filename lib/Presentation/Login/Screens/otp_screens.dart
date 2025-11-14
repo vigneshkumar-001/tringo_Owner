@@ -133,7 +133,6 @@ import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/common_Container.dart';
 
-
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
   const OtpScreen({super.key, required this.phoneNumber});
@@ -156,7 +155,7 @@ class _OtpScreenState extends State<OtpScreen> {
     } else {
       maskMobileNumber =
           'x' * (mobileNumber.length - 3) +
-              mobileNumber.substring(mobileNumber.length - 3);
+          mobileNumber.substring(mobileNumber.length - 3);
     }
     return Scaffold(
       body: SafeArea(
@@ -195,7 +194,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             children: [
                               Text(
                                 'Enter 4 Digit OTP',
-                                style:AppTextStyles.mulish(
+                                style: AppTextStyles.mulish(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 24,
                                   color: AppColor.darkBlue,
@@ -351,13 +350,13 @@ class _OtpScreenState extends State<OtpScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 35),
                       child: CommonContainer.button(
                         onTap: () {
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (context) => PrivacyPolicy(),
-                        //     ),
-                        //   );
-                      },
+                          //   Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //       builder: (context) => PrivacyPolicy(),
+                          //     ),
+                          //   );
+                        },
                         text: Text('Verify Now'),
                       ),
                     ),
