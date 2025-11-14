@@ -1272,93 +1272,6 @@ class CommonContainer {
           }
         }
 
-        // -------------------- Tap Handling --------------------
-        // void _handleTap() async {
-        //   if (context == null) return;
-        //
-        //   // Single Date Picker
-        //   if (datePickMode == DatePickMode.single) {
-        //     final picked = await showDatePicker(
-        //       context: context!,
-        //       initialDate: DateTime.now(),
-        //       firstDate: DateTime(1900),
-        //       lastDate: DateTime(2100),
-        //       builder: (ctx, child) => Theme(
-        //         data: Theme.of(ctx).copyWith(
-        //           dialogBackgroundColor: AppColor.scaffoldColor,
-        //           colorScheme: ColorScheme.light(
-        //             primary: AppColor.resendOtp,
-        //             onPrimary: Colors.white,
-        //             onSurface: AppColor.black,
-        //           ),
-        //           textButtonTheme: TextButtonThemeData(
-        //             style: TextButton.styleFrom(
-        //               foregroundColor: AppColor.resendOtp,
-        //             ),
-        //           ),
-        //         ),
-        //         child: child!,
-        //       ),
-        //     );
-        //     if (picked != null) {
-        //       controller?.text = fmt(picked);
-        //       state.didChange(controller?.text);
-        //     }
-        //     return;
-        //   }
-        //
-        //   // Range Picker
-        //   if (datePickMode == DatePickMode.range) {
-        //     final picked = await showDateRangePicker(
-        //       context: context!,
-        //       firstDate: DateTime(2000),
-        //       lastDate: DateTime(2100),
-        //       initialDateRange: DateTimeRange(
-        //         start: DateTime.now(),
-        //         end: DateTime.now().add(const Duration(days: 7)),
-        //       ),
-        //       builder: (ctx, child) => Theme(
-        //         data: Theme.of(ctx).copyWith(
-        //           dialogBackgroundColor: AppColor.scaffoldColor,
-        //           colorScheme: ColorScheme.light(
-        //             primary: AppColor.resendOtp,
-        //             onPrimary: Colors.white,
-        //             onSurface: AppColor.black,
-        //           ),
-        //           textButtonTheme: TextButtonThemeData(
-        //             style: TextButton.styleFrom(
-        //               foregroundColor: AppColor.lightSkyBlue,
-        //             ),
-        //           ),
-        //         ),
-        //         child: child!,
-        //       ),
-        //     );
-        //     if (picked != null) {
-        //       controller?.text = '${fmt(picked.start)}  to  ${fmt(picked.end)}';
-        //       state.didChange(controller?.text);
-        //     }
-        //     return;
-        //   }
-        //
-        //   // Dropdown
-        //   if (isDropdown && dropdownItems?.isNotEmpty == true) {
-        //     FocusScope.of(context!).unfocus();
-        //     await Future.delayed(const Duration(milliseconds: 100));
-        //     _showDropdownBottomSheet(
-        //       context!,
-        //       dropdownItems!,
-        //       controller,
-        //       state,
-        //     );
-        //     return;
-        //   }
-        //
-        //   // Default
-        //   onFieldTap?.call();
-        // }
-
-        // -------------------- Input Formatters --------------------
         final effectiveInputFormatters = isMobile || isAadhaar || isPincode
             ? <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly,
@@ -1580,7 +1493,7 @@ class CommonContainer {
                           ),
                         ),
                       ],
-                       SizedBox(width: 20),
+                      SizedBox(width: 20),
                       if (imagePath != null)
                         InkWell(
                           onTap: () {
