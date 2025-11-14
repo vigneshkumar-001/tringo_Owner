@@ -165,6 +165,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 
 void main() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details);
+  };
   runApp(const ProviderScope(child: MyApp()));
 }
 

@@ -77,19 +77,25 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../controller/login_notifier.dart';
 
-class LoginMobileNumber extends StatefulWidget {
+class LoginMobileNumber extends ConsumerStatefulWidget {
   const LoginMobileNumber({super.key});
 
   @override
-  State<LoginMobileNumber> createState() => _LoginMobileNumberState();
+  ConsumerState<LoginMobileNumber> createState() => _LoginMobileNumberState();
 }
 
-class _LoginMobileNumberState extends State<LoginMobileNumber> {
+class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   String errorText = '';
   bool _isFormatting = false;
   final TextEditingController mobileNumberController = TextEditingController();
@@ -124,6 +130,20 @@ class _LoginMobileNumberState extends State<LoginMobileNumber> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(loginNotifierProvider);
+    final notifier = ref.read(loginNotifierProvider.notifier);
+    ref.listen<LoginState>(loginNotifierProvider, (_, next) {
+      if (next.error != null) {
+        AppSnackBar.error(context, next.error!);
+      } else if (next.loginResponse != null) {
+        AppSnackBar.success(context, 'OTP sent successfully!');
+        context.pushNamed(
+          AppRoutes.otp,
+          extra: mobileNumberController.text.trim(),
+        );
+        ref.read(loginNotifierProvider.notifier).resetState();
+      }
+    });
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -352,23 +372,71 @@ class _LoginMobileNumberState extends State<LoginMobileNumber> {
                     ),
 
                     SizedBox(height: 35),
-
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 35),
-                      child: CommonContainer.button(
-                        onTap: () {},
-                        // onTap: () {
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (context) => MobileNumberVerify(),
-                        //     ),
-                        //   );
-                        // },
-                        text: Text('Verify Now'),
+                      child: CommonContainer.button2(
+                        width: double.infinity,
+                        loader: state.isLoading ? ThreeDotsLoader() : null,
+                        onTap: state.isLoading
+                            ? null
+                            : () {
+                                final phone = mobileNumberController.text
+                                    .trim();
+                                if (phone.isEmpty) {
+                                  AppSnackBar.info(
+                                    context,
+                                    'Please Enter Phone Number',
+                                  );
+                                  return;
+                                }
+                                notifier.loginUser(phoneNumber: phone);
+                              },
+
+                        text: 'Verify Now',
                       ),
                     ),
 
+                    // Padding(
+                    //   padding: EdgeInsets.symmetric(horizontal: 35),
+                    //   child: CommonContainer.button(
+                    //     onTap: state.isLoading ? null : () {
+                    //       final phone = mobileNumberController.text.trim();
+                    //       if (phone.isEmpty) {
+                    //         AppSnackBar.info(context, 'Please Enter Phone Number');
+                    //         return;
+                    //       }
+                    //       notifier.loginUser(phoneNumber: phone);
+                    //     },
+                    //
+                    //     text:   Text('Verify Now'),
+                    //   ),
+                    // ),
+
+                    // Padding(
+                    //   padding: EdgeInsets.symmetric(horizontal: 35),
+                    //   child: CommonContainer.button(
+                    //     onTap: state.isLoading ? null : () {
+                    //       final phone = mobileNumberController.text.trim();
+                    //       if (phone.isEmpty) {
+                    //        AppSnackBar.info(context, 'Please Enter Phone Number');
+                    //         return;
+                    //       }
+                    //       notifier.loginUser(phoneNumber: phone);
+                    //     },
+                    //     // onTap: () {
+                    //     //   Navigator.push(
+                    //     //     context,
+                    //     //     MaterialPageRoute(
+                    //     //       builder: (context) => MobileNumberVerify(),
+                    //     //     ),
+                    //     //   );
+                    //     // },
+                    //     text: state.isLoading
+                    //         ? const ThreeDotsLoader()
+                    //         : const Text('Verify Now'),
+                    //
+                    //   ),
+                    // ),
                     SizedBox(height: 50),
                   ],
                 ),
