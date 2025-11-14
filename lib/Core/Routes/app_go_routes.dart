@@ -39,7 +39,7 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.loginPath,
       name: AppRoutes.login,
-      builder: (context, state) => const LoginScreen(),
+      builder: (context, state) => const LoginMobileNumber(),
     ),
     GoRoute(
       path: AppRoutes.otpPath,
