@@ -10,6 +10,7 @@ import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
+import '../../ShopInfo/model/shop_category_list_response.dart';
 import 'add_product_list.dart';
 
 class ProductCategoryScreens extends ConsumerStatefulWidget {
@@ -25,7 +26,7 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
 class _ProductCategoryScreensState
     extends ConsumerState<ProductCategoryScreens> {
   final _formKey = GlobalKey<FormState>();
-
+  List<ShopCategoryListData>? _selectedCategoryChildren;
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -46,11 +47,288 @@ class _ProductCategoryScreensState
     'Chennai',
     'Coimbatore',
   ];
-  final List<String> offers = [
-    'First App Offer',
-    'Second App Offer',
-    'Third App Offer',
-  ];
+  final List<String> offers = ['true', 'fast'];
+
+  String productCategorySlug = '';
+  String productSubCategorySlug = '';
+
+  void _showCategoryBottomSheet(
+    BuildContext context,
+    List<ShopCategoryListData>? categories,
+    TextEditingController controller, {
+    bool isLoading = false,
+
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final searchController = TextEditingController();
+        List<ShopCategoryListData> filtered = List.from(categories ?? []);
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.8,
+              minChildSize: 0.4,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                if (isLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                if (categories == null || categories.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        'No categories found',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: SizedBox(
+                        width: 40,
+                        height: 4,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'Select Category',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // 🔹 Search Field (no divider / underline)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (value) {
+                          setModalState(() {
+                            filtered = categories
+                                .where(
+                                  (c) => c.name.toLowerCase().contains(
+                                    value.toLowerCase(),
+                                  ),
+                                )
+                                .toList();
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search category...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none, // ❌ No divider line
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final category = filtered[index];
+                          return ListTile(
+                            title: Text(category.name),
+                            trailing: category.children.isNotEmpty
+                                ? const Icon(Icons.arrow_forward_ios, size: 14)
+                                : null,
+                            onTap: () {
+                              Navigator.pop(context);
+
+                              setState(() {
+                                controller.text = category.name;
+                                productCategorySlug = category.slug;
+                              });
+                              if (onCategorySelected != null) {
+                                onCategorySelected(category);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showCategoryChildrenBottomSheet(
+    BuildContext context,
+    List<ShopCategoryListData> children,
+    TextEditingController controller,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        final searchController = TextEditingController();
+        List<ShopCategoryListData> filtered = List.from(children);
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              builder: (context, scrollController) {
+                return Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: SizedBox(
+                        width: 40,
+                        height: 4,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'Select Subcategory',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // 🔹 Search field with no underline
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (value) {
+                          setModalState(() {
+                            filtered = children
+                                .where(
+                                  (c) => c.name.toLowerCase().contains(
+                                    value.toLowerCase(),
+                                  ),
+                                )
+                                .toList();
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search subcategory...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none, // ❌ No divider
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No subcategories found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: scrollController,
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                final child = filtered[index];
+                                return ListTile(
+                                  title: Text(child.name),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    setState(() {
+                                      controller.text = child.name;
+                                      productCategorySlug = child.slug;
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _validateAndContinue() {
     Navigator.push(
@@ -79,6 +357,14 @@ class _ProductCategoryScreensState
     //     ),
     //   );
     // }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(productNotifierProvider.notifier).fetchProductCategories();
+    });
   }
 
   @override
@@ -142,7 +428,7 @@ class _ProductCategoryScreensState
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
+                      /*             CommonContainer.fillingContainer(
                         imagePath: AppImages.downArrow,
                         verticalDivider: false,
                         controller: _categoryController,
@@ -164,6 +450,106 @@ class _ProductCategoryScreensState
                         validator: (value) => value == null || value.isEmpty
                             ? 'Please select a sub category'
                             : null,
+                      ),*/
+                      GestureDetector(
+                        onTap: () {
+                          final categoriesList =
+                              state.shopCategoryListResponse?.data ?? [];
+                          if (categoriesList.isNotEmpty) {
+                            _showCategoryBottomSheet(
+                              context,
+                              categoriesList,
+                              _categoryController,
+                              onCategorySelected: (selectedCategory) {
+                                _selectedCategoryChildren =
+                                    selectedCategory.children;
+                                _subCategoryController.clear();
+                              },
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 19,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColor.lightGray,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _categoryController.text.isEmpty
+                                        ? ""
+                                        : _categoryController.text,
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                                Image.asset(AppImages.downArrow, height: 30),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+
+                      GestureDetector(
+                        onTap: () {
+                          if (_categoryController.text.isEmpty) {
+                            AppSnackBar.info(
+                              context,
+                              'Please select a category first',
+                            );
+                          }
+                          _showCategoryChildrenBottomSheet(
+                            context,
+                            _selectedCategoryChildren!,
+                            _subCategoryController,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 19,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColor.lightGray,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _subCategoryController.text.isEmpty
+                                        ? " "
+                                        : _subCategoryController.text,
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                      color: _subCategoryController.text.isEmpty
+                                          ? Colors.grey
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                Image.asset(AppImages.downArrow, height: 30),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                       SizedBox(height: 25),
                       Text(
