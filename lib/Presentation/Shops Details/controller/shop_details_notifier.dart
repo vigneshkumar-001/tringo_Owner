@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
 import '../../../Api/DataSource/api_data_source.dart';
-
 import '../../Login/controller/login_notifier.dart';
+import '../model/shop_details_response.dart';
 
 class ShopDetailsState {
   final bool isLoading;
@@ -35,8 +33,11 @@ class ShopDetailsNotifier extends Notifier<ShopDetailsState> {
     final result = await api.getShopDetails();
 
     result.fold(
-      (failure) =>
-          state = ShopDetailsState(isLoading: false, error: failure.message),
+      (failure) => state = ShopDetailsState(
+        isLoading: false,
+        error: failure.message,
+        shopDetailsResponse: null,
+      ),
       (response) => state = ShopDetailsState(
         isLoading: false,
         shopDetailsResponse: response,
