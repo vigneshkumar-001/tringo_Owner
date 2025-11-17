@@ -88,13 +88,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   bool _isFetchingGps = false;
 
   void _showCategoryBottomSheet(
-    BuildContext context,
-    List<ShopCategoryListData>? categories,
-    TextEditingController controller, {
-    bool isLoading = false,
-
-    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  }) {
+      BuildContext context,
+      TextEditingController controller, {
+        void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+      }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -106,131 +103,149 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       ),
       builder: (context) {
         final searchController = TextEditingController();
-        List<ShopCategoryListData> filtered = List.from(categories ?? []);
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.8,
-              minChildSize: 0.4,
-              maxChildSize: 0.95,
-              builder: (context, scrollController) {
-                if (isLoading) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
+        return Consumer(
+          builder: (context, ref, _) {
+            final shopState = ref.watch(shopCategoryNotifierProvider);
+            final isLoading = shopState.isLoading;
+            final categories = shopState.shopCategoryListResponse?.data ?? [];
 
-                if (categories == null || categories.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text(
-                        'No categories found',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  );
-                }
+            // Local filtered list for search
+            List<ShopCategoryListData> filtered = List.from(categories);
 
-                return Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: SizedBox(
-                        width: 40,
-                        height: 4,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.grey,
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
+            return StatefulBuilder(
+              builder: (context, setModalState) {
+                return DraggableScrollableSheet(
+                  expand: false,
+                  initialChildSize: 0.8,
+                  minChildSize: 0.4,
+                  maxChildSize: 0.95,
+                  builder: (context, scrollController) {
+
+                    if (!isLoading && categories.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            'No categories found',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const Text(
-                      'Select Category',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                      );
+                    }
 
-                    // 🔹 Search Field (no divider / underline)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: TextField(
-                        controller: searchController,
-                        onChanged: (value) {
-                          setModalState(() {
-                            filtered = categories
-                                .where(
-                                  (c) => c.name.toLowerCase().contains(
-                                    value.toLowerCase(),
-                                  ),
+                    // 🔹 Normal UI: header + search + loader/list
+                    return Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: SizedBox(
+                            width: 40,
+                            height: 4,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(2),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Text(
+                          'Select Category',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // 🔍 Search box
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: TextField(
+                            controller: searchController,
+                            onChanged: (value) {
+                              setModalState(() {
+                                filtered = categories
+                                    .where(
+                                      (c) => c.name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase()),
                                 )
-                                .toList();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search category...',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none, // ❌ No divider line
+                                    .toList();
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search category...',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.grey,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final category = filtered[index];
-                          return ListTile(
-                            title: Text(category.name),
-                            trailing: category.children.isNotEmpty
-                                ? const Icon(Icons.arrow_forward_ios, size: 14)
-                                : null,
-                            onTap: () {
-                              Navigator.pop(context);
 
-                              setState(() {
-                                controller.text = category.name;
-                                categorySlug = category.slug;
-                              });
-                              if (onCategorySelected != null) {
-                                onCategorySelected(category);
-                              }
+                        Expanded(
+                          child: isLoading
+                              ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: ThreeDotsLoader(),
+                            ),
+                          )
+                              : ListView.builder(
+                            controller: scrollController,
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final category = filtered[index];
+                              return ListTile(
+                                title: Text(category.name),
+                                trailing: category.children.isNotEmpty
+                                    ? const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                )
+                                    : null,
+                                onTap: () {
+                                  Navigator.pop(context);
+
+                                  setState(() {
+                                    controller.text = category.name;
+                                    categorySlug = category.slug;
+                                  });
+
+                                  if (onCategorySelected != null) {
+                                    onCategorySelected(category);
+                                  }
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
+
               },
             );
           },
@@ -238,6 +253,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       },
     );
   }
+
 
   void _showCategoryChildrenBottomSheet(
     BuildContext context,
@@ -556,20 +572,20 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
-                          final categoriesList =
-                              state.shopCategoryListResponse?.data ?? [];
-                          if (categoriesList.isNotEmpty) {
-                            _showCategoryBottomSheet(
-                              context,
-                              categoriesList,
-                              _categoryController,
-                              onCategorySelected: (selectedCategory) {
-                                _selectedCategoryChildren =
-                                    selectedCategory.children;
+                          // 1️⃣ Start API call – this will set isLoading = true
+                          ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
+
+                          // 2️⃣ Open bottom sheet immediately
+                          _showCategoryBottomSheet(
+                            context,
+                            _categoryController,
+                            onCategorySelected: (selectedCategory) {
+                              setState(() {
+                                _selectedCategoryChildren = selectedCategory.children;
                                 _subCategoryController.clear();
-                              },
-                            );
-                          }
+                              });
+                            },
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -603,6 +619,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           ),
                         ),
                       ),
+
                       SizedBox(height: 10),
 
                       GestureDetector(
