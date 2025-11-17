@@ -52,12 +52,23 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
     }
   }
 
-  void _openDialer(String phoneNumber) async {
-    final uri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+  Future<void> _openDialer(String phoneNumber) async {
+    final trimmed = phoneNumber.trim();
+    if (trimmed.isEmpty) {
+      debugPrint('No phone number provided');
+      return;
+    }
+
+    final uri = Uri.parse('tel:$trimmed');
+    debugPrint('Trying to launch: $uri');
+
+    final canLaunch = await canLaunchUrl(uri);
+    debugPrint('canLaunchUrl: $canLaunch');
+
+    if (canLaunch) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      print('Could not launch dialer for $phoneNumber');
+      debugPrint('Could not launch dialer for $trimmed');
     }
   }
 
@@ -249,7 +260,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 horizontal: 16,
                               ),
                               child: CommonContainer.callNowButton(
-                                callOnTap: () => _openDialer(shop?.shopPhone ?? ''),
+                                callOnTap: () =>
+                                    _openDialer(shop?.shopPhone ?? ''),
+
                                 callImage: AppImages.callImage,
                                 callText: 'Call Now',
                                 whatsAppIcon: true,
@@ -298,109 +311,114 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 horizontal: 15,
                               ),
                               child: Row(
-                                children: List.generate(shop?.shopImages.length ?? 0, (
-                                  index,
-                                ) {
-                                  final imageData = shop?.shopImages[index];
+                                children: List.generate(
+                                  shop?.shopImages.length ?? 0,
+                                  (index) {
+                                    final imageData = shop?.shopImages[index];
 
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 10.0),
-                                    child: Stack(
-                                      children: [
-                                        ClipRRect(
-                                          clipBehavior: Clip.antiAlias,
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          // --- Replace Image.network with CachedNetworkImage ---
-                                          child: CachedNetworkImage(
-                                            imageUrl: imageData?.url ?? '',
-                                            height: 230,
-                                            width: 310,
-                                            fit: BoxFit.cover,
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 10.0,
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          ClipRRect(
+                                            clipBehavior: Clip.antiAlias,
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            // --- Replace Image.network with CachedNetworkImage ---
+                                            child: CachedNetworkImage(
+                                              imageUrl: imageData?.url ?? '',
+                                              height: 230,
+                                              width: 310,
+                                              fit: BoxFit.cover,
 
-                                            placeholder: (context, url) =>
-                                                Container(
-                                                  width: 310,
-                                                  height: 230,
-                                                  color: Colors.grey[300],
-                                                  child: Center(
-                                                    child: ThreeDotsLoader(),
-                                                  ),
-                                                ),
-                                            // The errorWidget is shown if the image fails to load
-                                            errorWidget:
-                                                (context, url, error) =>
-                                                    Container(
-                                                      width: 310,
-                                                      height: 230,
-                                                      color: Colors.grey[300],
-                                                      child: const Icon(
-                                                        Icons.broken_image,
-                                                        color: Colors.grey,
-                                                      ),
+                                              placeholder: (context, url) =>
+                                                  Container(
+                                                    width: 310,
+                                                    height: 230,
+                                                    color: Colors.grey[300],
+                                                    child: Center(
+                                                      child: ThreeDotsLoader(),
                                                     ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 20,
-                                          left: 15,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColor.scaffoldColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(30),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  '4.1', // TODO: dynamic rating
-                                                  style: AppTextStyles.mulish(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                    color: AppColor.darkBlue,
                                                   ),
-                                                ),
-                                                const SizedBox(width: 5),
-                                                Image.asset(
-                                                  AppImages.starImage,
-                                                  height: 9,
-                                                  color: AppColor.green,
-                                                ),
-                                                const SizedBox(width: 5),
-                                                Container(
-                                                  width: 1.5,
-                                                  height: 11,
-                                                  decoration: BoxDecoration(
-                                                    color: AppColor.darkBlue
-                                                        .withOpacity(0.2),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          1,
+                                              // The errorWidget is shown if the image fails to load
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      Container(
+                                                        width: 310,
+                                                        height: 230,
+                                                        color: Colors.grey[300],
+                                                        child: const Icon(
+                                                          Icons.broken_image,
+                                                          color: Colors.grey,
                                                         ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 5),
-                                                Text(
-                                                  '16', // TODO: dynamic count
-                                                  style: AppTextStyles.mulish(
-                                                    fontSize: 12,
-                                                    color: AppColor.darkBlue,
-                                                  ),
-                                                ),
-                                              ],
+                                                      ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }),
+                                          Positioned(
+                                            top: 20,
+                                            left: 15,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppColor.scaffoldColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(30),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    '4.1', // TODO: dynamic rating
+                                                    style: AppTextStyles.mulish(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 14,
+                                                      color: AppColor.darkBlue,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Image.asset(
+                                                    AppImages.starImage,
+                                                    height: 9,
+                                                    color: AppColor.green,
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Container(
+                                                    width: 1.5,
+                                                    height: 11,
+                                                    decoration: BoxDecoration(
+                                                      color: AppColor.darkBlue
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            1,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Text(
+                                                    '16', // TODO: dynamic count
+                                                    style: AppTextStyles.mulish(
+                                                      fontSize: 12,
+                                                      color: AppColor.darkBlue,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
