@@ -18,20 +18,30 @@
     <!-- Android 13+ (Tiramisu) notifications for foreground service notification -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- Optional: remove if you don't read the real number/logs -->
-    <!-- <uses-permission android:name="android.permission.READ_CALL_LOG"/> -->
-
-    <!-- (Optional) Keep only if your app actually needs these elsewhere -->
+    <!-- (optional / commented out others you had) -->
     <!--
+    <uses-permission android:name="android.permission.READ_CALL_LOG"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
     -->
+
+    <!-- 🔹 ANDROID 11+ PACKAGE VISIBILITY (IMPORTANT) -->
+    <queries>
+        <!-- existing from plugin -->
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+
+        <!-- 🔥 ADD THIS: allow querying apps that handle tel: DIAL -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
 
     <application
         android:name="${applicationName}"
@@ -54,12 +64,12 @@
                 android:resource="@style/NormalTheme" />
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- ===== INCOMING CALLS: works even if the app is closed ===== -->
+        <!-- ===== INCOMING CALLS ===== -->
         <receiver
             android:name=".CallReceiver"
             android:enabled="true"
@@ -69,19 +79,19 @@
             </intent-filter>
         </receiver>
 
-        <!-- ===== OVERLAY FOREGROUND SERVICE (draws the card) ===== -->
+        <!-- ===== OVERLAY FOREGROUND SERVICE ===== -->
         <service
             android:name=".TringoOverlayService"
             android:exported="false"
             android:foregroundServiceType="phoneCall" />
 
-        <!-- ===== OUTGOING CALLS (Android 10+): requires Call Redirection role once ===== -->
+        <!-- ===== OUTGOING CALLS (Call Redirection) ===== -->
         <service
             android:name=".TringoRedirectionService"
             android:permission="android.permission.BIND_CALL_REDIRECTION_SERVICE"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.telecom.CallRedirectionService"/>
+                <action android:name="android.telecom.CallRedirectionService" />
             </intent-filter>
         </service>
 
@@ -90,12 +100,4 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-
-    <!-- Required by Flutter text processing plugin -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
-        </intent>
-    </queries>
 </manifest>

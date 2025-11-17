@@ -37,7 +37,7 @@ class AppRoutes {
 }
 
 final goRouter = GoRouter(
-  initialLocation: AppRoutes.productCategoryScreensPath,
+  initialLocation: AppRoutes.shopsDetailsPath,
   routes: [
     GoRoute(
       path: AppRoutes.loginPath,
