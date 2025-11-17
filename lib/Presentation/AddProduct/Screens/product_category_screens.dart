@@ -53,13 +53,11 @@ class _ProductCategoryScreensState
   String productSubCategorySlug = '';
 
   void _showCategoryBottomSheet(
-    BuildContext context,
-    List<ShopCategoryListData>? categories,
-    TextEditingController controller, {
-    bool isLoading = false,
-
-    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  }) {
+      BuildContext context,
+      WidgetRef ref,
+      TextEditingController controller, {
+        void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+      }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -71,130 +69,149 @@ class _ProductCategoryScreensState
       ),
       builder: (context) {
         final searchController = TextEditingController();
-        List<ShopCategoryListData> filtered = List.from(categories ?? []);
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.8,
-              minChildSize: 0.4,
-              maxChildSize: 0.95,
-              builder: (context, scrollController) {
-                if (isLoading) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
+        return Consumer(
+          builder: (context, ref, _) {
+            // 🔹 Always get the latest ProductState here
+            final productState = ref.watch(productNotifierProvider);
+            final isLoading = productState.isLoading;
+            final categories =
+                productState.shopCategoryListResponse?.data ?? [];
 
-                if (categories == null || categories.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text(
-                        'No categories found',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  );
-                }
+            // Local filtered list for search
+            List<ShopCategoryListData> filtered = List.from(categories);
 
-                return Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: SizedBox(
-                        width: 40,
-                        height: 4,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.grey,
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
+            return StatefulBuilder(
+              builder: (context, setModalState) {
+                return DraggableScrollableSheet(
+                  expand: false,
+                  initialChildSize: 0.8,
+                  minChildSize: 0.4,
+                  maxChildSize: 0.95,
+                  builder: (context, scrollController) {
+                    // ❌ No data & not loading
+                    if (!isLoading && categories.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            'No categories found',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const Text(
-                      'Select Category',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                      );
+                    }
 
-                    // 🔹 Search Field (no divider / underline)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: TextField(
-                        controller: searchController,
-                        onChanged: (value) {
-                          setModalState(() {
-                            filtered = categories
-                                .where(
-                                  (c) => c.name.toLowerCase().contains(
-                                    value.toLowerCase(),
-                                  ),
+                    // ✅ Header + Search + Loader/List
+                    return Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: SizedBox(
+                            width: 40,
+                            height: 4,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(2),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Text(
+                          'Select Category',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // 🔍 Search field
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: TextField(
+                            controller: searchController,
+                            onChanged: (value) {
+                              setModalState(() {
+                                filtered = categories
+                                    .where(
+                                      (c) => c.name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase()),
                                 )
-                                .toList();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search category...',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none, // ❌ No divider line
+                                    .toList();
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search category...',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.grey,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final category = filtered[index];
-                          return ListTile(
-                            title: Text(category.name),
-                            trailing: category.children.isNotEmpty
-                                ? const Icon(Icons.arrow_forward_ios, size: 14)
-                                : null,
-                            onTap: () {
-                              Navigator.pop(context);
+                        Expanded(
+                          child: isLoading
+                              ?   Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: ThreeDotsLoader(),
+                            ),
+                          )
+                              : ListView.builder(
+                            controller: scrollController,
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final category = filtered[index];
+                              return ListTile(
+                                title: Text(category.name),
+                                trailing: category.children.isNotEmpty
+                                    ? const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                )
+                                    : null,
+                                onTap: () {
+                                  Navigator.pop(context);
 
-                              setState(() {
-                                controller.text = category.name;
-                                productCategorySlug = category.slug;
-                              });
-                              if (onCategorySelected != null) {
-                                onCategorySelected(category);
-                              }
+                                  // ⬇️ Update your screen state
+                                  setState(() {
+                                    controller.text = category.name;
+                                    productCategorySlug = category.slug;
+                                  });
+
+                                  if (onCategorySelected != null) {
+                                    onCategorySelected(category);
+                                  }
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             );
@@ -203,6 +220,7 @@ class _ProductCategoryScreensState
       },
     );
   }
+
 
   void _showCategoryChildrenBottomSheet(
     BuildContext context,
@@ -369,6 +387,8 @@ class _ProductCategoryScreensState
 
   @override
   Widget build(BuildContext context) {
+    final productState = ref.watch(productNotifierProvider);
+
     final state = ref.watch(productNotifierProvider);
     return Scaffold(
       body: SafeArea(
@@ -453,20 +473,19 @@ class _ProductCategoryScreensState
                       ),*/
                       GestureDetector(
                         onTap: () {
-                          final categoriesList =
-                              state.shopCategoryListResponse?.data ?? [];
-                          if (categoriesList.isNotEmpty) {
-                            _showCategoryBottomSheet(
-                              context,
-                              categoriesList,
-                              _categoryController,
-                              onCategorySelected: (selectedCategory) {
-                                _selectedCategoryChildren =
-                                    selectedCategory.children;
-                                _subCategoryController.clear();
-                              },
-                            );
-                          }
+                          // 1️⃣ Start fetching product categories
+                          ref.read(productNotifierProvider.notifier).fetchProductCategories();
+
+                          // 2️⃣ Open bottom sheet immediately
+                          _showCategoryBottomSheet(
+                            context,
+                            ref,
+                            _categoryController,
+                            onCategorySelected: (selectedCategory) {
+                              _selectedCategoryChildren = selectedCategory.children;
+                              _subCategoryController.clear();
+                            },
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -478,9 +497,7 @@ class _ProductCategoryScreensState
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             child: Row(
                               children: [
                                 Expanded(
@@ -500,6 +517,7 @@ class _ProductCategoryScreensState
                           ),
                         ),
                       ),
+
                       SizedBox(height: 10),
 
                       GestureDetector(
