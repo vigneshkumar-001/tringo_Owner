@@ -26,7 +26,7 @@ class ShopsDetails extends ConsumerStatefulWidget {
 
 class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
   int selectedIndex = 0;
-  int selectedWeight = 0; // default
+  int selectedWeight = 0;
 
   Future<void> _openMap(String latitude, String longitude) async {
     final Uri googleMapUrl = Uri.parse(
@@ -146,7 +146,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
     final bool isIndividual =
         RegistrationSession.instance.businessType == BusinessType.individual;
 
-    final bool showAddBranch = isCompany; // company-only
+    final bool showAddBranch = isCompany;
 
     return Skeletonizer(
       enabled: state.isLoading,
@@ -230,7 +230,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 const SizedBox(width: 3),
                                 Expanded(
                                   child: Text(
-                                    '${shop?.shopCity.toString() ?? ''},${shop?.shopCountry.toString() ?? ''}',
+                                    '${shop?.shopAddressEn.toString() ?? ''} ${shop?.shopCity.toString() ?? ''} ${shop?.shopState.toString() ?? ''},${shop?.shopCountry.toString() ?? ''}',
                                     style: AppTextStyles.mulish(
                                       color: AppColor.darkGrey,
                                     ),
@@ -249,7 +249,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 horizontal: 16,
                               ),
                               child: CommonContainer.callNowButton(
-                                // callOnTap: () => _openDialer(shop?.primaryPhone ?? ''),
+                                callOnTap: () => _openDialer(shop?.shopPhone ?? ''),
                                 callImage: AppImages.callImage,
                                 callText: 'Call Now',
                                 whatsAppIcon: true,
@@ -318,7 +318,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                             height: 230,
                                             width: 310,
                                             fit: BoxFit.cover,
-                                            // The placeholder is used while the image is loading
+
                                             placeholder: (context, url) =>
                                                 Container(
                                                   width: 310,
