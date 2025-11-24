@@ -139,6 +139,8 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../controller/login_notifier.dart';
+import 'dart:async';
+
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -152,12 +154,43 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   final TextEditingController otp = TextEditingController();
   String? otpError;
   String verifyCode = '';
+  int timerSeconds = 30;
+  bool canResend = false;
+  Timer? countdownTimer;
+
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(loginNotifierProvider.notifier).resetState();
+    });
+    startCountdown(30);
+  }
+  @override
+  void dispose() {
+    countdownTimer?.cancel();
+    super.dispose();
+  }
+
+
+  void startCountdown(int seconds) {
+    timerSeconds = seconds;
+    canResend = false;
+
+    countdownTimer?.cancel();
+
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (timerSeconds == 0) {
+        setState(() {
+          canResend = true;
+        });
+        timer.cancel();
+      } else {
+        setState(() {
+          timerSeconds--;
+        });
+      }
     });
   }
 
@@ -359,29 +392,67 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         ),
                       ),
                     SizedBox(height: 35),
+                    GestureDetector(
+                      onTap: () {
+                        if (!canResend) return;
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 35),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Resend code in',
-                            style: AppTextStyles.mulish(
-                              fontWeight: FontWeight.w800,
-                              color: AppColor.darkBlue,
+                        setState(() => canResend = false);
+
+                        lastLoginPage = 'resendOtp';
+                        // notifier.login(contact: widget.phoneNumber);
+
+                        startCountdown(45); // NEXT TIMER 45s
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 35),
+                        child: Row(
+                          children: [
+                            Text(
+                              canResend ? 'Resend OTP' : 'Resend code in',
+                              style: AppTextStyles.mulish(
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.darkBlue,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            '00.29',
-                            style: AppTextStyles.mulish(
-                              fontWeight: FontWeight.w800,
-                              color: AppColor.darkBlue,
+                            const SizedBox(width: 4),
+                            Text(
+                              canResend
+                                  ? ''
+                                  : "00:${timerSeconds.toString().padLeft(2, '0')}",
+                              style: AppTextStyles.mulish(
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.darkBlue,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
+
+
+
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 35),
+                    //   child: Row(
+                    //     children: [
+                    //       Text(
+                    //         'Resend code in',
+                    //         style: AppTextStyles.mulish(
+                    //           fontWeight: FontWeight.w800,
+                    //           color: AppColor.darkBlue,
+                    //         ),
+                    //       ),
+                    //       SizedBox(width: 4),
+                    //       Text(
+                    //         '00.29',
+                    //         style: AppTextStyles.mulish(
+                    //           fontWeight: FontWeight.w800,
+                    //           color: AppColor.darkBlue,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: Text(
