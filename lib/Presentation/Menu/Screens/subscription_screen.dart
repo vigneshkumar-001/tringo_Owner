@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_history.dart';
 
+import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
+
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({super.key});
+  final bool showSkip;
+  const SubscriptionScreen({super.key, this.showSkip = false});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -51,6 +56,36 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               ),
                             ),
                           ),
+                          Spacer(),
+                          if (widget.showSkip)
+                            InkWell(
+                              onTap: () {
+                                // 1️⃣ mark as non-premium
+                                RegistrationProductSeivice.instance
+                                    .markUnsubscribed();
+
+
+                                context.goNamed(
+                                  AppRoutes.shopsDetails,
+                                  extra: true,
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 5,
+                                ),
+                                child: Text(
+                                  'Skip',
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       SizedBox(height: 10),

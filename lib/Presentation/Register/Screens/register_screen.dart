@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.dart';
 
 import 'package:tringo_vendor/Core/Session/registration_session.dart';
+
+import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,20 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool? selectedKind;
 
-  // void _goNext() {
-  //   // selectedKind is guaranteed non-null when the button is visible
-  //   final isIndividual = selectedKind ?? true;
-  //
-  //   RegistrationSession.instance.businessType = isIndividual
-  //       ? BusinessType.individual
-  //       : BusinessType.company;
-  //
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (_) => const OwnerInfoScreens()),
-  //   );
-  // }
-
   void _goNext() {
     if (selectedKind == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -41,24 +31,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final isIndividual = selectedKind!;
-    final businessType = isIndividual
-        ? BusinessType.individual
-        : BusinessType.company;
+    // selectedKind == true  → Individual
+    // selectedKind == false → Company
+    final bool isIndividual = selectedKind!;
+    final BusinessType businessType =
+    isIndividual ? BusinessType.individual : BusinessType.company;
+
 
     RegistrationSession.instance.businessType = businessType;
+    RegistrationProductSeivice.instance.businessType = businessType;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OwnerInfoScreens(
-          isService: selectedIndex == 1, // 0=Product, 1=Service
-          isIndividual: isIndividual,
-        ),
-      ),
+    // Product / Service
+    final BusinessCategory businessCategory =
+    (selectedIndex == 0) ? BusinessCategory.product : BusinessCategory.services;
+
+    RegistrationProductSeivice.instance.businessCategory = businessCategory;
+
+    // Owner info
+    context.pushNamed(
+      AppRoutes.ownerInfo,
+      extra: {'isService': selectedIndex == 1, 'isIndividual': isIndividual},
     );
   }
 
+
+  ///new1///
   // void _goNext() {
   //   if (selectedKind == null) {
   //     ScaffoldMessenger.of(context).showSnackBar(
@@ -67,13 +64,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
   //     return;
   //   }
   //
-  //   RegistrationSession.instance.businessType = selectedKind!
+  //   // selectedKind == true  → Individual
+  //   // selectedKind == false → Company
+  //   final bool isIndividual = selectedKind!;
+  //   final BusinessType businessType = isIndividual
   //       ? BusinessType.individual
   //       : BusinessType.company;
   //
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (_) => const OwnerInfoScreens()),
+  //   // 🔹 Save premium / non-premium to both sessions
+  //   RegistrationSession.instance.businessType = businessType;
+  //   RegistrationProductSeivice.instance.businessType = businessType;
+  //
+  //   // 🔹 Product / Service selection
+  //   final BusinessCategory businessCategory = (selectedIndex == 0)
+  //       ? BusinessCategory.product
+  //       : BusinessCategory.service;
+  //
+  //   RegistrationProductSeivice.instance.businessCategory = businessCategory;
+  //
+  //   // 🔹 Go to owner info with flags
+  //   context.pushNamed(
+  //     AppRoutes.ownerInfo,
+  //     extra: {'isService': selectedIndex == 1, 'isIndividual': isIndividual},
   //   );
   // }
 

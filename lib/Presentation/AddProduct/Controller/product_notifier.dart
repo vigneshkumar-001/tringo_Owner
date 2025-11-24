@@ -41,16 +41,15 @@ class ProductNotifier extends Notifier<ProductState> {
     required int price,
     required String offerLabel,
     required String offerValue,
-
     required String description,
-  }) async {
+  }) async
+  {
     state = const ProductState(isLoading: true);
 
     final result = await api.addProduct(
       subCategory: subCategory,
       englishName: englishName,
       category: category,
-
       description: description,
       offerLabel: offerLabel,
       offerValue: offerValue,
@@ -88,7 +87,6 @@ class ProductNotifier extends Notifier<ProductState> {
     );
   }
 
-
   Future<bool> uploadProductImages({
     required List<File?> images,
     required List<Map<String, String>> features,
@@ -114,8 +112,8 @@ class ProductNotifier extends Notifier<ProductState> {
       final uploadResult = await api.userProfileUpload(imageFile: file);
 
       final uploadedUrl = uploadResult.fold<String?>(
-            (failure) => null,
-            (success) => success.message,
+        (failure) => null,
+        (success) => success.message,
       );
 
       if (uploadedUrl == null) {
@@ -130,10 +128,7 @@ class ProductNotifier extends Notifier<ProductState> {
     }
 
     if (uploadedUrls.isEmpty) {
-      state = const ProductState(
-        isLoading: false,
-        error: "No image uploaded",
-      );
+      state = const ProductState(isLoading: false, error: "No image uploaded");
       return false;
     }
 
@@ -144,21 +139,20 @@ class ProductNotifier extends Notifier<ProductState> {
     );
 
     return result.fold(
-          (failure) {
+      (failure) {
         state = ProductState(isLoading: false, error: failure.message);
         return false;
       },
-          (response) {
-        state = ProductState(
-          isLoading: false,
-          productResponse: response,
-        );
+      (response) {
+        state = ProductState(isLoading: false, productResponse: response);
         return response.status == true;
       },
     );
   }
 
-  Future<bool> updateProductSearchWords({required List<String> keywords}) async {
+  Future<bool> updateProductSearchWords({
+    required List<String> keywords,
+  }) async {
     state = const ProductState(isLoading: true);
 
     final result = await api.updateSearchKeyWords(keywords: keywords);
@@ -166,25 +160,22 @@ class ProductNotifier extends Notifier<ProductState> {
     bool success = false;
 
     result.fold(
-          (failure) {
+      (failure) {
         state = ProductState(isLoading: false, error: failure.message);
         success = false;
       },
-          (response) async {
+      (response) async {
+        // final prefs = await SharedPreferences.getInstance();
+        // await prefs.remove('product_id');
 
-            // final prefs = await SharedPreferences.getInstance();
-            // await prefs.remove('product_id');
-
-        state = ProductState(
-          isLoading: false,
-          productResponse: response,
-        );
+        state = ProductState(isLoading: false, productResponse: response);
         success = true;
       },
     );
 
     return success;
   }
+
   void resetState() {
     state = ProductState.initial();
   }

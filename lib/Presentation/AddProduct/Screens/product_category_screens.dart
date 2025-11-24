@@ -6,17 +6,29 @@ import 'package:tringo_vendor/Presentation/AddProduct/Controller/product_notifie
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../ShopInfo/model/shop_category_list_response.dart';
+import '../Service Info/Controller/service_info_notifier.dart';
 import 'add_product_list.dart';
 
 class ProductCategoryScreens extends ConsumerStatefulWidget {
   final bool? isService;
   final bool? isIndividual;
-  const ProductCategoryScreens({super.key, this.isService, this.isIndividual});
+  final bool allowOfferEdit;
+  final String? initialOfferLabel;
+  final String? initialOfferValue;
+  const ProductCategoryScreens({
+    super.key,
+    this.isService,
+    this.isIndividual,
+    this.allowOfferEdit = false,
+    this.initialOfferLabel,
+    this.initialOfferValue,
+  });
 
   @override
   ConsumerState<ProductCategoryScreens> createState() =>
@@ -26,6 +38,9 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
 class _ProductCategoryScreensState
     extends ConsumerState<ProductCategoryScreens> {
   final _formKey = GlobalKey<FormState>();
+  bool _categoryHasError = false;
+  bool _subCategoryHasError = false;
+
   List<ShopCategoryListData>? _selectedCategoryChildren;
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _subCategoryController = TextEditingController();
@@ -42,22 +57,18 @@ class _ProductCategoryScreensState
     'Clothing',
     'Groceries',
   ];
-  final List<String> cities = [
-    'product-mobile-smartphones',
-    'Chennai',
-    'Coimbatore',
-  ];
-  final List<String> offers = ['true', 'fast'];
+  final List<String> cities = ['Yes', 'No'];
+  final List<String> offers = ['First App Offer', 'second App Offer'];
 
   String productCategorySlug = '';
   String productSubCategorySlug = '';
 
   void _showCategoryBottomSheet(
-      BuildContext context,
-      WidgetRef ref,
-      TextEditingController controller, {
-        void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-      }) {
+    BuildContext context,
+    WidgetRef ref,
+    TextEditingController controller, {
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -144,10 +155,10 @@ class _ProductCategoryScreensState
                               setModalState(() {
                                 filtered = categories
                                     .where(
-                                      (c) => c.name
-                                      .toLowerCase()
-                                      .contains(value.toLowerCase()),
-                                )
+                                      (c) => c.name.toLowerCase().contains(
+                                        value.toLowerCase(),
+                                      ),
+                                    )
                                     .toList();
                               });
                             },
@@ -173,41 +184,46 @@ class _ProductCategoryScreensState
 
                         Expanded(
                           child: isLoading
-                              ?   Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(20),
-                              child: ThreeDotsLoader(),
-                            ),
-                          )
-                              : ListView.builder(
-                            controller: scrollController,
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final category = filtered[index];
-                              return ListTile(
-                                title: Text(category.name),
-                                trailing: category.children.isNotEmpty
-                                    ? const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 14,
+                              ? Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: ThreeDotsLoader(
+                                      dotColor: AppColor.darkBlue,
+                                    ),
+                                  ),
                                 )
-                                    : null,
-                                onTap: () {
-                                  Navigator.pop(context);
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, index) {
+                                    final category = filtered[index];
+                                    return ListTile(
+                                      title: Text(category.name),
+                                      trailing: category.children.isNotEmpty
+                                          ? const Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 14,
+                                            )
+                                          : null,
+                                      onTap: () {
+                                        Navigator.pop(context);
 
-                                  // ⬇️ Update your screen state
-                                  setState(() {
-                                    controller.text = category.name;
-                                    productCategorySlug = category.slug;
-                                  });
+                                        // ⬇️ Update your screen state
+                                        setState(() {
+                                          controller.text = category.name;
+                                          productCategorySlug = category.slug;
+                                          _categoryHasError =
+                                              false; // ✅ clear error when selected
+                                          _subCategoryHasError = false;
+                                        });
 
-                                  if (onCategorySelected != null) {
-                                    onCategorySelected(category);
-                                  }
-                                },
-                              );
-                            },
-                          ),
+                                        if (onCategorySelected != null) {
+                                          onCategorySelected(category);
+                                        }
+                                      },
+                                    );
+                                  },
+                                ),
                         ),
                       ],
                     );
@@ -220,7 +236,6 @@ class _ProductCategoryScreensState
       },
     );
   }
-
 
   void _showCategoryChildrenBottomSheet(
     BuildContext context,
@@ -332,6 +347,9 @@ class _ProductCategoryScreensState
                                     setState(() {
                                       controller.text = child.name;
                                       productCategorySlug = child.slug;
+                                      _categoryHasError =
+                                          false; // ✅ clear error when selected
+                                      _subCategoryHasError = false;
                                     });
                                   },
                                 );
@@ -348,6 +366,46 @@ class _ProductCategoryScreensState
     );
   }
 
+  Future<void> _showOfferBottomSheet() async {
+    if (!widget.allowOfferEdit) return;
+
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 12),
+              Text(
+                'Select App Offer',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              ...offers.map(
+                (offer) => ListTile(
+                  title: Text(offer),
+                  onTap: () => Navigator.pop(context, offer),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected != null && mounted) {
+      setState(() {
+        _offerController.text = selected;
+      });
+    }
+  }
+
   void _validateAndContinue() {
     Navigator.push(
       context,
@@ -360,7 +418,7 @@ class _ProductCategoryScreensState
     //       content: Text('Form submitted successfully!'),
     //       backgroundColor: Colors.green,
     //     ),
-    //   );A
+    //   );
     //
     //   // 👉 TODO: Navigate to next screen here
     //   Navigator.push(
@@ -380,6 +438,16 @@ class _ProductCategoryScreensState
   @override
   void initState() {
     super.initState();
+
+    // // 🔹 Default dropdown value
+    // _offerController.text = offers.first; // 'First App Offer'
+    //
+    // // 🔹 Default offer price value
+    // _offerPriceController.text = '5%';
+
+    _offerController.text = widget.initialOfferLabel ?? offers.first;
+    _offerPriceController.text = widget.initialOfferValue ?? '5%';
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(productNotifierProvider.notifier).fetchProductCategories();
     });
@@ -388,6 +456,12 @@ class _ProductCategoryScreensState
   @override
   Widget build(BuildContext context) {
     final productState = ref.watch(productNotifierProvider);
+    final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
+    final isService = RegistrationProductSeivice.instance.isServiceBusiness;
+    final serviceState = ref.watch(serviceInfoNotifierProvider);
+    final bool isLoading = isService
+        ? serviceState.isLoading
+        : productState.isLoading;
 
     final state = ref.watch(productNotifierProvider);
     return Scaffold(
@@ -422,9 +496,7 @@ class _ProductCategoryScreensState
                 SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.addProduct,
-                  text: widget.isService == true
-                      ? 'Add Service'
-                      : 'Add Product',
+                  text: isService ? 'Add Service' : 'Add Product',
                   imageHeight: 85,
                   gradientColor: AppColor.lavenderMist,
                   value: 0.8,
@@ -444,7 +516,7 @@ class _ProductCategoryScreensState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Product Category',
+                        isService ? ' Service Category' : 'Product Category',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
@@ -473,17 +545,22 @@ class _ProductCategoryScreensState
                       ),*/
                       GestureDetector(
                         onTap: () {
-                          // 1️⃣ Start fetching product categories
-                          ref.read(productNotifierProvider.notifier).fetchProductCategories();
+                          ref
+                              .read(productNotifierProvider.notifier)
+                              .fetchProductCategories();
 
-                          // 2️⃣ Open bottom sheet immediately
                           _showCategoryBottomSheet(
                             context,
                             ref,
                             _categoryController,
                             onCategorySelected: (selectedCategory) {
-                              _selectedCategoryChildren = selectedCategory.children;
+                              _selectedCategoryChildren =
+                                  selectedCategory.children;
                               _subCategoryController.clear();
+                              setState(() {
+                                _categoryHasError = false;
+                                _subCategoryHasError = false;
+                              });
                             },
                           );
                         },
@@ -495,9 +572,17 @@ class _ProductCategoryScreensState
                           decoration: BoxDecoration(
                             color: AppColor.lightGray,
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _categoryHasError
+                                  ? Colors.red
+                                  : Colors.transparent,
+                              width: 1.5,
+                            ), // 🔴 here
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
                             child: Row(
                               children: [
                                 Expanded(
@@ -527,7 +612,22 @@ class _ProductCategoryScreensState
                               context,
                               'Please select a category first',
                             );
+                            setState(() {
+                              _categoryHasError =
+                                  true; // highlight category if missing
+                            });
+                            return; // ❗ stop here
                           }
+
+                          if (_selectedCategoryChildren == null ||
+                              _selectedCategoryChildren!.isEmpty) {
+                            AppSnackBar.info(
+                              context,
+                              'No subcategories available for this category',
+                            );
+                            return;
+                          }
+
                           _showCategoryChildrenBottomSheet(
                             context,
                             _selectedCategoryChildren!,
@@ -542,6 +642,12 @@ class _ProductCategoryScreensState
                           decoration: BoxDecoration(
                             color: AppColor.lightGray,
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _subCategoryHasError
+                                  ? Colors.red
+                                  : Colors.transparent,
+                              width: 1.5,
+                            ), //  here
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -569,18 +675,25 @@ class _ProductCategoryScreensState
                           ),
                         ),
                       ),
+
                       SizedBox(height: 25),
                       Text(
-                        'Product name',
+                        isService ? 'Service Name' : 'Product name',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         verticalDivider: false,
                         controller: _productNameController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter Product name'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            //  Service-na "Start From", illa na "Product price"
+                            return isService
+                                ? 'Please enter Product name'
+                                : 'Please enter Service Name';
+                          }
+                          return null;
+                        },
                       ),
                       SizedBox(height: 25),
                       // Text(
@@ -588,9 +701,7 @@ class _ProductCategoryScreensState
                       //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       // ),
                       Text(
-                        widget.isService == true
-                            ? 'Start From'
-                            : 'Product price',
+                        isService ? 'Start From' : 'Product price',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
 
@@ -599,9 +710,15 @@ class _ProductCategoryScreensState
                         keyboardType: TextInputType.number,
                         verticalDivider: false,
                         controller: _productPriceController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter Product price'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            // 🔥 Service-na "Start From", illa na "Product price"
+                            return isService
+                                ? 'Please enter Start From amount'
+                                : 'Please enter Product price';
+                          }
+                          return null;
+                        },
                       ),
                       SizedBox(height: 25),
                       Text(
@@ -609,28 +726,83 @@ class _ProductCategoryScreensState
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        imagePath: AppImages.downArrow,
-                        verticalDivider: false,
-                        controller: _offerController,
-                        isDropdown: true,
-                        dropdownItems: offers,
-                        context: context,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select an Offer'
+                      GestureDetector(
+                        onTap: widget.allowOfferEdit
+                            ? _showOfferBottomSheet
                             : null,
+                        child: AbsorbPointer(
+                          child: CommonContainer.fillingContainer(
+                            imagePath: widget.allowOfferEdit
+                                ? AppImages.downArrow
+                                : null,
+                            verticalDivider: false,
+                            controller: _offerController,
+                            readOnly: true, // 👈 always read-only, no typing
+                            context: context,
+                          ),
+                        ),
                       ),
+
+                      // CommonContainer.fillingContainer(
+                      //   imagePath: AppImages.downArrow,
+                      //   verticalDivider: false,
+                      //   controller: _offerController,
+                      //   isDropdown: widget.allowOfferEdit,
+                      //   dropdownItems: widget.allowOfferEdit ? offers : null,
+                      //   readOnly: !widget.allowOfferEdit,
+                      //   context: context,
+                      //   // validator: (value) => value == null || value.isEmpty
+                      //   //     ? 'Please select an Offer'
+                      //   //     : null,
+                      // ),
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        keyboardType: TextInputType.number,
                         verticalDivider: false,
                         controller: _offerPriceController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter Offer price'
-                            : null,
+                        readOnly: !widget.allowOfferEdit,
+                        onChanged: (value) {
+                          //  Numbers mattum retain pannuvom
+                          final onlyDigits = value.replaceAll(
+                            RegExp(r'[^0-9]'),
+                            '',
+                          );
+
+                          if (onlyDigits.isEmpty) {
+                            _offerPriceController.clear();
+                            return;
+                          }
+
+                          final formatted = '$onlyDigits%';
+
+                          //  Text + cursor position update
+                          _offerPriceController.value = TextEditingValue(
+                            text: formatted,
+                            selection: TextSelection.collapsed(
+                              offset: formatted.length,
+                            ),
+                          );
+                        },
+                        // validator: (value) {
+                        //   if (value == null || value.isEmpty) {
+                        //     return 'Please enter Offer price';
+                        //   }
+                        //   final digits = value.replaceAll(
+                        //     RegExp(r'[^0-9]'),
+                        //     '',
+                        //   );
+                        //   if (digits.isEmpty) {
+                        //     return 'Please enter a valid number';
+                        //   }
+                        //   return null;
+                        // },
                       ),
+
                       SizedBox(height: 25),
                       Text(
-                        'Product Description',
+                        isService
+                            ? 'Service Description'
+                            : 'Product Description',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
@@ -638,36 +810,264 @@ class _ProductCategoryScreensState
                         maxLine: 4,
                         verticalDivider: false,
                         controller: _descriptionController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter Product Description'
-                            : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            //  Service-na "Start From", illa na "Product price"
+                            return isService
+                                ? 'Please enter Product Description'
+                                : 'Please enter Service Description';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 25),
-                      Text(
-                        'Door Delivery',
-                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
-                      ),
-                      SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        imagePath: AppImages.downArrow,
-                        verticalDivider: false,
-                        controller: _genderController,
-                        isDropdown: true,
-                        dropdownItems: cities,
-                        context: context,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select Door Delivery option'
-                            : null,
-                      ),
+
+                      if (!isService) ...[
+                        SizedBox(height: 25),
+                        Text(
+                          'Door Delivery',
+                          style: AppTextStyles.mulish(
+                            color: AppColor.mildBlack,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        CommonContainer.fillingContainer(
+                          imagePath: AppImages.downArrow,
+                          verticalDivider: false,
+                          controller: _genderController,
+                          isDropdown: true,
+                          dropdownItems: cities,
+                          context: context,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please select Door Delivery option'
+                              : null,
+                        ),
+                        SizedBox(height: 30),
+                      ],
+
                       SizedBox(height: 30),
+
+                      // CommonContainer.button(
+                      //   buttonColor: AppColor.black,
+                      //   onTap: () async {
+                      //     final isService = RegistrationProductSeivice
+                      //         .instance
+                      //         .isServiceBusiness;
+                      //
+                      //     final priceText = _productPriceController.text.trim();
+                      //     final price = int.tryParse(priceText);
+                      //
+                      //     // Category/Subcategory validation
+                      //     final hasCategoryError = _categoryController.text
+                      //         .trim()
+                      //         .isEmpty;
+                      //     final hasSubCategoryError = _subCategoryController
+                      //         .text
+                      //         .trim()
+                      //         .isEmpty;
+                      //
+                      //     setState(() {
+                      //       _categoryHasError = hasCategoryError;
+                      //       _subCategoryHasError = hasSubCategoryError;
+                      //     });
+                      //
+                      //     final formValid =
+                      //         _formKey.currentState?.validate() ?? false;
+                      //
+                      //     if (!formValid ||
+                      //         hasCategoryError ||
+                      //         hasSubCategoryError) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'Please fill all required fields correctly.',
+                      //       );
+                      //       return;
+                      //     }
+                      //
+                      //     bool success = false;
+                      //     String? errorMsg;
+                      //
+                      //     if (isService) {
+                      //       // SERVICE FLOW
+                      //       final serviceResponse = await ref
+                      //           .read(serviceInfoNotifierProvider.notifier)
+                      //           .saveServiceInfo(
+                      //         title: _productNameController.text.trim(),
+                      //         tamilName: _productNameController.text.trim(),
+                      //         description: _descriptionController.text.trim(),
+                      //         startsAt: price ?? 0,
+                      //         offerLabel: _offerController.text.trim(),
+                      //         offerValue: _offerPriceController.text.trim(),
+                      //         durationMinutes: 60,
+                      //         categoryId: productCategorySlug,
+                      //         subCategory: _subCategoryController.text.trim(),
+                      //         tags: const [],
+                      //         keywords: const [],
+                      //         images: const [],
+                      //         isFeatured: false,
+                      //         features: const [],
+                      //       );
+                      //
+                      //
+                      //       success = serviceResponse != null;
+                      //
+                      //       if (!success) {
+                      //         final svcState = ref.read(
+                      //           serviceInfoNotifierProvider,
+                      //         );
+                      //         errorMsg = svcState.error?.isNotEmpty == true
+                      //             ? svcState.error
+                      //             : 'Service save failed. Please try again.';
+                      //       }
+                      //     } else {
+                      //       // PRODUCT FLOW
+                      //       success = await ref
+                      //           .read(productNotifierProvider.notifier)
+                      //           .addProduct(
+                      //             category: _categoryController.text.trim(),
+                      //             subCategory: _subCategoryController.text
+                      //                 .trim(),
+                      //             englishName: _productNameController.text
+                      //                 .trim(),
+                      //             price: price ?? 0,
+                      //             offerLabel: _offerController.text.trim(),
+                      //             offerValue: _offerPriceController.text.trim(),
+                      //             description: _descriptionController.text
+                      //                 .trim(),
+                      //           );
+                      //
+                      //       if (!success) {
+                      //         final err = ref
+                      //             .read(productNotifierProvider)
+                      //             .error;
+                      //         errorMsg = err?.isNotEmpty == true
+                      //             ? err
+                      //             : 'Something went wrong';
+                      //       }
+                      //     }
+                      //
+                      //     if (success) {
+                      //       // Show success message first
+                      //       AppSnackBar.success(context, 'Saved successfully!');
+                      //
+                      //       // Navigate after short delay so user sees the message
+                      //       Future.delayed(
+                      //         const Duration(milliseconds: 500),
+                      //         () {
+                      //           context.pushNamed(AppRoutes.addProductList);
+                      //         },
+                      //       );
+                      //     } else if (errorMsg != null) {
+                      //       AppSnackBar.error(context, errorMsg);
+                      //     }
+                      //   },
+                      //   text: state.isLoading
+                      //       ? const ThreeDotsLoader()
+                      //       : Text(
+                      //           'Save & Continue',
+                      //           style: AppTextStyles.mulish(
+                      //             fontSize: 18,
+                      //             fontWeight: FontWeight.w700,
+                      //           ),
+                      //         ),
+                      //   imagePath: state.isLoading
+                      //       ? null
+                      //       : AppImages.rightStickArrow,
+                      //   imgHeight: 20,
+                      // ),
+
+                      ///old product& service///
                       CommonContainer.button(
                         buttonColor: AppColor.black,
+
                         onTap: () async {
+                          FocusScope.of(context).unfocus();
+                          final isService = RegistrationProductSeivice
+                              .instance
+                              .isServiceBusiness; // 🔹 decide flow
+
+
+
                           final priceText = _productPriceController.text.trim();
                           final price = int.tryParse(priceText);
 
-                          if (_formKey.currentState!.validate()) {
-                            final success = await ref
+                          //  extra validation for category + subcategory
+                          final hasCategoryError = _categoryController.text
+                              .trim()
+                              .isEmpty;
+                          final hasSubCategoryError = _subCategoryController
+                              .text
+                              .trim()
+                              .isEmpty;
+
+                          setState(() {
+                            _categoryHasError = hasCategoryError;
+                            _subCategoryHasError = hasSubCategoryError;
+                          });
+
+                          final formValid = _formKey.currentState!.validate();
+
+                          if (!formValid ||
+                              hasCategoryError ||
+                              hasSubCategoryError) {
+                            AppSnackBar.info(
+                              context,
+                              'Please fill all required fields correctly.',
+                            );
+                            return;
+                          }
+
+                          bool success = false;
+
+                          if (isService) {
+                            //  SERVICE FLOW → call serviceInfo API
+
+                            // For now, use basic values; later you can plug Tamil name, tags, keywords, images from other screens.
+                            final serviceResponse = await ref
+                                .read(serviceInfoNotifierProvider.notifier)
+                                .saveServiceInfo(
+                                  title: _productNameController.text
+                                      .trim(), // Service name (English)
+                                  tamilName: _productNameController.text
+                                      .trim(), // TODO: replace with Tamil field when you add
+                                  description: _descriptionController.text
+                                      .trim(),
+                                  startsAt: price ?? 0, // "Start From" amount
+                                  offerLabel: _offerController.text.trim(),
+                                  offerValue: _offerPriceController.text.trim(),
+                                  durationMinutes:
+                                      60, // TODO: read from UI later
+                                  categoryId:
+                                      productCategorySlug, // slug/id from category picker
+                                  subCategory: _subCategoryController.text
+                                      .trim(),
+                                  tags: const [], // later you can add tags
+                                  keywords:
+                                      const [], // or reuse your keyword screen
+                                  images: const [], // add after image upload
+                                  isFeatured: false,
+                                  features:
+                                      const [], // later: add feature chips
+                                );
+
+                            success = serviceResponse != null;
+
+                            if (!success) {
+                              final svcState = ref.read(
+                                serviceInfoNotifierProvider,
+                              );
+                              if (svcState.error != null &&
+                                  svcState.error!.isNotEmpty) {
+                                AppSnackBar.error(context, svcState.error!);
+                              } else {
+                                AppSnackBar.error(
+                                  context,
+                                  'Service save failed. Please try again.',
+                                );
+                              }
+                            }
+                          } else {
+                            // 🔹 PRODUCT FLOW → existing product API
+                            success = await ref
                                 .read(productNotifierProvider.notifier)
                                 .addProduct(
                                   category: _categoryController.text.trim(),
@@ -681,9 +1081,8 @@ class _ProductCategoryScreensState
                                   description: _descriptionController.text
                                       .trim(),
                                 );
-                            if (success) {
-                              context.pushNamed(AppRoutes.addProductList);
-                            } else {
+
+                            if (!success) {
                               final err = ref
                                   .read(productNotifierProvider)
                                   .error;
@@ -696,15 +1095,15 @@ class _ProductCategoryScreensState
                                 );
                               }
                             }
-                          } else {
-                            AppSnackBar.info(
-                              context,
-                              'Please fill all required fields correctly.',
-                            );
+                          }
+
+                          //  Navigation if API ok
+                          if (success) {
+                            context.pushNamed(AppRoutes.addProductList);
                           }
                         },
-                        text: state.isLoading
-                            ? const ThreeDotsLoader()
+                        text: isLoading
+                            ? ThreeDotsLoader()
                             : Text(
                                 'Save & Continue',
                                 style: AppTextStyles.mulish(
@@ -712,11 +1111,84 @@ class _ProductCategoryScreensState
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                        imagePath: state.isLoading
-                            ? null
-                            : AppImages.rightStickArrow,
+                        imagePath: isLoading ? null : AppImages.rightStickArrow,
                         imgHeight: 20,
                       ),
+
+                      ///old product///
+                      // CommonContainer.button(
+                      //   buttonColor: AppColor.black,
+                      //   onTap: () async {
+                      //     final priceText = _productPriceController.text.trim();
+                      //     final price = int.tryParse(priceText);
+                      //
+                      //     // 🔴 extra validation for category + subcategory
+                      //     final hasCategoryError = _categoryController.text
+                      //         .trim()
+                      //         .isEmpty;
+                      //     final hasSubCategoryError = _subCategoryController
+                      //         .text
+                      //         .trim()
+                      //         .isEmpty;
+                      //
+                      //     setState(() {
+                      //       _categoryHasError = hasCategoryError;
+                      //       _subCategoryHasError = hasSubCategoryError;
+                      //     });
+                      //
+                      //     final formValid = _formKey.currentState!.validate();
+                      //
+                      //     if (!formValid ||
+                      //         hasCategoryError ||
+                      //         hasSubCategoryError) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'Please fill all required fields correctly.',
+                      //       );
+                      //       return;
+                      //     }
+                      //
+                      //     final success = await ref
+                      //         .read(productNotifierProvider.notifier)
+                      //         .addProduct(
+                      //           category: _categoryController.text.trim(),
+                      //           subCategory: _subCategoryController.text.trim(),
+                      //           englishName: _productNameController.text.trim(),
+                      //           price: price ?? 0,
+                      //           offerLabel: _offerController.text.trim(),
+                      //           offerValue: _offerPriceController.text.trim(),
+                      //           description: _descriptionController.text.trim(),
+                      //         );
+                      //
+                      //     if (success) {
+                      //       context.pushNamed(AppRoutes.addProductList);
+                      //     } else {
+                      //       final err = ref.read(productNotifierProvider).error;
+                      //       if (err != null && err.isNotEmpty) {
+                      //         AppSnackBar.error(context, err);
+                      //       } else {
+                      //         AppSnackBar.error(
+                      //           context,
+                      //           'Something went wrong',
+                      //         );
+                      //       }
+                      //     }
+                      //   },
+                      //
+                      //   text: state.isLoading
+                      //       ? const ThreeDotsLoader()
+                      //       : Text(
+                      //           'Save & Continue',
+                      //           style: AppTextStyles.mulish(
+                      //             fontSize: 18,
+                      //             fontWeight: FontWeight.w700,
+                      //           ),
+                      //         ),
+                      //   imagePath: state.isLoading
+                      //       ? null
+                      //       : AppImages.rightStickArrow,
+                      //   imgHeight: 20,
+                      // ),
                       SizedBox(height: 36),
                     ],
                   ),

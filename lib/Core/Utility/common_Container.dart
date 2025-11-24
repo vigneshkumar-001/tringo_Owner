@@ -368,29 +368,32 @@ class CommonContainer {
               children: [
                 Stack(
                   children: [
-            ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-      child: CachedNetworkImage(
-        imageUrl: image,                // 👈 your URL string here
-        width: 130,
-        height: 130,
-        fit: BoxFit.cover,              // same effect as FittedBox.cover
-        placeholder: (context, url) => Container(
-          width: 130,
-          height: 130,
-          color: Colors.grey[300],
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-        errorWidget: (context, url, error) => Container(
-          width: 130,
-          height: 130,
-          color: Colors.grey[300],
-          child: const Icon(Icons.broken_image, color: Colors.grey),
-        ),
-      ),
-    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: CachedNetworkImage(
+                        imageUrl: image, // 👈 your URL string here
+                        width: 130,
+                        height: 130,
+                        fit: BoxFit.cover, // same effect as FittedBox.cover
+                        placeholder: (context, url) => Container(
+                          width: 130,
+                          height: 130,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: 130,
+                          height: 130,
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
                     // if (Ad)
                     //   Positioned(
                     //     bottom: 10,
@@ -433,13 +436,14 @@ class CommonContainer {
                         children: [
                           // if (Verify) CommonContainer.verifyTick(),
                           // SizedBox(width: 5),
-                          doorDelivery?
-                          CommonContainer.doorDelivery(
-                            text: 'Door Delivery',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            textColor: AppColor.skyBlue,
-                          ): SizedBox.shrink(),
+                          doorDelivery
+                              ? CommonContainer.doorDelivery(
+                                  text: 'Door Delivery',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  textColor: AppColor.skyBlue,
+                                )
+                              : SizedBox.shrink(),
                         ],
                       ),
                       SizedBox(height: 12),
@@ -474,6 +478,7 @@ class CommonContainer {
                             ),
                           ),
                           SizedBox(width: 10),
+                          oldAmound.isEmpty? SizedBox.shrink():
                           Stack(
                             alignment: Alignment.center,
                             children: [
@@ -1071,10 +1076,11 @@ class CommonContainer {
     double fontSize = 16,
     Color? textColor = Colors.white,
     bool isBorder = false,
-    FontWeight? fontWeight = FontWeight.w700,
+    FontWeight fontWeight = FontWeight.w700,
     double? width = 200,
     double? height = 60,
     String? image,
+    Color? backgroundColor,
   }) {
     return Center(
       child: SizedBox(
@@ -1082,10 +1088,11 @@ class CommonContainer {
         height: height,
         child: Container(
           decoration: BoxDecoration(
-            color: isBorder ? AppColor.white : AppColor.black,
-
+            color:
+                backgroundColor ??
+                (isBorder ? AppColor.white : AppColor.skyBlue),
             border: isBorder
-                ? Border.all(color: Color(0xff3F5FF2), width: 2)
+                ? Border.all(color: const Color(0xff3F5FF2), width: 2)
                 : null,
             borderRadius: BorderRadius.circular(18),
           ),
@@ -1100,7 +1107,7 @@ class CommonContainer {
             ),
             onPressed: onTap,
             child: loader != null
-                ? loader // Show loader instead of text
+                ? loader
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -1108,13 +1115,13 @@ class CommonContainer {
                         text,
                         style: TextStyle(
                           fontFamily: "Roboto-normal",
-                          fontSize: 16.sp,
+                          fontSize: fontSize,
                           color: textColor,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: fontWeight,
                         ),
                       ),
                       if (image != null) ...[
-                        SizedBox(width: 15),
+                        const SizedBox(width: 15),
                         Image.asset(image, height: 20),
                       ],
                     ],
@@ -1124,6 +1131,71 @@ class CommonContainer {
       ),
     );
   }
+
+  // static button2({
+  //   BuildContext? context,
+  //   VoidCallback? onTap,
+  //   required String text,
+  //   Widget? loader,
+  //   double fontSize = 16,
+  //   Color? textColor = Colors.white,
+  //   bool isBorder = false,
+  //   FontWeight? fontWeight = FontWeight.w700,
+  //   double? width = 200,
+  //   double? height = 60,
+  //   String? image,
+  //   Color? backgroundColor,
+  // }) {
+  //   return Center(
+  //     child: SizedBox(
+  //       width: width,
+  //       height: height,
+  //       child: Container(
+  //         decoration: BoxDecoration(
+  //           color:
+  //               backgroundColor ??
+  //               (isBorder ? AppColor.white : AppColor.skyBlue),
+  //
+  //           border: isBorder
+  //               ? Border.all(color: Color(0xff3F5FF2), width: 2)
+  //               : null,
+  //           borderRadius: BorderRadius.circular(18),
+  //         ),
+  //         child: ElevatedButton(
+  //           style: ButtonStyle(
+  //             padding: MaterialStateProperty.all(EdgeInsets.zero),
+  //             shape: MaterialStateProperty.all(
+  //               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //             ),
+  //             elevation: MaterialStateProperty.all(0),
+  //             backgroundColor: MaterialStateProperty.all(Colors.transparent),
+  //           ),
+  //           onPressed: onTap,
+  //           child: loader != null
+  //               ? loader // Show loader instead of text
+  //               : Row(
+  //                   mainAxisAlignment: MainAxisAlignment.center,
+  //                   children: [
+  //                     Text(
+  //                       text,
+  //                       style: TextStyle(
+  //                         fontFamily: "Roboto-normal",
+  //                         fontSize: 16.sp,
+  //                         color: textColor,
+  //                         fontWeight: FontWeight.bold,
+  //                       ),
+  //                     ),
+  //                     if (image != null) ...[
+  //                       SizedBox(width: 15),
+  //                       Image.asset(image, height: 20),
+  //                     ],
+  //                   ],
+  //                 ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   static Widget button({
     required GestureTapCallback? onTap,
@@ -1267,6 +1339,7 @@ class CommonContainer {
                   ),
                   textButtonTheme: TextButtonThemeData(
                     style: TextButton.styleFrom(
+                      textStyle: AppTextStyles.mulish(),
                       foregroundColor: AppColor.resendOtp,
                     ),
                   ),
@@ -1304,6 +1377,9 @@ class CommonContainer {
                   ),
                   textButtonTheme: TextButtonThemeData(
                     style: TextButton.styleFrom(
+                      textStyle: AppTextStyles.mulish(
+                        fontWeight: FontWeight.w700,
+                      ),
                       foregroundColor: AppColor.lightSkyBlue,
                     ),
                   ),
@@ -1392,16 +1468,23 @@ class CommonContainer {
                                                 controller: controller,
                                                 validator: validator,
                                                 readOnly: true,
-                                                decoration:
-                                                    const InputDecoration(
-                                                      border: InputBorder.none,
-                                                      isDense: true,
-                                                      errorText: null,
-                                                      contentPadding:
-                                                          EdgeInsets.symmetric(
-                                                            horizontal: 10,
-                                                          ),
-                                                    ),
+                                                // style: TextStyle(
+                                                //   fontWeight:
+                                                //       textFontWeight ??
+                                                //       FontWeight
+                                                //           .w700, // <-- THIS IS WHAT YOU WANT
+                                                //   fontSize: 16,
+                                                //   color: AppColor.black,
+                                                // ),
+                                                decoration: InputDecoration(
+                                                  border: InputBorder.none,
+                                                  isDense: true,
+                                                  errorText: null,
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                      ),
+                                                ),
                                               ),
                                             ),
                                             ValueListenableBuilder<
@@ -1488,6 +1571,14 @@ class CommonContainer {
                                       : TextFormField(
                                           controller: controller,
                                           readOnly: true,
+                                          style: TextStyle(
+                                            fontWeight:
+                                                textFontWeight ??
+                                                FontWeight
+                                                    .w700, // <-- THIS IS WHAT YOU WANT
+                                            fontSize: 16,
+                                            color: AppColor.black,
+                                          ),
                                           decoration: const InputDecoration(
                                             border: InputBorder.none,
                                             isDense: true,
@@ -1556,7 +1647,7 @@ class CommonContainer {
                         ),
 
                       if (suffixWidget != null) ...[
-                         SizedBox(width: 8),
+                        SizedBox(width: 8),
                         suffixWidget,
                       ],
                       if (text != null) ...[
@@ -1790,20 +1881,20 @@ class CommonContainer {
                                   controller?.clear();
                                   setState(() {});
                                 },
-                                child: const Icon(
+                                child: Icon(
                                   Icons.close,
                                   color: Colors.grey,
                                   size: 22,
                                 ),
                               )
                             : SizedBox.shrink(),
-                        Container(
-                          width: 1.2,
-                          height: 30,
-                          color: Colors.grey.shade300,
-                          margin: const EdgeInsets.symmetric(horizontal: 12),
-                        ),
 
+                        // Container(
+                        //   width: 1.2,
+                        //   height: 30,
+                        //   color: Colors.grey.shade300,
+                        //   margin: const EdgeInsets.symmetric(horizontal: 12),
+                        // ),
                         textValue.isEmpty
                             ? Text(
                                 'Mobile No',
@@ -1812,27 +1903,27 @@ class CommonContainer {
                                 ),
                               )
                             : SizedBox.shrink(),
-                        if (textValue.isNotEmpty)
-                          GestureDetector(
-                            onTap: onVerifyTap,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2196F3),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                "Verify",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
+                        // if (textValue.isNotEmpty)
+                        // GestureDetector(
+                        //   onTap: onVerifyTap,
+                        //   child: Container(
+                        //     padding: const EdgeInsets.symmetric(
+                        //       horizontal: 14,
+                        //       vertical: 8,
+                        //     ),
+                        //     decoration: BoxDecoration(
+                        //       color: const Color(0xFF2196F3),
+                        //       borderRadius: BorderRadius.circular(12),
+                        //     ),
+                        //     child: const Text(
+                        //       "Verify",
+                        //       style: TextStyle(
+                        //         color: Colors.white,
+                        //         fontWeight: FontWeight.w600,
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

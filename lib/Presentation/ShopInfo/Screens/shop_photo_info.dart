@@ -25,24 +25,51 @@ class ShopPhotoInfo extends ConsumerStatefulWidget {
 
 class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
   final ImagePicker _picker = ImagePicker();
+  bool _insidePhotoError = false;
 
   // 4 containers = 4 image slots
   List<File?> _pickedImages = List<File?>.filled(4, null);
   List<bool> _hasError = List<bool>.filled(4, false);
+
+  // Future<void> _pickImage(int index) async {
+  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _pickedImages[index] = File(pickedFile.path);
+  //       _hasError[index] = false; // clear error once image selected
+  //     });
+  //   }
+  // }
 
   Future<void> _pickImage(int index) async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _pickedImages[index] = File(pickedFile.path);
-        _hasError[index] = false; // clear error once image selected
+
+        // Clear individual errors for first 2 slots
+        if (index == 0 || index == 1) {
+          _hasError[index] = false;
+        }
+
+        // Clear group error if at least 1 inside photo is selected
+        if (index == 2 || index == 3) {
+          if (_pickedImages[2] != null || _pickedImages[3] != null) {
+            _insidePhotoError = false;
+          }
+        }
       });
     }
   }
 
-  Widget _addImageContainer({required int index}) {
+  Widget _addImageContainer({
+    required int index,
+    bool checkIndividualError = false,
+  }) {
     final file = _pickedImages[index];
-    final hasError = _hasError[index];
+    final hasError = checkIndividualError
+        ? _hasError[index]
+        : false; // only for 0 & 1
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,31 +170,32 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
     );
   }
 
-  Future<void> _validateAndContinue() async {
-    // bool valid = true;
-    // setState(() {
-    //   for (int i = 0; i < _pickedImages.length; i++) {
-    //     if (_pickedImages[i] == null) {
-    //       _hasError[i] = true;
-    //       valid = false;
-    //     } else {
-    //       _hasError[i] = false;
-    //     }
-    //   }
-    // });
-    //
-    // if (!valid) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Please add all required images before continuing.'),
-    //       backgroundColor: Colors.red,
-    //     ),
-    //   );
-    //   return;
-    // }
+  Future<void> _validateImages() async {
+    bool valid = true;
 
-    //  All images valid → proceed to next screen or API upload
-    debugPrint('All images selected. Proceed.');
+    // Validate slot 0 & 1 individually
+    setState(() {
+      for (int i = 0; i <= 1; i++) {
+        if (_pickedImages[i] == null) {
+          _hasError[i] = true;
+          valid = false;
+        } else {
+          _hasError[i] = false;
+        }
+      }
+
+      // Group validation for inside photos (index 2 & 3)
+      if (_pickedImages[2] == null && _pickedImages[3] == null) {
+        _insidePhotoError = true;
+        valid = false;
+      } else {
+        _insidePhotoError = false;
+      }
+    });
+
+    if (!valid) return;
+
+    debugPrint("ALL IMAGES ARE VALID");
   }
 
   @override
@@ -221,81 +249,108 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
                   children: [
                     CommonContainer.containerTitle(
                       context: context,
+                      title: 'Sign Board Photo',
                       infoMessage:
                           'Please upload a clear photo of your shop signboard showing the name clearly.',
-                      title: 'Sign Board Photo',
                       image: AppImages.iImage,
                     ),
+
                     SizedBox(height: 10),
-                    _addImageContainer(index: 0),
+                    _addImageContainer(index: 0, checkIndividualError: true),
                     SizedBox(height: 25),
                     CommonContainer.containerTitle(
                       context: context,
                       title: 'Shop Outside Photo',
                       image: AppImages.iImage,
                       infoMessage:
-                          'Please upload a clear photo of your shop signboard showing the name clearly.',
+                          'Please upload a clear photo showing the full outside view of your shop.',
                     ),
+
                     SizedBox(height: 10),
-                    _addImageContainer(index: 1),
+                    _addImageContainer(index: 1, checkIndividualError: true),
                     SizedBox(height: 25),
                     CommonContainer.containerTitle(
                       context: context,
                       title: 'Shop Inside Photo',
                       image: AppImages.iImage,
                       infoMessage:
-                          'Please upload a clear photo of your shop signboard showing the name clearly.',
+                          'Please upload a clear photo of the inside of your shop showing the interior clearly.',
                     ),
+
                     SizedBox(height: 10),
                     _addImageContainer(index: 2),
                     SizedBox(height: 10),
                     _addImageContainer(index: 3),
+
+                    /// ONE GROUP ERROR MESSAGE
+                    if (_insidePhotoError)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 5),
+                        child: Text(
+                          'Please upload at least one inside photo',
+                          style: AppTextStyles.mulish(
+                            color: Colors.red,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+
                     SizedBox(height: 30),
+
                     CommonContainer.button(
                       buttonColor: AppColor.black,
                       onTap: () async {
-                        if (widget.pages == "AboutMeScreens") {
-                          // Example: collect image data before returning
-                          final updatedPhotos = _pickedImages
-                              .where((img) => img != null)
-                              .map((f) => f!.path)
-                              .toList();
+                        await _validateImages();
 
-                          Navigator.pop(
+                        // Validation failed → stop
+                        if (_hasError.contains(true) || _insidePhotoError) {
+                          AppSnackBar.error(
                             context,
-                            updatedPhotos,
-                          ); // Return to AboutMeScreens
-                        } else {
-                          if (_pickedImages.every((img) => img == null)) {
-                            AppSnackBar.error(
-                              context,
-                              'Please select all required images',
-                            );
-                            return;
-                          }
+                            'Please fix the highlighted errors before continuing',
+                          );
+                          return;
+                        }
 
-                          final success = await ref
-                              .read(shopCategoryNotifierProvider.notifier)
-                              .uploadShopImages(
-                                images: _pickedImages,
+                        final notifier = ref.read(
+                          shopCategoryNotifierProvider.notifier,
+                        );
 
-                                context: context,
-                              );
-                          if (success) {
-                            context.pushNamed(AppRoutes.searchKeyword);
-                          } else {
-                            final err = ref
-                                .read(shopCategoryNotifierProvider)
-                                .error;
-                            if (err != null && err.isNotEmpty) {
-                              AppSnackBar.error(context, err);
+                        final success = await notifier.uploadShopImages(
+                          images: _pickedImages,
+                          context: context,
+                        );
+
+                        if (success) {
+                          // SHOW SUCCESS SNACKBAR
+                          AppSnackBar.success(
+                            context,
+                            'Shop images uploaded successfully!',
+                          );
+
+                          // Navigate after a short delay so user can see the message
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            if (widget.pages == "AboutMeScreens") {
+                              final updatedPhotos = _pickedImages
+                                  .where((img) => img != null)
+                                  .map((f) => f!.path)
+                                  .toList();
+                              Navigator.pop(context, updatedPhotos);
                             } else {
-                              AppSnackBar.error(
-                                context,
-                                'Image upload failed. Please try again.',
-                              );
+                              context.pushNamed(AppRoutes.searchKeyword);
                             }
-                          }
+                          });
+                        } else {
+                          // SHOW ERROR SNACKBAR
+                          final err = ref
+                              .read(shopCategoryNotifierProvider)
+                              .error;
+                          AppSnackBar.error(
+                            context,
+                            err != null && err.isNotEmpty
+                                ? err
+                                : 'Image upload failed. Please try again.',
+                          );
                         }
                       },
                       text: state.isLoading
@@ -315,6 +370,70 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
                       imgHeight: 20,
                     ),
 
+                    // CommonContainer.button(
+                    //   buttonColor: AppColor.black,
+                    //   onTap: () async {
+                    //     await _validateImages();
+                    //     if (widget.pages == "AboutMeScreens") {
+                    //       // Example: collect image data before returning
+                    //       final updatedPhotos = _pickedImages
+                    //           .where((img) => img != null)
+                    //           .map((f) => f!.path)
+                    //           .toList();
+                    //
+                    //       Navigator.pop(
+                    //         context,
+                    //         updatedPhotos,
+                    //       ); // Return to AboutMeScreens
+                    //     } else {
+                    //       if (_pickedImages.every((img) => img == null)) {
+                    //         AppSnackBar.error(
+                    //           context,
+                    //           'Please select all required images',
+                    //         );
+                    //         return;
+                    //       }
+                    //
+                    //       final success = await ref
+                    //           .read(shopCategoryNotifierProvider.notifier)
+                    //           .uploadShopImages(
+                    //             images: _pickedImages,
+                    //
+                    //             context: context,
+                    //           );
+                    //       if (success) {
+                    //         context.pushNamed(AppRoutes.searchKeyword);
+                    //       } else {
+                    //         final err = ref
+                    //             .read(shopCategoryNotifierProvider)
+                    //             .error;
+                    //         if (err != null && err.isNotEmpty) {
+                    //           AppSnackBar.error(context, err);
+                    //         } else {
+                    //           AppSnackBar.error(
+                    //             context,
+                    //             'Image upload failed. Please try again.',
+                    //           );
+                    //         }
+                    //       }
+                    //     }
+                    //   },
+                    //   text: state.isLoading
+                    //       ? const ThreeDotsLoader()
+                    //       : Text(
+                    //           widget.pages == "AboutMeScreens"
+                    //               ? 'Update'
+                    //               : 'Save & Continue',
+                    //           style: AppTextStyles.mulish(
+                    //             fontSize: 18,
+                    //             fontWeight: FontWeight.w700,
+                    //           ),
+                    //         ),
+                    //   imagePath: state.isLoading
+                    //       ? null
+                    //       : AppImages.rightStickArrow,
+                    //   imgHeight: 20,
+                    // ),
                     SizedBox(height: 36),
                   ],
                 ),
