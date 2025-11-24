@@ -1,91 +1,16 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-// import 'package:top_snackbar_flutter/top_snack_bar.dart';
-// import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
-// import 'package:tringo_vendor/Presentation/Login/Screens/otp_screens.dart';
-// import '../../../Core/Routes/app_go_routes.dart';
-// import '../../../Core/Utility/app_loader.dart';
-// import '../../Login/controller/login_notifier.dart';
-//
-// class LoginScreen extends ConsumerStatefulWidget {
-//   const LoginScreen({super.key});
-//
-//   @override
-//   ConsumerState<LoginScreen> createState() => _LoginScreenState();
-// }
-//
-// class _LoginScreenState extends ConsumerState<LoginScreen> {
-//   final TextEditingController phoneController = TextEditingController();
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final state = ref.watch(loginNotifierProvider);
-//     final notifier = ref.read(loginNotifierProvider.notifier);
-//     ref.listen<LoginState>(loginNotifierProvider, (_, next) {
-//       if (next.error != null) {
-//         AppSnackBar.error(context, next.error!);
-//       } else if (next.loginResponse != null) {
-//         AppSnackBar.success(context, 'OTP sent successfully!');
-//         context.goNamed(AppRoutes.otp, extra: phoneController.text.trim());
-//         ref.read(loginNotifierProvider.notifier).resetState();
-//       }
-//     });
-//
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Login')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: phoneController,
-//               keyboardType: TextInputType.phone,
-//               decoration: const InputDecoration(labelText: 'Phone Number'),
-//             ),
-//             const SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: state.isLoading
-//                   ? null
-//                   : () {
-//                       final phone = phoneController.text.trim();
-//                       if (phone.isEmpty) {
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           const SnackBar(
-//                             content: Text('Please enter phone number'),
-//                           ),
-//                         );
-//                         return;
-//                       }
-//                       notifier.loginUser(phoneNumber: phone);
-//                     },
-//               child: state.isLoading
-//                   ? const ThreeDotsLoader()
-//                   : const Text('Login'),
-//             ),
-//             const SizedBox(height: 20),
-//             if (state.error != null)
-//               Text(state.error!, style: const TextStyle(color: Colors.red)),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-///New///
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:tringo_vendor/Core/Const/app_color.dart';
+import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
+import 'package:tringo_vendor/Core/Utility/app_loader.dart';
+import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import '../../../Core/Const/app_color.dart';
-import '../../../Core/Const/app_images.dart';
-import '../../../Core/Routes/app_go_routes.dart';
-import '../../../Core/Utility/app_loader.dart';
-import '../../../Core/Utility/app_snackbar.dart';
-import '../../../Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+
 import '../controller/login_notifier.dart';
 
 class LoginMobileNumber extends ConsumerStatefulWidget {
@@ -96,9 +21,73 @@ class LoginMobileNumber extends ConsumerStatefulWidget {
 }
 
 class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
+  bool isWhatsappChecked = false; // ⬅ start unchecked
   String errorText = '';
   bool _isFormatting = false;
   final TextEditingController mobileNumberController = TextEditingController();
+
+  String? _lastRawPhone;
+
+  @override
+  void initState() {
+    super.initState();
+
+    //  LISTEN LOGIN STATE (WhatsApp verify + login flow)
+    ///
+    // ref.listen<LoginState>(loginNotifierProvider, (prev, next) {
+    //   if (!mounted) return;
+    //
+    //   // 1) Show API error (for both WhatsApp verify & login)
+    //   if (next.error != null) {
+    //     AppSnackBar.error(context, next.error!);
+    //     return;
+    //   }
+    //
+    //   // 2) WhatsApp VERIFY result
+    //   if (next.whatsappResponse != null) {
+    //     final resp = next.whatsappResponse!;
+    //     final hasWhatsapp = resp.data.hasWhatsapp;
+    //
+    //     if (hasWhatsapp) {
+    //       // ✅ Auto tick checkbox
+    //       setState(() {
+    //         isWhatsappChecked = true;
+    //       });
+    //
+    //       // ✅ Now send OTP / login using same phone
+    //       final raw = _lastRawPhone;
+    //       if (raw != null) {
+    //         ref
+    //             .read(loginNotifierProvider.notifier)
+    //             .loginUser(phoneNumber: raw);
+    //       }
+    //     } else {
+    //       // ❌ No WhatsApp → uncheck + show error
+    //       setState(() {
+    //         isWhatsappChecked = false;
+    //       });
+    //
+    //       AppSnackBar.error(
+    //         context,
+    //         'This number is not registered on WhatsApp. Please use a WhatsApp number.',
+    //       );
+    //     }
+    //     // continue → later we may also receive loginResponse
+    //   }
+    //
+    //   // 3) LOGIN result → OTP screen
+    //   if (next.loginResponse != null) {
+    //     AppSnackBar.success(context, 'OTP sent successfully!');
+    //
+    //     final raw = _lastRawPhone ?? '';
+    //     // pass raw or formatted – here we send raw 10-digit
+    //     context.pushNamed(AppRoutes.otp, extra: raw);
+    //
+    //     // reset state for next attempt
+    //     ref.read(loginNotifierProvider.notifier).resetState();
+    //   }
+    // });
+  }
 
   void _formatPhoneNumber(String value) {
     setState(() => errorText = '');
@@ -132,15 +121,56 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   Widget build(BuildContext context) {
     final state = ref.watch(loginNotifierProvider);
     final notifier = ref.read(loginNotifierProvider.notifier);
-    ref.listen<LoginState>(loginNotifierProvider, (_, next) {
+    ref.listen<LoginState>(loginNotifierProvider, (prev, next) {
+      if (!mounted) return;
+
+      // 1) Show API error (for both WhatsApp verify & login)
       if (next.error != null) {
         AppSnackBar.error(context, next.error!);
-      } else if (next.loginResponse != null) {
+        return;
+      }
+
+      // 2) WhatsApp VERIFY result
+      if (next.whatsappResponse != null) {
+        final resp = next.whatsappResponse!;
+        final hasWhatsapp = resp.data.hasWhatsapp;
+
+        if (hasWhatsapp) {
+          // Auto tick checkbox
+          setState(() {
+            isWhatsappChecked = true;
+          });
+
+          //  Now send OTP / login using same phone
+          final raw = _lastRawPhone;
+          if (raw != null) {
+            ref
+                .read(loginNotifierProvider.notifier)
+                .loginUser(phoneNumber: raw);
+          }
+        } else {
+          //  No WhatsApp → uncheck + show error
+          setState(() {
+            isWhatsappChecked = false;
+          });
+
+          AppSnackBar.error(
+            context,
+            'This number is not registered on WhatsApp. Please use a WhatsApp number.',
+          );
+        }
+        // continue → later we may also receive loginResponse
+      }
+
+      // 3) LOGIN result → OTP screen
+      if (next.loginResponse != null) {
         AppSnackBar.success(context, 'OTP sent successfully!');
-        context.pushNamed(
-          AppRoutes.otp,
-          extra: mobileNumberController.text.trim(),
-        );
+
+        final raw = _lastRawPhone ?? '';
+        // pass raw or formatted – here we send raw 10-digit
+        context.pushNamed(AppRoutes.otp, extra: raw);
+
+        // reset state for next attempt
         ref.read(loginNotifierProvider.notifier).resetState();
       }
     });
@@ -161,10 +191,11 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
               right: 0,
               bottom: 120,
               child: SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.only(bottom: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // LOGO
                     Padding(
                       padding: const EdgeInsets.only(left: 35, top: 50),
                       child: Image.asset(AppImages.logo, height: 88, width: 85),
@@ -210,9 +241,9 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                     SizedBox(height: 35),
 
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35),
+                      padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 6,
                         ),
@@ -267,7 +298,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                               child: TextFormField(
                                 controller: mobileNumberController,
                                 keyboardType: TextInputType.phone,
-                                maxLength: 12,
+                                maxLength: 12, // 10 digits + 2 spaces
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
@@ -354,17 +385,32 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                             ),
                           ],
                         ),
-                        trailing: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColor.green, width: 2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              AppImages.tickImage,
-                              height: 12,
-                              color: AppColor.green,
+
+                        trailing: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isWhatsappChecked = !isWhatsappChecked;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: isWhatsappChecked
+                                    ? AppColor.green
+                                    : AppColor.darkGrey,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: isWhatsappChecked
+                                  ? Image.asset(
+                                      AppImages.tickImage,
+                                      height: 12,
+                                      color: AppColor.green,
+                                    )
+                                  : SizedBox(width: 12, height: 12),
                             ),
                           ),
                         ),
@@ -372,71 +418,46 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                     ),
 
                     SizedBox(height: 35),
+
+                    // VERIFY BUTTON
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35),
+                      padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: CommonContainer.button2(
                         width: double.infinity,
                         loader: state.isLoading ? ThreeDotsLoader() : null,
                         onTap: state.isLoading
                             ? null
-                            : () {
-                                final phone = mobileNumberController.text
+                            : () async {
+                                final formatted = mobileNumberController.text
                                     .trim();
-                                if (phone.isEmpty) {
+                                final rawPhone = formatted.replaceAll(' ', '');
+
+                                if (rawPhone.isEmpty) {
                                   AppSnackBar.info(
                                     context,
-                                    'Please Enter Phone Number',
+                                    'Please enter phone number',
                                   );
                                   return;
                                 }
-                                notifier.loginUser(phoneNumber: phone);
-                              },
+                                if (rawPhone.length != 10) {
+                                  AppSnackBar.info(
+                                    context,
+                                    'Please enter a valid 10-digit number',
+                                  );
+                                  return;
+                                }
 
+                                _lastRawPhone = rawPhone;
+
+                                await notifier.verifyWhatsappNumber(
+                                  contact: rawPhone,
+                                  purpose: 'owner', //  important
+                                );
+                              },
                         text: 'Verify Now',
                       ),
                     ),
 
-                    // Padding(
-                    //   padding: EdgeInsets.symmetric(horizontal: 35),
-                    //   child: CommonContainer.button(
-                    //     onTap: state.isLoading ? null : () {
-                    //       final phone = mobileNumberController.text.trim();
-                    //       if (phone.isEmpty) {
-                    //         AppSnackBar.info(context, 'Please Enter Phone Number');
-                    //         return;
-                    //       }
-                    //       notifier.loginUser(phoneNumber: phone);
-                    //     },
-                    //
-                    //     text:   Text('Verify Now'),
-                    //   ),
-                    // ),
-
-                    // Padding(
-                    //   padding: EdgeInsets.symmetric(horizontal: 35),
-                    //   child: CommonContainer.button(
-                    //     onTap: state.isLoading ? null : () {
-                    //       final phone = mobileNumberController.text.trim();
-                    //       if (phone.isEmpty) {
-                    //        AppSnackBar.info(context, 'Please Enter Phone Number');
-                    //         return;
-                    //       }
-                    //       notifier.loginUser(phoneNumber: phone);
-                    //     },
-                    //     // onTap: () {
-                    //     //   Navigator.push(
-                    //     //     context,
-                    //     //     MaterialPageRoute(
-                    //     //       builder: (context) => MobileNumberVerify(),
-                    //     //     ),
-                    //     //   );
-                    //     // },
-                    //     text: state.isLoading
-                    //         ? const ThreeDotsLoader()
-                    //         : const Text('Verify Now'),
-                    //
-                    //   ),
-                    // ),
                     SizedBox(height: 50),
                   ],
                 ),

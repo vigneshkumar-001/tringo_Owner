@@ -11,8 +11,10 @@ import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
+import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/create_surprise_offers.dart';
 import '../../Enquiry/Screens/enquiry_screens.dart';
 import '../../Menu/Screens/menu_screens.dart';
@@ -52,7 +54,8 @@ class _HomeScreensState extends State<HomeScreens> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPremium = RegistrationSession.instance.isPremium;
+    final isPremium    = RegistrationProductSeivice.instance.isPremium;
+    final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -403,7 +406,7 @@ class _HomeScreensState extends State<HomeScreens> {
                               ),
                             ),
 
-                            SizedBox(height: 90),
+                            SizedBox(height: isPremium ? 20 : 90),
                           ],
                         ),
                       ),
@@ -492,7 +495,7 @@ class _HomeScreensState extends State<HomeScreens> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  CommonBottomNavigation(initialIndex: 2),
+                              CreateAppOffer(),
                             ),
                           );
                         },
@@ -502,15 +505,13 @@ class _HomeScreensState extends State<HomeScreens> {
                       ),
                       CommonContainer.offerCardContainer(
                         onTap: () {
-                          final isPremium =
-                              RegistrationSession.instance.isPremium;
-
+                          final isPremium = RegistrationProductSeivice.instance.isPremium;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => isPremium
-                                  ? SubscriptionScreen() //  premium → Subscription
-                                  : CreateSurpriseOffers(), //  non-premium → Create Surprise
+                                  ?    CreateSurpriseOffers() // ✅ PREMIUM → create surprise offer
+                                  : SubscriptionScreen(), // ✅ NON-PREMIUM → ask to upgrade
                             ),
                           );
                         },

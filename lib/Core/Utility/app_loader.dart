@@ -6,15 +6,14 @@ class AppLoader {
     return const SizedBox(
       width: 22,
       height: 22,
-      child: CircularProgressIndicator(
-        strokeWidth: 1.8,
-        color: AppColor.white,
-      ),
+      child: CircularProgressIndicator(strokeWidth: 1.8, color: AppColor.white),
     );
   }
 }
+
 class ThreeDotsLoader extends StatefulWidget {
-  const ThreeDotsLoader({super.key});
+  final Color dotColor;
+  const ThreeDotsLoader({super.key, this.dotColor = AppColor.white});
 
   @override
   State<ThreeDotsLoader> createState() => _ThreeDotsLoaderState();
@@ -66,10 +65,11 @@ class _ThreeDotsLoaderState extends State<ThreeDotsLoader>
   Widget _buildDot(Animation<double> animation) {
     return ScaleTransition(
       scale: animation,
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 2),
         child: CircleAvatar(
-          radius: 6, // 👈 smaller dot (try 1.8–2.5 range)
+          backgroundColor: widget.dotColor,
+          radius: 6, //  smaller dot (try 1.8–2.5 range)
         ),
       ),
     );

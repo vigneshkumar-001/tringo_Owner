@@ -1,6 +1,7 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
@@ -150,7 +151,15 @@ class _OfferProductsState extends State<OfferProducts> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: CommonContainer.button(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  CommonBottomNavigation(initialIndex: 2),
+                            ),
+                          );
+                        },
                         imagePath: AppImages.rightStickArrow,
                         text: Text(
                           'Apply Offer',

@@ -1,5 +1,6 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import '../../../Core/Const/app_color.dart';
@@ -18,6 +19,11 @@ class PremiumOffers extends StatefulWidget {
 class _PremiumOffersState extends State<PremiumOffers> {
   bool isSurpriseSelected = true;
   int selectedIndex = 0;
+  DateTime selectedDate = DateTime.now();
+  String selectedDay = 'Today';
+
+  String _fmt(DateTime d) =>
+      DateFormat('dd MMM yyyy').format(d); // e.g., 23 Sep 2025
 
   Future<void> _openQrScanner() async {
     var status = await Permission.camera.request();
@@ -244,17 +250,197 @@ class _PremiumOffersState extends State<PremiumOffers> {
                 ),
               ),
               SizedBox(width: 15),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+              GestureDetector(
+                onTap: () async {
+                  final selected = await showModalBottomSheet<String>(
+                    context: context,
+                    backgroundColor: AppColor.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    builder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Select Date',
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColor.mistyRose,
+                                      borderRadius:
+                                      BorderRadius.circular(25),
+                                    ),
+                                    child: Padding(
+                                      padding:
+                                      const EdgeInsets.symmetric(
+                                        horizontal: 17,
+                                        vertical: 10,
+                                      ),
+                                      child: Icon(
+                                        size: 16,
+                                        Icons.close,
+                                        color: AppColor.red,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 15),
+                            CommonContainer.horizonalDivider(),
+                            ListTile(
+                              title: Text(
+                                'Today',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                              onTap: () =>
+                                  Navigator.pop(context, 'Today'),
+                            ),
+                            ListTile(
+                              title: Text(
+                                'Yesterday',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                              onTap: () =>
+                                  Navigator.pop(context, 'Yesterday'),
+                              // trailing: GestureDetector(
+                              //   onTap: () =>
+                              //       Navigator.pop(context, 'Yesterday'),
+                              //   child: Container(
+                              //     decoration: BoxDecoration(
+                              //       color: AppColor.iceBlue,
+                              //       borderRadius: BorderRadius.circular(
+                              //         25,
+                              //       ),
+                              //     ),
+                              //     child: Padding(
+                              //       padding: const EdgeInsets.symmetric(
+                              //         horizontal: 17,
+                              //         vertical: 10,
+                              //       ),
+                              //       child: Image.asset(
+                              //         AppImages.rightArrow,
+                              //         height: 13,color: AppColor.skyBlue,
+                              //       ),
+                              //     ),
+                              //   ),
+                              // ),
+                            ),
+                            ListTile(
+                              title: Text(
+                                'Custom Date',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        dialogBackgroundColor:
+                                        AppColor.white,
+                                        colorScheme: ColorScheme.light(
+                                          primary: AppColor.brightBlue,
+                                          onPrimary: Colors.white,
+                                          onSurface: AppColor.black,
+                                        ),
+                                        textButtonTheme:
+                                        TextButtonThemeData(
+                                          style:
+                                          TextButton.styleFrom(
+                                            foregroundColor:
+                                            AppColor
+                                                .brightBlue,
+                                          ),
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+
+                                if (picked != null) {
+                                  setState(() {
+                                    selectedDate = picked;
+                                    selectedDay = _fmt(picked);
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+
+                  if (selected == 'Today') {
+                    setState(() {
+                      selectedDay = 'Today';
+                      selectedDate = DateTime.now();
+                    });
+                  } else if (selected == 'Yesterday') {
+                    setState(() {
+                      selectedDay = 'Yesterday';
+                      selectedDate = DateTime.now().subtract(
+                        const Duration(days: 1),
+                      );
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColor.iceBlue,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Image.asset(AppImages.filter, height: 19),
                 ),
-                decoration: BoxDecoration(
-                  color: AppColor.iceBlue,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Image.asset(AppImages.filter, height: 19),
               ),
+              // Container(
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 10,
+              //     vertical: 8,
+              //   ),
+              //   decoration: BoxDecoration(
+              //     color: AppColor.iceBlue,
+              //     borderRadius: BorderRadius.circular(15),
+              //   ),
+              //   child: Image.asset(AppImages.filter, height: 19),
+              // ),
             ],
           ),
           SizedBox(height: 22),
@@ -562,17 +748,198 @@ class _PremiumOffersState extends State<PremiumOffers> {
                 ),
               ),
               SizedBox(width: 15),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+              GestureDetector(
+                onTap: () async {
+                  final selected = await showModalBottomSheet<String>(
+                    context: context,
+                    backgroundColor: AppColor.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    builder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Select Date',
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColor.mistyRose,
+                                      borderRadius:
+                                      BorderRadius.circular(25),
+                                    ),
+                                    child: Padding(
+                                      padding:
+                                      const EdgeInsets.symmetric(
+                                        horizontal: 17,
+                                        vertical: 10,
+                                      ),
+                                      child: Icon(
+                                        size: 16,
+                                        Icons.close,
+                                        color: AppColor.red,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 15),
+                            CommonContainer.horizonalDivider(),
+                            ListTile(
+                              title: Text(
+                                'Today',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                              onTap: () =>
+                                  Navigator.pop(context, 'Today'),
+                            ),
+                            ListTile(
+                              title: Text(
+                                'Yesterday',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                              onTap: () =>
+                                  Navigator.pop(context, 'Yesterday'),
+                              // trailing: GestureDetector(
+                              //   onTap: () =>
+                              //       Navigator.pop(context, 'Yesterday'),
+                              //   child: Container(
+                              //     decoration: BoxDecoration(
+                              //       color: AppColor.iceBlue,
+                              //       borderRadius: BorderRadius.circular(
+                              //         25,
+                              //       ),
+                              //     ),
+                              //     child: Padding(
+                              //       padding: const EdgeInsets.symmetric(
+                              //         horizontal: 17,
+                              //         vertical: 10,
+                              //       ),
+                              //       child: Image.asset(
+                              //         AppImages.rightArrow,
+                              //         height: 13,color: AppColor.skyBlue,
+                              //       ),
+                              //     ),
+                              //   ),
+                              // ),
+                            ),
+                            ListTile(
+                              title: Text(
+                                'Custom Date',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        dialogBackgroundColor:
+                                        AppColor.white,
+                                        colorScheme: ColorScheme.light(
+                                          primary: AppColor.brightBlue,
+                                          onPrimary: Colors.white,
+                                          onSurface: AppColor.black,
+                                        ),
+                                        textButtonTheme:
+                                        TextButtonThemeData(
+                                          style:
+                                          TextButton.styleFrom(
+                                            foregroundColor:
+                                            AppColor
+                                                .brightBlue,
+                                          ),
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+
+                                if (picked != null) {
+                                  setState(() {
+                                    selectedDate = picked;
+                                    selectedDay = _fmt(picked);
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+
+                  if (selected == 'Today') {
+                    setState(() {
+                      selectedDay = 'Today';
+                      selectedDate = DateTime.now();
+                    });
+                  } else if (selected == 'Yesterday') {
+                    setState(() {
+                      selectedDay = 'Yesterday';
+                      selectedDate = DateTime.now().subtract(
+                        const Duration(days: 1),
+                      );
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColor.iceBlue,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Image.asset(AppImages.filter, height: 19),
                 ),
-                decoration: BoxDecoration(
-                  color: AppColor.iceBlue,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Image.asset(AppImages.filter, height: 19),
               ),
+
+              // Container(
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 10,
+              //     vertical: 8,
+              //   ),
+              //   decoration: BoxDecoration(
+              //     color: AppColor.iceBlue,
+              //     borderRadius: BorderRadius.circular(15),
+              //   ),
+              //   child: Image.asset(AppImages.filter, height: 19),
+              // ),
             ],
           ),
 

@@ -10,7 +10,10 @@ import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart
 
 import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
+import '../../Presentation/Home/Screens/home_screens.dart';
+import '../../Presentation/Menu/Screens/subscription_screen.dart';
 import '../../Presentation/Shops Details/Screen/shops_details.dart';
+import '../Widgets/bottom_navigation_bar.dart';
 
 class AppRoutes {
   static const String login = 'login';
@@ -23,6 +26,8 @@ class AppRoutes {
   static const String productCategoryScreens = 'ProductCategoryScreens';
   static const String addProductList = 'AddProductList';
   static const String shopsDetails = 'ShopsDetails';
+  static const String homeScreen = 'HomeScreens';
+  static const String subscriptionScreen = 'SubscriptionScreen';
 
   static const String loginPath = '/login';
   static const String otpPath = '/otp';
@@ -34,15 +39,17 @@ class AppRoutes {
   static const String productCategoryScreensPath = '/ProductCategoryScreens';
   static const String addProductListPath = '/AddProductList';
   static const String shopsDetailsPath = '/ShopsDetails';
+  static const String homeScreenPath = '/HomeScreens';
+  static const String subscriptionScreenPath = '/SubscriptionScreen';
 }
 
 final goRouter = GoRouter(
-  initialLocation: AppRoutes.shopsDetailsPath,
+  initialLocation: AppRoutes.loginPath,
   routes: [
     GoRoute(
       path: AppRoutes.loginPath,
       name: AppRoutes.login,
-      builder: (context, state) =>  LoginMobileNumber(),
+      builder: (context, state) => LoginMobileNumber(),
     ),
     GoRoute(
       path: AppRoutes.otpPath,
@@ -61,10 +68,18 @@ final goRouter = GoRouter(
       path: AppRoutes.ownerInfoPath,
       name: AppRoutes.ownerInfo,
       builder: (context, state) {
-        final isCompany = state.extra as bool?;
-        return OwnerInfoScreens(isCompany: isCompany ?? false);
+        final extra = state.extra as Map<String, dynamic>?;
+
+        final isService = (extra?['isService'] as bool?) ?? false;
+        final isIndividual = (extra?['isIndividual'] as bool?) ?? true;
+
+        return OwnerInfoScreens(
+          isService: isService,
+          isIndividual: isIndividual,
+        );
       },
     ),
+
     GoRoute(
       path: AppRoutes.shopCategoryInfoPath,
       name: AppRoutes.shopCategoryInfo,
@@ -110,7 +125,23 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.shopsDetailsPath,
       name: AppRoutes.shopsDetails,
-      builder: (context, state) => const ShopsDetails(),
+      builder: (context, state) => const ShopsDetails(backDisabled: true),
     ),
+    GoRoute(
+      path: AppRoutes.homeScreenPath,
+      name: AppRoutes.homeScreen,
+      builder: (context, state) => CommonBottomNavigation(initialIndex: 0),
+    ),
+    GoRoute(
+      path: AppRoutes.subscriptionScreenPath,
+      name: AppRoutes.subscriptionScreen,
+      builder: (context, state) {
+        final extra = state.extra;
+        final bool showSkip = extra is bool ? extra : false; // ✅ never null
+        return SubscriptionScreen(showSkip: showSkip);
+      },
+    ),
+
+
   ],
 );

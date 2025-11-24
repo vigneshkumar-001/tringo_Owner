@@ -90,4 +90,5 @@ class AppImages {
   static String tickImage = 'Assets/Images/Tick_Image.png';
   static String whatsAppBlack = 'Assets/Images/WhatsApp_Black.png';
   static String loginScreenBottom = 'Assets/Images/Login_Screen_Bottom.png';
+  static String product = 'Assets/Images/Product.png';
 }

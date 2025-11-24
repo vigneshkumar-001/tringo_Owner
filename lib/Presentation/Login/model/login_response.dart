@@ -3,11 +3,7 @@ class LoginResponse {
   final int code;
   final LoginData? data;
 
-  LoginResponse({
-    required this.status,
-    required this.code,
-    this.data,
-  });
+  LoginResponse({required this.status, required this.code, this.data});
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
@@ -18,11 +14,7 @@ class LoginResponse {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'status': status,
-      'code': code,
-      'data': data?.toJson(),
-    };
+    return {'status': status, 'code': code, 'data': data?.toJson()};
   }
 }
 
@@ -30,10 +22,7 @@ class LoginData {
   final String maskedContact;
   final int waitSeconds;
 
-  LoginData({
-    required this.maskedContact,
-    required this.waitSeconds,
-  });
+  LoginData({required this.maskedContact, required this.waitSeconds});
 
   factory LoginData.fromJson(Map<String, dynamic> json) {
     return LoginData(
@@ -43,9 +32,6 @@ class LoginData {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'maskedContact': maskedContact,
-      'waitSeconds': waitSeconds,
-    };
+    return {'maskedContact': maskedContact, 'waitSeconds': waitSeconds};
   }
 }
