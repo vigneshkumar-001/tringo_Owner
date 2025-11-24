@@ -224,6 +224,7 @@ import 'package:tringo_vendor/Presentation/Menu/Screens/menu_screens.dart';
 
 import '../../Presentation/Offer/Screen/offer_screens.dart';
 import '../../Presentation/Offer/Screen/premium_offers.dart';
+import '../Session/registration_product_seivice.dart';
 
 class CommonBottomNavigation extends StatefulWidget {
   final int initialIndex;
@@ -262,28 +263,55 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
   }
 
   // 👉 Build the page on demand so it always sees latest businessType
+  ///new///
   Widget _pageForIndex(int index) {
-    final bt = RegistrationSession.instance.businessType;
+    final regPS = RegistrationProductSeivice.instance;
+    final bool isPremium = regPS.isPremium; // company = premium
 
     switch (index) {
       case 0:
-        // If you have HomeScreens(showUpgradeOnFirstVisit: true) keep that param.
         return const HomeScreens();
       case 1:
         return const EnquiryScreens();
       case 2:
-        // Company => premium; Individual => non-premium
-        return (bt == BusinessType.company)
-            ? PremiumOffers()
-            : const OfferScreens();
+      // 🔹 Company (premium) → PremiumOffers
+      // 🔹 Individual / null (non-premium) → OfferScreens
+        return isPremium
+            ? PremiumOffers()          // PREMIUM (company)
+            : const OfferScreens();    // NON-PREMIUM (individual)
       case 3:
-        return AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0);
+        return AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0,);
       case 4:
-        return const MenuScreens();
+        return const MenuScreens(page : "bottomScreen");
       default:
         return const SizedBox.shrink();
     }
   }
+
+
+  ///old///
+  // Widget _pageForIndex(int index) {
+  //   final bt = RegistrationSession.instance.businessType;
+  //
+  //   switch (index) {
+  //     case 0:
+  //       // If you have HomeScreens(showUpgradeOnFirstVisit: true) keep that param.
+  //       return const HomeScreens();
+  //     case 1:
+  //       return const EnquiryScreens();
+  //     case 2:
+  //       // Company => premium; Individual => non-premium
+  //       return (bt == BusinessType.company)
+  //           ? PremiumOffers()
+  //           : const OfferScreens();
+  //     case 3:
+  //       return AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0);
+  //     case 4:
+  //       return const MenuScreens();
+  //     default:
+  //       return const SizedBox.shrink();
+  //   }
+  // }
 
   void _updateSlideAnimation() {
     _slideAnimation =

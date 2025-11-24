@@ -5,13 +5,15 @@ import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
 
+import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/create_surprise_offers.dart';
 import '../../Offer/Screen/offer_screens.dart';
 
 class MenuScreens extends StatefulWidget {
-  const MenuScreens({super.key});
+  final String? page;
+  const MenuScreens({super.key, this.page});
 
   @override
   State<MenuScreens> createState() => _MenuScreensState();
@@ -56,6 +58,8 @@ class _MenuScreensState extends State<MenuScreens> {
 
   @override
   Widget build(BuildContext context) {
+    final isPremium = RegistrationProductSeivice.instance.isPremium;
+    final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -63,24 +67,38 @@ class _MenuScreensState extends State<MenuScreens> {
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CommonContainer.topLeftArrow(
-                  isMenu: true,
-                  onTap: () => Navigator.pop(context),
-                ),
+                if(widget.page != 'bottomScreen')...[
+                  CommonContainer.topLeftArrow(
+                    isMenu: true,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ] ,
+
                 SizedBox(height: 20),
-                CommonContainer.attractCustomerCard(
-                  title: 'Attract More Customers',
-                  description: 'Unlock premium to attract more customers',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SubscriptionScreen(),
-                      ),
-                    );
-                  },
-                ),
+                if (!isPremium)
+                  CommonContainer.attractCustomerCard(
+                    title: 'Attract More Customers',
+                    description: 'Unlock premium to attract more customers',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SubscriptionScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                if (!isNonPremium)
+                  Text(
+                    'Menu',
+                    style: AppTextStyles.mulish(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 30,
+                      color: AppColor.darkBlue,
+                    ),
+                  ),
                 SizedBox(height: 20),
 
                 for (int i = 0; i < titles.length; i++) ...[

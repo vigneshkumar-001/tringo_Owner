@@ -4,6 +4,7 @@ class ApiUrl {
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
   static const String verifyOtp = "${base}api/v1/auth/verify-otp";
+  static const String whatsAppVerify = "${base}api/v1/auth/check-whatsapp";
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
@@ -39,4 +40,15 @@ class ApiUrl {
   static String shopDetails({required String shopId}) {
     return "${base}api/v1/shops/$shopId";
   }
+  static String serviceInfo({required String shopId}) {
+    //  no slash before api
+    return "${base}api/v1/shops/$shopId/services";
+  }
+  static String serviceList({required String serviceId}) {
+    return "${base}api/v1/services/$serviceId";
+  }
+  static String getAllShop({required String shopId}) {
+    return "${base}api/v1/shops?mine=true&selectedShopId=$shopId";
+  }
+
 }
