@@ -2,11 +2,13 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Controller/product_notifier.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
@@ -14,15 +16,19 @@ import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../Shops Details/Screen/shops_details.dart';
+import '../Service Info/Controller/service_info_notifier.dart';
+import 'add_product_list.dart';
 
 class ProductSearchKeyword extends ConsumerStatefulWidget {
   final bool? isCompany;
-  const ProductSearchKeyword({super.key,  this.isCompany,});
+  const ProductSearchKeyword({super.key, this.isCompany});
   bool get isCompanyResolved =>
-      isCompany ?? (RegistrationSession.instance.businessType == BusinessType.company);
+      isCompany ??
+      (RegistrationSession.instance.businessType == BusinessType.company);
 
   @override
-  ConsumerState<ProductSearchKeyword> createState() => _ProductSearchKeywordState();
+  ConsumerState<ProductSearchKeyword> createState() =>
+      _ProductSearchKeywordState();
 }
 
 class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
@@ -74,7 +80,17 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(productNotifierProvider);
+
+    final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
+    final isService = RegistrationProductSeivice.instance.isServiceBusiness;
     final bool isCompany = widget.isCompanyResolved;
+
+    final serviceState = ref.watch(serviceInfoNotifierProvider);
+    final productState = ref.watch(productNotifierProvider);
+
+    final bool isLoading = isService
+        ? serviceState.isLoading
+        : productState.isLoading;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -87,7 +103,15 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                 child: Row(
                   children: [
                     CommonContainer.topLeftArrow(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddProductList(),
+                          ),
+                        );
+                      },
+                      // onTap: () => Navigator.pop(context),
                     ),
                     SizedBox(width: 50),
                     Text(
@@ -104,7 +128,7 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
 
               CommonContainer.registerTopContainer(
                 image: AppImages.addProduct,
-                text: 'Add Product',
+                text: isService ? 'Add Service' : 'Add Product',
                 imageHeight: 85,
                 gradientColor: AppColor.lavenderMist,
                 value: 0.8,
@@ -123,8 +147,9 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                       title: 'Search Keyword',
                       image: AppImages.iImage,
                       infoMessage:
-                          'Please upload a clear photo of your shop signboard showing the name clearly.',
+                          'Add relevant search keywords customers might use to find your shop.',
                     ),
+
                     SizedBox(height: 10),
 
                     // Typing Field
@@ -287,32 +312,11 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                       ),
 
                     SizedBox(height: 30),
-
-                    // //  Save & Continue
-                    // CommonContainer.button(
-                    //   buttonColor: AppColor.black,
-                    //   onTap: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => ShopsDetails(),
-                    //       ),
-                    //     );
-                    //   },
-                    //   text: Text(
-                    //     'Preview Shop & Product',
-                    //     style: AppTextStyles.mulish(
-                    //       fontSize: 18,
-                    //       fontWeight: FontWeight.w700,
-                    //     ),
-                    //   ),
-                    //   imagePath: AppImages.rightStickArrow,
-                    //   imgHeight: 20,
-                    // ),
-
                     CommonContainer.button(
                       buttonColor: AppColor.black,
                       onTap: () async {
+                        FocusScope.of(context).unfocus();
+                        // --- Basic validation ---
                         if (_keywords.isEmpty) {
                           AppSnackBar.error(
                             context,
@@ -321,43 +325,155 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                           return;
                         }
 
-                        // Call the API with the keywords list
-                        final result = await ref
-                            .read(productNotifierProvider.notifier)
-                            .updateProductSearchWords(keywords: _keywords);
+                        final session = RegistrationProductSeivice.instance;
+                        final isService = session.isServiceBusiness;
+                        final isPremium = session.isPremium;
+                        AppLogger.log.i('isPremium : $isPremium');
+                        bool success = false;
 
-                        // Check state or API response, then navigate
-                        final state = ref.read(productNotifierProvider);
-                        if (result) {
+                        // --- CASE: SERVICE BUSINESS ---
+                        if (isService) {
+                          success = await ref
+                              .read(serviceInfoNotifierProvider.notifier)
+                              .serviceSearchWords(keywords: _keywords);
+                        }
+                        // --- CASE: PRODUCT BUSINESS ---
+                        else {
+                          success = await ref
+                              .read(productNotifierProvider.notifier)
+                              .updateProductSearchWords(keywords: _keywords);
+                        }
+
+                        final productState = ref.read(productNotifierProvider);
+                        final serviceState = ref.read(
+                          serviceInfoNotifierProvider,
+                        );
+
+                        // --- HANDLE RESULT ---
+                        if (success) {
+                          final productSession =
+                              RegistrationProductSeivice.instance;
+                          final regSession = RegistrationSession.instance;
+
+                          // Company + NOT subscribed → go to subscription
+                          if (regSession.isCompanyBusiness &&
+                              productSession.isNonPremium) {
                             context.pushNamed(
-                              AppRoutes.shopsDetails,
-
+                              AppRoutes.subscriptionScreen,
+                              extra: true,
                             );
-                          // Only navigate if API call is successful
-                          //  Navigator.push(
-                          //    context,
-                          //    MaterialPageRoute(
-                          //      builder: (context) => ShopsDetails(),
-                          //    ),
-                          //  );
-                        } else if (state.error != null) {
-                          AppSnackBar.error(context, state.error!);
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ShopsDetails(),
+                              ),
+                            );
+                          }
+                        }
+                        // if (success) {
+                        //   if (isPremium) {
+                        //     context.pushNamed(
+                        //       AppRoutes.subscriptionScreen,
+                        //       extra: true,
+                        //     );
+                        //   }
+                        //   else {
+                        //     Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //         builder: (context) => ShopsDetails(),
+                        //       ),
+                        //     );
+                        //   }
+                        // }
+                        else {
+                          // --- Product error ---
+                          if (!isService && productState.error != null) {
+                            AppSnackBar.error(context, productState.error!);
+                          }
+
+                          // --- Service error ---
+                          if (isService && serviceState.error != null) {
+                            AppSnackBar.error(context, serviceState.error!);
+                          }
                         }
                       },
-                      text: state.isLoading
-                          ? const ThreeDotsLoader()
+                      text: isLoading
+                          ? ThreeDotsLoader()
                           : Text(
-                        'Preview Shop & Product',
-                        style: AppTextStyles.mulish(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      imagePath: state.isLoading
-                          ? null
-                          : AppImages.rightStickArrow,
+                              'Preview Shop & Product',
+                              style: AppTextStyles.mulish(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                      imagePath: isLoading ? null : AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
+
+                    // CommonContainer.button(
+                    //   buttonColor: AppColor.black,
+                    //   onTap: () async {
+                    //     final isService = RegistrationProductSeivice
+                    //         .instance
+                    //         .isServiceBusiness;
+                    //     if (_keywords.isEmpty) {
+                    //       AppSnackBar.error(
+                    //         context,
+                    //         'Please add at least one keyword',
+                    //       );
+                    //       return;
+                    //     }
+                    //     final productSession =
+                    //         RegistrationProductSeivice.instance;
+                    //     final bool isNonPremium = productSession.isNonPremium;
+                    //     final bool isPremium = productSession.isPremium;
+                    //
+                    //     final result = await ref
+                    //         .read(productNotifierProvider.notifier)
+                    //         .updateProductSearchWords(keywords: _keywords);
+                    //     final serviceNotifier = ref.read(
+                    //       serviceInfoNotifierProvider.notifier,
+                    //     );
+                    //     if (isService) {
+                    //       await serviceNotifier.serviceSearchWords(
+                    //         keywords: _keywords,
+                    //       );
+                    //     }
+                    //     final state = ref.read(productNotifierProvider);
+                    //     if (result) {
+                    //       if (isPremium) {
+                    //         context.pushNamed(
+                    //           AppRoutes.subscriptionScreen,
+                    //           extra: true,
+                    //         );
+                    //       } else {
+                    //         Navigator.push(
+                    //           context,
+                    //           MaterialPageRoute(
+                    //             builder: (context) => ShopsDetails(),
+                    //           ),
+                    //         );
+                    //       }
+                    //     } else if (state.error != null) {
+                    //       AppSnackBar.error(context, state.error!);
+                    //     }
+                    //   },
+                    //   text: state.isLoading
+                    //       ? ThreeDotsLoader()
+                    //       : Text(
+                    //           'Preview Shop & Product',
+                    //           style: AppTextStyles.mulish(
+                    //             fontSize: 18,
+                    //             fontWeight: FontWeight.w700,
+                    //           ),
+                    //         ),
+                    //   imagePath: state.isLoading
+                    //       ? null
+                    //       : AppImages.rightStickArrow,
+                    //   imgHeight: 20,
+                    // ),
                     SizedBox(height: 36),
                   ],
                 ),

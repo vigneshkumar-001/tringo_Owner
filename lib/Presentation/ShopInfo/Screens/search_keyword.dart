@@ -116,8 +116,9 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                       title: 'Search Keyword',
                       image: AppImages.iImage,
                       infoMessage:
-                          'Please upload a clear photo of your shop signboard showing the name clearly.',
+                          'Add relevant keywords so customers can easily find your shop in search results.',
                     ),
+
                     SizedBox(height: 10),
 
                     // Typing Field
@@ -313,43 +314,42 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                           return;
                         }
 
-                        // Call the API with the keywords list
-                        final result = await ref
-                            .read(shopCategoryNotifierProvider.notifier)
-                            .searchKeywords(keywords: _keywords);
-
-                        // Check state or API response, then navigate
+                        final notifier = ref.read(shopCategoryNotifierProvider.notifier);
                         final state = ref.read(shopCategoryNotifierProvider);
-                        if (result) {
-                          context.pushNamed(
-                            AppRoutes.productCategoryScreens,
-                            extra: 'SearchKeyword',
-                          );
-                          // Only navigate if API call is successful
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => ProductCategoryScreens(),
-                          //   ),
-                          // );
-                        } else if (state.error != null) {
-                          AppSnackBar.error(context, state.error!);
+
+                        // Call the API
+                        final success = await notifier.searchKeywords(keywords: _keywords);
+
+                        if (success) {
+                          // Show success message
+                          AppSnackBar.success(context, 'Keywords saved successfully!');
+
+                          // Navigate after short delay so user sees the message
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            context.pushNamed(
+                              AppRoutes.productCategoryScreens,
+                              extra: 'SearchKeyword',
+                            );
+                          });
+                        } else {
+                          // Show error from state if available
+                          final errorMsg = state.error ?? 'Failed to save keywords. Try again.';
+                          AppSnackBar.error(context, errorMsg);
                         }
                       },
                       text: state.isLoading
                           ? const ThreeDotsLoader()
                           : Text(
-                              'Save & Continue',
-                              style: AppTextStyles.mulish(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                      imagePath: state.isLoading
-                          ? null
-                          : AppImages.rightStickArrow,
+                        'Save & Continue',
+                        style: AppTextStyles.mulish(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      imagePath: state.isLoading ? null : AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
+
 
                     SizedBox(height: 36),
                   ],

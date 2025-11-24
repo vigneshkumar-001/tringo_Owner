@@ -27,6 +27,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? pages;
   final String? initialShopNameEnglish;
   final String? initialShopNameTamil;
+  final String? shopId;
   final bool? isService;
   final bool? isIndividual;
   const ShopCategoryInfo({
@@ -34,6 +35,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.pages,
     this.initialShopNameEnglish,
     this.initialShopNameTamil,
+    this.shopId,
     required this.isService,
     required this.isIndividual,
   });
@@ -71,7 +73,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       TextEditingController();
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
-  final List<String> doorDelivery = ['true', 'false'];
+  final List<String> doorDelivery = ['Yes', 'No'];
 
   List<String> tamilNameSuggestion = [];
   List<String> descriptionTamilSuggestion = [];
@@ -87,11 +89,18 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   bool _timetableInvalid = false;
   bool _isFetchingGps = false;
 
+  // 🔹 Extra validation error texts
+  String? _categoryErrorText;
+  String? _subCategoryErrorText;
+  String? _timeErrorText;
+  String? _imageErrorText;
+  String? _gpsErrorText;
+
   void _showCategoryBottomSheet(
-      BuildContext context,
-      TextEditingController controller, {
-        void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-      }) {
+    BuildContext context,
+    TextEditingController controller, {
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -121,7 +130,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   minChildSize: 0.4,
                   maxChildSize: 0.95,
                   builder: (context, scrollController) {
-
                     if (!isLoading && categories.isEmpty) {
                       return const Center(
                         child: Padding(
@@ -137,10 +145,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       );
                     }
 
-                    // 🔹 Normal UI: header + search + loader/list
+                    //  Normal UI: header + search + loader/list
                     return Column(
                       children: [
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
                           child: SizedBox(
                             width: 40,
@@ -155,7 +163,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ),
                           ),
                         ),
-                        const Text(
+                        Text(
                           'Select Category',
                           style: TextStyle(
                             fontSize: 18,
@@ -176,10 +184,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               setModalState(() {
                                 filtered = categories
                                     .where(
-                                      (c) => c.name
-                                      .toLowerCase()
-                                      .contains(value.toLowerCase()),
-                                )
+                                      (c) => c.name.toLowerCase().contains(
+                                        value.toLowerCase(),
+                                      ),
+                                    )
                                     .toList();
                               });
                             },
@@ -203,49 +211,54 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           ),
                         ),
 
-
                         Expanded(
                           child: isLoading
-                              ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(20),
-                              child: ThreeDotsLoader(),
-                            ),
-                          )
-                              : ListView.builder(
-                            controller: scrollController,
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final category = filtered[index];
-                              return ListTile(
-                                title: Text(category.name),
-                                trailing: category.children.isNotEmpty
-                                    ? const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 14,
+                              ? Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: ThreeDotsLoader(
+                                      dotColor: AppColor.darkBlue,
+                                    ),
+                                  ),
                                 )
-                                    : null,
-                                onTap: () {
-                                  Navigator.pop(context);
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, index) {
+                                    final category = filtered[index];
+                                    return ListTile(
+                                      title: Text(category.name),
+                                      trailing: category.children.isNotEmpty
+                                          ? const Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 14,
+                                            )
+                                          : null,
+                                      onTap: () {
+                                        Navigator.pop(context);
 
-                                  setState(() {
-                                    controller.text = category.name;
-                                    categorySlug = category.slug;
-                                  });
+                                        setState(() {
+                                          controller.text = category.name;
+                                          categorySlug = category.slug;
+                                          _categoryErrorText = null;
+                                          _selectedCategoryChildren =
+                                              category.children;
+                                          _subCategoryController.clear();
+                                          _subCategoryErrorText = null;
+                                        });
 
-                                  if (onCategorySelected != null) {
-                                    onCategorySelected(category);
-                                  }
-                                },
-                              );
-                            },
-                          ),
+                                        if (onCategorySelected != null) {
+                                          onCategorySelected(category);
+                                        }
+                                      },
+                                    );
+                                  },
+                                ),
                         ),
                       ],
                     );
                   },
                 );
-
               },
             );
           },
@@ -253,7 +266,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       },
     );
   }
-
 
   void _showCategoryChildrenBottomSheet(
     BuildContext context,
@@ -365,6 +377,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     setState(() {
                                       controller.text = child.name;
                                       subCategorySlug = child.slug;
+                                      _subCategoryErrorText = null;
                                     });
                                   },
                                 );
@@ -390,7 +403,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     if (pickedFile != null) {
       setState(() {
         _permanentImage = pickedFile;
-        _timetableInvalid = false; // if you use this as error flag
+        _timetableInvalid = false;
+        _imageErrorText = null;
       });
     }
   }
@@ -444,6 +458,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
         _gpsFetched = true; // Mark GPS as fetched
       });
 
+      if (_isSubmitted) {
+        _formKey.currentState?.validate();
+      }
+
       debugPrint('📍 Current Location → ${_gpsController.text}');
     } catch (e) {
       debugPrint('❌ Error getting location: $e');
@@ -456,6 +474,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   @override
   void initState() {
     super.initState();
+    AppLogger.log.i(widget.shopId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
     });
@@ -464,7 +483,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
         _shopNameEnglishController.text = widget.initialShopNameEnglish!;
       }
 
-      // If Tamil was passed explicitly, use it; else transliterate once
       if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
         tamilNameController.text = widget.initialShopNameTamil!;
         _tamilPrefilled = true;
@@ -494,17 +512,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     }
   }
 
-  // Future<void> _prefillTamilFromEnglish(String english) async {
-  //   try {
-  //     final result = await TanglishTamilHelper.transliterate(english);
-  //     if (mounted && result.isNotEmpty) {
-  //       setState(() {
-  //         tamilNameController.text = result.first; // take the first suggestion
-  //       });
-  //     }
-  //   } catch (_) {}
-  // }
-
   @override
   void dispose() {
     _shopNameEnglishController.dispose();
@@ -515,12 +522,79 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     addressTamilNameController.dispose();
     descriptionTamilController.dispose();
     _gpsController.dispose();
+    _openTimeController.dispose();
+    _closeTimeController.dispose();
+    _descriptionEnglishController.dispose();
+    _addressEnglishController.dispose();
+    _primaryMobileController.dispose();
+    _whatsappController.dispose();
+    _emailController.dispose();
+    _subCategoryController.dispose();
     super.dispose();
+  }
+
+  // 🔹 Central validation function
+  bool _validateAll() {
+    setState(() {
+      _isSubmitted = true;
+      _categoryErrorText = null;
+      _subCategoryErrorText = null;
+      _timeErrorText = null;
+      _imageErrorText = null;
+      _timetableInvalid = false;
+      _gpsErrorText = null;
+    });
+
+    final baseValid = _formKey.currentState?.validate() ?? false;
+    bool extraValid = true;
+
+    // Category
+    if (_categoryController.text.trim().isEmpty) {
+      _categoryErrorText = 'Please select a category';
+      extraValid = false;
+    }
+
+    // Subcategory
+    if (_subCategoryController.text.trim().isEmpty) {
+      _subCategoryErrorText = 'Please select a subcategory';
+      extraValid = false;
+    }
+
+    // Time order
+    if (_openTod != null && _closeTod != null && !validateTimes()) {
+      _timeErrorText = 'Close Time must be after Open Time';
+      extraValid = false;
+    }
+
+    // Image validation for service
+    if (widget.isService == true && _permanentImage == null) {
+      _imageErrorText = 'Please add your Photo';
+      _timetableInvalid = true;
+      extraValid = false;
+    }
+
+    if (widget.isService != true) {
+      if (_gpsController.text.trim().isEmpty) {
+        _gpsErrorText = 'Please get GPS location';
+        extraValid = false;
+      }
+    }
+
+    final allGood = baseValid && extraValid;
+
+    if (!allGood) {
+      AppSnackBar.error(context, 'Please fill all required fields correctly');
+    }
+
+    setState(() {});
+    return allGood;
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopCategoryNotifierProvider);
+    final bool isServiceFlow = widget.isService ?? false;
+    final bool isIndividualFlow = widget.isIndividual ?? true;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -539,7 +613,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       CommonContainer.topLeftArrow(
                         onTap: () => Navigator.pop(context),
                       ),
-                      SizedBox(width: 50),
+                      const SizedBox(width: 50),
                       Text(
                         'Register Shop - Individual',
                         style: AppTextStyles.mulish(
@@ -550,7 +624,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                     ],
                   ),
                 ),
-                SizedBox(height: 35),
+                const SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.shopInfoImage,
                   text: 'Shop Info',
@@ -559,7 +633,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   value: 0.3,
                 ),
 
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
@@ -569,11 +643,13 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         'Shop Category',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
                           // 1️⃣ Start API call – this will set isLoading = true
-                          ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
+                          ref
+                              .read(shopCategoryNotifierProvider.notifier)
+                              .fetchCategories();
 
                           // 2️⃣ Open bottom sheet immediately
                           _showCategoryBottomSheet(
@@ -581,8 +657,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             _categoryController,
                             onCategorySelected: (selectedCategory) {
                               setState(() {
-                                _selectedCategoryChildren = selectedCategory.children;
+                                _selectedCategoryChildren =
+                                    selectedCategory.children;
                                 _subCategoryController.clear();
+                                _categoryErrorText = null;
+                                _subCategoryErrorText = null;
                               });
                             },
                           );
@@ -619,16 +698,29 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           ),
                         ),
                       ),
+                      if (_categoryErrorText != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0, left: 4),
+                          child: Text(
+                            _categoryErrorText!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
 
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
                       GestureDetector(
                         onTap: () {
-                          if (_categoryController.text.isEmpty) {
+                          if (_categoryController.text.isEmpty ||
+                              _selectedCategoryChildren == null) {
                             AppSnackBar.info(
                               context,
                               'Please select a category first',
                             );
+                            return;
                           }
                           _showCategoryChildrenBottomSheet(
                             context,
@@ -671,8 +763,19 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           ),
                         ),
                       ),
+                      if (_subCategoryErrorText != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0, left: 4),
+                          child: Text(
+                            _subCategoryErrorText!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
 
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Row(
                         children: [
                           Text(
@@ -681,7 +784,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               color: AppColor.mildBlack,
                             ),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           Text(
                             '( As per Govt Certificate )',
                             style: AppTextStyles.mulish(
@@ -690,7 +793,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _shopNameEnglishController,
                         text: 'English',
@@ -698,7 +801,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Shop Name in English'
                             : null,
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       CommonContainer.fillingContainer(
                         controller: tamilNameController,
                         text: 'Tamil',
@@ -724,7 +827,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-
                       if (isTamilNameLoading)
                         const Padding(
                           padding: EdgeInsets.all(8.0),
@@ -756,18 +858,16 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     },
                                   );
                                 },
-                                // onTap:
-                                //     () => _onSuggestionSelected(suggestion),
                               );
                             },
                           ),
                         ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Describe Shop',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _descriptionEnglishController,
                         maxLine: 4,
@@ -776,7 +876,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Describe in English'
                             : null,
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       CommonContainer.fillingContainer(
                         onChanged: (value) async {
                           setState(() => isDescriptionTamilLoading = true);
@@ -830,18 +930,16 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     },
                                   );
                                 },
-                                // onTap:
-                                //     () => _onSuggestionSelected(suggestion),
                               );
                             },
                           ),
                         ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Address',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _addressEnglishController,
                         maxLine: 4,
@@ -850,7 +948,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Address in English'
                             : null,
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       CommonContainer.fillingContainer(
                         onChanged: (value) async {
                           setState(() => isAddressLoading = true);
@@ -903,18 +1001,16 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     },
                                   );
                                 },
-                                // onTap:
-                                //     () => _onSuggestionSelected(suggestion),
                               );
                             },
                           ),
                         ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'GPS Location',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
                       GestureDetector(
                         onTap: () async {
@@ -927,9 +1023,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         child: AbsorbPointer(
                           child: CommonContainer.fillingContainer(
                             controller: _gpsController,
-                            text: _isFetchingGps
-                                ? '' // hide text while loader shows
-                                : 'Get by GPS',
+                            text: _isFetchingGps ? '' : 'Get by GPS',
                             textColor: _gpsController.text.isEmpty
                                 ? AppColor.skyBlue
                                 : AppColor.mildBlack,
@@ -944,41 +1038,39 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     ),
                                   )
                                 : null,
-                            validator: (value) {
-                              if (!_isSubmitted) return null;
-                              return _gpsFetched
-                                  ? null
-                                  : 'Please get GPS location';
-                            },
+                            validator: (_) => null,
+                            // validator: (value) {
+                            //   if (!_isSubmitted) return null;
+                            //
+                            //   // 🔹 Service business → NO GPS validation
+                            //   if (widget.isService == true) {
+                            //     return null;
+                            //   }
+                            //
+                            //   // 🔹 Product business → GPS required (only based on value)
+                            //   if (value == null || value.trim().isEmpty) {
+                            //     return 'Please get GPS location';
+                            //   }
+                            //
+                            //   return null;
+                            // },
                           ),
                         ),
                       ),
-
-                      // GestureDetector(
-                      //   onTap: _getCurrentLocation,
-                      //   child: AbsorbPointer(
-                      //     child: CommonContainer.fillingContainer(
-                      //       controller: _gpsController,
-                      //       text: 'Get by GPS',
-                      //       textColor: _gpsController.text.isEmpty
-                      //           ? AppColor.skyBlue
-                      //           : AppColor.mildBlack,
-                      //       textFontWeight: FontWeight.w700,
-                      //       validator: (value) {
-                      //         if (!_isSubmitted) return null;
-                      //         return _gpsFetched
-                      //             ? null
-                      //             : 'Please get GPS location';
-                      //       },
+                      // if (_gpsErrorText != null)
+                      //   Padding(
+                      //     padding: const EdgeInsets.only(top: 6.0, left: 4),
+                      //     child: Text(
+                      //       _gpsErrorText!,
+                      //       style: TextStyle(color: Colors.red, fontSize: 12),
                       //     ),
                       //   ),
-                      // ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Primary Mobile Number',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _primaryMobileController,
                         verticalDivider: true,
@@ -988,12 +1080,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Primary Mobile Number'
                             : null,
                       ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Whatsapp Number',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _whatsappController,
                         verticalDivider: true,
@@ -1003,12 +1095,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Whatsapp Number'
                             : null,
                       ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Open Time',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _openTimeController,
                         text: '',
@@ -1022,21 +1114,19 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           );
                           if (picked != null) {
                             _openTimeController.text = picked.format(context);
-                            setState(
-                              () => _openTod = picked,
-                            ); // if you keep a TimeOfDay for validation
+                            setState(() => _openTod = picked);
                           }
                         },
                         validator: (v) => (v == null || v.isEmpty)
                             ? 'Please select Open Time'
                             : null,
                       ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Close Time',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _closeTimeController,
                         text: '',
@@ -1057,22 +1147,42 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please select Close Time'
                             : null,
                       ),
+                      if (_timeErrorText != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0, left: 4),
+                          child: Text(
+                            _timeErrorText!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
 
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       Text(
                         'Email Id',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        keyboardType: TextInputType.emailAddress,
                         controller: _emailController,
                         verticalDivider: true,
                         text: 'Email Id',
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Email Id'
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Email required';
+                          }
+                          if (!RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                          ).hasMatch(v)) {
+                            return 'Enter valid email';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       if (!(widget.isService ?? false)) ...[
                         // Selling Product: show Door Delivery
                         Text(
@@ -1081,7 +1191,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             color: AppColor.mildBlack,
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         CommonContainer.fillingContainer(
                           imagePath: AppImages.downArrow,
                           verticalDivider: false,
@@ -1096,26 +1206,28 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ] else ...[
                         // Service: show image picker container
                         Text(
-                          'Upload Image',
+                          'Add Your Photo',
                           style: AppTextStyles.mulish(
                             color: AppColor.mildBlack,
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         GestureDetector(
                           onTap: _pickImage,
                           child: DottedBorder(
                             borderType: BorderType.RRect,
-                            radius: Radius.circular(20),
+                            radius: const Radius.circular(20),
                             color: _timetableInvalid
                                 ? Colors.red
                                 : AppColor.mediumLightGray,
                             strokeWidth: 1.5,
-                            dashPattern: [6, 2],
-                            padding: EdgeInsets.all(1),
+                            dashPattern: const [6, 2],
+                            padding: const EdgeInsets.all(1),
                             child: Container(
                               height: 160,
-                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColor.white3,
                                 borderRadius: BorderRadius.circular(20),
@@ -1129,7 +1241,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                             AppImages.uploadImage,
                                             height: 30,
                                           ),
-                                          SizedBox(width: 10),
+                                          const SizedBox(width: 10),
                                           Text(
                                             'Upload',
                                             style: AppTextStyles.mulish(
@@ -1151,16 +1263,18 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                             child: Image.file(
                                               File(_permanentImage!.path),
                                               height: 140,
-                                              fit: BoxFit
-                                                  .cover, // fills available width safely
+                                              fit: BoxFit.cover,
                                             ),
                                           ),
                                         ),
-                                        SizedBox(width: 8),
+                                        const SizedBox(width: 8),
                                         InkWell(
                                           onTap: () {
                                             setState(() {
                                               _permanentImage = null;
+                                              _imageErrorText =
+                                                  'Please Add Your Photo';
+                                              _timetableInvalid = true;
                                             });
                                           },
                                           child: Padding(
@@ -1194,50 +1308,30 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ),
                           ),
                         ),
-                        // GestureDetector(
-                        //   onTap: _pickImage,
-                        //   child: Container(
-                        //     height: 150,
-                        //     width: double.infinity,
-                        //     decoration: BoxDecoration(
-                        //       color: AppColor.lightGray,
-                        //       borderRadius: BorderRadius.circular(12),
-                        //       border: Border.all(color: Colors.grey),
-                        //     ),
-                        //     child: _selectedImage != null
-                        //         ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                        //         : Icon(
-                        //             Icons.camera_alt,
-                        //             size: 50,
-                        //             color: Colors.grey,
-                        //           ),
-                        //   ),
-                        // ),
+                        if (_imageErrorText != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6.0, left: 4.0),
+                            child: Text(
+                              _imageErrorText!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                       ],
 
-                      // Text(
-                      //   'Door Delivery',
-                      //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
-                      // ),
-                      // SizedBox(height: 10),
-                      // CommonContainer.fillingContainer(
-                      //   imagePath: AppImages.downArrow,
-                      //   verticalDivider: false,
-                      //   controller: _genderController,
-                      //   isDropdown: true,
-                      //   dropdownItems: cities,
-                      //   context: context,
-                      //   validator: (value) => value == null || value.isEmpty
-                      //       ? 'Please select a Door Delivery'
-                      //       : null,
-                      // ),
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
                         onTap: () async {
+                          FocusScope.of(context).unfocus();
+
+                          if (!_validateAll()) {
+                            return;
+                          }
+
                           if (widget.pages == "AboutMeScreens") {
-                            // If coming from AboutMeScreens, treat this as an update flow
-                            // Example: gather updated data to return
                             final updatedData = {
                               'category': _categoryController.text,
                               'city': _cityController.text,
@@ -1246,16 +1340,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                             Navigator.pop(context, updatedData);
                           } else {
-                            // AppLogger.log.i( _addressEnglishController.text);
-                            // AppLogger.log.i( addressTamilNameController.text);
-                            // AppLogger.log.i( _whatsappController.text);
-                            // AppLogger.log.i( _categoryController.text);
-                            // AppLogger.log.i( _emailController.text);
-                            // AppLogger.log.i( _descriptionEnglishController.text);
-                            // AppLogger.log.i( descriptionTamilController.text);
-                            // AppLogger.log.i( _primaryMobileController.text);
-                            // AppLogger.log.i( _subCategoryController.text);
                             AppLogger.log.i(_gpsController.text);
+                            final bool isServiceFlow =
+                                widget.isService ?? false;
+                            final String type = isServiceFlow
+                                ? 'service'
+                                : 'product';
                             final gpsText = _gpsController.text.trim();
                             double latitude = 0.0;
                             double longitude = 0.0;
@@ -1268,9 +1358,35 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                   double.tryParse(parts[1].trim()) ?? 0.0;
                             }
 
+                            bool doorDelivery = false;
+                            if (!isServiceFlow) {
+                              final value = _doorDeliveryController.text
+                                  .trim()
+                                  .toLowerCase();
+                              doorDelivery = value == 'yes';
+                            }
+                            // final String ownerImageUrl = isServiceFlow
+                            //     ? (_permanentImage?.path ?? '')
+                            //     : '';
+                            final File? ownerFile = _permanentImage == null
+                                ? null
+                                : File(_permanentImage!.path);
+
+                            if (ownerFile == null) {
+                              AppSnackBar.error(
+                                context,
+                                "Please capture the image",
+                              );
+                              return;
+                            }
+
                             final response = await ref
                                 .read(shopCategoryNotifierProvider.notifier)
                                 .shopCategoryInfo(
+                                  shopId: widget.shopId,
+                                  ownerImageFile: ownerFile,
+                                  type: type,
+
                                   addressEn: _addressEnglishController.text
                                       .trim(),
                                   addressTa: addressTamilNameController.text
@@ -1284,7 +1400,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                       .trim(),
                                   descriptionTa: descriptionTamilController.text
                                       .trim(),
-                                  doorDelivery: true,
+                                  doorDelivery: doorDelivery,
                                   englishName: _shopNameEnglishController.text
                                       .trim(),
                                   gpsLatitude: latitude,
@@ -1304,8 +1420,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               AppSnackBar.error(
                                 context,
                                 newState.error!,
-                              ); // ✅ show API error
+                              ); //  show API error
                             } else if (response != null) {
+                              AppSnackBar.success(
+                                context,
+                                'Shop category details saved successfully',
+                              );
                               context.pushNamed(
                                 AppRoutes.shopPhotoInfo,
                                 extra: 'shopCategory',
@@ -1319,7 +1439,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
                         },
                         text: state.isLoading
-                            ? const ThreeDotsLoader()
+                            ? ThreeDotsLoader()
                             : Text(
                                 widget.pages == "AboutMeScreens"
                                     ? 'Update'
@@ -1333,7 +1453,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? null
                             : AppImages.rightStickArrow,
                       ),
-                      SizedBox(height: 36),
+                      const SizedBox(height: 36),
                     ],
                   ),
                 ),

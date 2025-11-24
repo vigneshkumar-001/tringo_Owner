@@ -5,6 +5,7 @@ import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
 import '../model/login_response.dart';
 import '../model/otp_response.dart';
+import '../model/whatsapp_response.dart';
 
 /// --- STATE ---
 class LoginState {
@@ -12,12 +13,14 @@ class LoginState {
   final LoginResponse? loginResponse;
   final OtpResponse? otpResponse;
   final String? error;
+  final WhatsappResponse? whatsappResponse;
 
   const LoginState({
     this.isLoading = false,
     this.loginResponse,
     this.otpResponse,
     this.error,
+    this.whatsappResponse,
   });
 
   factory LoginState.initial() => const LoginState();
@@ -27,17 +30,17 @@ class LoginState {
     LoginResponse? loginResponse,
     OtpResponse? otpResponse,
     String? error,
+    WhatsappResponse? whatsappResponse,
   }) {
     return LoginState(
       isLoading: isLoading ?? this.isLoading,
       loginResponse: loginResponse ?? this.loginResponse,
       otpResponse: otpResponse ?? this.otpResponse,
       error: error,
+      whatsappResponse: whatsappResponse ?? this.whatsappResponse,
     );
   }
 }
-
-
 
 class LoginNotifier extends Notifier<LoginState> {
   late final ApiDataSource api;
@@ -64,17 +67,15 @@ class LoginNotifier extends Notifier<LoginState> {
       },
     );
   }
-  Future<void> verifyOtp({
-    required String contact,
-    required String otp,
-  }) async {
+
+  Future<void> verifyOtp({required String contact, required String otp}) async {
     state = const LoginState(isLoading: true);
 
     final result = await api.otp(contact: contact, otp: otp);
 
     result.fold(
-          (failure) => state = LoginState(isLoading: false, error: failure.message),
-          (OtpResponse response) async {
+      (failure) => state = LoginState(isLoading: false, error: failure.message),
+      (OtpResponse response) async {
         final data = response.data;
 
         final prefs = await SharedPreferences.getInstance();
@@ -84,13 +85,13 @@ class LoginNotifier extends Notifier<LoginState> {
         await prefs.setString('sessionToken', data?.sessionToken ?? '');
         await prefs.setString('role', data?.role ?? '');
 
-        // ✅ Print what was actually stored
+        //  Print what was actually stored
         final accessToken = prefs.getString('token');
         final refreshToken = prefs.getString('refreshToken');
         final sessionToken = prefs.getString('sessionToken');
         final role = prefs.getString('role');
 
-        AppLogger.log.i('✅ SharedPreferences stored successfully:');
+        AppLogger.log.i(' SharedPreferences stored successfully:');
         AppLogger.log.i('token → $accessToken');
         AppLogger.log.i('refreshToken → $refreshToken');
         AppLogger.log.i('sessionToken → $sessionToken');
@@ -101,6 +102,32 @@ class LoginNotifier extends Notifier<LoginState> {
     );
   }
 
+  Future<void> verifyWhatsappNumber({
+    required String contact,
+    required String purpose,
+  }) async {
+    state = LoginState(isLoading: true); // start loader
+
+    try {
+      final result = await api.whatsAppNumberVerify(
+        contact: contact,
+        purpose: purpose,
+      );
+
+      result.fold(
+        (failure) {
+          // API failed
+          state = LoginState(isLoading: false, error: failure.message);
+        },
+        (response) {
+          // API success
+          state = LoginState(isLoading: false, whatsappResponse: response);
+        },
+      );
+    } catch (e) {
+      state = LoginState(isLoading: false, error: e.toString());
+    }
+  }
 }
 
 /// --- PROVIDERS ---

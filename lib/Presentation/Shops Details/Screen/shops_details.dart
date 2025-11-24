@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/Shops%20Details/controller/shop_details_notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../../AddProduct/Screens/product_search_keyword.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 
 import 'package:tringo_vendor/Core/Session/registration_session.dart';
 
 class ShopsDetails extends ConsumerStatefulWidget {
-  const ShopsDetails({super.key});
+  final bool backDisabled;
+  const ShopsDetails({super.key, this.backDisabled = false});
 
   @override
   ConsumerState<ShopsDetails> createState() => _ShopsDetailsState();
@@ -152,12 +157,17 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
         'ஸ்ரீ கிருஷ்ணா ஸ்வீட்ஸ் பிரைவேட் லிமிடெட்';
     const String shopDisplayName = 'Sri Krishna Sweets Private Limited';
 
+    final productSession = RegistrationProductSeivice.instance;
+    final bool isPremium = productSession.isPremium;
+    final bool isNonPremium = productSession.isNonPremium;
+
     final bool isCompany =
         RegistrationSession.instance.businessType == BusinessType.company;
     final bool isIndividual =
         RegistrationSession.instance.businessType == BusinessType.individual;
-
-    final bool showAddBranch = isCompany;
+    final isService = RegistrationProductSeivice.instance.isServiceBusiness;
+    //  Only premium company can add branches
+    final bool showAddBranch = isPremium && isCompany;
 
     return Skeletonizer(
       enabled: state.isLoading,
@@ -186,8 +196,40 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                         child: Row(
                           children: [
                             CommonContainer.topLeftArrow(
-                              onTap: () => Navigator.pop(context),
+                              onTap: () {
+                                if (widget.backDisabled) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'You cannot go back from this screen.',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (Navigator.of(context).canPop()) {
+                                  Navigator.of(context).pop();
+                                } else {
+                                  context.goNamed(
+                                    AppRoutes.homeScreen,
+                                    extra: 2,
+                                  );
+                                }
+                              },
                             ),
+
+                            // CommonContainer.topLeftArrow(
+                            //   // onTap: () {
+                            //   //   Navigator.push(
+                            //   //     context,
+                            //   //     MaterialPageRoute(
+                            //   //       builder: (context) =>
+                            //   //           ProductSearchKeyword(isCompany: true),
+                            //   //     ),
+                            //   //   );
+                            //   // },
+                            //   onTap: () => Navigator.pop(context),
+                            // ),
                             const Spacer(),
                             CommonContainer.gradientContainer(
                               text: shop?.category.toString() ?? '',
@@ -205,14 +247,14 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Row(
                               children: [
-                                CommonContainer.doorDelivery(
-                                  text: (shop?.shopDoorDelivery ?? false)
-                                      ? 'Door Delivery'
-                                      : '',
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w900,
-                                  textColor: AppColor.skyBlue,
-                                ),
+                                shop?.shopDoorDelivery == true
+                                    ? CommonContainer.doorDelivery(
+                                        text: 'Door Delivery',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w900,
+                                        textColor: AppColor.skyBlue,
+                                      )
+                                    : SizedBox.shrink(),
                               ],
                             ),
                           ),
@@ -480,132 +522,315 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                               ),
                             ),
 
-                          const SizedBox(height: 15),
+                          SizedBox(height: 15),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: 40),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      // ListView.builder(
+                      //   shrinkWrap: true,
+                      //   physics: const NeverScrollableScrollPhysics(),
+                      //   itemCount: shop?.products.length ?? 0,
+                      //   itemBuilder: (context, index) {
+                      //     final data = shop?.products[index];
+                      //     final media =
+                      //         data?.media; // media list for this product
+                      //
+                      //     // Safely pick an image URL
+                      //     final imageUrl = (media != null && media.isNotEmpty)
+                      //         ? (media.first.url ?? '') // media[0]
+                      //         : '';
+                      //
+                      //     return Padding(
+                      //       padding: const EdgeInsets.only(right: 10),
+                      //       child: CommonContainer.foodList(
+                      //         fontSize: 14,
+                      //         doorDelivery: data?.doorDelivery ?? false,
+                      //         titleWeight: FontWeight.w700,
+                      //         onTap: () {},
+                      //         imageWidth: 130,
+                      //         image: imageUrl, // 👈 use safe image url
+                      //         foodName: data?.englishName.toString() ?? '',
+                      //         ratingStar: data?.rating.toString() ?? '',
+                      //         ratingCount: data?.ratingCount.toString() ?? '',
+                      //         offAmound: '₹${data?.price.toString() ?? ''}',
+                      //         oldAmound: '₹110',
+                      //         km: '',
+                      //         location: '',
+                      //         Verify: false,
+                      //         locations: false,
+                      //         weight: false,
+                      //         horizontalDivider: false,
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Image.asset(
-                            AppImages.fireImage,
-                            height: 35,
-                            color: AppColor.darkBlue,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Offer Products',
-                            style: AppTextStyles.mulish(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
-                              color: AppColor.darkBlue,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 16),
-
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: shop?.products.length ?? 0,
-                        itemBuilder: (context, index) {
-                          final data = shop?.products[index];
-                          final media =
-                              data?.media; // media list for this product
-
-                          // Safely pick an image URL
-                          final imageUrl = (media != null && media.isNotEmpty)
-                              ? (media.first.url ?? '') // media[0]
-                              : '';
-
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: CommonContainer.foodList(
-                              fontSize: 14,
-                              doorDelivery: data?.doorDelivery ?? false,
-                              titleWeight: FontWeight.w700,
-                              onTap: () {},
-                              imageWidth: 130,
-                              image: imageUrl, // 👈 use safe image url
-                              foodName: data?.englishName.toString() ?? '',
-                              ratingStar: data?.rating.toString() ?? '',
-                              ratingCount: data?.ratingCount.toString() ?? '',
-                              offAmound: '₹${data?.price.toString() ?? ''}',
-                              oldAmound: '₹110',
-                              km: '',
-                              location: '',
-                              Verify: false,
-                              locations: false,
-                              weight: false,
-                              horizontalDivider: false,
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 10),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ProductCategoryScreens(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColor.lightGray,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 22.5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                AppImages.addListImage,
-                                height: 22,
-                                color: AppColor.darkBlue,
-                              ),
-                              const SizedBox(width: 9),
-                              Text(
-                                'Add Product',
-                                style: AppTextStyles.mulish(
+                          // ------------------- PRODUCTS SECTION -------------------
+                          if ((shop?.products ?? []).isNotEmpty) ...[
+                            Row(
+                              children: [
+                                Image.asset(
+                                  AppImages.fireImage,
+                                  height: 35,
                                   color: AppColor.darkBlue,
                                 ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Offer Products',
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 22,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: shop!.products.length,
+                              itemBuilder: (context, index) {
+                                final data = shop.products[index];
+
+                                // Safe image
+                                final imageUrl = (data.media.isNotEmpty)
+                                    ? (data.media.first.url ?? '')
+                                    : '';
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: CommonContainer.foodList(
+                                    fontSize: 14,
+                                    doorDelivery: data.doorDelivery ?? false,
+                                    titleWeight: FontWeight.w700,
+                                    onTap: () {},
+                                    imageWidth: 130,
+                                    image: imageUrl,
+                                    foodName: data.englishName ?? '',
+                                    ratingStar: data.rating?.toString() ?? '0',
+                                    ratingCount:
+                                        data.ratingCount?.toString() ?? '0',
+                                    offAmound: '₹${data.price ?? 0}',
+                                    oldAmound: '₹110',
+                                    km: '',
+                                    location: '',
+                                    Verify: false,
+                                    locations: false,
+                                    weight: false,
+                                    horizontalDivider: false,
+                                  ),
+                                );
+                              },
+                            ),
+
+                            SizedBox(height: 10),
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductCategoryScreens(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: AppColor.lightGray,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 22.5),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      AppImages.addListImage,
+                                      height: 22,
+                                      color: AppColor.darkBlue,
+                                    ),
+                                    const SizedBox(width: 9),
+                                    Text(
+                                      'Add Products',
+                                      style: AppTextStyles.mulish(
+                                        color: AppColor.darkBlue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
+                            ),
+                          ],
+
+                          // ------------------- SERVICES SECTION -------------------
+                          if ((shop?.services ?? []).isNotEmpty) ...[
+                            Row(
+                              children: [
+                                Image.asset(
+                                  AppImages.fireImage,
+                                  height: 35,
+                                  color: AppColor.darkBlue,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Offer Services',
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 22,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: shop?.services.length,
+                              itemBuilder: (context, index) {
+                                final data = shop?.services[index];
+
+                                final imageUrl =
+                                    (data?.media != null &&
+                                        data!.media.isNotEmpty)
+                                    ? (data?.media.first.url ?? '')
+                                    : '';
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: CommonContainer.foodList(
+                                    fontSize: 14,
+                                    doorDelivery: false,
+                                    titleWeight: FontWeight.w700,
+                                    onTap: () {},
+                                    imageWidth: 130,
+                                    image: imageUrl,
+                                    foodName: data?.englishName ?? '',
+                                    ratingStar: data?.rating?.toString() ?? '0',
+                                    ratingCount:
+                                        data?.ratingCount?.toString() ?? '0',
+                                    offAmound: '₹${data?.startsAt ?? 0}',
+                                    oldAmound: '',
+                                    km: '',
+                                    location: '',
+                                    Verify: false,
+                                    locations: false,
+                                    weight: false,
+                                    horizontalDivider: false,
+                                  ),
+                                );
+                              },
+                            ),
+
+                            SizedBox(height: 10),
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductCategoryScreens(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: AppColor.lightGray,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 22.5),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      AppImages.addListImage,
+                                      height: 22,
+                                      color: AppColor.darkBlue,
+                                    ),
+                                    const SizedBox(width: 9),
+                                    Text(
+                                      'Add Service',
+                                      style: AppTextStyles.mulish(
+                                        color: AppColor.darkBlue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 40),
-                      if (isIndividual)
+
+                      // SizedBox(height: 10),
+                      // InkWell(
+                      //   onTap: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) => ProductCategoryScreens(),
+                      //       ),
+                      //     );
+                      //   },
+                      //   child: Container(
+                      //     width: double.infinity,
+                      //     decoration: BoxDecoration(
+                      //       color: AppColor.lightGray,
+                      //       borderRadius: BorderRadius.circular(15),
+                      //     ),
+                      //     padding: EdgeInsets.symmetric(vertical: 22.5),
+                      //     child: Row(
+                      //       mainAxisAlignment: MainAxisAlignment.center,
+                      //       children: [
+                      //         Image.asset(
+                      //           AppImages.addListImage,
+                      //           height: 22,
+                      //           color: AppColor.darkBlue,
+                      //         ),
+                      //         const SizedBox(width: 9),
+                      //         Text(
+                      //           isService ? 'Add Service' : 'Add Product',
+                      //           style: AppTextStyles.mulish(
+                      //             color: AppColor.darkBlue,
+                      //           ),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
+                      SizedBox(height: 40),
+                      if (isNonPremium)
                         CommonContainer.attractCustomerCard(
                           title: 'Attract More Customers',
                           description:
                               'Unlock premium to attract more customers',
                           onTap: () {
+                            // From details we don’t want Skip again – only real subscribe
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const SubscriptionScreen(),
+                                    const SubscriptionScreen(showSkip: false),
                               ),
                             );
                           },
                         ),
+
                       const SizedBox(height: 40),
                       Row(
                         children: [
@@ -722,14 +947,15 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                 child: ElevatedButton(
                   onPressed: () {
                     RegistrationSession.instance.reset();
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const CommonBottomNavigation(initialIndex: 0),
-                      ),
-                      (route) => false,
-                    );
+                    context.goNamed(AppRoutes.homeScreen, extra: 2);
+                    // Navigator.pushAndRemoveUntil(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) =>
+                    //         const CommonBottomNavigation(initialIndex: 0),
+                    //   ),
+                    //   (route) => false,
+                    // );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,

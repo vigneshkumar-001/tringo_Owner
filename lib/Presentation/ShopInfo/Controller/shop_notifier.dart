@@ -51,12 +51,28 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     required String primaryPhone,
     required String alternatePhone,
     required String contactEmail,
+      String? shopId,
+
+    required File ownerImageFile, // <-- FILE INSTEAD OF URL
     required bool doorDelivery,
+    required String type,
   }) async {
     state = const ShopCategoryState(isLoading: true);
 
+
+    final uploadResult = await apiDataSource.userProfileUpload(
+      imageFile: ownerImageFile,
+    );
+
+    final ownerImageUrl = uploadResult.fold<String?>(
+          (failure) => null,
+          (success) => success.message, // your API returns url in 'message'
+    );
+
     final result = await apiDataSource.shopCategoryInfo(
+      type: type,
       category: category,
+      shopId: shopId,
       subCategory: subCategory,
       englishName: englishName,
       tamilName: tamilName,
@@ -68,6 +84,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       gpsLongitude: gpsLongitude,
       primaryPhone: primaryPhone,
       alternatePhone: alternatePhone,
+      ownerImageUrl: ownerImageUrl ?? '',
       contactEmail: contactEmail,
       doorDelivery: doorDelivery,
     );
