@@ -1,132 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
-//
-// import '../../../Core/Routes/app_go_routes.dart';
-// import '../../../Core/Utility/app_loader.dart';
-// import '../../../Core/Utility/app_snackbar.dart';
-// import '../controller/login_notifier.dart';
-//
-// class OtpScreens extends ConsumerStatefulWidget {
-//   final String phoneNumber;
-//   const OtpScreens({super.key, required this.phoneNumber});
-//
-//   @override
-//   ConsumerState<OtpScreens> createState() => _OtpScreensState();
-// }
-//
-// class _OtpScreensState extends ConsumerState<OtpScreens> {
-//   final TextEditingController otpController = TextEditingController();
-//   @override
-//   void initState() {
-//     super.initState();
-//     // ✅ Reset login state when entering this screen
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       ref.read(loginNotifierProvider.notifier).resetState();
-//     });
-//   }
-//   String? lastLoginPage;
-//   @override
-//   Widget build(BuildContext context) {
-//     final state = ref.watch(loginNotifierProvider);
-//     final notifier = ref.read(loginNotifierProvider.notifier);
-//
-//     ref.listen<LoginState>(loginNotifierProvider, (_, next) {
-//       final notifier = ref.read(loginNotifierProvider.notifier);
-//
-//       // Current error
-//       if (next.error != null) {
-//         AppSnackBar.error(context, next.error!);
-//         notifier.resetState();
-//       }
-//       // OTP verified -> navigate
-//       else if (next.otpResponse != null) {
-//         AppSnackBar.success(context, 'OTP verified successfully!');
-//         context.goNamed(AppRoutes.register);
-//         // Navigator.pushReplacement(
-//         //   context,
-//         //   MaterialPageRoute(builder: (_) => const RegisterScreen()),
-//         // );
-//         notifier.resetState();
-//       }
-//       // Login response (used for resend OTP)
-//       else if (next.loginResponse != null) {
-//         // Check if this was a resend OTP request
-//         if (lastLoginPage == 'resendOtp') {
-//           AppSnackBar.success(context, 'OTP resent successfully!');
-//         }
-//         lastLoginPage = null; // reset after handling
-//         notifier.resetState();
-//       }
-//     });
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Otp')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: otpController,
-//               keyboardType: TextInputType.phone,
-//               decoration: const InputDecoration(labelText: 'Phone Number'),
-//             ),
-//             const SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: state.isLoading
-//                   ? null
-//                   : () {
-//                       final otp = otpController.text.trim();
-//                       if (otp.isEmpty) {
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           const SnackBar(
-//                             content: Text('Please enter phone number'),
-//                           ),
-//                         );
-//                         return;
-//                       }
-//                       notifier.verifyOtp(contact: widget.phoneNumber, otp: otp);
-//                     },
-//               child: state.isLoading
-//                   ? const SizedBox(
-//                       width: 24,
-//                       height: 24,
-//                       child: CircularProgressIndicator(strokeWidth: 2),
-//                     )
-//                   : const Text('Submit'),
-//             ),
-//             const SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: state.isLoading
-//                   ? null
-//                   : () {
-//                       final otp = otpController.text.trim();
-//                       if (otp.isEmpty) {
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           const SnackBar(
-//                             content: Text('Please enter phone number'),
-//                           ),
-//                         );
-//                         return;
-//                       }
-//                       notifier. loginUser( phoneNumber: widget.phoneNumber,page: 'resendOtp');
-//                     },
-//               child: state.isLoading
-//                   ? const ThreeDotsLoader()
-//                   : const Text('Resend Otp Submit'),
-//             ),
-//             const SizedBox(height: 20),
-//             if (state.error != null)
-//               Text(state.error!, style: const TextStyle(color: Colors.red)),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-///
-///
-///
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -135,17 +6,17 @@ import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../controller/login_notifier.dart';
-import 'dart:async';
-
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
+
   const OtpScreen({super.key, required this.phoneNumber});
 
   @override
@@ -154,46 +25,59 @@ class OtpScreen extends ConsumerStatefulWidget {
 
 class _OtpScreenState extends ConsumerState<OtpScreen> {
   final TextEditingController otp = TextEditingController();
+
   String? otpError;
   String verifyCode = '';
+
   Timer? _timer;
   int _secondsRemaining = 30;
   bool _canResend = false;
 
+  String? lastLoginPage;
+
   @override
   void initState() {
     super.initState();
+
+    // Start the countdown timer
     _startTimer(30);
+
+    // Reset login state when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(loginNotifierProvider.notifier).resetState();
     });
-    startCountdown(30);
-  }
-  @override
-  void dispose() {
-    countdownTimer?.cancel();
-    super.dispose();
-  }
 
+    // Listen to login state changes (OTP, resend, errors)
+    ref.listen<LoginState>(loginNotifierProvider, (previous, next) {
+      final notifier = ref.read(loginNotifierProvider.notifier);
 
-  void startCountdown(int seconds) {
-    timerSeconds = seconds;
-    canResend = false;
-
-    countdownTimer?.cancel();
-
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (timerSeconds == 0) {
-        setState(() {
-          canResend = true;
-        });
-        timer.cancel();
-      } else {
-        setState(() {
-          timerSeconds--;
-        });
+      // Error case
+      if (next.error != null) {
+        AppSnackBar.error(context, next.error!);
+        notifier.resetState();
+      }
+      // OTP verified
+      else if (next.otpResponse != null) {
+        AppSnackBar.success(context, 'OTP verified successfully!');
+        context.goNamed(AppRoutes.register);
+        notifier.resetState();
+      }
+      // Login response (used for resend OTP)
+      else if (next.loginResponse != null) {
+        if (lastLoginPage == 'resendOtp') {
+          AppSnackBar.success(context, 'OTP resent successfully!');
+        }
+        lastLoginPage = null;
+        notifier.resetState();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    otp.dispose();
+    super.dispose();
   }
 
   void _startTimer(int seconds) {
@@ -218,47 +102,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    otp.dispose();
-    super.dispose();
-  }
-
-  String? lastLoginPage;
-  @override
   Widget build(BuildContext context) {
     final state = ref.watch(loginNotifierProvider);
     final notifier = ref.read(loginNotifierProvider.notifier);
 
-    ref.listen<LoginState>(loginNotifierProvider, (_, next) {
-      final notifier = ref.read(loginNotifierProvider.notifier);
-      // Current error
-      if (next.error != null) {
-        AppSnackBar.error(context, next.error!);
-        notifier.resetState();
-      }
-      // OTP verified -> navigate
-      else if (next.otpResponse != null) {
-        AppSnackBar.success(context, 'OTP verified successfully!');
-        context.goNamed(AppRoutes.register);
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (_) => const RegisterScreen())
-        // );
-        notifier.resetState();
-      }
-      // Login response (used for resend OTP)
-      else if (next.loginResponse != null) {
-        // Check if this was a resend OTP request
-        if (lastLoginPage == 'resendOtp') {
-          AppSnackBar.success(context, 'OTP resent successfully!');
-        }
-        lastLoginPage = null; // reset after handling
-        notifier.resetState();
-      }
-    });
-    String mobileNumber = widget.phoneNumber ?? '';
-    String maskMobileNumber;
+    // phoneNumber is non-nullable, so no ??
+    final String mobileNumber = widget.phoneNumber;
+    late final String maskMobileNumber;
 
     if (mobileNumber.length <= 3) {
       maskMobileNumber = mobileNumber;
@@ -267,6 +117,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           'x' * (mobileNumber.length - 3) +
           mobileNumber.substring(mobileNumber.length - 3);
     }
+
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -277,7 +128,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               height: double.infinity,
               fit: BoxFit.cover,
             ),
-
             Positioned(
               top: 0,
               left: 0,
@@ -288,13 +138,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Logo
                     Padding(
                       padding: const EdgeInsets.only(left: 35, top: 50),
                       child: Image.asset(AppImages.logo, height: 88, width: 85),
                     ),
 
-                    SizedBox(height: 81),
+                    const SizedBox(height: 81),
 
+                    // Title
                     Padding(
                       padding: const EdgeInsets.only(left: 35, top: 20),
                       child: Column(
@@ -310,7 +162,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                   color: AppColor.darkBlue,
                                 ),
                               ),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 5),
                               Text(
                                 'sent to',
                                 style: AppTextStyles.mulish(
@@ -331,33 +183,23 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                       ),
                     ),
 
-                    SizedBox(height: 35),
+                    const SizedBox(height: 35),
 
+                    // OTP fields
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: PinCodeTextField(
-                        onCompleted: (value) async {},
-
-                        autoFocus: otp.text.isEmpty,
                         appContext: context,
-                        // pastedTextStyle: TextStyle(
-                        //   color: Colors.green.shade600,
-                        //   fontWeight: FontWeight.bold,
-                        // ),
                         length: 4,
-
-                        // obscureText: true,
-                        // obscuringCharacter: '*',
-                        // obscuringWidget: const FlutterLogo(size: 24,),
-                        blinkWhenObscuring: true,
+                        autoFocus: otp.text.isEmpty,
                         mainAxisAlignment: MainAxisAlignment.start,
                         autoDisposeControllers: false,
-
-                        // validator: (v) {
-                        //   if (v == null || v.length != 4)
-                        //     return 'Enter valid 4-digit OTP';
-                        //   return null;
-                        // },
+                        blinkWhenObscuring: true,
+                        controller: otp,
+                        keyboardType: TextInputType.number,
+                        cursorColor: AppColor.black,
+                        animationDuration: const Duration(milliseconds: 300),
+                        enableActiveFill: true,
                         pinTheme: PinTheme(
                           shape: PinCodeFieldShape.box,
                           borderRadius: BorderRadius.circular(17),
@@ -368,48 +210,35 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           activeFillColor: AppColor.white,
                           inactiveColor: AppColor.darkBlue,
                           selectedFillColor: AppColor.white,
-                          fieldOuterPadding: EdgeInsets.symmetric(
+                          inactiveFillColor: AppColor.white,
+                          fieldOuterPadding: const EdgeInsets.symmetric(
                             horizontal: 9,
                           ),
-                          inactiveFillColor: AppColor.white,
                         ),
-                        cursorColor: AppColor.black,
-                        animationDuration: const Duration(milliseconds: 300),
-                        enableActiveFill: true,
-                        // errorAnimationController: errorController,
-                        controller: otp,
-                        keyboardType: TextInputType.number,
                         boxShadows: [
                           BoxShadow(
-                            offset: Offset(0, 1),
+                            offset: const Offset(0, 1),
                             color: AppColor.skyBlue,
                             blurRadius: 5,
                           ),
                         ],
-                        // validator: (value) {
-                        //   if (value == null || value.length != 4) {
-                        //     return 'Please enter a valid 4-digit OTP';
-                        //   }
-                        //   return null;
-                        // },
-                        // onCompleted: (value) async {},
-                        onChanged: (value) {
-                          debugPrint(value);
+                        onCompleted: (value) {
                           verifyCode = value;
-
+                        },
+                        onChanged: (value) {
+                          verifyCode = value;
                           if (otpError != null && value.isNotEmpty) {
                             setState(() {
                               otpError = null;
                             });
                           }
                         },
-
                         beforeTextPaste: (text) {
-                          debugPrint("Allowing to paste $text");
                           return true;
                         },
                       ),
                     ),
+
                     if (otpError != null)
                       Center(
                         child: Text(
@@ -421,142 +250,109 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                    SizedBox(height: 35),
-                    GestureDetector(
-                      onTap: () {
-                        if (!canResend) return;
 
+                    const SizedBox(height: 35),
+
+                    // Resend row
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: Row(
                         children: [
-                          // Left side: Countdown / info text
-                          Row(
-                            children: [
-                              InkWell(
-                                onTap: _canResend
-                                    ? () {
-                                        // notifier.resendOtp(contact: widget.phoneNumber);
-                                        _startTimer(30); // start new timer
-                                      }
-                                    : null,
-                                child: Text(
-                                  'Resend',
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.w800,
-                                    color: _canResend
-                                        ? AppColor.skyBlue
-                                        : AppColor.gray84,
-                                  ),
-                                ),
+                          InkWell(
+                            onTap: _canResend
+                                ? () {
+                                    // mark as resend call
+                                    lastLoginPage = 'resendOtp';
+                                    notifier.loginUser(
+                                      phoneNumber: widget.phoneNumber,
+                                      page: 'resendOtp',
+                                    );
+                                    _startTimer(30);
+                                  }
+                                : null,
+                            child: Text(
+                              'Resend',
+                              style: AppTextStyles.mulish(
+                                fontWeight: FontWeight.w800,
+                                color: _canResend
+                                    ? AppColor.skyBlue
+                                    : AppColor.gray84,
                               ),
-                              SizedBox(width: 5),
-                              Text(
-                                _canResend ? 'OTP' : 'code in',
-                                style: AppTextStyles.mulish(
-                                  fontWeight: FontWeight.w800,
-                                  color: _canResend
-                                      ? AppColor.skyBlue
-                                      : AppColor.gray84,
-                                ),
-                              ),
-                              if (!_canResend) ...[
-                                SizedBox(width: 4),
-                                Text(
-                                  '00:${_secondsRemaining.toString().padLeft(2, '0')}',
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColor.darkBlue,
-                                  ),
-                                ),
-                              ],
-                            ],
+                            ),
                           ),
-
-                          Spacer(),
-
-                          // Right side: Resend button
+                          const SizedBox(width: 5),
+                          Text(
+                            _canResend ? 'OTP' : 'code in',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.w800,
+                              color: _canResend
+                                  ? AppColor.skyBlue
+                                  : AppColor.gray84,
+                            ),
+                          ),
+                          if (!_canResend) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              '00:${_secondsRemaining.toString().padLeft(2, '0')}',
+                              style: AppTextStyles.mulish(
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.darkBlue,
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
                         ],
                       ),
                     ),
 
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 35),
-                    //   child: Row(
-                    //     children: [
-                    //       Text(
-                    //         'Resend',
-                    //         style: AppTextStyles.mulish(
-                    //           fontWeight: FontWeight.w800,
-                    //           color: AppColor.darkBlue,
-                    //         ),
-                    //       ),
-                    //       SizedBox(width: 5,),
-                    //       Text(
-                    //         'code in',
-                    //         style: AppTextStyles.mulish(
-                    //           fontWeight: FontWeight.w800,
-                    //           color: AppColor.darkBlue,
-                    //         ),
-                    //       ),
-                    //       SizedBox(width: 4),
-                    //       Text(
-                    //         '00.29',
-                    //         style: AppTextStyles.mulish(
-                    //           fontWeight: FontWeight.w800,
-                    //           color: AppColor.darkBlue,
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
+                    const SizedBox(height: 12),
+
+                    // Info text
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: Text(
-                        'OTP sent to $maskMobileNumber, please check and enter below. If you’re not received OTP',
+                        'OTP sent to $maskMobileNumber, please check and enter below. '
+                        'If you’ve not received OTP, you can resend after the timer ends.',
                         style: AppTextStyles.mulish(
                           fontSize: 14,
                           color: AppColor.darkGrey,
                         ),
                       ),
                     ),
-                    SizedBox(height: 35),
+
+                    const SizedBox(height: 35),
+
+                    // Verify button
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 35),
+                      padding: const EdgeInsets.symmetric(horizontal: 35),
                       child: CommonContainer.button(
                         buttonColor: AppColor.skyBlue,
                         onTap: () {
-                          final Otp = otp.text.trim();
-                          if (Otp.isEmpty) {
+                          final enteredOtp = otp.text.trim();
+                          if (enteredOtp.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter phone number'),
-                              ),
+                              const SnackBar(content: Text('Please enter OTP')),
                             );
                             return;
                           }
                           notifier.verifyOtp(
                             contact: widget.phoneNumber,
-                            otp: Otp,
+                            otp: enteredOtp,
                           );
-                          //   Navigator.push(
-                          //     context,
-                          //     MaterialPageRoute(
-                          //       builder: (context) => PrivacyPolicy(),
-                          //     ),
-                          //   );
                         },
                         text: state.isLoading
-                            ? ThreeDotsLoader()
-                            : Text('Verify Now'),
+                            ? const ThreeDotsLoader()
+                            : const Text('Verify Now'),
                       ),
                     ),
-                    SizedBox(height: 50),
+
+                    const SizedBox(height: 50),
                   ],
                 ),
               ),
             ),
 
+            // Bottom decoration
             Positioned(
               bottom: 0,
               left: 0,
