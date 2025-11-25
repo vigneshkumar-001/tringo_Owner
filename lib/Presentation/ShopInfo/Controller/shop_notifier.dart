@@ -36,7 +36,76 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
   @override
   ShopCategoryState build() => ShopCategoryState.initial();
-
+  //
+  // Future<ShopCategoryResponse?> shopCategoryInfo({
+  //   required String category,
+  //   required String subCategory,
+  //   required String englishName,
+  //   required String tamilName,
+  //   required String descriptionEn,
+  //   required String descriptionTa,
+  //   required String addressEn,
+  //   required String addressTa,
+  //   required double gpsLatitude,
+  //   required double gpsLongitude,
+  //   required String primaryPhone,
+  //   required String alternatePhone,
+  //   required String contactEmail,
+  //     String? shopId,
+  //
+  //     File? ownerImageFile, // <-- FILE INSTEAD OF URL
+  //   required bool doorDelivery,
+  //   required String type,
+  // }) async {
+  //   state = const ShopCategoryState(isLoading: true);
+  //
+  //
+  //   final uploadResult = await apiDataSource.userProfileUpload(
+  //     imageFile: ownerImageFile,
+  //   );
+  //
+  //   final ownerImageUrl = uploadResult.fold<String?>(
+  //         (failure) => null,
+  //         (success) => success.message, // your API returns url in 'message'
+  //   );
+  //
+  //   final result = await apiDataSource.shopCategoryInfo(
+  //     type: type,
+  //     category: category,
+  //     shopId: shopId,
+  //     subCategory: subCategory,
+  //     englishName: englishName,
+  //     tamilName: tamilName,
+  //     descriptionEn: descriptionEn,
+  //     descriptionTa: descriptionTa,
+  //     addressEn: addressEn,
+  //     addressTa: addressTa,
+  //     gpsLatitude: gpsLatitude,
+  //     gpsLongitude: gpsLongitude,
+  //     primaryPhone: primaryPhone,
+  //     alternatePhone: alternatePhone,
+  //     ownerImageUrl: ownerImageUrl ?? '',
+  //     contactEmail: contactEmail,
+  //     doorDelivery: doorDelivery,
+  //   );
+  //
+  //   return result.fold(
+  //     (failure) {
+  //       state = ShopCategoryState(isLoading: false, error: failure.message);
+  //       return null;
+  //     },
+  //     (response) async {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('shop_id', response.id);
+  //
+  //       state = ShopCategoryState(
+  //         isLoading: false,
+  //         shopCategoryResponse: response,
+  //       );
+  //       return response;
+  //     },
+  //   );
+  // }
   Future<ShopCategoryResponse?> shopCategoryInfo({
     required String category,
     required String subCategory,
@@ -51,27 +120,32 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     required String primaryPhone,
     required String alternatePhone,
     required String contactEmail,
-      String? shopId,
-
-    required File ownerImageFile, // <-- FILE INSTEAD OF URL
+    String? shopId,
+    File? ownerImageFile, // only used if type == service
     required bool doorDelivery,
     required String type,
   }) async {
     state = const ShopCategoryState(isLoading: true);
 
+    String ownerImageUrl = '';
 
-    final uploadResult = await apiDataSource.userProfileUpload(
-      imageFile: ownerImageFile,
-    );
+    // Upload owner image only if type is 'service' and file is provided
+    if (type == 'service' && ownerImageFile != null) {
+      final uploadResult = await apiDataSource.userProfileUpload(
+        imageFile: ownerImageFile,
+      );
 
-    final ownerImageUrl = uploadResult.fold<String?>(
-          (failure) => null,
-          (success) => success.message, // your API returns url in 'message'
-    );
+      ownerImageUrl = uploadResult.fold<String?>(
+            (failure) => null,
+            (success) => success.message,
+      ) ?? '';
+    }
 
     final result = await apiDataSource.shopCategoryInfo(
+
       type: type,
       category: category,
+
       shopId: shopId,
       subCategory: subCategory,
       englishName: englishName,
@@ -84,17 +158,17 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       gpsLongitude: gpsLongitude,
       primaryPhone: primaryPhone,
       alternatePhone: alternatePhone,
-      ownerImageUrl: ownerImageUrl ?? '',
+      ownerImageUrl: ownerImageUrl, // empty string if not uploaded
       contactEmail: contactEmail,
       doorDelivery: doorDelivery,
     );
 
     return result.fold(
-      (failure) {
+          (failure) {
         state = ShopCategoryState(isLoading: false, error: failure.message);
         return null;
       },
-      (response) async {
+          (response) async {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('shop_id', response.id);
 
@@ -127,6 +201,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
   Future<bool> uploadShopImages({
     required List<File?> images,
     required BuildContext context,
+      String? shopId,
   }) async {
     if (images.isEmpty || images.every((e) => e == null)) {
       state = const ShopCategoryState(
@@ -164,7 +239,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       return false;
     }
 
-    final apiResult = await apiDataSource.shopPhotoUpload(items: items);
+    final apiResult = await apiDataSource.shopPhotoUpload(items: items,apiShopId: shopId);
 
     return apiResult.fold(
       (failure) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Controller/product_notifier.dart';
 import '../../../Core/Const/app_color.dart';
@@ -21,9 +22,15 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
   final bool allowOfferEdit;
   final String? initialOfferLabel;
   final String? initialOfferValue;
+  final String? shopId;
+  final String? productId;
+  final String? page;
   const ProductCategoryScreens({
     super.key,
     this.isService,
+    this.shopId,
+    this.productId,
+    this.page,
     this.isIndividual,
     this.allowOfferEdit = false,
     this.initialOfferLabel,
@@ -438,7 +445,8 @@ class _ProductCategoryScreensState
   @override
   void initState() {
     super.initState();
-
+AppLogger.log.i(widget.productId);
+AppLogger.log.i(widget.page);
     // // 🔹 Default dropdown value
     // _offerController.text = offers.first; // 'First App Offer'
     //
@@ -985,8 +993,6 @@ class _ProductCategoryScreensState
                               .instance
                               .isServiceBusiness; // 🔹 decide flow
 
-
-
                           final priceText = _productPriceController.text.trim();
                           final price = int.tryParse(priceText);
 
@@ -1066,10 +1072,11 @@ class _ProductCategoryScreensState
                               }
                             }
                           } else {
-                            // 🔹 PRODUCT FLOW → existing product API
                             success = await ref
                                 .read(productNotifierProvider.notifier)
                                 .addProduct(
+                                  productId: widget.productId,
+                                  shopId: widget.shopId ?? '',
                                   category: _categoryController.text.trim(),
                                   subCategory: _subCategoryController.text
                                       .trim(),
@@ -1097,9 +1104,12 @@ class _ProductCategoryScreensState
                             }
                           }
 
-                          //  Navigation if API ok
                           if (success) {
-                            context.pushNamed(AppRoutes.addProductList);
+                            if (widget.page == 'AboutMeScreens') {
+                              context.pushNamed(AppRoutes.homeScreen, extra: 3);
+                            } else {
+                              context.pushNamed(AppRoutes.addProductList);
+                            }
                           }
                         },
                         text: isLoading

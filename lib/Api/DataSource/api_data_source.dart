@@ -191,7 +191,7 @@ class ApiDataSource extends BaseApiDataSource {
     required String englishName,
     required String tamilName,
     required String descriptionEn,
-      String? shopId,
+    String? shopId,
     required String type,
     required String descriptionTa,
     required String addressEn,
@@ -207,12 +207,10 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
 
+      final url = (shopId != null && shopId.isNotEmpty)
+          ? ApiUrl.updateShop(shopId: shopId)
+          : ApiUrl.shop;
 
-        final url = (shopId != null && shopId.isNotEmpty)
-            ? ApiUrl.updateShop(shopId: shopId)
-            : ApiUrl.shop;
-
-      // final url = ApiUrl.shop;
       final payload = {
         "category": category,
         "subCategory": subCategory,
@@ -346,12 +344,14 @@ class ApiDataSource extends BaseApiDataSource {
 
   Future<Either<Failure, ShopPhotoResponse>> shopPhotoUpload({
     required List<Map<String, String>> items,
+      String? apiShopId,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final shopId = prefs.getString('shop_id');
-      final url = ApiUrl.shopPhotosUpload(shopId: shopId ?? '');
+      // final shopId = prefs.getString('shop_id');
+      final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+      final url = ApiUrl.shopPhotosUpload(shopId: shopIdToUse ?? '');
 
       final payload = {"items": items};
 
@@ -436,6 +436,8 @@ class ApiDataSource extends BaseApiDataSource {
     required int price,
     required String offerLabel,
     required String offerValue,
+    String? apiShopId,
+    String? apiProductId,
 
     required String description,
   }) async {
@@ -443,20 +445,30 @@ class ApiDataSource extends BaseApiDataSource {
       final prefs = await SharedPreferences.getInstance();
 
       final shopId = prefs.getString('shop_id');
-      final productId = prefs.getString('product_id');
+      // final productId = prefs.getString('product_id');
 
       // final url = (productId != null && productId.isNotEmpty)
       //     ? ApiUrl.updateProducts(productId: productId)
       //     : ApiUrl.addProducts(shopId: shopId ?? '');
 
-      String url = ApiUrl.addProducts(shopId: shopId ?? '');
+      // String url = ApiUrl.addProducts(shopId: shopId ?? '');
+      // final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+      // final url = ApiUrl.addProducts(shopId: shopIdToUse);
+
+
+      final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+      final productId = apiProductId ?? prefs.getString('product_id');
+
+      final url = (productId != null && productId.isNotEmpty)
+          ? ApiUrl.updateProducts(productId: productId)
+          : ApiUrl.addProducts(shopId: shopIdToUse);
 
       final payload = {
         "category": category,
         "subCategory": subCategory,
         "englishName": englishName,
         "tamilName": "ரெட்மி நோட் 13",
-        "price": 16999,
+        "price": price,
         "offerLabel": offerLabel,
         "offerValue": "$offerValue%",
         "description": description,

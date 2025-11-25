@@ -17,7 +17,8 @@ import '../Controller/shop_notifier.dart';
 
 class ShopPhotoInfo extends ConsumerStatefulWidget {
   final String? pages;
-  const ShopPhotoInfo({super.key, this.pages = ''});
+  final String? shopId;
+  const ShopPhotoInfo({super.key, this.pages = '', this.shopId});
 
   @override
   ConsumerState<ShopPhotoInfo> createState() => _ShopPhotoInfoState();
@@ -318,28 +319,21 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
 
                         final success = await notifier.uploadShopImages(
                           images: _pickedImages,
+                          shopId: widget.shopId,
                           context: context,
                         );
 
                         if (success) {
-                          // SHOW SUCCESS SNACKBAR
-                          AppSnackBar.success(
-                            context,
-                            'Shop images uploaded successfully!',
-                          );
-
-                          // Navigate after a short delay so user can see the message
-                          Future.delayed(const Duration(milliseconds: 500), () {
-                            if (widget.pages == "AboutMeScreens") {
-                              final updatedPhotos = _pickedImages
-                                  .where((img) => img != null)
-                                  .map((f) => f!.path)
-                                  .toList();
-                              Navigator.pop(context, updatedPhotos);
-                            } else {
-                              context.pushNamed(AppRoutes.searchKeyword);
-                            }
-                          });
+                          if (widget.pages == "AboutMeScreens") {
+                            context.pushNamed(AppRoutes.homeScreen, extra: 3);
+                            // final updatedPhotos = _pickedImages
+                            //     .where((img) => img != null)
+                            //     .map((f) => f!.path)
+                            //     .toList();
+                            // Navigator.pop(context, updatedPhotos);
+                          } else {
+                            context.pushNamed(AppRoutes.searchKeyword);
+                          }
                         } else {
                           // SHOW ERROR SNACKBAR
                           final err = ref
