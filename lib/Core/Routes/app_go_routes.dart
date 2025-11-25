@@ -141,7 +141,5 @@ final goRouter = GoRouter(
         return SubscriptionScreen(showSkip: showSkip);
       },
     ),
-
-
   ],
 );
