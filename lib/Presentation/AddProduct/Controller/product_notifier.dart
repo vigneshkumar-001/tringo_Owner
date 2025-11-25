@@ -42,12 +42,15 @@ class ProductNotifier extends Notifier<ProductState> {
     required String offerLabel,
     required String offerValue,
     required String description,
+      String? shopId,
+      String? productId,
   }) async
   {
     state = const ProductState(isLoading: true);
 
     final result = await api.addProduct(
-      subCategory: subCategory,
+      apiProductId: productId,
+      subCategory: subCategory, apiShopId :shopId ,
       englishName: englishName,
       category: category,
       description: description,

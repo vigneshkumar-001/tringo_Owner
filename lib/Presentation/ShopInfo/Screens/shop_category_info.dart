@@ -1183,8 +1183,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         },
                       ),
                       const SizedBox(height: 25),
-                      if (!(widget.isService ?? false)) ...[
-                        // Selling Product: show Door Delivery
+                      if (widget.isService ?? false || widget.pages != 'AboutMeScreens') ...[
+
                         Text(
                           'Door Delivery',
                           style: AppTextStyles.mulish(
@@ -1327,115 +1327,113 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         onTap: () async {
                           FocusScope.of(context).unfocus();
 
-                          if (!_validateAll()) {
-                            return;
+                          // if (!_validateAll()) {
+                          //   return;
+                          // }
+
+                          AppLogger.log.i(_gpsController.text);
+                          final bool isServiceFlow =
+                              widget.isService ?? false;
+                          final String type = isServiceFlow
+                              ? 'service'
+                              : 'product';
+                          final gpsText = _gpsController.text.trim();
+                          double latitude = 0.0;
+                          double longitude = 0.0;
+
+                          if (gpsText.isNotEmpty && gpsText.contains(',')) {
+                            final parts = gpsText.split(',');
+                            latitude =
+                                double.tryParse(parts[0].trim()) ?? 0.0;
+                            longitude =
+                                double.tryParse(parts[1].trim()) ?? 0.0;
                           }
 
-                          if (widget.pages == "AboutMeScreens") {
-                            final updatedData = {
-                              'category': _categoryController.text,
-                              'city': _cityController.text,
-                              'tamilName': tamilNameController.text,
-                            };
+                          bool doorDelivery = false;
+                          if (!isServiceFlow) {
+                            final value = _doorDeliveryController.text
+                                .trim()
+                                .toLowerCase();
+                            doorDelivery = value == 'yes';
+                          }
+                          // final String ownerImageUrl = isServiceFlow
+                          //     ? (_permanentImage?.path ?? '')
+                          //     : '';
+                          final File? ownerFile = _permanentImage == null
+                              ? null
+                              : File(_permanentImage!.path);
 
-                            Navigator.pop(context, updatedData);
-                          } else {
-                            AppLogger.log.i(_gpsController.text);
-                            final bool isServiceFlow =
-                                widget.isService ?? false;
-                            final String type = isServiceFlow
-                                ? 'service'
-                                : 'product';
-                            final gpsText = _gpsController.text.trim();
-                            double latitude = 0.0;
-                            double longitude = 0.0;
+                          // if (ownerFile == null) {
+                          //   AppSnackBar.error(
+                          //     context,
+                          //     "Please capture the image",
+                          //   );
+                          //   return;
+                          // }
 
-                            if (gpsText.isNotEmpty && gpsText.contains(',')) {
-                              final parts = gpsText.split(',');
-                              latitude =
-                                  double.tryParse(parts[0].trim()) ?? 0.0;
-                              longitude =
-                                  double.tryParse(parts[1].trim()) ?? 0.0;
-                            }
+                          final response = await ref
+                              .read(shopCategoryNotifierProvider.notifier)
+                              .shopCategoryInfo(
+                            shopId: widget.shopId,
+                            ownerImageFile: ownerFile,
+                            type: type,
 
-                            bool doorDelivery = false;
-                            if (!isServiceFlow) {
-                              final value = _doorDeliveryController.text
-                                  .trim()
-                                  .toLowerCase();
-                              doorDelivery = value == 'yes';
-                            }
-                            // final String ownerImageUrl = isServiceFlow
-                            //     ? (_permanentImage?.path ?? '')
-                            //     : '';
-                            final File? ownerFile = _permanentImage == null
-                                ? null
-                                : File(_permanentImage!.path);
+                            addressEn: _addressEnglishController.text
+                                .trim(),
+                            addressTa: addressTamilNameController.text
+                                .trim(),
+                            alternatePhone: _whatsappController.text
+                                .trim(),
+                            category: categorySlug,
+                            contactEmail: _emailController.text.trim(),
+                            descriptionEn: _descriptionEnglishController
+                                .text
+                                .trim(),
+                            descriptionTa: descriptionTamilController.text
+                                .trim(),
+                            doorDelivery: doorDelivery,
+                            englishName: _shopNameEnglishController.text
+                                .trim(),
+                            gpsLatitude: latitude,
+                            gpsLongitude: longitude,
+                            primaryPhone: _primaryMobileController.text
+                                .trim(),
+                            subCategory: subCategorySlug,
+                            tamilName: tamilNameController.text.trim(),
+                          );
 
-                            if (ownerFile == null) {
-                              AppSnackBar.error(
-                                context,
-                                "Please capture the image",
-                              );
-                              return;
-                            }
+                          final newState = ref.read(
+                            shopCategoryNotifierProvider,
+                          );
 
-                            final response = await ref
-                                .read(shopCategoryNotifierProvider.notifier)
-                                .shopCategoryInfo(
-                                  shopId: widget.shopId,
-                                  ownerImageFile: ownerFile,
-                                  type: type,
-
-                                  addressEn: _addressEnglishController.text
-                                      .trim(),
-                                  addressTa: addressTamilNameController.text
-                                      .trim(),
-                                  alternatePhone: _whatsappController.text
-                                      .trim(),
-                                  category: categorySlug,
-                                  contactEmail: _emailController.text.trim(),
-                                  descriptionEn: _descriptionEnglishController
-                                      .text
-                                      .trim(),
-                                  descriptionTa: descriptionTamilController.text
-                                      .trim(),
-                                  doorDelivery: doorDelivery,
-                                  englishName: _shopNameEnglishController.text
-                                      .trim(),
-                                  gpsLatitude: latitude,
-                                  gpsLongitude: longitude,
-                                  primaryPhone: _primaryMobileController.text
-                                      .trim(),
-                                  subCategory: subCategorySlug,
-                                  tamilName: tamilNameController.text.trim(),
-                                );
-
-                            final newState = ref.read(
-                              shopCategoryNotifierProvider,
+                          if (newState.error != null &&
+                              newState.error!.isNotEmpty) {
+                            AppSnackBar.error(
+                              context,
+                              newState.error!,
+                            ); //  show API error
+                          } else if (response != null) {
+                            AppSnackBar.success(
+                              context,
+                              'Shop category details saved successfully',
                             );
-
-                            if (newState.error != null &&
-                                newState.error!.isNotEmpty) {
-                              AppSnackBar.error(
-                                context,
-                                newState.error!,
-                              ); //  show API error
-                            } else if (response != null) {
-                              AppSnackBar.success(
-                                context,
-                                'Shop category details saved successfully',
+                            if (widget.pages == 'AboutMeScreens') {
+                              context.pushNamed(
+                                AppRoutes.homeScreen,
+                                extra: 3, // or 3 depending on the tab you want
                               );
+
+                            } else {
                               context.pushNamed(
                                 AppRoutes.shopPhotoInfo,
                                 extra: 'shopCategory',
                               );
-                            } else {
-                              AppSnackBar.error(
-                                context,
-                                "Unexpected error, please try again",
-                              );
                             }
+                          } else {
+                            AppSnackBar.error(
+                              context,
+                              "Unexpected error, please try again",
+                            );
                           }
                         },
                         text: state.isLoading

@@ -38,7 +38,7 @@
 
 import 'package:tringo_vendor/Core/Session/registration_session.dart';
 
-enum BusinessCategory { product, services }
+enum BusinessCategory { sellingProduct, services }
 
 class RegistrationProductSeivice {
   RegistrationProductSeivice._internal();
@@ -55,7 +55,7 @@ class RegistrationProductSeivice {
   bool _isSubscribed = false;
 
   /// Helpers: product vs service
-  bool get isProductBusiness => businessCategory == BusinessCategory.product;
+  bool get isProductBusiness => businessCategory == BusinessCategory.sellingProduct;
   bool get isServiceBusiness => businessCategory == BusinessCategory.services;
 
   /// Helpers: premium vs non-premium

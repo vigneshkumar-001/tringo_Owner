@@ -46,31 +46,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(loginNotifierProvider.notifier).resetState();
     });
-
-    // Listen to login state changes (OTP, resend, errors)
-    ref.listen<LoginState>(loginNotifierProvider, (previous, next) {
-      final notifier = ref.read(loginNotifierProvider.notifier);
-
-      // Error case
-      if (next.error != null) {
-        AppSnackBar.error(context, next.error!);
-        notifier.resetState();
-      }
-      // OTP verified
-      else if (next.otpResponse != null) {
-        AppSnackBar.success(context, 'OTP verified successfully!');
-        context.goNamed(AppRoutes.register);
-        notifier.resetState();
-      }
-      // Login response (used for resend OTP)
-      else if (next.loginResponse != null) {
-        if (lastLoginPage == 'resendOtp') {
-          AppSnackBar.success(context, 'OTP resent successfully!');
-        }
-        lastLoginPage = null;
-        notifier.resetState();
-      }
-    });
   }
 
   @override
@@ -105,7 +80,30 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(loginNotifierProvider);
     final notifier = ref.read(loginNotifierProvider.notifier);
+    // Listen to login state changes (OTP, resend, errors)
+    ref.listen<LoginState>(loginNotifierProvider, (previous, next) {
+      final notifier = ref.read(loginNotifierProvider.notifier);
 
+      // Error case
+      if (next.error != null) {
+        AppSnackBar.error(context, next.error!);
+        notifier.resetState();
+      }
+      // OTP verified
+      else if (next.otpResponse != null) {
+        AppSnackBar.success(context, 'OTP verified successfully!');
+        context.goNamed(AppRoutes.register);
+        notifier.resetState();
+      }
+      // Login response (used for resend OTP)
+      else if (next.loginResponse != null) {
+        if (lastLoginPage == 'resendOtp') {
+          AppSnackBar.success(context, 'OTP resent successfully!');
+        }
+        lastLoginPage = null;
+        notifier.resetState();
+      }
+    });
     // phoneNumber is non-nullable, so no ??
     final String mobileNumber = widget.phoneNumber;
     late final String maskMobileNumber;
