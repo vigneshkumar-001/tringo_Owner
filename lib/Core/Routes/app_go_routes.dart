@@ -130,8 +130,18 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.homeScreenPath,
       name: AppRoutes.homeScreen,
-      builder: (context, state) => CommonBottomNavigation(initialIndex: 0),
+      builder: (context, state) {
+        final initialIndex =
+            state.extra as int? ?? 0; // default to 0 if not provided
+        return CommonBottomNavigation(initialIndex: initialIndex);
+      },
     ),
+
+    // GoRoute(
+    //   path: AppRoutes.homeScreenPath,
+    //   name: AppRoutes.homeScreen,
+    //   builder: (context, state) => CommonBottomNavigation(initialIndex: 0),
+    // ),
     GoRoute(
       path: AppRoutes.subscriptionScreenPath,
       name: AppRoutes.subscriptionScreen,
@@ -141,7 +151,5 @@ final goRouter = GoRouter(
         return SubscriptionScreen(showSkip: showSkip);
       },
     ),
-
-
   ],
 );
