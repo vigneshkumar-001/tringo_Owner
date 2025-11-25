@@ -34,16 +34,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // selectedKind == true  → Individual
     // selectedKind == false → Company
     final bool isIndividual = selectedKind!;
-    final BusinessType businessType =
-    isIndividual ? BusinessType.individual : BusinessType.company;
-
+    final BusinessType businessType = isIndividual
+        ? BusinessType.individual
+        : BusinessType.company;
 
     RegistrationSession.instance.businessType = businessType;
     RegistrationProductSeivice.instance.businessType = businessType;
 
     // Product / Service
-    final BusinessCategory businessCategory =
-    (selectedIndex == 0) ? BusinessCategory.product : BusinessCategory.services;
+    final BusinessCategory businessCategory = (selectedIndex == 0)
+        ? BusinessCategory.sellingProduct
+        : BusinessCategory.services;
 
     RegistrationProductSeivice.instance.businessCategory = businessCategory;
 
@@ -53,7 +54,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       extra: {'isService': selectedIndex == 1, 'isIndividual': isIndividual},
     );
   }
-
 
   ///new1///
   // void _goNext() {

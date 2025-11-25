@@ -64,7 +64,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
     super.initState();
 
     ownershipType = widget.isIndividual ? 'INDIVIDUAL' : 'COMPANY';
-    businessTypeForApi = widget.isService ? 'SERVICES' : 'PRODUCT';
+    businessTypeForApi = widget.isService ? 'SERVICES' : 'SELLING_PRODUCTS';
 
     otpControllers = List.generate(otpLength, (_) => TextEditingController());
     otpFocusNodes = List.generate(otpLength, (_) => FocusNode());

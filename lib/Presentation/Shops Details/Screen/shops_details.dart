@@ -93,7 +93,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
         enabled: true,
         enableSwitchAnimation: true,
         child: Scaffold(
-          body: SafeArea(child: Center(child: ThreeDotsLoader())),
+          body: SafeArea(child: Center(child: ThreeDotsLoader(dotColor: AppColor.black,))),
         ),
       );
     }
@@ -643,7 +643,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        ProductCategoryScreens(),
+                                        ProductCategoryScreens(shopId: shop.shopId,),
                                   ),
                                 );
                               },
