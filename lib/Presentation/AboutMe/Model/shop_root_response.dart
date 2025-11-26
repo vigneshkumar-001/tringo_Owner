@@ -4,17 +4,15 @@ class ShopRootResponse {
   final bool status;
   final List<Shop> data;
 
-  ShopRootResponse({
-    required this.status,
-    required this.data,
-  });
+  ShopRootResponse({required this.status, required this.data});
 
   factory ShopRootResponse.fromJson(Map<String, dynamic> json) {
     return ShopRootResponse(
       status: json["status"] ?? false,
-      data: (json["data"] as List<dynamic>?)
-          ?.map((x) => Shop.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      data:
+          (json["data"] as List<dynamic>?)
+              ?.map((x) => Shop.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -115,22 +113,26 @@ class Shop {
       shopReviewCount: (json["shopReviewCount"] as num?)?.toInt(),
 
       // 🔹 shopImages
-      shopImages: (json["shopImages"] as List<dynamic>?)
-          ?.map((x) => ShopImage.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      shopImages:
+          (json["shopImages"] as List<dynamic>?)
+              ?.map((x) => ShopImage.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
 
-      products: (json["products"] as List<dynamic>?)
-          ?.map((x) => Product.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      products:
+          (json["products"] as List<dynamic>?)
+              ?.map((x) => Product.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
-      services: (json["services"] as List<dynamic>?)
-          ?.map((x) => Service.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      services:
+          (json["services"] as List<dynamic>?)
+              ?.map((x) => Service.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
-      reviews: (json["reviews"] as List<dynamic>?)
-          ?.map((x) => Review.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      reviews:
+          (json["reviews"] as List<dynamic>?)
+              ?.map((x) => Review.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -144,12 +146,7 @@ class ShopImage {
   final String? url;
   final int? displayOrder;
 
-  ShopImage({
-    this.id,
-    this.type,
-    this.url,
-    this.displayOrder,
-  });
+  ShopImage({this.id, this.type, this.url, this.displayOrder});
 
   factory ShopImage.fromJson(Map<String, dynamic> json) {
     return ShopImage(
@@ -169,6 +166,8 @@ class Product {
   final String? updatedAt;
   final String? category;
   final String? subCategory;
+  final String? categorySlug;
+  final String? subCategorySlug;
   final String? englishName;
   final String? tamilName;
   final int? price;
@@ -187,6 +186,8 @@ class Product {
     this.updatedAt,
     this.category,
     this.subCategory,
+    this.categorySlug,
+    this.subCategorySlug,
     this.englishName,
     this.tamilName,
     this.price,
@@ -207,6 +208,8 @@ class Product {
       updatedAt: json["updatedAt"] as String?,
       category: json["category"] as String?,
       subCategory: json["subCategory"] as String?,
+      categorySlug: json["categorySlug"] as String?,
+      subCategorySlug: json["subCategorySlug"] as String?,
       englishName: json["englishName"] as String?,
       tamilName: json["tamilName"] as String?,
       price: (json["price"] as num?)?.toInt(),
@@ -217,9 +220,10 @@ class Product {
       doorDelivery: json["doorDelivery"] as bool?,
       rating: (json["rating"] as num?)?.toInt(),
       ratingCount: (json["ratingCount"] as num?)?.toInt(),
-      media: (json["media"] as List<dynamic>?)
-          ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      media:
+          (json["media"] as List<dynamic>?)
+              ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -285,9 +289,10 @@ class Service {
       ratingCount: (json["ratingCount"] as num?)?.toInt(),
       status: json["status"] as String?,
       features: json["features"] ?? [],
-      media: (json["media"] as List<dynamic>?)
-          ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+      media:
+          (json["media"] as List<dynamic>?)
+              ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -300,11 +305,7 @@ class Media {
   final String? url;
   final int? displayOrder;
 
-  Media({
-    this.id,
-    this.url,
-    this.displayOrder,
-  });
+  Media({this.id, this.url, this.displayOrder});
 
   factory Media.fromJson(Map<String, dynamic> json) {
     return Media(
