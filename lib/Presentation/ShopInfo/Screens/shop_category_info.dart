@@ -30,6 +30,24 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? shopId;
   final bool? isService;
   final bool? isIndividual;
+
+  // 👉 new fields for prefill when editing
+  final String? initialDescriptionEnglish;
+  final String? initialDescriptionTamil;
+  final String? initialAddressEnglish;
+  final String? initialAddressTamil;
+  final String? initialGps;
+  final String? initialPrimaryMobile;
+  final String? initialWhatsapp;
+  final String? initialEmail;
+  final String? initialCategoryName;
+  final String? initialCategorySlug;
+  final String? initialSubCategoryName;
+  final String? initialSubCategorySlug;
+  final String? initialDoorDeliveryText; // 'Yes' / 'No'
+  final String? initialOpenTimeText;
+  final String? initialCloseTimeText;
+
   const ShopCategoryInfo({
     super.key,
     this.pages,
@@ -38,6 +56,21 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.shopId,
     required this.isService,
     required this.isIndividual,
+    this.initialDescriptionEnglish,
+    this.initialDescriptionTamil,
+    this.initialAddressEnglish,
+    this.initialAddressTamil,
+    this.initialGps,
+    this.initialPrimaryMobile,
+    this.initialWhatsapp,
+    this.initialEmail,
+    this.initialCategoryName,
+    this.initialCategorySlug,
+    this.initialSubCategoryName,
+    this.initialSubCategorySlug,
+    this.initialDoorDeliveryText,
+    this.initialOpenTimeText,
+    this.initialCloseTimeText,
   });
 
   @override
@@ -478,7 +511,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
     });
+
     if (widget.pages == "AboutMeScreens") {
+      // 👉 shop name
       if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
         _shopNameEnglishController.text = widget.initialShopNameEnglish!;
       }
@@ -489,8 +524,108 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       } else {
         _prefillTamilFromEnglishOnce();
       }
+
+      // 👉 description
+      if (widget.initialDescriptionEnglish?.isNotEmpty ?? false) {
+        _descriptionEnglishController.text = widget.initialDescriptionEnglish!;
+      }
+      if (widget.initialDescriptionTamil?.isNotEmpty ?? false) {
+        descriptionTamilController.text = widget.initialDescriptionTamil!;
+      }
+
+      // 👉 address
+      if (widget.initialAddressEnglish?.isNotEmpty ?? false) {
+        _addressEnglishController.text = widget.initialAddressEnglish!;
+      }
+      if (widget.initialAddressTamil?.isNotEmpty ?? false) {
+        addressTamilNameController.text = widget.initialAddressTamil!;
+      }
+
+      // 👉 GPS
+      if (widget.initialGps?.isNotEmpty ?? false) {
+        _gpsController.text = widget.initialGps!;
+        _gpsFetched = true;
+      }
+
+      // 👉 phones
+      if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
+        var phone = widget.initialPrimaryMobile!;
+
+        // 🔹 If editing from AboutMeScreens, remove leading +91
+        if (widget.pages == "AboutMeScreens" && phone.startsWith('+91')) {
+          phone = phone.substring(3); // remove "+91"
+        }
+
+        _primaryMobileController.text = phone.trim();
+      }
+
+      if (widget.initialWhatsapp?.isNotEmpty ?? false) {
+        var wa = widget.initialWhatsapp!;
+
+        if (widget.pages == "AboutMeScreens" && wa.startsWith('+91')) {
+          wa = wa.substring(3);
+        }
+
+        _whatsappController.text = wa.trim();
+      }
+      // if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
+      //   _primaryMobileController.text = widget.initialPrimaryMobile!;
+      // }
+      // if (widget.initialWhatsapp?.isNotEmpty ?? false) {
+      //   _whatsappController.text = widget.initialWhatsapp!;
+      // }
+
+      // 👉 email
+      if (widget.initialEmail?.isNotEmpty ?? false) {
+        _emailController.text = widget.initialEmail!;
+      }
+
+      // 👉 category / subcategory
+      if (widget.initialCategoryName?.isNotEmpty ?? false) {
+        _categoryController.text = widget.initialCategoryName!;
+        categorySlug = widget.initialCategorySlug ?? '';
+      }
+      if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
+        _subCategoryController.text = widget.initialSubCategoryName!;
+        subCategorySlug = widget.initialSubCategorySlug ?? '';
+      }
+
+      // 👉 door delivery (for product flow)
+      if (widget.initialDoorDeliveryText?.isNotEmpty ?? false) {
+        _doorDeliveryController.text = widget.initialDoorDeliveryText!;
+      }
+
+      // 👉 open / close time (only text; you can parse to TimeOfDay if needed)
+      if (widget.initialOpenTimeText?.isNotEmpty ?? false) {
+        _openTimeController.text = widget.initialOpenTimeText!;
+      }
+      if (widget.initialCloseTimeText?.isNotEmpty ?? false) {
+        _closeTimeController.text = widget.initialCloseTimeText!;
+      }
     }
   }
+
+  ///old///
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   AppLogger.log.i(widget.shopId);
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
+  //   });
+  //   if (widget.pages == "AboutMeScreens") {
+  //     if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
+  //       _shopNameEnglishController.text = widget.initialShopNameEnglish!;
+  //     }
+  //
+  //     if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
+  //       tamilNameController.text = widget.initialShopNameTamil!;
+  //       _tamilPrefilled = true;
+  //     } else {
+  //       _prefillTamilFromEnglishOnce();
+  //     }
+  //   }
+  // }
 
   Future<void> _prefillTamilFromEnglishOnce() async {
     if (_tamilPrefilled) return;
@@ -595,6 +730,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     final state = ref.watch(shopCategoryNotifierProvider);
     final bool isServiceFlow = widget.isService ?? false;
     final bool isIndividualFlow = widget.isIndividual ?? true;
+    final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -1071,30 +1207,83 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       const SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        controller: _primaryMobileController,
-                        verticalDivider: true,
-                        isMobile: true,
-                        text: 'Mobile No',
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Primary Mobile Number'
-                            : null,
-                      ),
+                      if (isEditFromAboutMe) ...[
+                        // 👉 Edit mode from AboutMeScreens: NORMAL field, no +91, no validation
+                        CommonContainer.fillingContainer(
+                          controller: _primaryMobileController,
+                          verticalDivider:
+                              false, // optional: hide divider if you want
+                          isMobile: false, // ⚠️ IMPORTANT → disables +91 logic
+                          text: 'Mobile No',
+                          keyboardType: TextInputType.phone,
+                          validator: (_) => null, // no validation
+                        ),
+                      ] else ...[
+                        // 👉 Normal register flow: mobile UI + validation
+                        CommonContainer.fillingContainer(
+                          controller: _primaryMobileController,
+                          verticalDivider: true,
+                          isMobile: true, // mobile behavior +91 etc
+                          text: 'Mobile No',
+                          keyboardType: TextInputType.phone,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Primary Mobile Number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                      // CommonContainer.fillingContainer(
+                      //   controller: _primaryMobileController,
+                      //   verticalDivider: true,
+                      //   isMobile: true,
+                      //   text: 'Mobile No',
+                      //   // validator: (value) => value == null || value.isEmpty
+                      //   //     ? 'Please Enter Primary Mobile Number'
+                      //   //     : null,
+                      // ),
                       const SizedBox(height: 25),
                       Text(
                         'Whatsapp Number',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       const SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        controller: _whatsappController,
-                        verticalDivider: true,
-                        isMobile: true,
-                        text: 'Mobile No',
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Whatsapp Number'
-                            : null,
-                      ),
+                      if (isEditFromAboutMe) ...[
+                        // 👉 Edit mode: simple text field, no +91, no validation
+                        CommonContainer.fillingContainer(
+                          controller: _whatsappController,
+                          verticalDivider: false,
+                          isMobile: false, // ⚠️ IMPORTANT
+                          text: 'Mobile No',
+                          keyboardType: TextInputType.phone,
+                          validator: (_) => null,
+                        ),
+                      ] else ...[
+                        // 👉 Normal register flow
+                        CommonContainer.fillingContainer(
+                          controller: _whatsappController,
+                          verticalDivider: true,
+                          isMobile: true,
+                          text: 'Mobile No',
+                          keyboardType: TextInputType.phone,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Whatsapp Number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                      // CommonContainer.fillingContainer(
+                      //   controller: _whatsappController,
+                      //   verticalDivider: true,
+                      //   isMobile: true,
+                      //   text: 'Mobile No',
+                      //   // validator: (value) => value == null || value.isEmpty
+                      //   //     ? 'Please Enter Whatsapp Number'
+                      //   //     : null,
+                      // ),
                       const SizedBox(height: 25),
                       Text(
                         'Open Time',
@@ -1182,16 +1371,17 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 25),
-                      if (widget.isService ?? false || widget.pages != 'AboutMeScreens') ...[
-
+                      SizedBox(height: 25),
+                      // if (widget.isService ??
+                      //     false || widget.pages != 'AboutMeScreens')
+                      if (!(widget.isService ?? false)) ...[
                         Text(
                           'Door Delivery',
                           style: AppTextStyles.mulish(
                             color: AppColor.mildBlack,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         CommonContainer.fillingContainer(
                           imagePath: AppImages.downArrow,
                           verticalDivider: false,
@@ -1211,7 +1401,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             color: AppColor.mildBlack,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         GestureDetector(
                           onTap: _pickImage,
                           child: DottedBorder(
@@ -1332,8 +1522,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           // }
 
                           AppLogger.log.i(_gpsController.text);
-                          final bool isServiceFlow =
-                              widget.isService ?? false;
+                          final bool isServiceFlow = widget.isService ?? false;
                           final String type = isServiceFlow
                               ? 'service'
                               : 'product';
@@ -1343,10 +1532,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                           if (gpsText.isNotEmpty && gpsText.contains(',')) {
                             final parts = gpsText.split(',');
-                            latitude =
-                                double.tryParse(parts[0].trim()) ?? 0.0;
-                            longitude =
-                                double.tryParse(parts[1].trim()) ?? 0.0;
+                            latitude = double.tryParse(parts[0].trim()) ?? 0.0;
+                            longitude = double.tryParse(parts[1].trim()) ?? 0.0;
                           }
 
                           bool doorDelivery = false;
@@ -1374,33 +1561,32 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final response = await ref
                               .read(shopCategoryNotifierProvider.notifier)
                               .shopCategoryInfo(
-                            shopId: widget.shopId,
-                            ownerImageFile: ownerFile,
-                            type: type,
+                                shopId: widget.shopId,
+                                ownerImageFile: ownerFile,
+                                type: type,
 
-                            addressEn: _addressEnglishController.text
-                                .trim(),
-                            addressTa: addressTamilNameController.text
-                                .trim(),
-                            alternatePhone: _whatsappController.text
-                                .trim(),
-                            category: categorySlug,
-                            contactEmail: _emailController.text.trim(),
-                            descriptionEn: _descriptionEnglishController
-                                .text
-                                .trim(),
-                            descriptionTa: descriptionTamilController.text
-                                .trim(),
-                            doorDelivery: doorDelivery,
-                            englishName: _shopNameEnglishController.text
-                                .trim(),
-                            gpsLatitude: latitude,
-                            gpsLongitude: longitude,
-                            primaryPhone: _primaryMobileController.text
-                                .trim(),
-                            subCategory: subCategorySlug,
-                            tamilName: tamilNameController.text.trim(),
-                          );
+                                addressEn: _addressEnglishController.text
+                                    .trim(),
+                                addressTa: addressTamilNameController.text
+                                    .trim(),
+                                alternatePhone: _whatsappController.text.trim(),
+                                category: categorySlug,
+                                contactEmail: _emailController.text.trim(),
+                                descriptionEn: _descriptionEnglishController
+                                    .text
+                                    .trim(),
+                                descriptionTa: descriptionTamilController.text
+                                    .trim(),
+                                doorDelivery: doorDelivery,
+                                englishName: _shopNameEnglishController.text
+                                    .trim(),
+                                gpsLatitude: latitude,
+                                gpsLongitude: longitude,
+                                primaryPhone: _primaryMobileController.text
+                                    .trim(),
+                                subCategory: subCategorySlug,
+                                tamilName: tamilNameController.text.trim(),
+                              );
 
                           final newState = ref.read(
                             shopCategoryNotifierProvider,
@@ -1418,11 +1604,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               'Shop category details saved successfully',
                             );
                             if (widget.pages == 'AboutMeScreens') {
-                              context.pushNamed(
-                                AppRoutes.homeScreen,
-                                extra: 3, // or 3 depending on the tab you want
-                              );
-
+                              Navigator.pop(context, true);
+                              // context.pushNamed(
+                              //   AppRoutes.homeScreen,
+                              //   extra: 3, // or 3 depending on the tab you want
+                              // );
                             } else {
                               context.pushNamed(
                                 AppRoutes.shopPhotoInfo,

@@ -23,7 +23,12 @@ import 'package:tringo_vendor/Core/Session/registration_session.dart';
 
 class ShopsDetails extends ConsumerStatefulWidget {
   final bool backDisabled;
-  const ShopsDetails({super.key, this.backDisabled = false});
+  final bool fromSubscriptionSkip;
+  const ShopsDetails({
+    super.key,
+    this.backDisabled = false,
+    this.fromSubscriptionSkip = false,
+  });
 
   @override
   ConsumerState<ShopsDetails> createState() => _ShopsDetailsState();
@@ -85,6 +90,14 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
     });
   }
 
+  void _maybeGoToProductCategory() {
+    // your existing logic here, example:
+    //
+    // if (RegistrationProductSeivice.instance.shouldGoToProductCategory) {
+    //   context.goNamed(AppRoutes.productCategoryScreens);
+    // }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopDetailsNotifierProvider);
@@ -93,7 +106,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
         enabled: true,
         enableSwitchAnimation: true,
         child: Scaffold(
-          body: SafeArea(child: Center(child: ThreeDotsLoader(dotColor: AppColor.black,))),
+          body: SafeArea(
+            child: Center(child: ThreeDotsLoader(dotColor: AppColor.black)),
+          ),
         ),
       );
     }
@@ -643,7 +658,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        ProductCategoryScreens(shopId: shop.shopId,),
+                                        ProductCategoryScreens(
+                                          shopId: shop.shopId,
+                                        ),
                                   ),
                                 );
                               },
@@ -946,17 +963,33 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
+                    // optional: session reset (idhu navigation panna koodathu!)
                     RegistrationSession.instance.reset();
-                    context.goNamed(AppRoutes.homeScreen, extra: 2);
-                    // Navigator.pushAndRemoveUntil(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) =>
-                    //         const CommonBottomNavigation(initialIndex: 0),
-                    //   ),
-                    //   (route) => false,
-                    // );
+                    // RegistrationProductSeivice.instance.reset(); // venumna
+
+                    // 🔑 Navigator locked error avoid panna → next frame la navigate pannrom
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+
+                      context.goNamed(
+                        AppRoutes.homeScreen,
+                        extra: 2, // unga bottom nav index / tab
+                      );
+                    });
                   },
+
+                  // onPressed: () {
+                  //   RegistrationSession.instance.reset();
+                  //   context.goNamed(AppRoutes.homeScreen, extra: 2);
+                  //   // Navigator.pushAndRemoveUntil(
+                  //   //   context,
+                  //   //   MaterialPageRoute(
+                  //   //     builder: (_) =>
+                  //   //         const CommonBottomNavigation(initialIndex: 0),
+                  //   //   ),
+                  //   //   (route) => false,
+                  //   // );
+                  // },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
@@ -980,8 +1013,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
       ),
     );
   }
+}
 
-  /*  @override
+/*  @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopDetailsNotifierProvider);
 
@@ -1600,4 +1634,3 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
       ),
     );
   }*/
-}
