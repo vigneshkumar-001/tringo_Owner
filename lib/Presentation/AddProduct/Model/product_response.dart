@@ -19,13 +19,15 @@ class ProductData {
   final String category;
   final String subCategory;
   final String englishName;
-  final String tamilName;
+  // final String tamilName;
+  final String? tamilName;
   final num price;
   final String? offerLabel;
   final String? offerValue;
   final String description;
   final List<String> keywords;
-  final int readyTimeMinutes;
+  // final int readyTimeMinutes;
+  final int? readyTimeMinutes;
   final bool doorDelivery;
   final String status;
   final num rating;
@@ -40,13 +42,15 @@ class ProductData {
     required this.category,
     required this.subCategory,
     required this.englishName,
-    required this.tamilName,
+    // required this.tamilName,
+    this.tamilName,
     required this.price,
     this.offerLabel,
     this.offerValue,
     required this.description,
     required this.keywords,
-    required this.readyTimeMinutes,
+    // required this.readyTimeMinutes,
+    this.readyTimeMinutes,
     required this.doorDelivery,
     required this.status,
     required this.rating,
@@ -62,7 +66,8 @@ class ProductData {
     category: json['category'],
     subCategory: json['subCategory'],
     englishName: json['englishName'],
-    tamilName: json['tamilName'],
+    // tamilName: json['tamilName'],
+    tamilName: json['tamilName'] as String?,
     price: json['price'] is String
         ? num.tryParse(json['price']) ?? 0
         : json['price'] ?? 0,
@@ -70,7 +75,8 @@ class ProductData {
     offerValue: json['offerValue'],
     description: json['description'],
     keywords: List<String>.from(json['keywords'] ?? []),
-    readyTimeMinutes: json['readyTimeMinutes'] ?? 0,
+    // readyTimeMinutes: json['readyTimeMinutes'] ?? 0,
+    readyTimeMinutes: json['readyTimeMinutes'] as int?,
     doorDelivery: json['doorDelivery'] ?? false,
     status: json['status'] ?? 'DRAFT',
     rating: json['rating'] is String

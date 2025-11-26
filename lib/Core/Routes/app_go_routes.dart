@@ -125,8 +125,25 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.shopsDetailsPath,
       name: AppRoutes.shopsDetails,
-      builder: (context, state) => const ShopsDetails(backDisabled: true),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+
+        final bool backDisabled = extra?['backDisabled'] as bool? ?? false;
+        final bool fromSubscription =
+            extra?['fromSubscriptionSkip'] as bool? ?? false;
+
+        return ShopsDetails(
+          backDisabled: backDisabled,
+          fromSubscriptionSkip: fromSubscription,
+        );
+      },
     ),
+
+    // GoRoute(
+    //   path: AppRoutes.shopsDetailsPath,
+    //   name: AppRoutes.shopsDetails,
+    //   builder: (context, state) => const ShopsDetails(backDisabled: true),
+    // ),
     GoRoute(
       path: AppRoutes.homeScreenPath,
       name: AppRoutes.homeScreen,

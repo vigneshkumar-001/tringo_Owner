@@ -33,6 +33,10 @@ class ApiUrl {
     return "${base}api/v1/products/$productId";
   }
 
+  static String deleteProduct({required String productId}) {
+    return "${base}api/v1/products/$productId";
+  }
+
   static String productCategoryList({required String shopId}) {
     return "${base}api/v1/public/shops/$shopId/product-categories";
   }
@@ -40,15 +44,17 @@ class ApiUrl {
   static String shopDetails({required String shopId}) {
     return "${base}api/v1/shops/$shopId";
   }
+
   static String serviceInfo({required String shopId}) {
     //  no slash before api
     return "${base}api/v1/shops/$shopId/services";
   }
+
   static String serviceList({required String serviceId}) {
     return "${base}api/v1/services/$serviceId";
   }
+
   static String getAllShop({required String shopId}) {
     return "${base}api/v1/shops?mine=true&selectedShopId=$shopId";
   }
-
 }

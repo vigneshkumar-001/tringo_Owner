@@ -19,6 +19,7 @@ import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_respo
 import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
 
 import '../../Core/Session/registration_product_seivice.dart';
+import '../../Presentation/AddProduct/Model/delete_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
@@ -344,7 +345,7 @@ class ApiDataSource extends BaseApiDataSource {
 
   Future<Either<Failure, ShopPhotoResponse>> shopPhotoUpload({
     required List<Map<String, String>> items,
-      String? apiShopId,
+    String? apiShopId,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -438,76 +439,141 @@ class ApiDataSource extends BaseApiDataSource {
     required String offerValue,
     String? apiShopId,
     String? apiProductId,
-
     required String description,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final shopId = prefs.getString('shop_id');
-      // final productId = prefs.getString('product_id');
+      // 🔹 SHOP ID: can fallback to prefs
+      String? shopIdToUse = apiShopId ?? prefs.getString('shop_id');
 
-      // final url = (productId != null && productId.isNotEmpty)
-      //     ? ApiUrl.updateProducts(productId: productId)
-      //     : ApiUrl.addProducts(shopId: shopId ?? '');
+      if (shopIdToUse == null || shopIdToUse.isEmpty) {
+        return Left(
+          ServerFailure("Shop not found. Please complete shop setup first."),
+        );
+      }
 
-      // String url = ApiUrl.addProducts(shopId: shopId ?? '');
-      // final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
-      // final url = ApiUrl.addProducts(shopId: shopIdToUse);
+      // 🔹 PRODUCT ID: ONLY use what caller sends
+      final String? productId = apiProductId; // ❗ no prefs fallback here
 
-
-      final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
-      final productId = apiProductId ?? prefs.getString('product_id');
-
-      final url = (productId != null && productId.isNotEmpty)
-          ? ApiUrl.updateProducts(productId: productId)
-          : ApiUrl.addProducts(shopId: shopIdToUse);
+      final String url = (productId != null && productId.isNotEmpty)
+          ? ApiUrl.updateProducts(productId: productId) // UPDATE
+          : ApiUrl.addProducts(shopId: shopIdToUse); // CREATE
 
       final payload = {
         "category": category,
         "subCategory": subCategory,
         "englishName": englishName,
-        "tamilName": "ரெட்மி நோட் 13",
         "price": price,
         "offerLabel": offerLabel,
-        "offerValue": "$offerValue%",
+        "offerValue": offerValue,
         "description": description,
         "doorDelivery": true,
       };
 
-      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+      final response = await Request.sendRequest(url, payload, 'Post', true);
 
-      AppLogger.log.i(response);
-      AppLogger.log.i(payload);
-
-      if (response is! DioException) {
-        // If status code is success
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          if (response.data['status'] == true) {
-            return Right(ProductResponse.fromJson(response.data));
-          } else {
-            return Left(
-              ServerFailure(response.data['message'] ?? "Login failed"),
-            );
-          }
-        } else {
-          // ❗ API returned non-success code but has JSON error message
-          return Left(
-            ServerFailure(response.data['message'] ?? "Something went wrong"),
-          );
-        }
-      } else {
-        final errorData = response.response?.data;
-        if (errorData is Map && errorData.containsKey('message')) {
-          return Left(ServerFailure(errorData['message']));
-        }
-        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      if (response is! Response) {
+        return Left(ServerFailure("Invalid response from server"));
       }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+
+        if (data["status"] == true) {
+          return Right(ProductResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? "Request failed"));
+        }
+      }
+
+      return Left(
+        ServerFailure(response.data['message'] ?? "Something went wrong"),
+      );
     } catch (e) {
-      print(e);
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  ///old///
+  // Future<Either<Failure, ProductResponse>> addProduct({
+  //   required String category,
+  //   required String subCategory,
+  //   required String englishName,
+  //   required int price,
+  //   required String offerLabel,
+  //   required String offerValue,
+  //   String? apiShopId,
+  //   String? apiProductId,
+  //
+  //   required String description,
+  // }) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //
+  //     final shopId = prefs.getString('shop_id');
+  //     // final productId = prefs.getString('product_id');
+  //
+  //     // final url = (productId != null && productId.isNotEmpty)
+  //     //     ? ApiUrl.updateProducts(productId: productId)
+  //     //     : ApiUrl.addProducts(shopId: shopId ?? '');
+  //
+  //     // String url = ApiUrl.addProducts(shopId: shopId ?? '');
+  //     // final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+  //     // final url = ApiUrl.addProducts(shopId: shopIdToUse);
+  //
+  //     final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+  //     final productId = apiProductId ?? prefs.getString('product_id');
+  //
+  //     final url = (productId != null && productId.isNotEmpty)
+  //         ? ApiUrl.updateProducts(productId: productId)
+  //         : ApiUrl.addProducts(shopId: shopIdToUse);
+  //
+  //     final payload = {
+  //       "category": category,
+  //       "subCategory": subCategory,
+  //       "englishName": englishName,
+  //       "tamilName": "ரெட்மி நோட் 13",
+  //       "price": price,
+  //       "offerLabel": offerLabel,
+  //       "offerValue": "$offerValue%",
+  //       "description": description,
+  //       "doorDelivery": true,
+  //     };
+  //
+  //     dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+  //
+  //     AppLogger.log.i(response);
+  //     AppLogger.log.i(payload);
+  //
+  //     if (response is! DioException) {
+  //       // If status code is success
+  //       if (response.statusCode == 200 || response.statusCode == 201) {
+  //         if (response.data['status'] == true) {
+  //           return Right(ProductResponse.fromJson(response.data));
+  //         } else {
+  //           return Left(
+  //             ServerFailure(response.data['message'] ?? "Login failed"),
+  //           );
+  //         }
+  //       } else {
+  //         // ❗ API returned non-success code but has JSON error message
+  //         return Left(
+  //           ServerFailure(response.data['message'] ?? "Something went wrong"),
+  //         );
+  //       }
+  //     } else {
+  //       final errorData = response.response?.data;
+  //       if (errorData is Map && errorData.containsKey('message')) {
+  //         return Left(ServerFailure(errorData['message']));
+  //       }
+  //       return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+  //     }
+  //   } catch (e) {
+  //     print(e);
+  //     return Left(ServerFailure(e.toString()));
+  //   }
+  // }
 
   Future<Either<Failure, ShopCategoryListResponse>>
   getProductCategories() async {
@@ -978,6 +1044,36 @@ class ApiDataSource extends BaseApiDataSource {
     } catch (e) {
       AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, DeleteResponse>> deleteProduct({
+    String? productId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = productId ?? prefs.getString('product_id');
+
+      if (id == null || id.isEmpty) {
+        return Left(ServerFailure("Product not found."));
+      }
+
+      final url = ApiUrl.deleteProduct(productId: id);
+
+      final response = await Request.sendRequest(url, {}, 'DELETE', true);
+
+      if (response is DioException) {
+        return Left(ServerFailure(response.message ?? 'Delete failed'));
+      }
+
+      final map = response.data;
+      if (map == null || map is! Map<String, dynamic>) {
+        return const Right(DeleteResponse(status: true));
+      }
+
+      return Right(DeleteResponse.fromJson(map));
+    } catch (_) {
+      return Left(ServerFailure('Unexpected error'));
     }
   }
 }
