@@ -3,23 +3,27 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../ShopInfo/model/shop_category_list_response.dart';
+import '../Model/delete_response.dart';
 
 class ProductState {
   final bool isLoading;
   final String? error;
   final ProductResponse? productResponse;
   final ShopCategoryListResponse? shopCategoryListResponse;
+  final DeleteResponse? DeleteResponses;
 
   const ProductState({
     this.isLoading = false,
     this.error,
     this.productResponse,
     this.shopCategoryListResponse,
+    this.DeleteResponses,
   });
 
   factory ProductState.initial() => const ProductState();
@@ -42,15 +46,20 @@ class ProductNotifier extends Notifier<ProductState> {
     required String offerLabel,
     required String offerValue,
     required String description,
-      String? shopId,
-      String? productId,
-  }) async
-  {
+    String? shopId,
+    String? productId, // from widget / route
+  }) async {
     state = const ProductState(isLoading: true);
 
+    // Only use id if non-empty
+    final String? productIdToUse = (productId != null && productId.isNotEmpty)
+        ? productId
+        : null;
+
     final result = await api.addProduct(
-      apiProductId: productId,
-      subCategory: subCategory, apiShopId :shopId ,
+      apiProductId: productIdToUse, // only this
+      subCategory: subCategory,
+      apiShopId: shopId,
       englishName: englishName,
       category: category,
       description: description,
@@ -66,7 +75,10 @@ class ProductNotifier extends Notifier<ProductState> {
       },
       (response) async {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('product_id', response.data.id);
+        await prefs.setString(
+          'product_id',
+          response.data.id,
+        ); // ✅ fine for later steps
         state = ProductState(isLoading: false, productResponse: response);
         return true;
       },
@@ -74,6 +86,48 @@ class ProductNotifier extends Notifier<ProductState> {
 
     return isSuccess;
   }
+
+  ///old///
+  // Future<bool> addProduct({
+  //   required String category,
+  //   required String subCategory,
+  //   required String englishName,
+  //   required int price,
+  //   required String offerLabel,
+  //   required String offerValue,
+  //   required String description,
+  //   String? shopId,
+  //   String? productId,
+  // }) async {
+  //   state = const ProductState(isLoading: true);
+  //
+  //   final result = await api.addProduct(
+  //     apiProductId: productId,
+  //     subCategory: subCategory,
+  //     apiShopId: shopId,
+  //     englishName: englishName,
+  //     category: category,
+  //     description: description,
+  //     offerLabel: offerLabel,
+  //     offerValue: offerValue,
+  //     price: price,
+  //   );
+  //
+  //   final isSuccess = await result.fold<Future<bool>>(
+  //     (failure) async {
+  //       state = ProductState(isLoading: false, error: failure.message);
+  //       return false;
+  //     },
+  //     (response) async {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('product_id', response.data.id);
+  //       state = ProductState(isLoading: false, productResponse: response);
+  //       return true;
+  //     },
+  //   );
+  //
+  //   return isSuccess;
+  // }
 
   Future<void> fetchProductCategories() async {
     state = const ProductState(isLoading: true);
@@ -182,9 +236,34 @@ class ProductNotifier extends Notifier<ProductState> {
   void resetState() {
     state = ProductState.initial();
   }
+
+  Future<bool> deleteProductAction({String? productId}) async {
+    if (!ref.mounted) return false;
+
+    state = const ProductState(isLoading: true, error: null);
+
+    final result = await api.deleteProduct(productId: productId);
+
+    if (!ref.mounted) return false;
+
+    return result.fold(
+          (failure) {
+        if (!ref.mounted) return false;
+        AppLogger.log.e('❌ deleteProduct failure: ${failure.message}');
+        state = ProductState(isLoading: false, error: failure.message);
+        return false;
+      },
+          (response) {
+        if (!ref.mounted) return false;
+        AppLogger.log.i('✅ deleteProduct status: ${response.status}');
+        state = ProductState(isLoading: false, DeleteResponses: response);
+        return response.status == true;
+      },
+    );
+  }
+
 }
 
-final productNotifierProvider =
-    NotifierProvider.autoDispose<ProductNotifier, ProductState>(
-      ProductNotifier.new,
-    );
+final productNotifierProvider = NotifierProvider<ProductNotifier, ProductState>(
+  ProductNotifier.new,
+);

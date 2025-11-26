@@ -11,6 +11,7 @@ import '../../../Core/Session/registration_product_seivice.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool showSkip;
+
   const SubscriptionScreen({super.key, this.showSkip = false});
 
   @override
@@ -63,7 +64,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 // 1️⃣ mark as non-premium
                                 RegistrationProductSeivice.instance
                                     .markUnsubscribed();
-
 
                                 context.goNamed(
                                   AppRoutes.shopsDetails,
