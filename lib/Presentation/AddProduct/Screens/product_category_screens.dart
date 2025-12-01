@@ -918,15 +918,15 @@ class _ProductCategoryScreensState
 
                           final formValid = _formKey.currentState!.validate();
 
-                          if (!formValid ||
-                              hasCategoryError ||
-                              hasSubCategoryError) {
-                            AppSnackBar.info(
-                              context,
-                              'Please fill all required fields correctly.',
-                            );
-                            return;
-                          }
+                          // if (!formValid ||
+                          //     hasCategoryError ||
+                          //     hasSubCategoryError) {
+                          //   AppSnackBar.info(
+                          //     context,
+                          //     'Please fill all required fields correctly.',
+                          //   );
+                          //   return;
+                          // }
 
                           bool success = false;
 
