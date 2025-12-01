@@ -42,19 +42,17 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
     required int startsAt,
     required String offerLabel,
     required String offerValue,
+    required String ServiceId,
     required int durationMinutes,
     required String categoryId,
     required String subCategory,
     required List<String> tags,
-    required List<String> keywords,
-    required List<String> images,
-    required bool isFeatured,
-    required List<Map<String, String>> features,
   }) async {
     // 🔹 Set loading before any await
     state = const ServiceInfoState(isLoading: true);
 
     final result = await api.serviceInfo(
+      apiServiceId: ServiceId,
       title: title,
       tamilName: tamilName,
       description: description,
@@ -65,10 +63,6 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
       categoryId: categoryId,
       subCategory: subCategory,
       tags: tags,
-      keywords: keywords,
-      images: images,
-      isFeatured: isFeatured,
-      features: features,
     );
 
     // Provider may have been disposed while waiting for API
@@ -120,8 +114,8 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
       final uploadResult = await api.serviceImageUpload(imageFile: file);
 
       final uploadedUrl = uploadResult.fold<String?>(
-            (failure) => null,
-            (success) => success.message,
+        (failure) => null,
+        (success) => success.message,
       );
 
       if (uploadedUrl == null) {
@@ -150,14 +144,11 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
     );
 
     return result.fold(
-          (failure) {
-        state = ServiceInfoState(
-          isLoading: false,
-          error: failure.message,
-        );
+      (failure) {
+        state = ServiceInfoState(isLoading: false, error: failure.message);
         return false;
       },
-          (response) {
+      (response) {
         state = ServiceInfoState(
           isLoading: false,
           serviceInfoResponse: response,

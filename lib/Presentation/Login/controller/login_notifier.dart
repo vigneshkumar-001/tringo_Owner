@@ -53,20 +53,43 @@ class LoginNotifier extends Notifier<LoginState> {
 
   void resetState() => state = LoginState.initial();
 
-  Future<void> loginUser({required String phoneNumber, String? page}) async {
+  Future<void> loginUser({
+    required String phoneNumber,
+    String? simToken,
+    String? page,
+  }) async {
     state = const LoginState(isLoading: true);
 
-    final result = await api.mobileNumberLogin(phoneNumber, page ?? '');
+    final result = await api.mobileNumberLogin(
+      phoneNumber,
+      simToken!,
+      page: page ?? '',
+    );
 
     result.fold(
-      (Failure failure) {
+      (failure) {
         state = LoginState(isLoading: false, error: failure.message);
       },
-      (LoginResponse response) {
+      (response) {
         state = LoginState(isLoading: false, loginResponse: response);
       },
     );
   }
+
+  // Future<void> loginUser({required String phoneNumber, String? page}) async {
+  //   state = const LoginState(isLoading: true);
+  //
+  //   final result = await api.mobileNumberLogin(phoneNumber, page ?? '');
+  //
+  //   result.fold(
+  //     (Failure failure) {
+  //       state = LoginState(isLoading: false, error: failure.message);
+  //     },
+  //     (LoginResponse response) {
+  //       state = LoginState(isLoading: false, loginResponse: response);
+  //     },
+  //   );
+  // }
 
   Future<void> verifyOtp({required String contact, required String otp}) async {
     state = const LoginState(isLoading: true);

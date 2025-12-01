@@ -105,6 +105,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  country_picker:
+    dependency: "direct main"
+    description:
+      name: country_picker
+      sha256: "9b14c04f9a35e99f6de6bcbc453a556bb98345aecb481c7a0e843c94c2bee1f8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.27"
   coverage:
     dependency: transitive
     description:
@@ -122,7 +130,7 @@ packages:
     source: hosted
     version: "0.3.4+2"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: "1e445881f28f22d6140f181e07737b22f1e099a5e1ff94b0af2f9e4a463f4855"
@@ -584,6 +592,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  mobile_number:
+    dependency: "direct main"
+    description:
+      name: mobile_number
+      sha256: "8dc5b7a19193f7a41fa07aa933c8db8085033e6201b20323f20e4d283ea2a9a8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   mobile_scanner:
     dependency: "direct main"
     description:
@@ -880,6 +896,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  sim_card_info:
+    dependency: "direct main"
+    description:
+      name: sim_card_info
+      sha256: d22c1fc597a962d1feed75e9b6415c8db8040d3eb78ed2f3a0e7832afb024488
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   skeletonizer:
     dependency: "direct main"
     description:
@@ -1045,6 +1069,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_io:
+    dependency: transitive
+    description:
+      name: universal_io
+      sha256: f63cbc48103236abf48e345e07a03ce5757ea86285ed313a6a032596ed9301e2
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.1"
   url_launcher:
     dependency: "direct main"
     description:

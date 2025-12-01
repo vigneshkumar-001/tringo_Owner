@@ -46,6 +46,12 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
 
   bool _showRecommended = false;
 
+  bool get isIndividualFlow {
+    final session = RegistrationProductSeivice.instance;
+    return session.businessType == BusinessType.individual;
+  }
+
+
   void _addKeyword(String keyword) {
     final text = keyword.trim();
 
@@ -115,12 +121,32 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                     ),
                     SizedBox(width: 50),
                     Text(
-                      'Register Shop - Individual',
+                      'Register Shop',
                       style: AppTextStyles.mulish(
                         fontSize: 16,
+                        fontWeight: FontWeight.w400,
                         color: AppColor.mildBlack,
                       ),
                     ),
+                    SizedBox(width: 5),
+                    Text(
+                      '-',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColor.mildBlack,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      isIndividualFlow ? 'Individual' : 'Company',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.mildBlack,
+                      ),
+                    ),
+
                   ],
                 ),
               ),
@@ -313,6 +339,86 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
 
                     SizedBox(height: 30),
 
+                    // CommonContainer.button(
+                    //   buttonColor: AppColor.black,
+                    //   onTap: () async {
+                    //     FocusScope.of(context).unfocus();
+                    //
+                    //     // 🔹 Basic validation
+                    //     if (_keywords.isEmpty) {
+                    //       AppSnackBar.error(
+                    //         context,
+                    //         'Please add at least one keyword',
+                    //       );
+                    //       return;
+                    //     }
+                    //
+                    //     final session = RegistrationProductSeivice.instance;
+                    //     final isService = session.isServiceBusiness;
+                    //
+                    //     bool success = false;
+                    //
+                    //     // 🔹 Call correct API (service / product)
+                    //     if (isService) {
+                    //       success = await ref
+                    //           .read(serviceInfoNotifierProvider.notifier)
+                    //           .serviceSearchWords(keywords: _keywords);
+                    //     } else {
+                    //       success = await ref
+                    //           .read(productNotifierProvider.notifier)
+                    //           .updateProductSearchWords(keywords: _keywords);
+                    //     }
+                    //
+                    //     final productState = ref.read(productNotifierProvider);
+                    //     final serviceState = ref.read(
+                    //       serviceInfoNotifierProvider,
+                    //     );
+                    //
+                    //     // ❌ Handle errors
+                    //     if (!success) {
+                    //       if (!isService && productState.error != null) {
+                    //         AppSnackBar.error(context, productState.error!);
+                    //       } else if (isService && serviceState.error != null) {
+                    //         AppSnackBar.error(context, serviceState.error!);
+                    //       }
+                    //       return;
+                    //     }
+                    //
+                    //     // ✅ SUCCESS FLOW
+                    //     final productSession =
+                    //         RegistrationProductSeivice.instance;
+                    //     final regSession = RegistrationSession.instance;
+                    //
+                    //     // Company + NOT subscribed → go to subscription
+                    //     if (regSession.isCompanyBusiness &&
+                    //         productSession.isNonPremium) {
+                    //       context.pushNamed(
+                    //         AppRoutes.subscriptionScreen,
+                    //         extra: true,
+                    //       );
+                    //     } else {
+                    //       // ✅ Preview → ShopsDetails (GoRouter)
+                    //       context.pushNamed(
+                    //         AppRoutes.shopsDetails,
+                    //         extra: {
+                    //           'backDisabled': true,
+                    //           'fromSubscriptionSkip': false,
+                    //         },
+                    //       );
+                    //     }
+                    //   },
+                    //   text: isLoading
+                    //       ? ThreeDotsLoader()
+                    //       : Text(
+                    //           'Preview Shop & Product',
+                    //           style: AppTextStyles.mulish(
+                    //             fontSize: 18,
+                    //             fontWeight: FontWeight.w700,
+                    //           ),
+                    //         ),
+                    //   imagePath: isLoading ? null : AppImages.rightStickArrow,
+                    //   imgHeight: 20,
+                    // ),
                     CommonContainer.button(
                       buttonColor: AppColor.black,
                       onTap: () async {
@@ -363,23 +469,27 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                             RegistrationProductSeivice.instance;
                         final regSession = RegistrationSession.instance;
 
-                        // Company + NOT subscribed → go to subscription
+                        // 🚨 IMPORTANT CHANGE: use goNamed, not pushNamed
+
+                        // Company + NOT subscribed → go to subscription (replace stack)
                         if (regSession.isCompanyBusiness &&
                             productSession.isNonPremium) {
-                          context.pushNamed(
+                          context.goNamed(
                             AppRoutes.subscriptionScreen,
-                            extra: true,
+                            extra:
+                                true, // showSkip = true inside SubscriptionScreen
                           );
-                        } else {
-                          // ✅ Preview → ShopsDetails (GoRouter)
-                          context.pushNamed(
-                            AppRoutes.shopsDetails,
-                            extra: {
-                              'backDisabled': true,
-                              'fromSubscriptionSkip': false,
-                            },
-                          );
+                          return;
                         }
+
+                        // ✅ Otherwise → go straight to ShopsDetails (replace stack)
+                        context.goNamed(
+                          AppRoutes.shopsDetails,
+                          extra: {
+                            'backDisabled': true,
+                            'fromSubscriptionSkip': false,
+                          },
+                        );
                       },
                       text: isLoading
                           ? ThreeDotsLoader()
