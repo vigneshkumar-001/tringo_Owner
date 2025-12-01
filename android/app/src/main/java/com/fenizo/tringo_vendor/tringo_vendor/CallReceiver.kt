@@ -1,4 +1,4 @@
-package com.fenizo.tringo_vendor.tringo_vendor
+package com.fenizo.tringo_Owner.tringo_Owner
 
 import android.content.BroadcastReceiver
 import android.content.Context
