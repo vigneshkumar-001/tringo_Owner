@@ -8,6 +8,7 @@ class ApiUrl {
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
+  static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
   static String imageUrl =
       "https://next.fenizotechnologies.com/Adrox/api/image-save";
   static const String categoriesShop =
@@ -51,6 +52,14 @@ class ApiUrl {
   }
 
   static String serviceList({required String serviceId}) {
+    return "${base}api/v1/services/$serviceId";
+  }
+
+  static String serviceEdit({required String serviceId}) {
+    return "${base}api/v1/services/$serviceId";
+  }
+
+  static String serviceDelete({required String serviceId}) {
     return "${base}api/v1/services/$serviceId";
   }
 

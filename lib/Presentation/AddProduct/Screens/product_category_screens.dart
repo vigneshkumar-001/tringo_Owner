@@ -8,6 +8,7 @@ import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
@@ -66,13 +67,14 @@ class _ProductCategoryScreensState
   final _formKey = GlobalKey<FormState>();
   bool _categoryHasError = false;
   bool _subCategoryHasError = false;
+  bool _doorDelivery = false;
 
   List<ShopCategoryListData>? _selectedCategoryChildren;
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _offerController = TextEditingController();
-  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _doorDeliveryController = TextEditingController();
   final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _productPriceController = TextEditingController();
   final TextEditingController _offerPriceController = TextEditingController();
@@ -88,6 +90,10 @@ class _ProductCategoryScreensState
 
   String productCategorySlug = '';
   String productSubCategorySlug = '';
+  bool get isIndividualFlow {
+    final session = RegistrationProductSeivice.instance;
+    return session.businessType == BusinessType.individual;
+  }
 
   void _showCategoryBottomSheet(
     BuildContext context,
@@ -184,7 +190,7 @@ class _ProductCategoryScreensState
                             },
                             decoration: InputDecoration(
                               hintText: 'Search category...',
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.search,
                                 color: Colors.grey,
                               ),
@@ -431,7 +437,7 @@ class _ProductCategoryScreensState
       _productPriceController.text = widget.initialPrice!.toString();
     }
     _descriptionController.text = widget.initialDescription ?? '';
-    _genderController.text = widget.initialDoorDelivery ?? '';
+    _doorDeliveryController.text = widget.initialDoorDelivery ?? '';
 
     productCategorySlug = widget.initialCategorySlug ?? '';
     productSubCategorySlug = widget.initialSubCategorySlug ?? '';
@@ -453,6 +459,10 @@ class _ProductCategoryScreensState
     final bool isServiceFlow =
         widget.isService ??
         RegistrationProductSeivice.instance.isServiceBusiness;
+    AppLogger.log.i('IS Service : $isServiceFlow');
+    final bool isEditFromAboutMe =
+        (widget.page == 'AboutMeScreens') &&
+        (widget.productId != null && widget.productId!.isNotEmpty);
 
     final bool isLoading = isServiceFlow
         ? serviceState.isLoading
@@ -478,9 +488,28 @@ class _ProductCategoryScreensState
                       ),
                       const SizedBox(width: 50),
                       Text(
-                        'Register Shop - Individual',
+                        'Register Shop',
                         style: AppTextStyles.mulish(
                           fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        '-',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        isIndividualFlow ? 'Individual' : 'Company',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: AppColor.mildBlack,
                         ),
                       ),
@@ -674,29 +703,35 @@ class _ProductCategoryScreensState
                         //   return null;
                         // },
                       ),
-                      const SizedBox(height: 25),
+                      SizedBox(height: 25),
                       Text(
                         'App Offer price',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      const SizedBox(height: 10),
-                      GestureDetector(
-                        onTap: widget.allowOfferEdit
-                            ? _showOfferBottomSheet
-                            : null,
-                        child: AbsorbPointer(
-                          child: CommonContainer.fillingContainer(
-                            imagePath: widget.allowOfferEdit
-                                ? AppImages.downArrow
-                                : null,
-                            verticalDivider: false,
-                            controller: _offerController,
-                            readOnly: true,
-                            context: context,
-                          ),
-                        ),
+                      SizedBox(height: 10),
+                      CommonContainer.fillingContainer(
+                        text1: 'First App Offer',
+                        readOnly: true,
+                        verticalDivider: false,
+                        controller: _offerController,
                       ),
-                      const SizedBox(height: 10),
+                      // GestureDetector(
+                      //   onTap: widget.allowOfferEdit
+                      //       ? _showOfferBottomSheet
+                      //       : null,
+                      //   child: AbsorbPointer(
+                      //     child: CommonContainer.fillingContainer(
+                      //       imagePath: widget.allowOfferEdit
+                      //           ? AppImages.downArrow
+                      //           : null,
+                      //       verticalDivider: false,
+                      //       controller: _offerController,
+                      //       readOnly: true,
+                      //       context: context,
+                      //     ),
+                      //   ),
+                      // ),
+                      SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         keyboardType: TextInputType.number,
                         verticalDivider: false,
@@ -753,7 +788,7 @@ class _ProductCategoryScreensState
                         CommonContainer.fillingContainer(
                           imagePath: AppImages.downArrow,
                           verticalDivider: false,
-                          controller: _genderController,
+                          controller: _doorDeliveryController,
                           isDropdown: true,
                           dropdownItems: cities,
                           context: context,
@@ -766,6 +801,102 @@ class _ProductCategoryScreensState
                       const SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
+
+                        // onTap: () async {
+                        //   FocusScope.of(context).unfocus();
+                        //
+                        //   final priceText = _productPriceController.text.trim();
+                        //   final price = int.tryParse(priceText);
+                        //
+                        //   final hasCategoryError = _categoryController.text
+                        //       .trim()
+                        //       .isEmpty;
+                        //   final hasSubCategoryError = _subCategoryController
+                        //       .text
+                        //       .trim()
+                        //       .isEmpty;
+                        //
+                        //   setState(() {
+                        //     _categoryHasError = hasCategoryError;
+                        //     _subCategoryHasError = hasSubCategoryError;
+                        //   });
+                        //
+                        //   final formValid = _formKey.currentState!.validate();
+                        //
+                        //   if (!formValid ||
+                        //       hasCategoryError ||
+                        //       hasSubCategoryError) {
+                        //     AppSnackBar.info(
+                        //       context,
+                        //       'Please fill all required fields correctly.',
+                        //     );
+                        //     return;
+                        //   }
+                        //
+                        //   // -------------------------------------------------------------------
+                        //   // 🔵 DOOR DELIVERY FIX — convert dropdown to boolean before saving
+                        //   // -------------------------------------------------------------------
+                        //   if (!isServiceFlow) {
+                        //     final ddText = _doorDeliveryController.text.trim();
+                        //
+                        //     if (ddText.isEmpty) {
+                        //       AppSnackBar.error(
+                        //         context,
+                        //         'Please select Door Delivery',
+                        //       );
+                        //       return;
+                        //     }
+                        //
+                        //     _doorDelivery =
+                        //         ddText == 'Yes'; // <-- REAL VALUE NOW
+                        //   } else {
+                        //     _doorDelivery = false; // service case
+                        //   }
+                        //   // -------------------------------------------------------------------
+                        //
+                        //   bool success = false;
+                        //
+                        //   if (isServiceFlow) {
+                        //     // service call...
+                        //   } else {
+                        //     // PRODUCT SAVE
+                        //     success = await ref
+                        //         .read(productNotifierProvider.notifier)
+                        //         .addProduct(
+                        //           doorDelivery: _doorDelivery,
+                        //           productId: widget.productId,
+                        //           shopId: widget.shopId,
+                        //           category: _categoryController.text.trim(),
+                        //           subCategory: _subCategoryController.text
+                        //               .trim(),
+                        //           englishName: _productNameController.text
+                        //               .trim(),
+                        //           price: price ?? 0,
+                        //           offerLabel: _offerController.text.trim(),
+                        //           offerValue: _offerPriceController.text.trim(),
+                        //           description: _descriptionController.text
+                        //               .trim(),
+                        //         );
+                        //
+                        //     if (!success) {
+                        //       final err = ref
+                        //           .read(productNotifierProvider)
+                        //           .error;
+                        //       if (err != null && err.isNotEmpty) {
+                        //         AppSnackBar.error(context, err);
+                        //       } else {
+                        //         AppSnackBar.error(
+                        //           context,
+                        //           'Something went wrong',
+                        //         );
+                        //       }
+                        //     }
+                        //   }
+                        //
+                        //   if (success) {
+                        //     // navigation logic...
+                        //   }
+                        // },
                         onTap: () async {
                           FocusScope.of(context).unfocus();
 
@@ -800,9 +931,13 @@ class _ProductCategoryScreensState
                           bool success = false;
 
                           if (isServiceFlow) {
+                            // 🔵 SERVICE SAVE / UPDATE
                             final serviceResponse = await ref
                                 .read(serviceInfoNotifierProvider.notifier)
                                 .saveServiceInfo(
+                                  ServiceId:
+                                      widget.productId ??
+                                      '', // serviceId in edit mode
                                   title: _productNameController.text.trim(),
                                   tamilName: _productNameController.text.trim(),
                                   description: _descriptionController.text
@@ -815,10 +950,6 @@ class _ProductCategoryScreensState
                                   subCategory: _subCategoryController.text
                                       .trim(),
                                   tags: const [],
-                                  keywords: const [],
-                                  images: const [],
-                                  isFeatured: false,
-                                  features: const [],
                                 );
 
                             success = serviceResponse != null;
@@ -838,9 +969,12 @@ class _ProductCategoryScreensState
                               }
                             }
                           } else {
+                            // PRODUCT SAVE / UPDATE
                             success = await ref
                                 .read(productNotifierProvider.notifier)
                                 .addProduct(
+                                  doorDelivery:
+                                      _doorDelivery, //  use state variable
                                   productId: widget.productId,
                                   shopId: widget.shopId,
                                   category: _categoryController.text.trim(),
@@ -871,11 +1005,12 @@ class _ProductCategoryScreensState
                           }
 
                           if (success) {
-                            // 🔥 Navigation logic
+                            // 🎯 Navigation logic (product + service both use this)
                             if (widget.page == 'AboutMeScreens') {
-                              // EDIT mode -> productId present
+                              // EDIT mode (product or service) -> productId / serviceId present
                               if (widget.productId != null &&
                                   widget.productId!.isNotEmpty) {
+                                // ✅ Tell AboutMeScreens that something was updated
                                 Navigator.pop(context, true);
                               } else {
                                 // ADD mode from AboutMe -> go to AddProductList
@@ -895,7 +1030,7 @@ class _ProductCategoryScreensState
                         text: isLoading
                             ? const ThreeDotsLoader()
                             : Text(
-                                widget.pages == "AboutMeScreens"
+                                isEditFromAboutMe
                                     ? 'Update'
                                     : 'Save & Continue',
                                 style: AppTextStyles.mulish(
@@ -906,6 +1041,187 @@ class _ProductCategoryScreensState
                         imagePath: isLoading ? null : AppImages.rightStickArrow,
                         imgHeight: 20,
                       ),
+
+                      // CommonContainer.button(
+                      //   buttonColor: AppColor.black,
+                      //   onTap: () async {
+                      //     FocusScope.of(context).unfocus();
+                      //
+                      //     final priceText = _productPriceController.text.trim();
+                      //     final price = int.tryParse(priceText);
+                      //
+                      //     final hasCategoryError = _categoryController.text
+                      //         .trim()
+                      //         .isEmpty;
+                      //     final hasSubCategoryError = _subCategoryController
+                      //         .text
+                      //         .trim()
+                      //         .isEmpty;
+                      //
+                      //     setState(() {
+                      //       _categoryHasError = hasCategoryError;
+                      //       _subCategoryHasError = hasSubCategoryError;
+                      //     });
+                      //
+                      //     final formValid = _formKey.currentState!.validate();
+                      //
+                      //     if (!formValid ||
+                      //         hasCategoryError ||
+                      //         hasSubCategoryError) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'Please fill all required fields correctly.',
+                      //       );
+                      //       return;
+                      //     }
+                      //
+                      //     bool doorDelivery = false; // state variable
+                      //
+                      //     Switch(
+                      //       value: doorDelivery,
+                      //       onChanged: (v) {
+                      //         setState(() {
+                      //           doorDelivery = v;
+                      //         });
+                      //       },
+                      //     );
+                      //     bool success = false;
+                      //
+                      //     if (isServiceFlow) {
+                      //       final serviceResponse = await ref
+                      //           .read(serviceInfoNotifierProvider.notifier)
+                      //           .saveServiceInfo(
+                      //             ServiceId: widget.productId ?? '',
+                      //             title: _productNameController.text.trim(),
+                      //             tamilName: _productNameController.text.trim(),
+                      //             description: _descriptionController.text
+                      //                 .trim(),
+                      //             startsAt: price ?? 0,
+                      //             offerLabel: _offerController.text.trim(),
+                      //             offerValue: _offerPriceController.text.trim(),
+                      //             durationMinutes: 60,
+                      //             categoryId: productCategorySlug,
+                      //             subCategory: _subCategoryController.text
+                      //                 .trim(),
+                      //             tags: const [],
+                      //             keywords: const [],
+                      //             images: const [],
+                      //             isFeatured: false,
+                      //             features: const [],
+                      //           );
+                      //
+                      //       success = serviceResponse != null;
+                      //
+                      //       if (!success) {
+                      //         final svcState = ref.read(
+                      //           serviceInfoNotifierProvider,
+                      //         );
+                      //         if (svcState.error != null &&
+                      //             svcState.error!.isNotEmpty) {
+                      //           AppSnackBar.error(context, svcState.error!);
+                      //         } else {
+                      //           AppSnackBar.error(
+                      //             context,
+                      //             'Service save failed. Please try again.',
+                      //           );
+                      //         }
+                      //       }
+                      //     } else {
+                      //       success = await ref
+                      //           .read(productNotifierProvider.notifier)
+                      //           .addProduct(
+                      //             doorDelivery: doorDelivery,
+                      //             productId: widget.productId,
+                      //             shopId: widget.shopId,
+                      //             category: _categoryController.text.trim(),
+                      //             subCategory: _subCategoryController.text
+                      //                 .trim(),
+                      //             englishName: _productNameController.text
+                      //                 .trim(),
+                      //             price: price ?? 0,
+                      //             offerLabel: _offerController.text.trim(),
+                      //             offerValue: _offerPriceController.text.trim(),
+                      //             description: _descriptionController.text
+                      //                 .trim(),
+                      //           );
+                      //
+                      //       if (!success) {
+                      //         final err = ref
+                      //             .read(productNotifierProvider)
+                      //             .error;
+                      //         if (err != null && err.isNotEmpty) {
+                      //           AppSnackBar.error(context, err);
+                      //         } else {
+                      //           AppSnackBar.error(
+                      //             context,
+                      //             'Something went wrong',
+                      //           );
+                      //         }
+                      //       }
+                      //     }
+                      //
+                      //     if (success) {
+                      //       //  Navigation logic
+                      //       if (widget.page == 'AboutMeScreens') {
+                      //         // EDIT mode -> productId present
+                      //         if (widget.productId != null &&
+                      //             widget.productId!.isNotEmpty) {
+                      //           Navigator.pop(
+                      //             context,
+                      //             true,
+                      //           ); // ✅ back to AboutMeScreens
+                      //         } else {
+                      //           // ADD mode from AboutMe -> go to AddProductList
+                      //           Navigator.push(
+                      //             context,
+                      //             MaterialPageRoute(
+                      //               builder: (_) =>
+                      //                   AddProductList(), // ✅ goes to AddProductList
+                      //             ),
+                      //           );
+                      //         }
+                      //       } else {
+                      //         // normal registration flow or other pages
+                      //         context.pushNamed(AppRoutes.addProductList);
+                      //       }
+                      //     }
+                      //
+                      //     // if (success) {
+                      //     //   //  Navigation logic
+                      //     //   if (widget.page == 'AboutMeScreens') {
+                      //     //     // EDIT mode -> productId present
+                      //     //     if (widget.productId != null &&
+                      //     //         widget.productId!.isNotEmpty) {
+                      //     //       Navigator.pop(context, true);
+                      //     //     } else {
+                      //     //       // ADD mode from AboutMe -> go to AddProductList
+                      //     //       Navigator.push(
+                      //     //         context,
+                      //     //         MaterialPageRoute(
+                      //     //           builder: (_) => AddProductList(),
+                      //     //         ),
+                      //     //       );
+                      //     //     }
+                      //     //   } else {
+                      //     //     // normal registration flow or other pages
+                      //     //     context.pushNamed(AppRoutes.addProductList);
+                      //     //   }
+                      //     // }
+                      //   },
+                      //   text: isLoading
+                      //       ? const ThreeDotsLoader()
+                      //       : Text(
+                      //           isEditFromAboutMe
+                      //               ? 'Update'
+                      //               : 'Save & Continue',
+                      //           style: AppTextStyles.mulish(
+                      //             fontSize: 18,
+                      //             fontWeight: FontWeight.w700,
+                      //           ),
+                      //         ),
+                      //   imagePath: isLoading ? null : AppImages.rightStickArrow,
+                      //   imgHeight: 20,
+                      // ),
                       const SizedBox(height: 36),
                     ],
                   ),

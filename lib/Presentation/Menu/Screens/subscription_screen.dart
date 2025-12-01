@@ -61,18 +61,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           if (widget.showSkip)
                             InkWell(
                               onTap: () {
-                                // 1️⃣ mark as non-premium
                                 RegistrationProductSeivice.instance
                                     .markUnsubscribed();
 
-                                // 2️⃣ navigate with structured extra
-                                context.goNamed(
+                                final router = GoRouter.of(context);
+
+                                // 1️⃣ Close this SubscriptionScreen if it was pushed via Navigator
+                                if (Navigator.of(context).canPop()) {
+                                  Navigator.of(context).pop();
+                                }
+
+                                // 2️⃣ Now use go_router to show ShopsDetails
+                                router.goNamed(
                                   AppRoutes.shopsDetails,
                                   extra: {
-                                    'backDisabled':
-                                        false, // or true if you want to disable back
-                                    'fromSubscriptionSkip':
-                                        true, // you are coming from Skip
+                                    'backDisabled': false,
+                                    'fromSubscriptionSkip': true,
                                   },
                                 );
                               },
@@ -92,6 +96,38 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 ),
                               ),
                             ),
+
+                          // if (widget.showSkip)
+                          //   InkWell(
+                          //     onTap: () {
+                          //       RegistrationProductSeivice.instance
+                          //           .markUnsubscribed();
+                          //
+                          //       context.goNamed(
+                          //         AppRoutes.shopsDetails,
+                          //         extra: {
+                          //           'backDisabled': false,
+                          //           'fromSubscriptionSkip': true,
+                          //         },
+                          //       );
+                          //     },
+                          //
+                          //     borderRadius: BorderRadius.circular(16),
+                          //     child: Padding(
+                          //       padding: const EdgeInsets.symmetric(
+                          //         horizontal: 18,
+                          //         vertical: 5,
+                          //       ),
+                          //       child: Text(
+                          //         'Skip',
+                          //         style: AppTextStyles.mulish(
+                          //           fontSize: 20,
+                          //           fontWeight: FontWeight.w700,
+                          //           color: AppColor.darkBlue,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
                         ],
                       ),
                       SizedBox(height: 10),

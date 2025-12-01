@@ -6,6 +6,8 @@ import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
@@ -14,7 +16,8 @@ import '../../AddProduct/Screens/product_category_screens.dart';
 import '../Controller/shop_notifier.dart';
 
 class SearchKeyword extends ConsumerStatefulWidget {
-  const SearchKeyword({super.key});
+  final bool? isIndividual;
+  const SearchKeyword({super.key, this.isIndividual});
 
   @override
   ConsumerState<SearchKeyword> createState() => _SearchKeywordState();
@@ -66,9 +69,15 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
     setState(() => _keywords.remove(keyword));
   }
 
+  bool get isIndividualFlow {
+    final session = RegistrationProductSeivice.instance;
+    return session.businessType == BusinessType.individual;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopCategoryNotifierProvider);
+    // final bool isIndividualFlow = widget.isIndividual ?? true;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -84,9 +93,28 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                     ),
                     SizedBox(width: 50),
                     Text(
-                      'Register Shop - Individual',
+                      'Register Shop',
                       style: AppTextStyles.mulish(
                         fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColor.mildBlack,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      '-',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: AppColor.mildBlack,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      isIndividualFlow ? 'Individual' : 'Company',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                         color: AppColor.mildBlack,
                       ),
                     ),
@@ -314,15 +342,22 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                           return;
                         }
 
-                        final notifier = ref.read(shopCategoryNotifierProvider.notifier);
+                        final notifier = ref.read(
+                          shopCategoryNotifierProvider.notifier,
+                        );
                         final state = ref.read(shopCategoryNotifierProvider);
 
                         // Call the API
-                        final success = await notifier.searchKeywords(keywords: _keywords);
+                        final success = await notifier.searchKeywords(
+                          keywords: _keywords,
+                        );
 
                         if (success) {
                           // Show success message
-                          AppSnackBar.success(context, 'Keywords saved successfully!');
+                          AppSnackBar.success(
+                            context,
+                            'Keywords saved successfully!',
+                          );
 
                           // Navigate after short delay so user sees the message
                           Future.delayed(const Duration(milliseconds: 500), () {
@@ -333,23 +368,26 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                           });
                         } else {
                           // Show error from state if available
-                          final errorMsg = state.error ?? 'Failed to save keywords. Try again.';
+                          final errorMsg =
+                              state.error ??
+                              'Failed to save keywords. Try again.';
                           AppSnackBar.error(context, errorMsg);
                         }
                       },
                       text: state.isLoading
                           ? const ThreeDotsLoader()
                           : Text(
-                        'Save & Continue',
-                        style: AppTextStyles.mulish(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      imagePath: state.isLoading ? null : AppImages.rightStickArrow,
+                              'Save & Continue',
+                              style: AppTextStyles.mulish(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                      imagePath: state.isLoading
+                          ? null
+                          : AppImages.rightStickArrow,
                       imgHeight: 20,
                     ),
-
 
                     SizedBox(height: 36),
                   ],

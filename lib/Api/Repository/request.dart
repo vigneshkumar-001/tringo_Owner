@@ -275,9 +275,15 @@ class Request {
   ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    String? sessionToken = prefs.getString('sessionToken');
     String? userId = prefs.getString('userId');
 
-    Dio dio = Dio();
+    Dio dio = Dio(
+        BaseOptions(
+         connectTimeout: const Duration(seconds: 10),
+         receiveTimeout: const Duration(seconds: 15),
+       ),
+    );
 
     dio.interceptors.add(
       InterceptorsWrapper(
@@ -288,7 +294,7 @@ class Request {
             (Response<dynamic> response, ResponseInterceptorHandler handler) {
               AppLogger.log.i(queryParams);
               AppLogger.log.i(
-                "GET Request \n API: $url \n Token: $token \n RESPONSE: ${response.toString()}",
+                "RESPONSE \n API: $url \n Token : $token \n session Token : $sessionToken \n Headers : headers \n RESPONSE: ${response.toString()}",
               );
               return handler.next(response);
             },
