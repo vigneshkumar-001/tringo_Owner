@@ -34,6 +34,7 @@ class Shop {
   final String? shopPostalCode;
   final String? shopGpsLatitude;
   final String? shopGpsLongitude;
+  final String? shopWeeklyHours;
   final String? category;
   final String? subCategory;
   final String? shopKind;
@@ -68,6 +69,7 @@ class Shop {
     this.shopPostalCode,
     this.shopGpsLatitude,
     this.shopGpsLongitude,
+    this.shopWeeklyHours,
     this.category,
     this.subCategory,
     this.shopKind,
@@ -99,6 +101,7 @@ class Shop {
       shopPostalCode: json["shopPostalCode"] as String?,
       shopGpsLatitude: json["shopGpsLatitude"] as String?,
       shopGpsLongitude: json["shopGpsLongitude"] as String?,
+      shopWeeklyHours: json["shopWeeklyHours"] as String?,
       category: json["category"] as String?,
       subCategory: json["subCategory"] as String?,
       shopKind: json["shopKind"] as String?,
@@ -171,6 +174,7 @@ class Product {
   final String? englishName;
   final String? tamilName;
   final int? price;
+  final int? offerPrice;
   final bool? isFeatured;
   final String? offerLabel;
   final String? offerValue;
@@ -191,6 +195,7 @@ class Product {
     this.englishName,
     this.tamilName,
     this.price,
+    this.offerPrice,
     this.isFeatured,
     this.offerLabel,
     this.offerValue,
@@ -213,6 +218,7 @@ class Product {
       englishName: json["englishName"] as String?,
       tamilName: json["tamilName"] as String?,
       price: (json["price"] as num?)?.toInt(),
+      offerPrice: (json["offerPrice"] as num?)?.toInt(),
       isFeatured: json["isFeatured"] as bool?,
       offerLabel: json["offerLabel"] as String?,
       offerValue: json["offerValue"] as String?,

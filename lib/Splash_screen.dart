@@ -6,7 +6,6 @@ import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -24,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> checkNavigation() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
+    final token = prefs.getString('token');
     final bool isProfileCompleted =
         prefs.getBool("isProfileCompleted") ?? false;
 
@@ -33,13 +32,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    if (!isLoggedIn) {
+    if (token == null) {
       context.go(AppRoutes.loginPath);
+    } else {
+      context.go(AppRoutes.homeScreenPath);
     }
-
-    // else {
-    //   context.go(AppRoutes.homePath);
-    // }
   }
 
   // Future<void> checkNavigation() async {

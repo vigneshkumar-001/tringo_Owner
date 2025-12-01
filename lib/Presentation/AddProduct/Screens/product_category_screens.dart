@@ -438,6 +438,7 @@ class _ProductCategoryScreensState
     }
     _descriptionController.text = widget.initialDescription ?? '';
     _doorDeliveryController.text = widget.initialDoorDelivery ?? '';
+    _doorDelivery = (widget.initialDoorDelivery == 'Yes');
 
     productCategorySlug = widget.initialCategorySlug ?? '';
     productSubCategorySlug = widget.initialSubCategorySlug ?? '';
@@ -929,6 +930,23 @@ class _ProductCategoryScreensState
                           // }
 
                           bool success = false;
+                          if (!isServiceFlow) {
+                            final ddText = _doorDeliveryController.text.trim();
+
+                            if (ddText.isEmpty) {
+                              AppSnackBar.error(
+                                context,
+                                'Please select Door Delivery',
+                              );
+                              return;
+                            }
+
+                            // 'Yes' → true, anything else → false
+                            _doorDelivery = ddText == 'Yes';
+                          } else {
+                            _doorDelivery =
+                                false; // services currently no door-delivery flag
+                          }
 
                           if (isServiceFlow) {
                             // 🔵 SERVICE SAVE / UPDATE
