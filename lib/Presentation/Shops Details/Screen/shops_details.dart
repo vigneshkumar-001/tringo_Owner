@@ -367,6 +367,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 15,
                               ),
+
                               child: Row(
                                 children: List.generate(
                                   shop?.shopImages.length ?? 0,
@@ -430,9 +431,11 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
+
                                                 children: [
                                                   Text(
-                                                    '4.1', // TODO: dynamic rating
+                                                    (shop?.shopRating ?? 0.0)
+                                                        .toStringAsFixed(1),
                                                     style: AppTextStyles.mulish(
                                                       fontWeight:
                                                           FontWeight.bold,
@@ -461,7 +464,8 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                                   ),
                                                   const SizedBox(width: 5),
                                                   Text(
-                                                    '16', // TODO: dynamic count
+                                                    (shop?.shopReviewCount ?? 0)
+                                                        .toString(),
                                                     style: AppTextStyles.mulish(
                                                       fontSize: 12,
                                                       color: AppColor.darkBlue,
@@ -629,7 +633,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                   padding: const EdgeInsets.only(right: 10),
                                   child: CommonContainer.foodList(
                                     fontSize: 14,
-                                    doorDelivery: data.doorDelivery ?? false,
+                                    doorDelivery: data.doorDelivery == true,
                                     titleWeight: FontWeight.w700,
                                     onTap: () {},
                                     imageWidth: 130,
@@ -639,7 +643,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                     ratingCount:
                                         data.ratingCount?.toString() ?? '0',
                                     offAmound: '₹${data.price ?? 0}',
-                                    oldAmound: '₹${data.offerValue?? 0}',
+                                    oldAmound: '₹${data.offerPrice ?? 0}',
                                     km: '',
                                     location: '',
                                     Verify: false,

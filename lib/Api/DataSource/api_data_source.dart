@@ -244,6 +244,7 @@ class ApiDataSource extends BaseApiDataSource {
     required String ownerImageUrl,
     required String contactEmail,
     required bool doorDelivery,
+    required String weeklyHours,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -267,6 +268,7 @@ class ApiDataSource extends BaseApiDataSource {
         "alternatePhone": "+91$alternatePhone",
         "contactEmail": contactEmail,
         "doorDelivery": doorDelivery,
+        "weeklyHours": weeklyHours,
       };
       if (type == "service") {
         payload["ownerImageUrl"] = ownerImageUrl;
