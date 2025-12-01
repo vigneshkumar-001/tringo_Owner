@@ -44,7 +44,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialCategorySlug;
   final String? initialSubCategoryName;
   final String? initialSubCategorySlug;
-  final String? initialDoorDeliveryText; // 'Yes' / 'No'
+  final String? initialDoorDeliveryText;
   final String? initialOpenTimeText;
   final String? initialCloseTimeText;
 
