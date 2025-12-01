@@ -7,6 +7,7 @@ import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
+import '../../AboutMe/Service/Model/service_delete_response.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../ShopInfo/model/shop_category_list_response.dart';
 import '../Model/delete_response.dart';
@@ -17,6 +18,7 @@ class ProductState {
   final ProductResponse? productResponse;
   final ShopCategoryListResponse? shopCategoryListResponse;
   final DeleteResponse? DeleteResponses;
+  final ServiceDeleteResponse? serviceDeleteResponse;
 
   const ProductState({
     this.isLoading = false,
@@ -24,6 +26,7 @@ class ProductState {
     this.productResponse,
     this.shopCategoryListResponse,
     this.DeleteResponses,
+    this.serviceDeleteResponse,
   });
 
   factory ProductState.initial() => const ProductState();
@@ -47,17 +50,16 @@ class ProductNotifier extends Notifier<ProductState> {
     required String offerValue,
     required String description,
     String? shopId,
-    String? productId, // from widget / route
+    String? productId,
   }) async {
     state = const ProductState(isLoading: true);
 
-    // Only use id if non-empty
     final String? productIdToUse = (productId != null && productId.isNotEmpty)
         ? productId
         : null;
 
     final result = await api.addProduct(
-      apiProductId: productIdToUse, // only this
+      apiProductId: productIdToUse,
       subCategory: subCategory,
       apiShopId: shopId,
       englishName: englishName,
@@ -75,10 +77,7 @@ class ProductNotifier extends Notifier<ProductState> {
       },
       (response) async {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(
-          'product_id',
-          response.data.id,
-        ); // ✅ fine for later steps
+        await prefs.setString('product_id', response.data.id);
         state = ProductState(isLoading: false, productResponse: response);
         return true;
       },
@@ -247,13 +246,13 @@ class ProductNotifier extends Notifier<ProductState> {
     if (!ref.mounted) return false;
 
     return result.fold(
-          (failure) {
+      (failure) {
         if (!ref.mounted) return false;
         AppLogger.log.e('❌ deleteProduct failure: ${failure.message}');
         state = ProductState(isLoading: false, error: failure.message);
         return false;
       },
-          (response) {
+      (response) {
         if (!ref.mounted) return false;
         AppLogger.log.i('✅ deleteProduct status: ${response.status}');
         state = ProductState(isLoading: false, DeleteResponses: response);
@@ -262,6 +261,30 @@ class ProductNotifier extends Notifier<ProductState> {
     );
   }
 
+  Future<bool> deleteServiceAction({String? serviceId}) async {
+    if (!ref.mounted) return false;
+
+    state = const ProductState(isLoading: true, error: null);
+
+    final result = await api.deleteService(serviceId: serviceId);
+
+    if (!ref.mounted) return false;
+
+    return result.fold(
+      (failure) {
+        if (!ref.mounted) return false;
+        AppLogger.log.e('❌ deleteProduct failure: ${failure.message}');
+        state = ProductState(isLoading: false, error: failure.message);
+        return false;
+      },
+      (response) {
+        if (!ref.mounted) return false;
+        AppLogger.log.i('✅ deleteProduct status: ${response.status}');
+        state = ProductState(isLoading: false, serviceDeleteResponse: response);
+        return response.status == true;
+      },
+    );
+  }
 }
 
 final productNotifierProvider = NotifierProvider<ProductNotifier, ProductState>(
