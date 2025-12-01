@@ -963,33 +963,17 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    // optional: session reset (idhu navigation panna koodathu!)
                     RegistrationSession.instance.reset();
-                    // RegistrationProductSeivice.instance.reset(); // venumna
-
-                    // 🔑 Navigator locked error avoid panna → next frame la navigate pannrom
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-
-                      context.goNamed(
-                        AppRoutes.homeScreen,
-                        extra: 2, // unga bottom nav index / tab
-                      );
-                    });
+                    context.goNamed(AppRoutes.homeScreen, extra: 3);
+                    // Navigator.pushAndRemoveUntil(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) =>
+                    //         const CommonBottomNavigation(initialIndex: 3),
+                    //   ),
+                    //   (route) => false,
+                    // );
                   },
-
-                  // onPressed: () {
-                  //   RegistrationSession.instance.reset();
-                  //   context.goNamed(AppRoutes.homeScreen, extra: 2);
-                  //   // Navigator.pushAndRemoveUntil(
-                  //   //   context,
-                  //   //   MaterialPageRoute(
-                  //   //     builder: (_) =>
-                  //   //         const CommonBottomNavigation(initialIndex: 0),
-                  //   //   ),
-                  //   //   (route) => false,
-                  //   // );
-                  // },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(

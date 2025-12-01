@@ -19,6 +19,7 @@ import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_respo
 import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
 
 import '../../Core/Session/registration_product_seivice.dart';
+import '../../Presentation/AboutMe/Service/Model/service_delete_response.dart';
 import '../../Presentation/AddProduct/Model/delete_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
@@ -1072,6 +1073,43 @@ class ApiDataSource extends BaseApiDataSource {
       }
 
       return Right(DeleteResponse.fromJson(map));
+    } catch (_) {
+      return Left(ServerFailure('Unexpected error'));
+    }
+  }
+
+  Future<Either<Failure, ServiceDeleteResponse>> deleteService({
+    String? serviceId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = serviceId ?? prefs.getString('service_id');
+
+      if (id == null || id.isEmpty) {
+        return Left(ServerFailure("Service not found."));
+      }
+
+      final url = ApiUrl.deleteService(serviceId: id);
+
+      final response = await Request.sendRequest(url, {}, 'Delete', true);
+
+      if (response is DioException) {
+        return Left(ServerFailure(response.message ?? 'Delete failed'));
+      }
+
+      final map = response.data;
+
+      if (map == null || map is! Map<String, dynamic>) {
+        // ✅ fixed: always pass `data`
+        return const Right(
+          ServiceDeleteResponse(
+            status: true,
+            data: ResponseData(success: true),
+          ),
+        );
+      }
+
+      return Right(ServiceDeleteResponse.fromJson(map));
     } catch (_) {
       return Left(ServerFailure('Unexpected error'));
     }

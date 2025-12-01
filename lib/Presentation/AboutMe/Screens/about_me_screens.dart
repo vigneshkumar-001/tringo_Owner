@@ -975,9 +975,11 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           Expanded(
                             child: GestureDetector(
                               onTap: () async {
+                                if (_deletingProductId == s.serviceId) return;
+
                                 final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
+                                  context: this.context,
+                                  builder: (_) => AlertDialog(
                                     backgroundColor: AppColor.white,
                                     title: const Text('Confirm Remove'),
                                     content: const Text(
@@ -985,13 +987,11 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                     ),
                                     actions: [
                                       TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
+                                        onPressed: () => Navigator.pop(this.context, false),
                                         child: const Text('Cancel'),
                                       ),
                                       TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, true),
+                                        onPressed: () => Navigator.pop(this.context, true),
                                         child: Text(
                                           'Remove',
                                           style: AppTextStyles.mulish(
@@ -1004,8 +1004,57 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   ),
                                 );
 
-                                if (confirm == true) {
-                                  // TODO: Call delete service API here with s.serviceId
+                                if (confirm != true) return;
+                                if (!mounted) return;
+
+                                setState(() => _deletingProductId = s.serviceId);
+
+                                final success = await ref
+                                    .read(productNotifierProvider.notifier)
+                                    .deleteServiceAction(
+                                  serviceId: s.serviceId,
+                                );
+
+                                if (!mounted) return;
+
+                                setState(() => _deletingProductId = null);
+
+                                final productState = ref.read(productNotifierProvider);
+
+                                if (success) {
+                                  // optional: remove locally from services list
+                                  final currentShop = _getSelectedShop(aboutState);
+                                  if (currentShop != null) {
+                                    currentShop.services.removeWhere(
+                                          (svc) => svc.serviceId == s.serviceId,
+                                    );
+                                  }
+
+                                  // refresh from backend
+                                  await ref
+                                      .read(aboutMeNotifierProvider.notifier)
+                                      .fetchAllShopDetails(
+                                    shopId: _currentShopId ?? currentShop?.shopId,
+                                  );
+
+                                  if (!mounted) return;
+                                  setState(() {});
+
+                                  // show success message
+                                  ScaffoldMessenger.of(this.context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Service removed successfully'),
+                                    ),
+                                  );
+                                } else {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(this.context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        productState.error ?? 'Failed to remove service',
+                                      ),
+                                    ),
+                                  );
                                 }
                               },
                               child: Container(
@@ -1017,27 +1066,33 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   color: AppColor.leftArrow,
                                   borderRadius: BorderRadius.circular(15),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      AppImages.closeImage,
-                                      color: AppColor.black,
-                                      height: 16,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Remove',
-                                      style: AppTextStyles.mulish(
+                                child: Center(
+                                  child: (_deletingProductId == s.serviceId)
+                                      ? ThreeDotsLoader(dotColor: AppColor.black)
+                                      : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        AppImages.closeImage,
                                         color: AppColor.black,
-                                        fontWeight: FontWeight.bold,
+                                        height: 16,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'Remove',
+                                        style: AppTextStyles.mulish(
+                                          color: AppColor.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+
                         ],
                       ),
                     ],

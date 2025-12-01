@@ -126,11 +126,21 @@ final goRouter = GoRouter(
       path: AppRoutes.shopsDetailsPath,
       name: AppRoutes.shopsDetails,
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
+        final extra = state.extra;
 
-        final bool backDisabled = extra?['backDisabled'] as bool? ?? false;
-        final bool fromSubscription =
-            extra?['fromSubscriptionSkip'] as bool? ?? false;
+        bool backDisabled = false;
+        bool fromSubscription = false;
+
+        // Case 1: extra is a Map (normal case)
+        if (extra is Map<String, dynamic>) {
+          backDisabled = extra['backDisabled'] as bool? ?? false;
+          fromSubscription = extra['fromSubscriptionSkip'] as bool? ?? false;
+        }
+        // Case 2: someone passed just a bool (like extra: true)
+        else if (extra is bool) {
+          // Interpret this as "coming from subscription skip"
+          fromSubscription = extra;
+        }
 
         return ShopsDetails(
           backDisabled: backDisabled,
