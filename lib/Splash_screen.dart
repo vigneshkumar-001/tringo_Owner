@@ -6,7 +6,6 @@ import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -35,11 +34,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!isLoggedIn) {
       context.go(AppRoutes.loginPath);
+    } else {
+      context.go(AppRoutes.homeScreenPath);
     }
-
-    // else {
-    //   context.go(AppRoutes.homePath);
-    // }
   }
 
   // Future<void> checkNavigation() async {
