@@ -187,9 +187,12 @@ class Request {
       AppLogger.log.i("$body");
 
       return response;
+    } on DioException catch (e) {
+      // THROW the DioException, do not return it
+      throw e;
     } catch (e) {
-      AppLogger.log.e('API: $url \n ERROR: $e ');
-      return e;
+      // Throw clean exception
+      throw Exception(e.toString());
     }
   }
 
