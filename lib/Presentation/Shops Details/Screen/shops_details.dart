@@ -639,7 +639,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                     ratingCount:
                                         data.ratingCount?.toString() ?? '0',
                                     offAmound: '₹${data.price ?? 0}',
-                                    oldAmound: '₹110',
+                                    oldAmound: '₹${data.offerValue?? 0}',
                                     km: '',
                                     location: '',
                                     Verify: false,
