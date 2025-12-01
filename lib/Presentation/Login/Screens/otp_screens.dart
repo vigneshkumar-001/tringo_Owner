@@ -92,7 +92,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       // OTP verified
       else if (next.otpResponse != null) {
         AppSnackBar.success(context, 'OTP verified successfully!');
-        context.goNamed(AppRoutes.register);
+        context.goNamed(AppRoutes.privacyPolicy);
         notifier.resetState();
       }
       // Login response (used for resend OTP)
@@ -126,43 +126,66 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               height: double.infinity,
               fit: BoxFit.cover,
             ),
+            // Positioned(
+            //   top: 0,
+            //   left: 0,
+            //   right: 0,
+            //   bottom: 140,
+            //   child:
+            // ),
+
+            // Bottom decoration
             Positioned(
-              top: 0,
+              bottom: 0,
               left: 0,
               right: 0,
-              bottom: 140,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Logo
-                    Padding(
-                      padding: const EdgeInsets.only(left: 35, top: 50),
-                      child: Image.asset(AppImages.logo, height: 88, width: 85),
-                    ),
+              child: Column(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Logo
+                        Padding(
+                          padding: const EdgeInsets.only(left: 35, top: 50),
+                          child: Image.asset(
+                            AppImages.logo,
+                            height: 88,
+                            width: 85,
+                          ),
+                        ),
 
-                    const SizedBox(height: 81),
+                        const SizedBox(height: 81),
 
-                    // Title
-                    Padding(
-                      padding: const EdgeInsets.only(left: 35, top: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                        // Title
+                        Padding(
+                          padding: const EdgeInsets.only(left: 35, top: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Enter 4 Digit OTP',
-                                style: AppTextStyles.mulish(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 24,
-                                  color: AppColor.darkBlue,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Enter 4 Digit OTP',
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 24,
+                                      color: AppColor.darkBlue,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    'sent to',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 24,
+                                      color: AppColor.darkBlue,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 5),
                               Text(
-                                'sent to',
+                                'your given Mobile Number',
                                 style: AppTextStyles.mulish(
                                   fontSize: 24,
                                   color: AppColor.darkBlue,
@@ -170,195 +193,185 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                               ),
                             ],
                           ),
-                          Text(
-                            'your given Mobile Number',
-                            style: AppTextStyles.mulish(
-                              fontSize: 24,
-                              color: AppColor.darkBlue,
+                        ),
+
+                        const SizedBox(height: 35),
+
+                        // OTP fields
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 35),
+                          child: PinCodeTextField(
+                            appContext: context,
+                            length: 4,
+                            autoFocus: otp.text.isEmpty,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            autoDisposeControllers: false,
+                            blinkWhenObscuring: true,
+                            controller: otp,
+                            keyboardType: TextInputType.number,
+                            cursorColor: AppColor.black,
+                            animationDuration: const Duration(
+                              milliseconds: 300,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 35),
-
-                    // OTP fields
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 35),
-                      child: PinCodeTextField(
-                        appContext: context,
-                        length: 4,
-                        autoFocus: otp.text.isEmpty,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        autoDisposeControllers: false,
-                        blinkWhenObscuring: true,
-                        controller: otp,
-                        keyboardType: TextInputType.number,
-                        cursorColor: AppColor.black,
-                        animationDuration: const Duration(milliseconds: 300),
-                        enableActiveFill: true,
-                        pinTheme: PinTheme(
-                          shape: PinCodeFieldShape.box,
-                          borderRadius: BorderRadius.circular(17),
-                          fieldHeight: 55,
-                          fieldWidth: 55,
-                          selectedColor: AppColor.darkBlue,
-                          activeColor: AppColor.darkBlue,
-                          activeFillColor: AppColor.white,
-                          inactiveColor: AppColor.darkBlue,
-                          selectedFillColor: AppColor.white,
-                          inactiveFillColor: AppColor.white,
-                          fieldOuterPadding: const EdgeInsets.symmetric(
-                            horizontal: 9,
+                            enableActiveFill: true,
+                            pinTheme: PinTheme(
+                              shape: PinCodeFieldShape.box,
+                              borderRadius: BorderRadius.circular(17),
+                              fieldHeight: 55,
+                              fieldWidth: 55,
+                              selectedColor: AppColor.darkBlue,
+                              activeColor: AppColor.darkBlue,
+                              activeFillColor: AppColor.white,
+                              inactiveColor: AppColor.darkBlue,
+                              selectedFillColor: AppColor.white,
+                              inactiveFillColor: AppColor.white,
+                              fieldOuterPadding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                              ),
+                            ),
+                            boxShadows: [
+                              BoxShadow(
+                                offset: const Offset(0, 1),
+                                color: AppColor.skyBlue,
+                                blurRadius: 5,
+                              ),
+                            ],
+                            onCompleted: (value) {
+                              verifyCode = value;
+                            },
+                            onChanged: (value) {
+                              verifyCode = value;
+                              if (otpError != null && value.isNotEmpty) {
+                                setState(() {
+                                  otpError = null;
+                                });
+                              }
+                            },
+                            beforeTextPaste: (text) {
+                              return true;
+                            },
                           ),
                         ),
-                        boxShadows: [
-                          BoxShadow(
-                            offset: const Offset(0, 1),
-                            color: AppColor.skyBlue,
-                            blurRadius: 5,
-                          ),
-                        ],
-                        onCompleted: (value) {
-                          verifyCode = value;
-                        },
-                        onChanged: (value) {
-                          verifyCode = value;
-                          if (otpError != null && value.isNotEmpty) {
-                            setState(() {
-                              otpError = null;
-                            });
-                          }
-                        },
-                        beforeTextPaste: (text) {
-                          return true;
-                        },
-                      ),
-                    ),
 
-                    if (otpError != null)
-                      Center(
-                        child: Text(
-                          otpError!,
-                          style: AppTextStyles.mulish(
-                            color: AppColor.red,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                    const SizedBox(height: 35),
-
-                    // Resend row
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 35),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: _canResend
-                                ? () {
-                                    // mark as resend call
-                                    lastLoginPage = 'resendOtp';
-                                    notifier.loginUser(
-                                      phoneNumber: widget.phoneNumber,
-                                      page: 'resendOtp',
-                                    );
-                                    _startTimer(30);
-                                  }
-                                : null,
+                        if (otpError != null)
+                          Center(
                             child: Text(
-                              'Resend',
+                              otpError!,
                               style: AppTextStyles.mulish(
-                                fontWeight: FontWeight.w800,
-                                color: _canResend
-                                    ? AppColor.skyBlue
-                                    : AppColor.gray84,
+                                color: AppColor.red,
+                                fontSize: 14,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            _canResend ? 'OTP' : 'code in',
-                            style: AppTextStyles.mulish(
-                              fontWeight: FontWeight.w800,
-                              color: _canResend
-                                  ? AppColor.skyBlue
-                                  : AppColor.gray84,
-                            ),
-                          ),
-                          if (!_canResend) ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              '00:${_secondsRemaining.toString().padLeft(2, '0')}',
-                              style: AppTextStyles.mulish(
-                                fontWeight: FontWeight.w800,
-                                color: AppColor.darkBlue,
+
+                        const SizedBox(height: 35),
+
+                        // Resend row
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 35),
+                          child: Row(
+                            children: [
+                              InkWell(
+                                onTap: _canResend
+                                    ? () {
+                                        // mark as resend call
+                                        lastLoginPage = 'resendOtp';
+                                        notifier.loginUser(
+                                          phoneNumber: widget.phoneNumber,
+                                          page: 'resendOtp',
+                                        );
+                                        _startTimer(30);
+                                      }
+                                    : null,
+                                child: Text(
+                                  'Resend',
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.w800,
+                                    color: _canResend
+                                        ? AppColor.skyBlue
+                                        : AppColor.gray84,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                          const Spacer(),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Info text
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 35),
-                      child: Text(
-                        'OTP sent to $maskMobileNumber, please check and enter below. '
-                        'If you’ve not received OTP, you can resend after the timer ends.',
-                        style: AppTextStyles.mulish(
-                          fontSize: 14,
-                          color: AppColor.darkGrey,
+                              const SizedBox(width: 5),
+                              Text(
+                                _canResend ? 'OTP' : 'code in',
+                                style: AppTextStyles.mulish(
+                                  fontWeight: FontWeight.w800,
+                                  color: _canResend
+                                      ? AppColor.skyBlue
+                                      : AppColor.gray84,
+                                ),
+                              ),
+                              if (!_canResend) ...[
+                                const SizedBox(width: 4),
+                                Text(
+                                  '00:${_secondsRemaining.toString().padLeft(2, '0')}',
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                              ],
+                              const Spacer(),
+                            ],
+                          ),
                         ),
-                      ),
+
+                        const SizedBox(height: 12),
+
+                        // Info text
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 35),
+                          child: Text(
+                            'OTP sent to $maskMobileNumber, please check and enter below. '
+                            'If you’ve not received OTP, you can resend after the timer ends.',
+                            style: AppTextStyles.mulish(
+                              fontSize: 14,
+                              color: AppColor.darkGrey,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 35),
+
+                        // Verify button
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 35),
+                          child: CommonContainer.button(
+                            buttonColor: AppColor.skyBlue,
+                            onTap: () {
+                              final enteredOtp = otp.text.trim();
+                              if (enteredOtp.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please enter OTP'),
+                                  ),
+                                );
+                                return;
+                              }
+                              notifier.verifyOtp(
+                                contact: widget.phoneNumber,
+                                otp: enteredOtp,
+                              );
+                            },
+                            text: state.isLoading
+                                ? const ThreeDotsLoader()
+                                : const Text('Verify Now'),
+                          ),
+                        ),
+
+                        const SizedBox(height: 50),
+                      ],
                     ),
-
-                    const SizedBox(height: 35),
-
-                    // Verify button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 35),
-                      child: CommonContainer.button(
-                        buttonColor: AppColor.skyBlue,
-                        onTap: () {
-                          final enteredOtp = otp.text.trim();
-                          if (enteredOtp.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter OTP')),
-                            );
-                            return;
-                          }
-                          notifier.verifyOtp(
-                            contact: widget.phoneNumber,
-                            otp: enteredOtp,
-                          );
-                        },
-                        text: state.isLoading
-                            ? const ThreeDotsLoader()
-                            : const Text('Verify Now'),
-                      ),
-                    ),
-
-                    const SizedBox(height: 50),
-                  ],
-                ),
-              ),
-            ),
-
-            // Bottom decoration
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Image.asset(
-                AppImages.loginScreenBottom,
-                width: double.infinity,
-                fit: BoxFit.cover,
+                  ),
+                  Image.asset(
+                    AppImages.loginScreenBottom,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ],
               ),
             ),
           ],

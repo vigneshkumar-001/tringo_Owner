@@ -1273,6 +1273,7 @@ class CommonContainer {
 
   static Widget fillingContainer({
     String? text,
+    String? text1,
     double? textSize = 14,
     Color? textColor = AppColor.mediumGray,
     FontWeight? textFontWeight,
@@ -1495,7 +1496,7 @@ class CommonContainer {
                                                 final raw = value.text.trim();
                                                 if (raw.isEmpty) {
                                                   return Text(
-                                                    text ?? '',
+                                                    text1 ?? '',
                                                     style: AppTextStyles.mulish(
                                                       fontSize: 14,
                                                       color:

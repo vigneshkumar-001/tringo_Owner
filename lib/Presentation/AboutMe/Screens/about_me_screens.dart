@@ -18,6 +18,8 @@ import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 import '../../ShopInfo/Screens/shop_photo_info.dart';
+import '../Model/service_edit_response.dart';
+import '../Model/service_remove_response.dart';
 import '../controller/about_me_notifier.dart';
 
 class AboutMeScreens extends ConsumerStatefulWidget {
@@ -34,7 +36,9 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   int followersSelectedIndex = 0;
   int _selectedMonth = 2;
 
+  String? _editingServiceId;
   String? _deletingProductId;
+  String? _deletingServiceId;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -362,7 +366,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           isService: isServiceFlow, // keep as per your flow
                           isIndividual: false,
 
-                          // 👉 prefill values from Shop model
+                          //  prefill values from Shop model
                           initialShopNameEnglish: selectedShop.shopEnglishName,
                           initialShopNameTamil: selectedShop.shopTamilName,
 
@@ -419,40 +423,152 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     final selectedShop = _getSelectedShop(aboutState);
                     if (selectedShop == null) return;
 
-                    final updatedPhotos = await Navigator.push(
+                    // 1️⃣ Get existing images from shop.shopImages (sorted by displayOrder)
+                    final images = List.from(selectedShop.shopImages ?? [])
+                      ..sort(
+                        (a, b) => (a.displayOrder ?? 0).compareTo(
+                          b.displayOrder ?? 0,
+                        ),
+                      );
+
+                    // 2️⃣ Map first 4 images → our 4 slots in ShopPhotoInfo
+                    final initialImageUrls = List<String?>.filled(4, null);
+                    for (int i = 0; i < images.length && i < 4; i++) {
+                      final url = images[i].url;
+                      if (url != null && url.trim().isNotEmpty) {
+                        initialImageUrls[i] = url.trim();
+                      }
+                    }
+
+                    // 3️⃣ Navigate to ShopPhotoInfo with existing URLs
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ShopPhotoInfo(
                           pages: "AboutMeScreens",
                           shopId: selectedShop.shopId,
+                          initialImageUrls: initialImageUrls,
                         ),
                       ),
                     );
 
-                    if (updatedPhotos != null) {
-                      setState(() {});
-                    }
+                    // 4️⃣ If you want, refresh data after coming back
+                    if (!mounted) return;
+                    await ref
+                        .read(aboutMeNotifierProvider.notifier)
+                        .fetchAllShopDetails(
+                          shopId: _currentShopId ?? selectedShop.shopId,
+                        );
+                    setState(() {});
                   },
                 ),
+
+                // CommonContainer.editShopContainer(
+                //   text: 'Edit Shop Photos',
+                //   onTap: () async {
+                //     final selectedShop = _getSelectedShop(aboutState);
+                //     if (selectedShop == null) return;
+                //
+                //     final updatedPhotos = await Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => ShopPhotoInfo(
+                //           pages: "AboutMeScreens",
+                //           shopId: selectedShop.shopId,
+                //         ),
+                //       ),
+                //     );
+                //
+                //     if (updatedPhotos != null) {
+                //       setState(() {});
+                //     }
+                //   },
+                // ),
                 const SizedBox(width: 10),
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Location In Map',
                   onTap: () async {
-                    final updatedData = await Navigator.push(
+                    final selectedShop = _getSelectedShop(aboutState);
+                    if (selectedShop == null) return;
+
+                    //  Decide service / product based on shopKind
+                    final bool isServiceFlow =
+                        (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
+
+                    final updated = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ShopCategoryInfo(
+                        builder: (context) => ShopCategoryInfo(
                           pages: "AboutMeScreens",
-                          isService: true,
+                          shopId: selectedShop.shopId,
+                          isService: isServiceFlow, // keep as per your flow
                           isIndividual: false,
+
+                          //  prefill values from Shop model
+                          initialShopNameEnglish: selectedShop.shopEnglishName,
+                          initialShopNameTamil: selectedShop.shopTamilName,
+
+                          initialDescriptionEnglish:
+                              selectedShop.shopDescriptionEn,
+                          initialDescriptionTamil:
+                              selectedShop.shopDescriptionTa,
+
+                          initialAddressEnglish: selectedShop.shopAddressEn,
+                          initialAddressTamil: selectedShop.shopAddressTa,
+
+                          initialGps:
+                              (selectedShop.shopGpsLatitude != null &&
+                                  selectedShop.shopGpsLongitude != null &&
+                                  selectedShop.shopGpsLatitude!.isNotEmpty &&
+                                  selectedShop.shopGpsLongitude!.isNotEmpty)
+                              ? "${selectedShop.shopGpsLatitude}, ${selectedShop.shopGpsLongitude}"
+                              : "",
+
+                          initialPrimaryMobile: selectedShop.shopPhone,
+                          initialWhatsapp: selectedShop.shopWhatsapp,
+                          initialEmail: selectedShop.shopContactEmail,
+
+                          // no separate name fields in model → use slug as display text for now
+                          initialCategoryName: selectedShop.category ?? "",
+                          initialCategorySlug: selectedShop.category,
+                          initialSubCategoryName:
+                              selectedShop.subCategory ?? "",
+                          initialSubCategorySlug: selectedShop.subCategory,
+
+                          initialDoorDeliveryText:
+                              (selectedShop.shopDoorDelivery == true)
+                              ? 'Yes'
+                              : 'No',
                         ),
                       ),
                     );
 
-                    if (updatedData != null) {
+                    if (updated == true && mounted) {
+                      await ref
+                          .read(aboutMeNotifierProvider.notifier)
+                          .fetchAllShopDetails(
+                            shopId: _currentShopId ?? selectedShop.shopId,
+                          );
+
                       setState(() {});
                     }
                   },
+                  // onTap: () async {
+                  //   final updatedData = await Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (context) => const ShopCategoryInfo(
+                  //         pages: "AboutMeScreens",
+                  //         isService: true,
+                  //         isIndividual: false,
+                  //       ),
+                  //     ),
+                  //   );
+                  //
+                  //   if (updatedData != null) {
+                  //     setState(() {});
+                  //   }
+                  // },
                 ),
               ],
             ),
@@ -787,6 +903,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     }
   }
 
+  ///product or service edit
   Widget _buildShopDetails(AboutMeState aboutState) {
     final isPremium = RegistrationProductSeivice.instance.isPremium;
     final selectedShop = _getSelectedShop(aboutState);
@@ -887,7 +1004,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final ratingCount = (s.ratingCount ?? 0).toString();
 
                   final startsAt = s.startsAt ?? 0;
-                  final priceText = 'Starts at ₹$startsAt';
+                  final priceText = ' ₹$startsAt';
 
                   String imageUrl = '';
                   if (s.media.isNotEmpty) {
@@ -918,28 +1035,50 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                         children: [
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                final selectedShop = _getSelectedShop(
+                                  aboutState,
+                                );
+                                if (selectedShop == null) return;
+
+                                final title =
+                                    (s.englishName ?? s.tamilName ?? '').trim();
+                                final englishName = title.isEmpty
+                                    ? 'Unnamed Product'
+                                    : title;
+
+                                final updated = await Navigator.push<bool>(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         ProductCategoryScreens(
                                           page: 'AboutMeScreens',
-                                          isService: true, // 🔹 SERVICE FLOW
-                                          shopId: selectedShop?.shopId,
+                                          isService: true,
+                                          shopId: selectedShop.shopId,
                                           productId: s.serviceId,
                                           allowOfferEdit: true,
                                           initialCategoryName: s.category,
                                           initialSubCategoryName: s.subCategory,
-                                          initialProductName: serviceName,
+                                          initialProductName: englishName,
                                           initialPrice: s.startsAt,
                                           initialDescription: s.description,
-                                          initialDoorDelivery: 'No',
                                           initialOfferLabel: s.offerLabel,
                                           initialOfferValue: s.offerValue,
                                         ),
                                   ),
                                 );
+
+                                //  AFTER POP: refresh automatically
+                                if (updated == true && mounted) {
+                                  await ref
+                                      .read(aboutMeNotifierProvider.notifier)
+                                      .fetchAllShopDetails(
+                                        shopId:
+                                            _currentShopId ??
+                                            selectedShop.shopId,
+                                      );
+                                  setState(() {});
+                                }
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -971,13 +1110,86 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+
+                          // Expanded(
+                          //   child: GestureDetector(
+                          //     onTap: () async {
+                          //       final selectedShop = _getSelectedShop(
+                          //         aboutState,
+                          //       );
+                          //       if (selectedShop == null) return;
+                          //
+                          //       final title =
+                          //           (s.englishName ?? s.tamilName ?? '').trim();
+                          //       final englishName = title.isEmpty
+                          //           ? 'Unnamed Product'
+                          //           : title;
+                          //       final startsAt = s.startsAt ?? 0;
+                          //
+                          //       final offerLabel = s.offerLabel;
+                          //       final offerValue = s.offerValue;
+                          //       final description = s.description;
+                          //       Navigator.push(
+                          //         context,
+                          //         MaterialPageRoute(
+                          //           builder: (context) =>
+                          //               ProductCategoryScreens(
+                          //                 page: 'AboutMeScreens',
+                          //                 isService: true, // 🔹 SERVICE FLOW
+                          //                 shopId: selectedShop?.shopId,
+                          //                 productId: s.serviceId,
+                          //                 allowOfferEdit: true,
+                          //                 initialCategoryName: s.category,
+                          //                 initialSubCategoryName: s.subCategory,
+                          //                 initialProductName: englishName,
+                          //                 initialPrice: s.startsAt,
+                          //                 initialDescription: s.description,
+                          //                 initialOfferLabel: s.offerLabel,
+                          //                 initialOfferValue: s.offerValue,
+                          //               ),
+                          //         ),
+                          //       );
+                          //     },
+                          //     child: Container(
+                          //       padding: const EdgeInsets.symmetric(
+                          //         vertical: 15,
+                          //         horizontal: 15,
+                          //       ),
+                          //       decoration: BoxDecoration(
+                          //         color: AppColor.resendOtp,
+                          //         borderRadius: BorderRadius.circular(15),
+                          //       ),
+                          //       child: Row(
+                          //         mainAxisAlignment: MainAxisAlignment.center,
+                          //         children: [
+                          //           Image.asset(
+                          //             AppImages.editImage,
+                          //             color: AppColor.white,
+                          //             height: 16,
+                          //           ),
+                          //           const SizedBox(width: 6),
+                          //           Text(
+                          //             'Edit',
+                          //             style: AppTextStyles.mulish(
+                          //               color: AppColor.white,
+                          //               fontWeight: FontWeight.bold,
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
+                          SizedBox(width: 10),
                           Expanded(
                             child: GestureDetector(
                               onTap: () async {
+                                // prevent double tap while this service is deleting
+                                if (_deletingServiceId == s.serviceId) return;
+
                                 final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
+                                  context: this.context,
+                                  builder: (_) => AlertDialog(
                                     backgroundColor: AppColor.white,
                                     title: const Text('Confirm Remove'),
                                     content: const Text(
@@ -986,12 +1198,12 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                     actions: [
                                       TextButton(
                                         onPressed: () =>
-                                            Navigator.pop(context, false),
+                                            Navigator.pop(this.context, false),
                                         child: const Text('Cancel'),
                                       ),
                                       TextButton(
                                         onPressed: () =>
-                                            Navigator.pop(context, true),
+                                            Navigator.pop(this.context, true),
                                         child: Text(
                                           'Remove',
                                           style: AppTextStyles.mulish(
@@ -1004,8 +1216,73 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   ),
                                 );
 
-                                if (confirm == true) {
-                                  // TODO: Call delete service API here with s.serviceId
+                                if (confirm != true) return;
+                                if (!mounted) return;
+
+                                setState(
+                                  () => _deletingServiceId = s.serviceId,
+                                );
+
+                                final success = await ref
+                                    .read(productNotifierProvider.notifier)
+                                    .deleteServiceAction(
+                                      serviceId: s.serviceId,
+                                    );
+
+                                if (!mounted) return;
+
+                                setState(() => _deletingServiceId = null);
+
+                                final productState = ref.read(
+                                  productNotifierProvider,
+                                );
+                                final deleteMsg =
+                                    productState.serviceRemoveResponse?.message;
+
+                                if (success) {
+                                  // optional: instant local removal of the service
+                                  final currentShop = _getSelectedShop(
+                                    aboutState,
+                                  );
+                                  if (currentShop != null) {
+                                    currentShop.services.removeWhere(
+                                      (srv) => srv.serviceId == s.serviceId,
+                                    );
+                                  }
+
+                                  // refresh from backend
+                                  await ref
+                                      .read(aboutMeNotifierProvider.notifier)
+                                      .fetchAllShopDetails(
+                                        shopId:
+                                            _currentShopId ??
+                                            currentShop?.shopId,
+                                      );
+
+                                  if (!mounted) return;
+
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        deleteMsg ??
+                                            'Service removed successfully',
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        productState.error ??
+                                            'Failed to remove service',
+                                      ),
+                                    ),
+                                  );
                                 }
                               },
                               child: Container(
@@ -1017,23 +1294,31 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   color: AppColor.leftArrow,
                                   borderRadius: BorderRadius.circular(15),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      AppImages.closeImage,
-                                      color: AppColor.black,
-                                      height: 16,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Remove',
-                                      style: AppTextStyles.mulish(
-                                        color: AppColor.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
+                                child: Center(
+                                  child: (_deletingServiceId == s.serviceId)
+                                      ? ThreeDotsLoader(
+                                          dotColor: AppColor.black,
+                                        )
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              AppImages.closeImage,
+                                              color: AppColor.black,
+                                              height: 16,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              'Remove',
+                                              style: AppTextStyles.mulish(
+                                                color: AppColor.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                 ),
                               ),
                             ),
@@ -1136,7 +1421,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                         ),
                                   ),
                                 );
-
                                 if (updated == true && mounted) {
                                   await ref
                                       .read(aboutMeNotifierProvider.notifier)
@@ -1180,7 +1464,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           ),
                           const SizedBox(width: 10),
 
-                          // 🔴 REMOVE BUTTON (NOW WIRED TO API)
+                          //  REMOVE BUTTON (NOW WIRED TO API)
                           Expanded(
                             child: GestureDetector(
                               onTap: () async {
@@ -1333,210 +1617,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 },
               ),
 
-            // ListView.separated(
-            //   shrinkWrap: true,
-            //   physics: const NeverScrollableScrollPhysics(),
-            //   itemCount: products.length,
-            //   separatorBuilder: (_, __) => const SizedBox(height: 12),
-            //   itemBuilder: (context, i) {
-            //     final p = products[i];
-            //     final title = (p.englishName ?? p.tamilName ?? '').trim();
-            //     final englishName = title.isEmpty ? 'Unnamed Product' : title;
-            //
-            //     final rating = (p.rating ?? 0).toDouble().toStringAsFixed(1);
-            //     final ratingCount = (p.ratingCount ?? 0).toString();
-            //
-            //     final price = p.price ?? 0;
-            //     final priceText = '₹$price';
-            //
-            //     String imageUrl = '';
-            //     if (p.media.isNotEmpty) {
-            //       imageUrl = p.media.first.url ?? '';
-            //     }
-            //
-            //     return Column(
-            //       children: [
-            //         CommonContainer.foodList(
-            //           fontSize: 14,
-            //           titleWeight: FontWeight.w700,
-            //           onTap: () {},
-            //           imageWidth: 130,
-            //           image: imageUrl,
-            //           foodName: englishName,
-            //           ratingStar: rating,
-            //           ratingCount: ratingCount,
-            //           offAmound: priceText,
-            //           oldAmound: '',
-            //           km: '',
-            //           location: '',
-            //           Verify: false,
-            //           locations: false,
-            //           weight: false,
-            //           horizontalDivider: false,
-            //         ),
-            //         Row(
-            //           children: [
-            //             Expanded(
-            //               child: GestureDetector(
-            //                 onTap: () async {
-            //                   final selectedShop = _getSelectedShop(
-            //                     aboutState,
-            //                   );
-            //                   if (selectedShop == null) return;
-            //
-            //                   final title =
-            //                       (p.englishName ?? p.tamilName ?? '').trim();
-            //                   final englishName = title.isEmpty
-            //                       ? 'Unnamed Product'
-            //                       : title;
-            //                   final price = p.price ?? 0;
-            //
-            //                   final offerLabel = p.offerLabel;
-            //                   final offerValue = p.offerValue;
-            //                   final description = p.description;
-            //                   final doorDelivery = (p.doorDelivery == true)
-            //                       ? 'Yes'
-            //                       : 'No';
-            //
-            //                   final updated = await Navigator.push<bool>(
-            //                     context,
-            //                     MaterialPageRoute(
-            //                       builder: (context) =>
-            //                           ProductCategoryScreens(
-            //                             page: 'AboutMeScreens',
-            //                             isService: false, // 🔹 PRODUCT FLOW
-            //                             shopId: selectedShop.shopId,
-            //                             productId: p.productId,
-            //                             allowOfferEdit: true,
-            //                             initialCategoryName: p.category,
-            //                             initialSubCategoryName: p.subCategory,
-            //                             initialProductName: englishName,
-            //                             initialPrice: price,
-            //                             initialDescription: description,
-            //                             initialDoorDelivery: doorDelivery,
-            //                             initialOfferLabel: offerLabel,
-            //                             initialOfferValue: offerValue,
-            //                             initialCategorySlug: p.categorySlug,
-            //                             initialSubCategorySlug:
-            //                                 p.subCategorySlug,
-            //                           ),
-            //                     ),
-            //                   );
-            //
-            //                   if (updated == true && mounted) {
-            //                     await ref
-            //                         .read(aboutMeNotifierProvider.notifier)
-            //                         .fetchAllShopDetails(
-            //                           shopId:
-            //                               _currentShopId ??
-            //                               selectedShop.shopId,
-            //                         );
-            //                     setState(() {});
-            //                   }
-            //                 },
-            //                 child: Container(
-            //                   padding: const EdgeInsets.symmetric(
-            //                     vertical: 15,
-            //                     horizontal: 15,
-            //                   ),
-            //                   decoration: BoxDecoration(
-            //                     color: AppColor.resendOtp,
-            //                     borderRadius: BorderRadius.circular(15),
-            //                   ),
-            //                   child: Row(
-            //                     mainAxisAlignment: MainAxisAlignment.center,
-            //                     children: [
-            //                       Image.asset(
-            //                         AppImages.editImage,
-            //                         color: AppColor.white,
-            //                         height: 16,
-            //                       ),
-            //                       const SizedBox(width: 6),
-            //                       Text(
-            //                         'Edit',
-            //                         style: AppTextStyles.mulish(
-            //                           color: AppColor.white,
-            //                           fontWeight: FontWeight.bold,
-            //                         ),
-            //                       ),
-            //                     ],
-            //                   ),
-            //                 ),
-            //               ),
-            //             ),
-            //             const SizedBox(width: 10),
-            //             Expanded(
-            //               child: GestureDetector(
-            //                 onTap: () async {
-            //                   final confirm = await showDialog<bool>(
-            //                     context: context,
-            //                     builder: (context) => AlertDialog(
-            //                       backgroundColor: AppColor.white,
-            //                       title: const Text('Confirm Remove'),
-            //                       content: const Text(
-            //                         'Are you sure you want to remove this product?',
-            //                       ),
-            //                       actions: [
-            //                         TextButton(
-            //                           onPressed: () =>
-            //                               Navigator.pop(context, false),
-            //                           child: const Text('Cancel'),
-            //                         ),
-            //                         TextButton(
-            //                           onPressed: () =>
-            //                               Navigator.pop(context, true),
-            //                           child: Text(
-            //                             'Remove',
-            //                             style: AppTextStyles.mulish(
-            //                               fontWeight: FontWeight.w600,
-            //                               color: Colors.red,
-            //                             ),
-            //                           ),
-            //                         ),
-            //                       ],
-            //                     ),
-            //                   );
-            //
-            //                   if (confirm == true) {
-            //                     // TODO: Call delete product API here with p.productId
-            //                   }
-            //                 },
-            //                 child: Container(
-            //                   padding: const EdgeInsets.symmetric(
-            //                     vertical: 15,
-            //                     horizontal: 15,
-            //                   ),
-            //                   decoration: BoxDecoration(
-            //                     color: AppColor.leftArrow,
-            //                     borderRadius: BorderRadius.circular(15),
-            //                   ),
-            //                   child: Row(
-            //                     mainAxisAlignment: MainAxisAlignment.center,
-            //                     children: [
-            //                       Image.asset(
-            //                         AppImages.closeImage,
-            //                         color: AppColor.black,
-            //                         height: 16,
-            //                       ),
-            //                       const SizedBox(width: 10),
-            //                       Text(
-            //                         'Remove',
-            //                         style: AppTextStyles.mulish(
-            //                           color: AppColor.black,
-            //                           fontWeight: FontWeight.bold,
-            //                         ),
-            //                       ),
-            //                     ],
-            //                   ),
-            //                 ),
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       ],
-            //     );
-            //   },
-            // ),
             const SizedBox(height: 20),
 
             // 🔹 Add Product / Service
@@ -1583,7 +1663,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       height: 22,
                       color: AppColor.darkBlue,
                     ),
-                    const SizedBox(width: 9),
+                    SizedBox(width: 9),
                     Text(
                       hasServices ? 'Add Service' : 'Add Product',
                       style: AppTextStyles.mulish(
