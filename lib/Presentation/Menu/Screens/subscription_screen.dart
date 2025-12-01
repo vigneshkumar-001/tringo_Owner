@@ -65,9 +65,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 RegistrationProductSeivice.instance
                                     .markUnsubscribed();
 
+                                // 2️⃣ navigate with structured extra
                                 context.goNamed(
                                   AppRoutes.shopsDetails,
-                                  extra: true,
+                                  extra: {
+                                    'backDisabled':
+                                        false, // or true if you want to disable back
+                                    'fromSubscriptionSkip':
+                                        true, // you are coming from Skip
+                                  },
                                 );
                               },
                               borderRadius: BorderRadius.circular(16),

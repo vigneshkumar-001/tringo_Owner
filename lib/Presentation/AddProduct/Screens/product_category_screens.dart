@@ -15,7 +15,7 @@ import '../../ShopInfo/model/shop_category_list_response.dart';
 import '../Service Info/Controller/service_info_notifier.dart';
 import 'add_product_list.dart';
 
-  class ProductCategoryScreens extends ConsumerStatefulWidget {
+class ProductCategoryScreens extends ConsumerStatefulWidget {
   final bool? isService;
   final bool? isIndividual;
   final bool allowOfferEdit;
@@ -24,6 +24,7 @@ import 'add_product_list.dart';
   final String? shopId;
   final String? productId;
   final String? page;
+  final String? pages;
 
   final String? initialCategoryName;
   final String? initialSubCategoryName;
@@ -40,6 +41,7 @@ import 'add_product_list.dart';
     this.shopId,
     this.productId,
     this.page,
+    this.pages,
     this.isIndividual,
     this.allowOfferEdit = false,
     this.initialOfferLabel,
@@ -88,11 +90,11 @@ class _ProductCategoryScreensState
   String productSubCategorySlug = '';
 
   void _showCategoryBottomSheet(
-      BuildContext context,
-      WidgetRef ref,
-      TextEditingController controller, {
-        void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-      }) {
+    BuildContext context,
+    WidgetRef ref,
+    TextEditingController controller, {
+    void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -174,9 +176,9 @@ class _ProductCategoryScreensState
                                 filtered = categories
                                     .where(
                                       (c) => c.name.toLowerCase().contains(
-                                    value.toLowerCase(),
-                                  ),
-                                )
+                                        value.toLowerCase(),
+                                      ),
+                                    )
                                     .toList();
                               });
                             },
@@ -202,42 +204,42 @@ class _ProductCategoryScreensState
                         Expanded(
                           child: isLoading
                               ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: ThreeDotsLoader(
-                                dotColor: AppColor.darkBlue,
-                              ),
-                            ),
-                          )
-                              : ListView.builder(
-                            controller: scrollController,
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final category = filtered[index];
-                              return ListTile(
-                                title: Text(category.name),
-                                trailing: category.children.isNotEmpty
-                                    ? const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 14,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: ThreeDotsLoader(
+                                      dotColor: AppColor.darkBlue,
+                                    ),
+                                  ),
                                 )
-                                    : null,
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  setState(() {
-                                    controller.text = category.name;
-                                    productCategorySlug = category.slug;
-                                    _categoryHasError = false;
-                                    _subCategoryHasError = false;
-                                  });
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, index) {
+                                    final category = filtered[index];
+                                    return ListTile(
+                                      title: Text(category.name),
+                                      trailing: category.children.isNotEmpty
+                                          ? const Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 14,
+                                            )
+                                          : null,
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        setState(() {
+                                          controller.text = category.name;
+                                          productCategorySlug = category.slug;
+                                          _categoryHasError = false;
+                                          _subCategoryHasError = false;
+                                        });
 
-                                  if (onCategorySelected != null) {
-                                    onCategorySelected(category);
-                                  }
-                                },
-                              );
-                            },
-                          ),
+                                        if (onCategorySelected != null) {
+                                          onCategorySelected(category);
+                                        }
+                                      },
+                                    );
+                                  },
+                                ),
                         ),
                       ],
                     );
@@ -252,10 +254,10 @@ class _ProductCategoryScreensState
   }
 
   void _showCategoryChildrenBottomSheet(
-      BuildContext context,
-      List<ShopCategoryListData> children,
-      TextEditingController controller,
-      ) {
+    BuildContext context,
+    List<ShopCategoryListData> children,
+    TextEditingController controller,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -285,9 +287,7 @@ class _ProductCategoryScreensState
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             color: Colors.grey,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(2),
-                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(2)),
                           ),
                         ),
                       ),
@@ -312,9 +312,9 @@ class _ProductCategoryScreensState
                             filtered = children
                                 .where(
                                   (c) => c.name.toLowerCase().contains(
-                                value.toLowerCase(),
-                              ),
-                            )
+                                    value.toLowerCase(),
+                                  ),
+                                )
                                 .toList();
                           });
                         },
@@ -340,33 +340,33 @@ class _ProductCategoryScreensState
                     Expanded(
                       child: filtered.isEmpty
                           ? const Center(
-                        child: Text(
-                          'No subcategories found',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      )
+                              child: Text(
+                                'No subcategories found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            )
                           : ListView.builder(
-                        controller: scrollController,
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final child = filtered[index];
-                          return ListTile(
-                            title: Text(child.name),
-                            onTap: () {
-                              Navigator.pop(context);
-                              setState(() {
-                                controller.text = child.name;
-                                productSubCategorySlug = child.slug;
-                                _categoryHasError = false;
-                                _subCategoryHasError = false;
-                              });
-                            },
-                          );
-                        },
-                      ),
+                              controller: scrollController,
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                final child = filtered[index];
+                                return ListTile(
+                                  title: Text(child.name),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    setState(() {
+                                      controller.text = child.name;
+                                      productSubCategorySlug = child.slug;
+                                      _categoryHasError = false;
+                                      _subCategoryHasError = false;
+                                    });
+                                  },
+                                );
+                              },
+                            ),
                     ),
                   ],
                 );
@@ -399,7 +399,7 @@ class _ProductCategoryScreensState
               ),
               const SizedBox(height: 12),
               ...offers.map(
-                    (offer) => ListTile(
+                (offer) => ListTile(
                   title: Text(offer),
                   onTap: () => Navigator.pop(context, offer),
                 ),
@@ -451,10 +451,12 @@ class _ProductCategoryScreensState
 
     // 👇 VERY IMPORTANT: Decide service / product from widget.isService if given
     final bool isServiceFlow =
-        widget.isService ?? RegistrationProductSeivice.instance.isServiceBusiness;
+        widget.isService ??
+        RegistrationProductSeivice.instance.isServiceBusiness;
 
-    final bool isLoading =
-    isServiceFlow ? serviceState.isLoading : productState.isLoading;
+    final bool isLoading = isServiceFlow
+        ? serviceState.isLoading
+        : productState.isLoading;
 
     return Scaffold(
       body: SafeArea(
@@ -500,7 +502,9 @@ class _ProductCategoryScreensState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isServiceFlow ? ' Service Category' : 'Product Category',
+                        isServiceFlow
+                            ? ' Service Category'
+                            : 'Product Category',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       const SizedBox(height: 10),
@@ -621,8 +625,7 @@ class _ProductCategoryScreensState
                                     style: AppTextStyles.mulish(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 18,
-                                      color: _subCategoryController
-                                          .text.isEmpty
+                                      color: _subCategoryController.text.isEmpty
                                           ? Colors.grey
                                           : Colors.black,
                                     ),
@@ -643,14 +646,14 @@ class _ProductCategoryScreensState
                       CommonContainer.fillingContainer(
                         verticalDivider: false,
                         controller: _productNameController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return isServiceFlow
-                                ? 'Please enter Service Name'
-                                : 'Please enter Product name';
-                          }
-                          return null;
-                        },
+                        // validator: (value) {
+                        //   if (value == null || value.isEmpty) {
+                        //     return isServiceFlow
+                        //         ? 'Please enter Service Name'
+                        //         : 'Please enter Product name';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       const SizedBox(height: 25),
                       Text(
@@ -662,14 +665,14 @@ class _ProductCategoryScreensState
                         keyboardType: TextInputType.number,
                         verticalDivider: false,
                         controller: _productPriceController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return isServiceFlow
-                                ? 'Please enter Start From amount'
-                                : 'Please enter Product price';
-                          }
-                          return null;
-                        },
+                        // validator: (value) {
+                        //   if (value == null || value.isEmpty) {
+                        //     return isServiceFlow
+                        //         ? 'Please enter Start From amount'
+                        //         : 'Please enter Product price';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       const SizedBox(height: 25),
                       Text(
@@ -678,8 +681,9 @@ class _ProductCategoryScreensState
                       ),
                       const SizedBox(height: 10),
                       GestureDetector(
-                        onTap:
-                        widget.allowOfferEdit ? _showOfferBottomSheet : null,
+                        onTap: widget.allowOfferEdit
+                            ? _showOfferBottomSheet
+                            : null,
                         child: AbsorbPointer(
                           child: CommonContainer.fillingContainer(
                             imagePath: widget.allowOfferEdit
@@ -699,8 +703,10 @@ class _ProductCategoryScreensState
                         controller: _offerPriceController,
                         readOnly: !widget.allowOfferEdit,
                         onChanged: (value) {
-                          final onlyDigits =
-                          value.replaceAll(RegExp(r'[^0-9]'), '');
+                          final onlyDigits = value.replaceAll(
+                            RegExp(r'[^0-9]'),
+                            '',
+                          );
                           if (onlyDigits.isEmpty) {
                             _offerPriceController.clear();
                             return;
@@ -726,14 +732,14 @@ class _ProductCategoryScreensState
                         maxLine: 4,
                         verticalDivider: false,
                         controller: _descriptionController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return isServiceFlow
-                                ? 'Please enter Service Description'
-                                : 'Please enter Product Description';
-                          }
-                          return null;
-                        },
+                        // validator: (value) {
+                        //   if (value == null || value.isEmpty) {
+                        //     return isServiceFlow
+                        //         ? 'Please enter Service Description'
+                        //         : 'Please enter Product Description';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       if (!isServiceFlow) ...[
                         const SizedBox(height: 25),
@@ -751,9 +757,9 @@ class _ProductCategoryScreensState
                           isDropdown: true,
                           dropdownItems: cities,
                           context: context,
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Please select Door Delivery option'
-                              : null,
+                          // validator: (value) => value == null || value.isEmpty
+                          //     ? 'Please select Door Delivery option'
+                          //     : null,
                         ),
                         const SizedBox(height: 30),
                       ],
@@ -763,32 +769,33 @@ class _ProductCategoryScreensState
                         onTap: () async {
                           FocusScope.of(context).unfocus();
 
-                          final priceText =
-                          _productPriceController.text.trim();
+                          final priceText = _productPriceController.text.trim();
                           final price = int.tryParse(priceText);
 
-                          final hasCategoryError =
-                              _categoryController.text.trim().isEmpty;
-                          final hasSubCategoryError =
-                              _subCategoryController.text.trim().isEmpty;
+                          final hasCategoryError = _categoryController.text
+                              .trim()
+                              .isEmpty;
+                          final hasSubCategoryError = _subCategoryController
+                              .text
+                              .trim()
+                              .isEmpty;
 
                           setState(() {
                             _categoryHasError = hasCategoryError;
                             _subCategoryHasError = hasSubCategoryError;
                           });
 
-                          final formValid =
-                          _formKey.currentState!.validate();
+                          final formValid = _formKey.currentState!.validate();
 
-                          if (!formValid ||
-                              hasCategoryError ||
-                              hasSubCategoryError) {
-                            AppSnackBar.info(
-                              context,
-                              'Please fill all required fields correctly.',
-                            );
-                            return;
-                          }
+                          // if (!formValid ||
+                          //     hasCategoryError ||
+                          //     hasSubCategoryError) {
+                          //   AppSnackBar.info(
+                          //     context,
+                          //     'Please fill all required fields correctly.',
+                          //   );
+                          //   return;
+                          // }
 
                           bool success = false;
 
@@ -796,32 +803,30 @@ class _ProductCategoryScreensState
                             final serviceResponse = await ref
                                 .read(serviceInfoNotifierProvider.notifier)
                                 .saveServiceInfo(
-                              title:
-                              _productNameController.text.trim(),
-                              tamilName:
-                              _productNameController.text.trim(),
-                              description:
-                              _descriptionController.text.trim(),
-                              startsAt: price ?? 0,
-                              offerLabel: _offerController.text.trim(),
-                              offerValue:
-                              _offerPriceController.text.trim(),
-                              durationMinutes: 60,
-                              categoryId: productCategorySlug,
-                              subCategory:
-                              _subCategoryController.text.trim(),
-                              tags: const [],
-                              keywords: const [],
-                              images: const [],
-                              isFeatured: false,
-                              features: const [],
-                            );
+                                  title: _productNameController.text.trim(),
+                                  tamilName: _productNameController.text.trim(),
+                                  description: _descriptionController.text
+                                      .trim(),
+                                  startsAt: price ?? 0,
+                                  offerLabel: _offerController.text.trim(),
+                                  offerValue: _offerPriceController.text.trim(),
+                                  durationMinutes: 60,
+                                  categoryId: productCategorySlug,
+                                  subCategory: _subCategoryController.text
+                                      .trim(),
+                                  tags: const [],
+                                  keywords: const [],
+                                  images: const [],
+                                  isFeatured: false,
+                                  features: const [],
+                                );
 
                             success = serviceResponse != null;
 
                             if (!success) {
-                              final svcState =
-                              ref.read(serviceInfoNotifierProvider);
+                              final svcState = ref.read(
+                                serviceInfoNotifierProvider,
+                              );
                               if (svcState.error != null &&
                                   svcState.error!.isNotEmpty) {
                                 AppSnackBar.error(context, svcState.error!);
@@ -836,26 +841,24 @@ class _ProductCategoryScreensState
                             success = await ref
                                 .read(productNotifierProvider.notifier)
                                 .addProduct(
-                              productId: widget.productId,
-                              shopId: widget.shopId,
-                              category:
-                              _categoryController.text.trim(),
-                              subCategory:
-                              _subCategoryController.text.trim(),
-                              englishName:
-                              _productNameController.text.trim(),
-                              price: price ?? 0,
-                              offerLabel:
-                              _offerController.text.trim(),
-                              offerValue: _offerPriceController.text
-                                  .trim(),
-                              description:
-                              _descriptionController.text.trim(),
-                            );
+                                  productId: widget.productId,
+                                  shopId: widget.shopId,
+                                  category: _categoryController.text.trim(),
+                                  subCategory: _subCategoryController.text
+                                      .trim(),
+                                  englishName: _productNameController.text
+                                      .trim(),
+                                  price: price ?? 0,
+                                  offerLabel: _offerController.text.trim(),
+                                  offerValue: _offerPriceController.text.trim(),
+                                  description: _descriptionController.text
+                                      .trim(),
+                                );
 
                             if (!success) {
-                              final err =
-                                  ref.read(productNotifierProvider).error;
+                              final err = ref
+                                  .read(productNotifierProvider)
+                                  .error;
                               if (err != null && err.isNotEmpty) {
                                 AppSnackBar.error(context, err);
                               } else {
@@ -885,23 +888,22 @@ class _ProductCategoryScreensState
                               }
                             } else {
                               // normal registration flow or other pages
-                              context.pushNamed(
-                                AppRoutes.addProductList,
-                              );
+                              context.pushNamed(AppRoutes.addProductList);
                             }
                           }
                         },
                         text: isLoading
                             ? const ThreeDotsLoader()
                             : Text(
-                          'Save & Continue',
-                          style: AppTextStyles.mulish(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        imagePath:
-                        isLoading ? null : AppImages.rightStickArrow,
+                                widget.pages == "AboutMeScreens"
+                                    ? 'Update'
+                                    : 'Save & Continue',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                        imagePath: isLoading ? null : AppImages.rightStickArrow,
                         imgHeight: 20,
                       ),
                       const SizedBox(height: 36),
