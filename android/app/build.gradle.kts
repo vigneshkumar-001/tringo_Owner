@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "com.fenizo.tringo_vendor.tringo_vendor"
+    namespace = "com.fenizo.tringo_Owner.tringo_Owner"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
-        applicationId = "com.fenizo.tringo_vendor.tringo_vendor"
+        applicationId = "com.fenizo.tringo_Owner.tringo_Owner"
         minSdk = maxOf(23, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -83,10 +83,7 @@ class ProductNotifier extends Notifier<ProductState> {
       },
       (response) async {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(
-          'product_id',
-          response.data.id,
-        ); // ✅ fine for later steps
+        await prefs.setString('product_id', response.data.id);
         state = ProductState(isLoading: false, productResponse: response);
         return true;
       },

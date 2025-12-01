@@ -66,4 +66,8 @@ class ApiUrl {
   static String getAllShop({required String shopId}) {
     return "${base}api/v1/shops?mine=true&selectedShopId=$shopId";
   }
+
+  static String deleteService({required String serviceId}) {
+    return "${base}api/v1/services/$serviceId";
+  }
 }
