@@ -749,11 +749,30 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       CommonContainer.topLeftArrow(
                         onTap: () => Navigator.pop(context),
                       ),
-                      const SizedBox(width: 50),
+                      SizedBox(width: 50),
                       Text(
-                        'Register Shop - Individual',
+                        'Register Shop',
                         style: AppTextStyles.mulish(
                           fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        '-',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        isIndividualFlow ? 'Individual' : 'Company',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: AppColor.mildBlack,
                         ),
                       ),
@@ -1517,6 +1536,118 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         onTap: () async {
                           FocusScope.of(context).unfocus();
 
+                          final bool isServiceFlow = widget.isService ?? false;
+                          final String type = isServiceFlow
+                              ? 'service'
+                              : 'product';
+
+                          // GPS handling
+                          final gpsText = _gpsController.text.trim();
+                          double latitude = 0.0;
+                          double longitude = 0.0;
+
+                          if (gpsText.isNotEmpty && gpsText.contains(',')) {
+                            final parts = gpsText.split(',');
+                            latitude = double.tryParse(parts[0].trim()) ?? 0.0;
+                            longitude = double.tryParse(parts[1].trim()) ?? 0.0;
+                          }
+
+                          // -----------------------------
+                          // DOOR DELIVERY HANDLING
+                          // -----------------------------
+                          bool isDoorDeliveryEnabled = false;
+
+                          if (!isServiceFlow) {
+                            // PRODUCT flow → must validate dropdown
+                            final doorDeliveryValue = _doorDeliveryController
+                                .text
+                                .trim();
+
+                            if (doorDeliveryValue.isEmpty) {
+                              AppSnackBar.error(
+                                context,
+                                'Please select Door Delivery',
+                              );
+                              return; // stop flow
+                            }
+
+                            isDoorDeliveryEnabled = doorDeliveryValue == 'Yes';
+                            print('Door Delivery: $isDoorDeliveryEnabled');
+                          } else {
+                            // SERVICE flow → always false, no validation
+                            isDoorDeliveryEnabled = false;
+
+
+                          }
+
+                          // owner image
+                          final File? ownerFile = _permanentImage == null
+                              ? null
+                              : File(_permanentImage!.path);
+
+                          // API CALL
+                   final response = await ref
+                       .read(shopCategoryNotifierProvider.notifier)
+                       .shopCategoryInfo(
+                         shopId: widget.shopId,
+                         ownerImageFile: ownerFile,
+                         type: type,
+                         addressEn: _addressEnglishController.text
+                             .trim(),
+                         addressTa: addressTamilNameController.text
+                             .trim(),
+                         alternatePhone: _whatsappController.text.trim(),
+                         category: categorySlug,
+                         contactEmail: _emailController.text.trim(),
+                         descriptionEn: _descriptionEnglishController
+                             .text
+                             .trim(),
+                         descriptionTa: descriptionTamilController.text
+                             .trim(),
+                         doorDelivery:
+                             isDoorDeliveryEnabled, // <-- now correct
+                         englishName: _shopNameEnglishController.text
+                             .trim(),
+                         gpsLatitude: latitude,
+                         gpsLongitude: longitude,
+                         primaryPhone: _primaryMobileController.text
+                             .trim(),
+                         subCategory: subCategorySlug,
+                         tamilName: tamilNameController.text.trim(),
+                       );
+
+                   final newState = ref.read(
+                     shopCategoryNotifierProvider,
+                   );
+
+                   if (newState.error != null &&
+                       newState.error!.isNotEmpty) {
+                     AppSnackBar.error(context, newState.error!);
+                   } else if (response != null) {
+                     AppSnackBar.success(
+                       context,
+                       'Shop category details saved successfully',
+                     );
+
+                     if (widget.pages == 'AboutMeScreens') {
+                       Navigator.pop(context, true);
+                     } else {
+                       context.pushNamed(
+                         AppRoutes.shopPhotoInfo,
+                         extra: 'shopCategory',
+                       );
+                     }
+                   } else {
+                     AppSnackBar.error(
+                       context,
+                       "Unexpected error, please try again",
+                     );
+                   }
+                        },
+
+                        /*onTap: () async {
+                          FocusScope.of(context).unfocus();
+
                           // if (!_validateAll()) {
                           //   return;
                           // }
@@ -1536,12 +1667,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             longitude = double.tryParse(parts[1].trim()) ?? 0.0;
                           }
 
-                          bool doorDelivery = false;
+                          bool isDoorDeliveryEnabled = false;
                           if (!isServiceFlow) {
-                            final value = _doorDeliveryController.text
-                                .trim()
-                                .toLowerCase();
-                            doorDelivery = value == 'yes';
+                            final doorDeliveryValue = _doorDeliveryController.text.trim();
+                            final isDoorDeliveryEnabled = doorDeliveryValue == 'Yes';
+                            print(isDoorDeliveryEnabled);
                           }
                           // final String ownerImageUrl = isServiceFlow
                           //     ? (_permanentImage?.path ?? '')
@@ -1558,70 +1688,70 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           //   return;
                           // }
 
-                          final response = await ref
-                              .read(shopCategoryNotifierProvider.notifier)
-                              .shopCategoryInfo(
-                                shopId: widget.shopId,
-                                ownerImageFile: ownerFile,
-                                type: type,
-
-                                addressEn: _addressEnglishController.text
-                                    .trim(),
-                                addressTa: addressTamilNameController.text
-                                    .trim(),
-                                alternatePhone: _whatsappController.text.trim(),
-                                category: categorySlug,
-                                contactEmail: _emailController.text.trim(),
-                                descriptionEn: _descriptionEnglishController
-                                    .text
-                                    .trim(),
-                                descriptionTa: descriptionTamilController.text
-                                    .trim(),
-                                doorDelivery: doorDelivery,
-                                englishName: _shopNameEnglishController.text
-                                    .trim(),
-                                gpsLatitude: latitude,
-                                gpsLongitude: longitude,
-                                primaryPhone: _primaryMobileController.text
-                                    .trim(),
-                                subCategory: subCategorySlug,
-                                tamilName: tamilNameController.text.trim(),
-                              );
-
-                          final newState = ref.read(
-                            shopCategoryNotifierProvider,
-                          );
-
-                          if (newState.error != null &&
-                              newState.error!.isNotEmpty) {
-                            AppSnackBar.error(
-                              context,
-                              newState.error!,
-                            ); //  show API error
-                          } else if (response != null) {
-                            AppSnackBar.success(
-                              context,
-                              'Shop category details saved successfully',
-                            );
-                            if (widget.pages == 'AboutMeScreens') {
-                              Navigator.pop(context, true);
-                              // context.pushNamed(
-                              //   AppRoutes.homeScreen,
-                              //   extra: 3, // or 3 depending on the tab you want
-                              // );
-                            } else {
-                              context.pushNamed(
-                                AppRoutes.shopPhotoInfo,
-                                extra: 'shopCategory',
-                              );
-                            }
-                          } else {
-                            AppSnackBar.error(
-                              context,
-                              "Unexpected error, please try again",
-                            );
-                          }
-                        },
+                          // final response = await ref
+                          //     .read(shopCategoryNotifierProvider.notifier)
+                          //     .shopCategoryInfo(
+                          //       shopId: widget.shopId,
+                          //       ownerImageFile: ownerFile,
+                          //       type: type,
+                          //
+                          //       addressEn: _addressEnglishController.text
+                          //           .trim(),
+                          //       addressTa: addressTamilNameController.text
+                          //           .trim(),
+                          //       alternatePhone: _whatsappController.text.trim(),
+                          //       category: categorySlug,
+                          //       contactEmail: _emailController.text.trim(),
+                          //       descriptionEn: _descriptionEnglishController
+                          //           .text
+                          //           .trim(),
+                          //       descriptionTa: descriptionTamilController.text
+                          //           .trim(),
+                          //       doorDelivery: isDoorDeliveryEnabled,
+                          //       englishName: _shopNameEnglishController.text
+                          //           .trim(),
+                          //       gpsLatitude: latitude,
+                          //       gpsLongitude: longitude,
+                          //       primaryPhone: _primaryMobileController.text
+                          //           .trim(),
+                          //       subCategory: subCategorySlug,
+                          //       tamilName: tamilNameController.text.trim(),
+                          //     );
+                          //
+                          // final newState = ref.read(
+                          //   shopCategoryNotifierProvider,
+                          // );
+                          //
+                          // if (newState.error != null &&
+                          //     newState.error!.isNotEmpty) {
+                          //   AppSnackBar.error(
+                          //     context,
+                          //     newState.error!,
+                          //   ); //  show API error
+                          // } else if (response != null) {
+                          //   AppSnackBar.success(
+                          //     context,
+                          //     'Shop category details saved successfully',
+                          //   );
+                          //   if (widget.pages == 'AboutMeScreens') {
+                          //     Navigator.pop(context, true);
+                          //     // context.pushNamed(
+                          //     //   AppRoutes.homeScreen,
+                          //     //   extra: 3, // or 3 depending on the tab you want
+                          //     // );
+                          //   } else {
+                          //     context.pushNamed(
+                          //       AppRoutes.shopPhotoInfo,
+                          //       extra: 'shopCategory',
+                          //     );
+                          //   }
+                          // } else {
+                          //   AppSnackBar.error(
+                          //     context,
+                          //     "Unexpected error, please try again",
+                          //   );
+                          // }
+                        },*/
                         text: state.isLoading
                             ? ThreeDotsLoader()
                             : Text(

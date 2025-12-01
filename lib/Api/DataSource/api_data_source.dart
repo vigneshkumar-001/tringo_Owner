@@ -19,10 +19,13 @@ import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_respo
 import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
 
 import '../../Core/Session/registration_product_seivice.dart';
+import '../../Presentation/AboutMe/Model/service_edit_response.dart';
+import '../../Presentation/AboutMe/Model/service_remove_response.dart';
 import '../../Presentation/AddProduct/Model/delete_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
+import '../../Presentation/Mobile Nomber Verify/Model/sim_verify_response.dart';
 import '../../Presentation/Register/model/owner_info_response.dart';
 import '../../Presentation/ShopInfo/model/user_image_response.dart';
 
@@ -37,48 +40,85 @@ class ApiDataSource extends BaseApiDataSource {
   @override
   Future<Either<Failure, LoginResponse>> mobileNumberLogin(
     String phone,
-    String page,
-  ) async {
-    try {
-      String url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
-      AppLogger.log.i(url);
+    String simToken, {
+    String page = "",
+  }) async {
+    String url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
 
-      dynamic response = await Request.sendRequest(
-        url,
-        {"contact": "+91$phone", "purpose": "owner"},
-        'Post',
-        false,
-      );
+    final response = await Request.sendRequest(
+      url,
+      {"contact": "+91$phone", "purpose": "owner", },
+      'Post',
+      false,
+    );
 
-      AppLogger.log.i(response);
-
-      if (response is! DioException) {
-        // If status code is success
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          if (response.data['status'] == true) {
-            return Right(LoginResponse.fromJson(response.data));
-          } else {
-            return Left(
-              ServerFailure(response.data['message'] ?? "Login failed"),
-            );
-          }
+    if (response is! DioException) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data['status'] == true) {
+          return Right(LoginResponse.fromJson(response.data));
         } else {
-          // ❗ API returned non-success code but has JSON error message
           return Left(
-            ServerFailure(response.data['message'] ?? "Something went wrong"),
+            ServerFailure(response.data['message'] ?? "Login failed"),
           );
         }
       } else {
-        final errorData = response.response?.data;
-        if (errorData is Map && errorData.containsKey('message')) {
-          return Left(ServerFailure(errorData['message']));
-        }
-        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
       }
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } else {
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
     }
   }
+
+  // Future<Either<Failure, LoginResponse>> mobileNumberLogin(
+  //   String phone,
+  //   String page,
+  // ) async {
+  //   try {
+  //     String url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
+  //     AppLogger.log.i(url);
+  //
+  //     dynamic response = await Request.sendRequest(
+  //       url,
+  //       {"contact": "+91$phone", "purpose": "owner"},
+  //       'Post',
+  //       false,
+  //     );
+  //
+  //     AppLogger.log.i(response);
+  //
+  //     if (response is! DioException) {
+  //       // If status code is success
+  //       if (response.statusCode == 200 || response.statusCode == 201) {
+  //         if (response.data['status'] == true) {
+  //           return Right(LoginResponse.fromJson(response.data));
+  //         } else {
+  //           return Left(
+  //             ServerFailure(response.data['message'] ?? "Login failed"),
+  //           );
+  //         }
+  //       } else {
+  //         // ❗ API returned non-success code but has JSON error message
+  //         return Left(
+  //           ServerFailure(response.data['message'] ?? "Something went wrong"),
+  //         );
+  //       }
+  //     } else {
+  //       final errorData = response.response?.data;
+  //       if (errorData is Map && errorData.containsKey('message')) {
+  //         return Left(ServerFailure(errorData['message']));
+  //       }
+  //       return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+  //     }
+  //   } catch (e) {
+  //     return Left(ServerFailure(e.toString()));
+  //   }
+  // }
 
   Future<Either<Failure, OtpResponse>> otp({
     required String contact,
@@ -226,12 +266,14 @@ class ApiDataSource extends BaseApiDataSource {
         "primaryPhone": "+91$primaryPhone",
         "alternatePhone": "+91$alternatePhone",
         "contactEmail": contactEmail,
+        "doorDelivery": doorDelivery,
       };
       if (type == "service") {
         payload["ownerImageUrl"] = ownerImageUrl;
-      } else {
-        payload["doorDelivery"] = true;
       }
+      // else {
+      //   payload["doorDelivery"] = true;
+      // }
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
 
       AppLogger.log.i(response);
@@ -440,6 +482,7 @@ class ApiDataSource extends BaseApiDataSource {
     String? apiShopId,
     String? apiProductId,
     required String description,
+    required bool doorDelivery,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -468,7 +511,7 @@ class ApiDataSource extends BaseApiDataSource {
         "offerLabel": offerLabel,
         "offerValue": offerValue,
         "description": description,
-        "doorDelivery": true,
+        "doorDelivery": doorDelivery,
       };
 
       final response = await Request.sendRequest(url, payload, 'Post', true);
@@ -505,6 +548,7 @@ class ApiDataSource extends BaseApiDataSource {
   //   required String offerValue,
   //   String? apiShopId,
   //   String? apiProductId,
+  //   required bool doorDelivery,
   //
   //   required String description,
   // }) async {
@@ -512,19 +556,10 @@ class ApiDataSource extends BaseApiDataSource {
   //     final prefs = await SharedPreferences.getInstance();
   //
   //     final shopId = prefs.getString('shop_id');
-  //     // final productId = prefs.getString('product_id');
-  //
-  //     // final url = (productId != null && productId.isNotEmpty)
-  //     //     ? ApiUrl.updateProducts(productId: productId)
-  //     //     : ApiUrl.addProducts(shopId: shopId ?? '');
-  //
-  //     // String url = ApiUrl.addProducts(shopId: shopId ?? '');
-  //     // final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
-  //     // final url = ApiUrl.addProducts(shopId: shopIdToUse);
   //
   //     final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
   //     final productId = apiProductId ?? prefs.getString('product_id');
-  //
+  //     AppLogger.log.i(productId);
   //     final url = (productId != null && productId.isNotEmpty)
   //         ? ApiUrl.updateProducts(productId: productId)
   //         : ApiUrl.addProducts(shopId: shopIdToUse);
@@ -538,7 +573,7 @@ class ApiDataSource extends BaseApiDataSource {
   //       "offerLabel": offerLabel,
   //       "offerValue": "$offerValue%",
   //       "description": description,
-  //       "doorDelivery": true,
+  //       "doorDelivery": doorDelivery,
   //     };
   //
   //     dynamic response = await Request.sendRequest(url, payload, 'Post', true);
@@ -793,25 +828,26 @@ class ApiDataSource extends BaseApiDataSource {
     required String offerValue,
     required int durationMinutes,
     required String categoryId,
+    String? apiShopId,
+    required String apiServiceId,
     required String subCategory,
     required List<String> tags,
-    required List<String> keywords,
-    required List<String> images,
-    required bool isFeatured,
-    required List<Map<String, String>> features,
+    // required List<String> keywords,
+    // required List<String> images,
+    // required bool isFeatured,
+    // required List<Map<String, String>> features,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
       final shopId = prefs.getString('shop_id');
 
-      if (shopId == null || shopId.isEmpty) {
-        return Left(
-          ServerFailure('Shop ID not found. Please save shop first.'),
-        );
-      }
-
-      // 🔹 Always use service endpoint with shopId
-      final url = ApiUrl.serviceInfo(shopId: shopId);
+      AppLogger.log.i(apiServiceId);
+      final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+      final url = (apiServiceId != null && apiServiceId.isNotEmpty)
+          ? ApiUrl.serviceEdit(serviceId: apiServiceId)
+          : ApiUrl.serviceInfo(shopId: shopIdToUse ?? '');
+      // final url = ApiUrl.serviceInfo(shopId: shopId);
 
       final payload = {
         "title": title,
@@ -824,10 +860,6 @@ class ApiDataSource extends BaseApiDataSource {
         "categoryId": categoryId,
         "subCategory": subCategory,
         "tags": tags,
-        "keywords": keywords,
-        "images": images,
-        "isFeatured": isFeatured,
-        "features": features,
       };
 
       final response = await Request.sendRequest(url, payload, 'Post', true);
@@ -1074,6 +1106,87 @@ class ApiDataSource extends BaseApiDataSource {
       return Right(DeleteResponse.fromJson(map));
     } catch (_) {
       return Left(ServerFailure('Unexpected error'));
+    }
+  }
+
+  Future<Either<Failure, ServiceRemoveResponse>> deleteService({
+    String? serviceId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = serviceId ?? prefs.getString('service_id');
+
+      if (id == null || id.isEmpty) {
+        return Left(ServerFailure("Service not found."));
+      }
+
+      final url = ApiUrl.serviceDelete(serviceId: id);
+
+      // ⚠️ Keep method string consistent with your other calls
+      final response = await Request.sendRequest(url, {}, 'Delete', true);
+
+      // Network / Dio error
+      if (response is DioException) {
+        return Left(ServerFailure(response.message ?? 'Delete failed'));
+      }
+
+      final map = response.data;
+
+      if (map == null || map is! Map<String, dynamic>) {
+        return Left(ServerFailure('Invalid response from server'));
+      }
+
+      return Right(ServiceRemoveResponse.fromJson(map));
+    } catch (e, st) {
+      AppLogger.log.e('❌ deleteService exception: $e\n$st');
+      return Left(ServerFailure('Unexpected error'));
+    }
+  }
+
+  Future<Either<Failure, SimVerifyResponse>> mobileVerify({
+    required String contact,
+    required String simToken,
+    required String purpose,
+  }) async {
+    try {
+      final url = ApiUrl.mobileVerify;
+
+      final payload = {
+        'contact': "+91$contact",
+        'simToken': simToken,
+        'purpose': 'owner',
+      };
+
+      // Use your normal POST helper
+      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            // ✅ API returns the same JSON you showed
+            return Right(SimVerifyResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

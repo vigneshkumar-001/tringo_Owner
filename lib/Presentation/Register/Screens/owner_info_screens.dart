@@ -105,7 +105,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(ownerInfoNotifierProvider);
-
+    final bool isIndividualFlow = widget.isIndividual ?? true;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -134,12 +134,30 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           }
                         },
                       ),
-                      const SizedBox(width: 50),
+                      SizedBox(width: 50),
                       Text(
-                        'Register Shop - Individual',
+                        'Register Shop',
                         style: AppTextStyles.mulish(
                           fontSize: 16,
                           fontWeight: FontWeight.w400,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        '-',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: AppColor.mildBlack,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        isIndividualFlow ? 'Individual' : 'Company',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: AppColor.mildBlack,
                         ),
                       ),
@@ -147,7 +165,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                   ),
                 ),
 
-                const SizedBox(height: 35),
+                SizedBox(height: 35),
 
                 /// HEADER BLOCK
                 Container(

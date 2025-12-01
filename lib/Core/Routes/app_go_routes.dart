@@ -12,10 +12,15 @@ import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
 import '../../Presentation/Home/Screens/home_screens.dart';
 import '../../Presentation/Menu/Screens/subscription_screen.dart';
+import '../../Presentation/Mobile Nomber Verify/mobile_number_verify.dart';
+import '../../Presentation/Privacy Policy/privacy_policy.dart';
 import '../../Presentation/Shops Details/Screen/shops_details.dart';
+import '../../Splash_screen.dart';
+import '../Session/registration_product_seivice.dart';
 import '../Widgets/bottom_navigation_bar.dart';
 
 class AppRoutes {
+  static const String splashScreen = 'splashScreen';
   static const String login = 'login';
   static const String otp = 'otp';
   static const String register = 'register';
@@ -28,7 +33,11 @@ class AppRoutes {
   static const String shopsDetails = 'ShopsDetails';
   static const String homeScreen = 'HomeScreens';
   static const String subscriptionScreen = 'SubscriptionScreen';
+  static const String mobileNumberVerify = 'MobileNumberVerify';
+  static const String privacyPolicy = 'privacyPolicy';
+  static const String aboutMeScreens = 'AboutMeScreens';
 
+  static const String splashScreenPath = '/splashScreen';
   static const String loginPath = '/login';
   static const String otpPath = '/otp';
   static const String registerPath = '/register';
@@ -41,11 +50,39 @@ class AppRoutes {
   static const String shopsDetailsPath = '/ShopsDetails';
   static const String homeScreenPath = '/HomeScreens';
   static const String subscriptionScreenPath = '/SubscriptionScreen';
+  static const String mobileNumberVerifyPath = '/MobileNumberVerify';
+  static const String privacyPolicyPath = '/privacyPolicy';
+  static const String aboutMeScreensPath = '/AboutMeScreens';
 }
 
 final goRouter = GoRouter(
-  initialLocation: AppRoutes.loginPath,
+  initialLocation: AppRoutes.splashScreenPath,
+
+  redirect: (context, state) {
+    final location = state.matchedLocation;
+
+    // If navigating to ShopsDetails after pressing SKIP → never redirect
+    if (location == AppRoutes.shopsDetailsPath) {
+      final extra = state.extra;
+
+      if (extra is Map<String, dynamic>) {
+        if (extra['fromSubscriptionSkip'] == true) {
+          //  Came from SubscriptionScreen skip → allow ShopsDetails
+          return null;
+        }
+      }
+    }
+
+    // No other forced redirects for now
+    return null;
+  },
+
   routes: [
+    GoRoute(
+      path: AppRoutes.splashScreenPath,
+      name: AppRoutes.splashScreen,
+      builder: (context, state) => SplashScreen(),
+    ),
     GoRoute(
       path: AppRoutes.loginPath,
       name: AppRoutes.login,
@@ -126,11 +163,18 @@ final goRouter = GoRouter(
       path: AppRoutes.shopsDetailsPath,
       name: AppRoutes.shopsDetails,
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
+        final extra = state.extra;
 
-        final bool backDisabled = extra?['backDisabled'] as bool? ?? false;
-        final bool fromSubscription =
-            extra?['fromSubscriptionSkip'] as bool? ?? false;
+        bool backDisabled = false;
+        bool fromSubscription = false;
+
+        if (extra is Map<String, dynamic>) {
+          backDisabled = extra['backDisabled'] as bool? ?? false;
+          fromSubscription = extra['fromSubscriptionSkip'] as bool? ?? false;
+        } else if (extra is bool) {
+          // when you do extra: true from SubscriptionScreen
+          fromSubscription = extra;
+        }
 
         return ShopsDetails(
           backDisabled: backDisabled,
@@ -164,8 +208,44 @@ final goRouter = GoRouter(
       name: AppRoutes.subscriptionScreen,
       builder: (context, state) {
         final extra = state.extra;
-        final bool showSkip = extra is bool ? extra : false; // ✅ never null
+
+        bool showSkip = false;
+        if (extra is bool) {
+          showSkip = extra;
+        } else if (extra is Map<String, dynamic>) {
+          showSkip = extra['showSkip'] as bool? ?? false;
+        }
+
         return SubscriptionScreen(showSkip: showSkip);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.mobileNumberVerifyPath,
+      name: AppRoutes.mobileNumberVerify,
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>? ?? {};
+        final phone = args['phone'] as String? ?? '';
+        final simToken = args['simToken'] as String? ?? '';
+
+        return MobileNumberVerify(
+          loginNumber: phone,
+          simToken: simToken, // pass it to the screen
+        );
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.privacyPolicyPath,
+      name: AppRoutes.privacyPolicy,
+      builder: (context, state) => const PrivacyPolicy(),
+    ),
+    GoRoute(
+      path: AppRoutes.aboutMeScreensPath,
+      name: AppRoutes.aboutMeScreens,
+      builder: (context, state) {
+        final initialIndex =
+            state.extra as int? ?? 0; // default to 0 if not provided
+        return CommonBottomNavigation(initialIndex: initialIndex);
       },
     ),
   ],
