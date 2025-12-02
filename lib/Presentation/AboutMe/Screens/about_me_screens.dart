@@ -1366,11 +1366,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final offerPrice = p.offerPrice ?? 0;
                   final offerPriceText = '₹$offerPrice';
 
+                  final offerPrice = p.offerPrice ?? 0;
+                  final offerPriceText = '₹$offerPrice';
+
                   String imageUrl = '';
                   if (p.media.isNotEmpty) {
                     imageUrl = p.media.first.url ?? '';
                   }
+
                   final bool hasDoorDelivery = p.doorDelivery == true;
+
                   return Column(
                     children: [
                       CommonContainer.foodList(
