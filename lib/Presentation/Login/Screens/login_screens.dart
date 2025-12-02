@@ -31,7 +31,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
 
   ProviderSubscription<LoginState>? _sub;
 
-  // 🔹 Selected country data (default = India)
+
   String _selectedDialCode = '+91';
   String _selectedFlag = '🇮🇳';
 
@@ -158,17 +158,11 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
           // No strong border, just a soft pill
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(
-              color: Colors.grey.shade300,
-              width: 1,
-            ),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(
-              color: AppColor.skyBlue,
-              width: 1.5,
-            ),
+            borderSide: BorderSide(color: AppColor.skyBlue, width: 1.5),
           ),
           // Remove error border visuals (not really needed here)
           border: OutlineInputBorder(
