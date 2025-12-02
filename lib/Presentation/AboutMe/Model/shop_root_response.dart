@@ -34,6 +34,7 @@ class Shop {
   final String? shopPostalCode;
   final String? shopGpsLatitude;
   final String? shopGpsLongitude;
+  final String? shopWeeklyHours;
   final String? category;
   final String? subCategory;
   final String? shopKind;
@@ -68,6 +69,7 @@ class Shop {
     this.shopPostalCode,
     this.shopGpsLatitude,
     this.shopGpsLongitude,
+    this.shopWeeklyHours,
     this.category,
     this.subCategory,
     this.shopKind,
@@ -99,6 +101,7 @@ class Shop {
       shopPostalCode: json["shopPostalCode"] as String?,
       shopGpsLatitude: json["shopGpsLatitude"] as String?,
       shopGpsLongitude: json["shopGpsLongitude"] as String?,
+      shopWeeklyHours: json["shopWeeklyHours"] as String?,
       category: json["category"] as String?,
       subCategory: json["subCategory"] as String?,
       shopKind: json["shopKind"] as String?,

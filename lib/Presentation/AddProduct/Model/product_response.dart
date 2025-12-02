@@ -77,7 +77,17 @@ class ProductData {
     keywords: List<String>.from(json['keywords'] ?? []),
     // readyTimeMinutes: json['readyTimeMinutes'] ?? 0,
     readyTimeMinutes: json['readyTimeMinutes'] as int?,
-    doorDelivery: json['doorDelivery'] ?? false,
+    // doorDelivery: json['doorDelivery'] ?? false,
+    doorDelivery: () {
+      final raw = json['doorDelivery'];
+      if (raw is bool) return raw;
+      if (raw is num) return raw == 1;
+      if (raw is String) {
+        final v = raw.toLowerCase();
+        return v == 'true' || v == '1' || v == 'yes';
+      }
+      return false;
+    }(),
     status: json['status'] ?? 'DRAFT',
     rating: json['rating'] is String
         ? num.tryParse(json['rating']) ?? 0

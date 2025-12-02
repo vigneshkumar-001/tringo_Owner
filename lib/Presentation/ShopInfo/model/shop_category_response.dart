@@ -16,6 +16,7 @@ class ShopCategoryResponse {
   final double? gpsLongitude;
   final String? primaryPhone;
   final String? alternatePhone;
+  final String? shopWeeklyHours;
   final String? contactEmail;
   final bool? doorDelivery;
   final bool? isTrusted;
@@ -47,6 +48,7 @@ class ShopCategoryResponse {
     this.gpsLongitude,
     this.primaryPhone,
     this.alternatePhone,
+    this.shopWeeklyHours,
     this.contactEmail,
     this.doorDelivery,
     this.isTrusted,
@@ -82,6 +84,7 @@ class ShopCategoryResponse {
       gpsLongitude: (json['gpsLongitude'] as num?)?.toDouble(),
       primaryPhone: json['primaryPhone'] as String?,
       alternatePhone: json['alternatePhone'] as String?,
+      shopWeeklyHours: json['shopWeeklyHours'] as String?,
       contactEmail: json['contactEmail'] as String?,
       doorDelivery: json['doorDelivery'] as bool?,
       isTrusted: json['isTrusted'] as bool?,
@@ -115,6 +118,7 @@ class ShopCategoryResponse {
     'gpsLongitude': gpsLongitude,
     'primaryPhone': primaryPhone,
     'alternatePhone': alternatePhone,
+    'shopWeeklyHours': shopWeeklyHours,
     'contactEmail': contactEmail,
     'doorDelivery': doorDelivery,
     'isTrusted': isTrusted,

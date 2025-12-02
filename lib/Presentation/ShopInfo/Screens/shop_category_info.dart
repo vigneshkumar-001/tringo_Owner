@@ -1576,73 +1576,74 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           } else {
                             // SERVICE flow → always false, no validation
                             isDoorDeliveryEnabled = false;
-
-
                           }
 
                           // owner image
                           final File? ownerFile = _permanentImage == null
                               ? null
                               : File(_permanentImage!.path);
+                          final weeklyHoursText =
+                              "${_openTimeController.text.trim()} - ${_closeTimeController.text.trim()}";
 
                           // API CALL
-                   final response = await ref
-                       .read(shopCategoryNotifierProvider.notifier)
-                       .shopCategoryInfo(
-                         shopId: widget.shopId,
-                         ownerImageFile: ownerFile,
-                         type: type,
-                         addressEn: _addressEnglishController.text
-                             .trim(),
-                         addressTa: addressTamilNameController.text
-                             .trim(),
-                         alternatePhone: _whatsappController.text.trim(),
-                         category: categorySlug,
-                         contactEmail: _emailController.text.trim(),
-                         descriptionEn: _descriptionEnglishController
-                             .text
-                             .trim(),
-                         descriptionTa: descriptionTamilController.text
-                             .trim(),
-                         doorDelivery:
-                             isDoorDeliveryEnabled, // <-- now correct
-                         englishName: _shopNameEnglishController.text
-                             .trim(),
-                         gpsLatitude: latitude,
-                         gpsLongitude: longitude,
-                         primaryPhone: _primaryMobileController.text
-                             .trim(),
-                         subCategory: subCategorySlug,
-                         tamilName: tamilNameController.text.trim(),
-                       );
+                          final response = await ref
+                              .read(shopCategoryNotifierProvider.notifier)
+                              .shopCategoryInfo(
+                                shopId: widget.shopId,
+                                ownerImageFile: ownerFile,
+                                type: type,
+                                addressEn: _addressEnglishController.text
+                                    .trim(),
+                                addressTa: addressTamilNameController.text
+                                    .trim(),
+                                alternatePhone: _whatsappController.text.trim(),
+                                category: categorySlug,
+                                contactEmail: _emailController.text.trim(),
+                                descriptionEn: _descriptionEnglishController
+                                    .text
+                                    .trim(),
+                                descriptionTa: descriptionTamilController.text
+                                    .trim(),
+                                doorDelivery:
+                                    isDoorDeliveryEnabled, // <-- now correct
+                                englishName: _shopNameEnglishController.text
+                                    .trim(),
+                                gpsLatitude: latitude,
+                                gpsLongitude: longitude,
+                                primaryPhone: _primaryMobileController.text
+                                    .trim(),
+                                subCategory: subCategorySlug,
+                                tamilName: tamilNameController.text.trim(),
+                                weeklyHours: weeklyHoursText,
+                              );
 
-                   final newState = ref.read(
-                     shopCategoryNotifierProvider,
-                   );
+                          final newState = ref.read(
+                            shopCategoryNotifierProvider,
+                          );
 
-                   if (newState.error != null &&
-                       newState.error!.isNotEmpty) {
-                     AppSnackBar.error(context, newState.error!);
-                   } else if (response != null) {
-                     AppSnackBar.success(
-                       context,
-                       'Shop category details saved successfully',
-                     );
+                          if (newState.error != null &&
+                              newState.error!.isNotEmpty) {
+                            AppSnackBar.error(context, newState.error!);
+                          } else if (response != null) {
+                            AppSnackBar.success(
+                              context,
+                              'Shop category details saved successfully',
+                            );
 
-                     if (widget.pages == 'AboutMeScreens') {
-                       Navigator.pop(context, true);
-                     } else {
-                       context.pushNamed(
-                         AppRoutes.shopPhotoInfo,
-                         extra: 'shopCategory',
-                       );
-                     }
-                   } else {
-                     AppSnackBar.error(
-                       context,
-                       "Unexpected error, please try again",
-                     );
-                   }
+                            if (widget.pages == 'AboutMeScreens') {
+                              Navigator.pop(context, true);
+                            } else {
+                              context.pushNamed(
+                                AppRoutes.shopPhotoInfo,
+                                extra: 'shopCategory',
+                              );
+                            }
+                          } else {
+                            AppSnackBar.error(
+                              context,
+                              "Unexpected error, please try again",
+                            );
+                          }
                         },
 
                         /*onTap: () async {

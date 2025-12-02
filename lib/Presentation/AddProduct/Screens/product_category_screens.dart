@@ -933,6 +933,23 @@ class _ProductCategoryScreensState
                           // }
 
                           bool success = false;
+                          if (!isServiceFlow) {
+                            final ddText = _doorDeliveryController.text.trim();
+
+                            if (ddText.isEmpty) {
+                              AppSnackBar.error(
+                                context,
+                                'Please select Door Delivery',
+                              );
+                              return;
+                            }
+
+                            // 'Yes' → true, anything else → false
+                            _doorDelivery = ddText == 'Yes';
+                          } else {
+                            _doorDelivery =
+                                false; // services currently no door-delivery flag
+                          }
 
                           if (isServiceFlow) {
                             // 🔵 SERVICE SAVE / UPDATE
