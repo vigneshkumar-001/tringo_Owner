@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_response.dart';
@@ -15,7 +16,7 @@ class ShopCategoryState {
   final String? error;
   final ShopCategoryResponse? shopCategoryResponse;
   final ShopCategoryListResponse? shopCategoryListResponse;
-  final ShopPhotoResponse? shopPhotoResponse;
+  final ShopInfoPhotosResponse? shopPhotoResponse;
   final ShopCategoryApiResponse? shopCategoryApiResponse;
 
   const ShopCategoryState({
@@ -34,8 +35,88 @@ class ShopCategoryState {
 class ShopNotifier extends Notifier<ShopCategoryState> {
   final ApiDataSource apiDataSource = ApiDataSource();
 
+  // @override
+  // ShopCategoryState build() => ShopCategoryState.initial();
+  // Future<ShopCategoryResponse?> shopCategoryInfo({
+  //   required String category,
+  //   required String subCategory,
+  //   required String englishName,
+  //   required String tamilName,
+  //   required String descriptionEn,
+  //   required String descriptionTa,
+  //   required String addressEn,
+  //   required String addressTa,
+  //   required double gpsLatitude,
+  //   required double gpsLongitude,
+  //   required String primaryPhone,
+  //   required String alternatePhone,
+  //   required String contactEmail,
+  //   String? shopId,
+  //   File? ownerImageFile, // only used if type == service
+  //   required bool doorDelivery,
+  //   required String type,
+  //   required String weeklyHours,
+  // }) async {
+  //   state = const ShopCategoryState(isLoading: true);
+  //
+  //   String ownerImageUrl = '';
+  //
+  //   // Upload owner image only if type is 'service' and file is provided
+  //   if (type == 'service' && ownerImageFile != null) {
+  //     final uploadResult = await apiDataSource.userProfileUpload(
+  //       imageFile: ownerImageFile,
+  //     );
+  //
+  //     ownerImageUrl =
+  //         uploadResult.fold<String?>(
+  //           (failure) => null,
+  //           (success) => success.message,
+  //         ) ??
+  //         '';
+  //   }
+  //
+  //   final result = await apiDataSource.shopCategoryInfo(
+  //     type: type,
+  //     category: category,
+  //     weeklyHours: weeklyHours,
+  //     shopId: shopId,
+  //     subCategory: subCategory,
+  //     englishName: englishName,
+  //     tamilName: tamilName,
+  //     descriptionEn: descriptionEn,
+  //     descriptionTa: descriptionTa,
+  //     addressEn: addressEn,
+  //     addressTa: addressTa,
+  //     gpsLatitude: gpsLatitude,
+  //     gpsLongitude: gpsLongitude,
+  //     primaryPhone: primaryPhone,
+  //     alternatePhone: alternatePhone,
+  //     ownerImageUrl: ownerImageUrl, // empty string if not uploaded
+  //     contactEmail: contactEmail,
+  //     doorDelivery: doorDelivery,
+  //   );
+  //
+  //   return result.fold(
+  //     (failure) {
+  //       state = ShopCategoryState(isLoading: false, error: failure.message);
+  //       return null;
+  //     },
+  //     (response) async {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('shop_id', response.id);
+  //
+  //       state = ShopCategoryState(
+  //         isLoading: false,
+  //         shopCategoryResponse: response,
+  //       );
+  //       return response;
+  //     },
+  //   );
+  // }
+
   @override
   ShopCategoryState build() => ShopCategoryState.initial();
+
   Future<ShopCategoryResponse?> shopCategoryInfo({
     required String category,
     required String subCategory,
@@ -101,8 +182,9 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         return null;
       },
       (response) async {
+        // ✅ use response.data.id
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('shop_id', response.id);
+        await prefs.setString('shop_id', response.data.id);
 
         state = ShopCategoryState(
           isLoading: false,
@@ -178,7 +260,9 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
     return apiResult.fold(
       (failure) {
+
         state = ShopCategoryState(isLoading: false, error: failure.message);
+        AppLogger.log.e(failure.message);
         return false;
       },
       (response) {

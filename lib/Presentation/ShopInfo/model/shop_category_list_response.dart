@@ -1,4 +1,4 @@
-class  ShopCategoryListResponse  {
+class ShopCategoryListResponse {
   final bool status;
   final List<ShopCategoryListData> data;
 
@@ -7,9 +7,10 @@ class  ShopCategoryListResponse  {
   factory ShopCategoryListResponse.fromJson(Map<String, dynamic> json) {
     return ShopCategoryListResponse(
       status: json['status'] ?? false,
-      data: (json['data'] as List<dynamic>?)
-          ?.map((e) => ShopCategoryListData.fromJson(e))
-          .toList() ??
+      data:
+          (json['data'] as List<dynamic>?)
+              ?.map((e) => ShopCategoryListData.fromJson(e))
+              .toList() ??
           [],
     );
   }
@@ -53,9 +54,10 @@ class ShopCategoryListData {
       type: json['type'],
       displayOrder: json['displayOrder'] ?? 0,
       parentId: json['parentId'],
-      children: (json['children'] as List<dynamic>?)
-          ?.map((e) => ShopCategoryListData.fromJson(e))
-          .toList() ??
+      children:
+          (json['children'] as List<dynamic>?)
+              ?.map((e) => ShopCategoryListData.fromJson(e))
+              .toList() ??
           [],
     );
   }

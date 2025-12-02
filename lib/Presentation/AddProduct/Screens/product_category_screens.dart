@@ -993,7 +993,10 @@ class _ProductCategoryScreensState
                             // PRODUCT SAVE / UPDATE
                             final ddText = _doorDeliveryController.text.trim();
                             if (ddText.isEmpty) {
-                              AppSnackBar.error(context, 'Please select Door Delivery option');
+                              AppSnackBar.error(
+                                context,
+                                'Please select Door Delivery option',
+                              );
                               return;
                             }
                             _doorDelivery = ddText == 'Yes';
