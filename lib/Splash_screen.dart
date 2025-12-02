@@ -27,7 +27,6 @@ class _SplashScreenState extends State<SplashScreen> {
     final bool isProfileCompleted =
         prefs.getBool("isProfileCompleted") ?? false;
 
-    // Hold splash for 5 seconds
     await Future.delayed(const Duration(seconds: 5));
 
     if (!mounted) return;

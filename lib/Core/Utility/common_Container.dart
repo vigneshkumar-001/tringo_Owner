@@ -478,27 +478,28 @@ class CommonContainer {
                             ),
                           ),
                           SizedBox(width: 10),
-                          oldAmound.isEmpty? SizedBox.shrink():
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Text(
-                                oldAmound,
-                                style: AppTextStyles.mulish(
-                                  fontSize: 14,
-                                  color: AppColor.gray84,
+                          oldAmound.isEmpty
+                              ? SizedBox.shrink()
+                              : Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Text(
+                                      oldAmound,
+                                      style: AppTextStyles.mulish(
+                                        fontSize: 14,
+                                        color: AppColor.gray84,
+                                      ),
+                                    ),
+                                    Transform.rotate(
+                                      angle: -0.1,
+                                      child: Container(
+                                        height: 1.5,
+                                        width: 40,
+                                        color: AppColor.gray84,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Transform.rotate(
-                                angle: -0.1,
-                                child: Container(
-                                  height: 1.5,
-                                  width: 40,
-                                  color: AppColor.gray84,
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                       const SizedBox(height: 10),

@@ -357,6 +357,22 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     final bool isServiceFlow =
                         (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
 
+                    // 👇 Extract from weeklyHours (or shopWeeklyHours as backup)
+                    String? openTimeText;
+                    String? closeTimeText;
+
+                    final weekly = selectedShop.shopWeeklyHours ??
+                        selectedShop.shopWeeklyHours ?? // if you keep both
+                        '';
+
+                    if (weekly.contains('-')) {
+                      final parts = weekly.split('-');
+                      if (parts.length >= 2) {
+                        openTimeText = parts[0].trim();   // e.g. "09:00 AM"
+                        closeTimeText = parts[1].trim();  // e.g. "10:00 PM"
+                      }
+                    }
+
                     final updated = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
@@ -401,6 +417,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                               (selectedShop.shopDoorDelivery == true)
                               ? 'Yes'
                               : 'No',
+                          initialOpenTimeText: openTimeText,
+                          initialCloseTimeText: closeTimeText,
                         ),
                       ),
                     );
@@ -1345,6 +1363,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
                   final price = p.price ?? 0;
                   final priceText = '₹$price';
+                  final offerPrice = p.offerPrice ?? 0;
+                  final offerPriceText = '₹$offerPrice';
 
                   final offerPrice = p.offerPrice ?? 0;
                   final offerPriceText = '₹$offerPrice';
