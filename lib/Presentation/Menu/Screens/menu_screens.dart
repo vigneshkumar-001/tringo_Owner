@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
 
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
@@ -69,12 +71,12 @@ class _MenuScreensState extends State<MenuScreens> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if(widget.page != 'bottomScreen')...[
+                if (widget.page != 'bottomScreen') ...[
                   CommonContainer.topLeftArrow(
                     isMenu: true,
                     onTap: () => Navigator.pop(context),
                   ),
-                ] ,
+                ],
 
                 SizedBox(height: 20),
                 if (!isPremium)
@@ -188,9 +190,11 @@ class _MenuScreensState extends State<MenuScreens> {
                     );
 
                     if (shouldLogout ?? false) {
-                      // Perform your logout logic here
-                      // For example: AuthController.logout() or Navigator.pushReplacement to login screen
-                      print('User logged out');
+                      // Clear tokens/session here if needed
+
+                      // Then navigate
+                      context.goNamed(AppRoutes.login);
+                      // or: context.go(AppRoutes.loginPath);
                     }
                   },
                   text: Text(
