@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
@@ -27,11 +28,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final bool isProfileCompleted =
         prefs.getBool("isProfileCompleted") ?? false;
 
+    final bool newOwner = prefs.getBool("isNewOwner") ?? false;
+
     await Future.delayed(const Duration(seconds: 5));
 
     if (!mounted) return;
-
-    if (token == null) {
+    AppLogger.log.i(newOwner);
+    if (newOwner == true) {
       context.go(AppRoutes.loginPath);
     } else {
       context.go(AppRoutes.homeScreenPath);
