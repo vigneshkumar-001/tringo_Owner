@@ -63,11 +63,16 @@ class ApiUrl {
     return "${base}api/v1/services/$serviceId";
   }
 
-  static String getAllShop({required String shopId}) {
+  static String   getAllShop({required String shopId}) {
     return "${base}api/v1/shops?mine=true&selectedShopId=$shopId";
   }
 
   static String deleteService({required String serviceId}) {
     return "${base}api/v1/services/$serviceId";
+  }
+
+
+  static String   getAllEnquiry({required String shopId}) {
+    return "${base}api/v1/dashboard/enquiries?page=1&limit=20";
   }
 }
