@@ -2101,12 +2101,34 @@ class CommonContainer {
         child: Stack(
           alignment: Alignment.bottomLeft,
           children: [
-            Image.asset(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: CachedNetworkImage(
+                imageUrl: shopImage, // your network image URL
+                fit: BoxFit.cover,
+                width: double.infinity,
+                placeholder: (context, url) => Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 40, // reduce icon size
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+ /*           Image.asset(
               shopImage,
               height: 100,
               width: double.infinity,
               fit: BoxFit.cover,
-            ),
+            ),*/
             !isAdd
                 ? Container(
                     width: double.infinity,
@@ -2639,16 +2661,28 @@ class CommonContainer {
                             ),
                           ),
                         ),
-
                         ClipRRect(
                           borderRadius: BorderRadius.circular(15),
-                          child: Image.asset(
-                            phoneImageAsset,
+                          child: CachedNetworkImage(
+                            imageUrl: phoneImageAsset, // your network image URL
                             width: 100,
                             height: 100,
                             fit: BoxFit.cover,
+
+                            placeholder: (_, __) => Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.grey.shade200,
+                            ),
+
+                            errorWidget: (_, __, ___) => Icon(
+                              Icons.broken_image,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
+                        )
+
                       ],
                     ),
                   ],
@@ -2661,8 +2695,12 @@ class CommonContainer {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundImage: AssetImage(avatarAsset),
+                  backgroundImage: (avatarAsset != null && avatarAsset.isNotEmpty)
+                      ? CachedNetworkImageProvider(avatarAsset)
+                      :   AssetImage(AppImages.profile)
+                  as ImageProvider,
                 ),
+
                 const SizedBox(width: 8),
                 Expanded(
                   child: DottedBorder(

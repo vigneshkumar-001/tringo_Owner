@@ -313,13 +313,18 @@ class Request {
         },
       ),
     );
-
+    final headers = <String, dynamic>{
+      "Content-Type": "application/json",
+      if (token != null && isTokenRequired) "Authorization": "Bearer $token",
+      if (sessionToken != null && isTokenRequired)
+        "x-session-token": sessionToken,
+    };
     try {
       Response response = await dio.get(
         url,
         queryParameters: queryParams,
         options: Options(
-          headers: {"Authorization": token != null ? "Bearer $token" : ""},
+          headers: headers,
           validateStatus: (status) {
             return status != null && status < 500;
           },
