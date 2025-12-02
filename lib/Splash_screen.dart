@@ -29,6 +29,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     await Future.delayed(const Duration(seconds: 5));
 
+    if (!mounted) return;
+
     if (token == null) {
       context.go(AppRoutes.loginPath);
     } else {
@@ -36,38 +38,10 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  // Future<void> checkNavigation() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //
-  //   bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
-  //   bool isProfileCompleted = prefs.getBool("isProfileCompleted") ?? false;
-  //
-  //   // Hold splash for 5 seconds
-  //   await Future.delayed(const Duration(seconds: 5));
-  //
-  //   if (!isLoggedIn) {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (_) => LoginMobileNumber()),
-  //     );
-  //   } else if (!isProfileCompleted) {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (_) => FillProfile()),
-  //     );
-  //   } else {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (_) => HomeScreen()),
-  //     );
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     final h = MediaQuery.of(context).size.height;
     final w = MediaQuery.of(context).size.width;
-
     return Scaffold(
       body: SafeArea(
         child: Stack(
