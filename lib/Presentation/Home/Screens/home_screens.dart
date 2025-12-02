@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_vendor/Core/Utility/call_helper.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
@@ -59,6 +60,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(homeNotifierProvider.notifier).fetchShops();
       await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
     });
   }
@@ -68,6 +70,21 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     final homeState = ref.watch(homeNotifierProvider);
     final isPremium = RegistrationProductSeivice.instance.isPremium;
     final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
+    final enquiryData = homeState.enquiryResponse?.data;
+
+    // Open = Unanswered
+    final openItems = enquiryData?.open.items ?? [];
+
+    // Closed = Answered
+    final closedItems = enquiryData?.closed.items ?? [];
+
+    // counts for chips
+    final unansweredCount = openItems.length;
+    final answeredCount = closedItems.length;
+
+    // which list to show now
+    final bool isUnansweredTab = selectedIndex == 0;
+    final currentItems = isUnansweredTab ? openItems : closedItems;
     return Skeletonizer(
       enabled: homeState.isLoading,
       enableSwitchAnimation: true,
@@ -118,14 +135,18 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           child: Column(
                             children: [
                               Text(
-                                'Pothys Textiles',
+                                homeState.shopsResponse?.data[0].englishName
+                                        .toString() ??
+                                    '',
                                 style: AppTextStyles.mulish(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 20,
                                 ),
                               ),
                               Text(
-                                'Textiles & Readymade',
+                                homeState.shopsResponse?.data[0].category
+                                        .toString() ??
+                                    '',
                                 style: AppTextStyles.mulish(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
@@ -160,7 +181,35 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                     ),
                   ),
                   SizedBox(height: 30),
-                  SingleChildScrollView(
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: homeState.shopsResponse?.data.length,
+                      physics: BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        final data = homeState.shopsResponse?.data[index];
+                        return Row(
+                          children: [
+                            CommonContainer.smallShopContainer(
+                              shopImage: data?.primaryImageUrl.toString() ?? '',
+                              shopLocation:
+                                  '${data?.addressEn.toString() ?? ''},${data?.city.toString() ?? ''}, kunram ',
+                              shopName: data?.englishName.toString() ?? '',
+                            ),
+                            /* SizedBox(width: 8),
+                            CommonContainer.smallShopContainer(
+                              shopImage: AppImages.pothys,
+                              shopLocation: '12, 2, Tirupparankunram Rd, kunram ',
+                              shopName: 'Shop 1',
+                            ),*/
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  /*    SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     scrollDirection: Axis.horizontal,
                     physics: BouncingScrollPhysics(),
@@ -179,7 +228,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         ),
                       ],
                     ),
-                  ),
+                  ),*/
                   SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -660,7 +709,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    '10 Unanswered',
+                                    '$unansweredCount Unanswered',
                                     style: TextStyle(
                                       color: selectedIndex == 0
                                           ? AppColor.black
@@ -695,7 +744,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    '50 Answered',
+                                    '$answeredCount Answered',
                                     style: TextStyle(
                                       color: selectedIndex == 1
                                           ? AppColor.black
@@ -712,7 +761,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20),
+
+                    const SizedBox(height: 20),
                     Text(
                       'Today',
                       style: AppTextStyles.mulish(
@@ -721,55 +771,138 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 20),
-                    /*ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: homeState.enquiryResponse?.data.items.length,
-                      itemBuilder: (context, index) {
-                        final data = homeState.enquiryResponse?.data.items[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          child: Column(
-                            children: [
-                              CommonContainer.inquiryProductCard(
-                                questionText:
-                                    'Is Samsung s24fe white color available?\nIf it is i need best price',
-                                productTitle: 'Samsung s24fe ( 258GB 8GB )',
-                                rating: '4.5',
-                                ratingCount: '16',
-                                priceText: '₹${data?.contextType.toString()?? ''}',
-                                mrpText: '₹36,999',
-                                phoneImageAsset: AppImages.phone,
-                                avatarAsset: AppImages.profile,
-                                customerName: 'Ganeshan Kandhasa...',
-                                timeText: '10.40Pm',
-                                onChatTap: () {},
-                                onCallTap: () {},
-                              ),
-                              SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                             *//* CommonContainer.inquiryProductCard(
-                                isAds: true,
-                                questionText:
-                                    'Is Samsung s24fe white color available?\nIf it is i need best price',
-                                productTitle: 'Samsung s24fe ( 258GB 8GB )',
-                                rating: '4.5',
-                                ratingCount: '16',
-                                priceText: '₹29,999',
-                                mrpText: '₹36,999',
-                                phoneImageAsset: AppImages.fan,
-                                avatarAsset: AppImages.profile,
-                                customerName: 'Ganeshan Kandhasa',
-                                timeText: '10.40Pm',
-                                onChatTap: () {},
-                                onCallTap: () {},
-                              ),*//*
-                            ],
+                    if (currentItems.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            isUnansweredTab
+                                ? 'No unanswered enquiries'
+                                : 'No answered enquiries',
+                            style: AppTextStyles.mulish(
+                              fontSize: 12,
+                              color: AppColor.darkGrey,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        );
-                      },
-                    ),*/
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: currentItems.length,
+                        itemBuilder: (context, index) {
+                          final data = currentItems[index];
+
+                          // Normalize type (API sends "PRODUCT_SHOP", "PRODUCT_SERVICE", etc.)
+                          final type = data.contextType.toUpperCase();
+
+                          // Default values
+                          String productTitle = 'Enquiry';
+                          String rating = '0.0';
+                          String ratingCount = '0';
+                          String priceText = '';
+                          String image = '';
+                          String customerName = data.customer.name;
+                          String whatsappNumber = data.customer.whatsappNumber;
+                          String phone = data.customer.phone;
+                          String customerImg =
+                              data.customer.avatarUrl.toString() ?? '';
+                          String timeText = data.createdTime;
+
+                          if (type == 'PRODUCT_SHOP') {
+                            final shop = data.shop;
+
+                            productTitle = shop?.englishName.isNotEmpty == true
+                                ? shop!.englishName
+                                : 'Shop Enquiry';
+
+                            rating = (shop?.rating ?? 0).toString();
+                            ratingCount = (shop?.ratingCount ?? 0).toString();
+
+                            // You can customise this (city / category / etc.)
+                            priceText = 'Shop · ${shop?.city ?? ''}';
+                            image = shop?.primaryImageUrl ?? '';
+                          }
+                          // ---------- PRODUCT_SERVICE → use SERVICE details ----------
+                          else if (type == 'PRODUCT_SERVICE' ||
+                              type == 'SERVICE_SHOP') {
+                            final service = data.service;
+
+                            productTitle = service?.name.isNotEmpty == true
+                                ? service!.name
+                                : 'Service Enquiry';
+
+                            rating = (service?.rating ?? 0).toString();
+                            ratingCount = (service?.ratingCount ?? 0)
+                                .toString();
+
+                            // If startsAt is price
+                            if (service != null && service.startsAt > 0) {
+                              priceText = 'From ₹${service.startsAt}';
+                            } else {
+                              priceText = 'Service';
+                            }
+                          }
+                          // ---------- (Optional) PRODUCT → use PRODUCT details ----------
+                          else if (type == 'PRODUCT') {
+                            // right now Product has only id – you can expand later
+                            productTitle = 'Product Enquiry';
+                            priceText = 'Product Id: ${data.product?.id ?? ''}';
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Column(
+                              children: [
+                                CommonContainer.inquiryProductCard(
+                                  // 🔹 message from enquiry
+                                  questionText: data.message,
+
+                                  // 🔹 title depends on contextType
+                                  productTitle: productTitle,
+
+                                  // 🔹 rating depends on shop / service
+                                  rating: rating,
+                                  ratingCount: ratingCount,
+
+                                  // 🔹 price / label text depends on contextType
+                                  priceText: priceText,
+
+                                  // You can still keep dummy MRP or map from your real product later
+                                  mrpText: '₹36,999',
+
+                                  // Still using static image asset (your widget expects asset path)
+                                  phoneImageAsset: image,
+
+                                  // Customer details
+                                  avatarAsset: customerImg,
+                                  customerName: customerName,
+                                  timeText: timeText,
+
+                                  onChatTap: () {
+                                    CallHelper.openWhatsapp(
+                                      context: context,
+                                      phone: whatsappNumber,
+                                    );
+                                  },
+                                  onCallTap: () {
+                                    CallHelper.openDialer(
+                                      context: context,
+                                      rawPhone: phone,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                   ] else ...[
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
