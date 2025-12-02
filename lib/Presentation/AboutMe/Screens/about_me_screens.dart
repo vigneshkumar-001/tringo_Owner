@@ -1365,8 +1365,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final price = p.price ?? 0;
                   final priceText = '₹$price';
 
-                  // final offerPrice = p.offerPrice ?? 0;
-                  // final offerPriceText = '₹$offerPrice';
+                    final offerPrice = p.offerPrice ?? 0;
+                    final offerPriceText = '₹$offerPrice';
 
                   String imageUrl = '';
                   if (p.media.isNotEmpty) {

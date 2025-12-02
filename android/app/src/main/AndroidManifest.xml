@@ -100,4 +100,15 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <queries>
+        <!-- For WhatsApp app -->
+        <package android:name="com.whatsapp" />
+
+        <!-- For any https browser VIEW intent -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 </manifest>
