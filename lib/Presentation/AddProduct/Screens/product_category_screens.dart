@@ -438,6 +438,10 @@ class _ProductCategoryScreensState
     }
     _descriptionController.text = widget.initialDescription ?? '';
     _doorDeliveryController.text = widget.initialDoorDelivery ?? '';
+    if (widget.initialDoorDelivery != null &&
+        widget.initialDoorDelivery!.isNotEmpty) {
+      _doorDelivery = widget.initialDoorDelivery == 'Yes';
+    }
 
     productCategorySlug = widget.initialCategorySlug ?? '';
     productSubCategorySlug = widget.initialSubCategorySlug ?? '';
@@ -970,6 +974,12 @@ class _ProductCategoryScreensState
                             }
                           } else {
                             // PRODUCT SAVE / UPDATE
+                            final ddText = _doorDeliveryController.text.trim();
+                            if (ddText.isEmpty) {
+                              AppSnackBar.error(context, 'Please select Door Delivery option');
+                              return;
+                            }
+                            _doorDelivery = ddText == 'Yes';
                             success = await ref
                                 .read(productNotifierProvider.notifier)
                                 .addProduct(

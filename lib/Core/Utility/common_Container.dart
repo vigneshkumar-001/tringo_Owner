@@ -1731,8 +1731,8 @@ class CommonContainer {
                 value,
                 style: AppTextStyles.mulish(
                   fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColor.lightSkyBlue : Colors.black,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.normal,
+                  color: isSelected ? AppColor.skyBlue : Colors.black,
                 ),
               ),
               onTap: () {

@@ -171,6 +171,7 @@ class Product {
   final String? englishName;
   final String? tamilName;
   final int? price;
+  final int? offerPrice;
   final bool? isFeatured;
   final String? offerLabel;
   final String? offerValue;
@@ -191,6 +192,7 @@ class Product {
     this.englishName,
     this.tamilName,
     this.price,
+    this.offerPrice,
     this.isFeatured,
     this.offerLabel,
     this.offerValue,
@@ -213,6 +215,7 @@ class Product {
       englishName: json["englishName"] as String?,
       tamilName: json["tamilName"] as String?,
       price: (json["price"] as num?)?.toInt(),
+      offerPrice: (json["offerPrice"] as num?)?.toInt(),
       isFeatured: json["isFeatured"] as bool?,
       offerLabel: json["offerLabel"] as String?,
       offerValue: json["offerValue"] as String?,
