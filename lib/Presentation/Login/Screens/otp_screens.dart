@@ -92,7 +92,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       // OTP verified
       else if (next.otpResponse != null) {
         AppSnackBar.success(context, 'OTP verified successfully!');
-        context.goNamed(AppRoutes.privacyPolicy);
+        if(next.otpResponse?.data?.isNewOwner != true){
+          context.goNamed(AppRoutes.homeScreen);
+        }else{
+          context.goNamed(AppRoutes.privacyPolicy);
+        }
+
         notifier.resetState();
       }
       // Login response (used for resend OTP)

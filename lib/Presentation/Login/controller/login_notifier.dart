@@ -107,6 +107,7 @@ class LoginNotifier extends Notifier<LoginState> {
         await prefs.setString('refreshToken', data?.refreshToken ?? '');
         await prefs.setString('sessionToken', data?.sessionToken ?? '');
         await prefs.setString('role', data?.role ?? '');
+        await prefs.setBool('isNewOwner', data?.isNewOwner ?? false);
 
         //  Print what was actually stored
         final accessToken = prefs.getString('token');
