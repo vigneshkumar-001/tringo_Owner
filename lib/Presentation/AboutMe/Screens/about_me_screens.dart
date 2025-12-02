@@ -1323,7 +1323,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                               ),
                             ),
                           ),
-
                         ],
                       ),
                     ],
@@ -1347,10 +1346,15 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final price = p.price ?? 0;
                   final priceText = '₹$price';
 
+                  final offerPrice = p.offerPrice ?? 0;
+                  final offerPriceText = '₹$offerPrice';
+
                   String imageUrl = '';
                   if (p.media.isNotEmpty) {
                     imageUrl = p.media.first.url ?? '';
                   }
+
+                  final bool hasDoorDelivery = p.doorDelivery == true;
 
                   return Column(
                     children: [
@@ -1365,13 +1369,14 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                         ratingStar: rating,
                         ratingCount: ratingCount,
                         offAmound: priceText,
-                        oldAmound: '',
+                        oldAmound: offerPriceText,
                         km: '',
                         location: '',
                         Verify: false,
                         locations: false,
                         weight: false,
                         horizontalDivider: false,
+                        doorDelivery: hasDoorDelivery,
                       ),
                       Row(
                         children: [
