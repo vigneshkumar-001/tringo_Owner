@@ -104,7 +104,7 @@ class Shop {
   final String? country;
   final String? postalCode;
   final String? serviceTags;
-  final String? weeklyHours;
+  final List<ShopWeeklyHour> weeklyHours;
   final double? averageRating;
   final int? reviewCount;
   final String? status;
@@ -135,7 +135,7 @@ class Shop {
     this.country,
     this.postalCode,
     this.serviceTags,
-    this.weeklyHours,
+    this.weeklyHours = const [],
     this.averageRating,
     this.reviewCount,
     this.status,
@@ -168,7 +168,11 @@ class Shop {
     country: json['country'] as String?,
     postalCode: json['postalCode'] as String?,
     serviceTags: json['serviceTags'] as String?,
-    weeklyHours: json['weeklyHours'] as String?,
+    weeklyHours:
+    (json['weeklyHours'] as List<dynamic>?)
+        ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
+        .toList() ??
+        const [],
     averageRating: _toDouble(json['averageRating']),
     reviewCount: _toInt(json['reviewCount']),
     status: json['status'] as String?,
@@ -270,7 +274,32 @@ class BusinessProfile {
     'onboardingStatus': onboardingStatus,
   };
 }
+class ShopWeeklyHour {
+  final String? day;
+  final String? opensAt;
+  final String? closesAt;
+  final bool? closed;
 
+  const ShopWeeklyHour({this.day, this.opensAt, this.closesAt, this.closed});
+
+  factory ShopWeeklyHour.fromJson(Map<String, dynamic> json) {
+    return ShopWeeklyHour(
+      day: json['day'],
+      opensAt: json['opensAt'],
+      closesAt: json['closesAt'],
+      closed: _parseBool(json['closed']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day': day,
+      'opensAt': opensAt,
+      'closesAt': closesAt,
+      'closed': closed,
+    };
+  }
+}
 class User {
   final String id;
   final DateTime createdAt;
@@ -313,4 +342,21 @@ class User {
     'role': role,
     'status': status,
   };
+}
+bool? _parseBool(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+
+  if (value is num) {
+    if (value == 1) return true;
+    if (value == 0) return false;
+  }
+
+  if (value is String) {
+    final lower = value.toLowerCase().trim();
+    if (lower == 'true' || lower == 'yes' || lower == '1') return true;
+    if (lower == 'false' || lower == 'no' || lower == '0') return false;
+  }
+
+  return null;
 }
