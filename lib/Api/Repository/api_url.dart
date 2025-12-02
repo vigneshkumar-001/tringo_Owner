@@ -75,4 +75,8 @@ class ApiUrl {
   static String   getAllEnquiry({required String shopId}) {
     return "${base}api/v1/dashboard/enquiries?page=1&limit=20";
   }
+
+  static String   getAllShopsDetails({required String shopId}) {
+    return "${base}api/v1/dashboard/shops";
+  }
 }
