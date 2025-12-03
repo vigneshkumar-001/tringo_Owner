@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
@@ -190,7 +191,11 @@ class _MenuScreensState extends State<MenuScreens> {
                     );
 
                     if (shouldLogout ?? false) {
-                      // Clear tokens/session here if needed
+                      final prefs = await SharedPreferences.getInstance();
+                      // prefs.remove('token');
+                      // prefs.remove('isProfileCompleted');
+                      // prefs.remove('isNewOwner');
+                      await prefs.clear();
 
                       // Then navigate
                       context.goNamed(AppRoutes.login);

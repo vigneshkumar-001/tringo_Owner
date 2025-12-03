@@ -318,7 +318,7 @@ class ApiDataSource extends BaseApiDataSource {
     required String englishName,
     required String tamilName,
     required String descriptionEn,
-    String? shopId,
+    String? apiShopId,
     required String type,
     required String descriptionTa,
     required String addressEn,
@@ -335,9 +335,24 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final url = (shopId != null && shopId.isNotEmpty)
-          ? ApiUrl.updateShop(shopId: shopId)
-          : ApiUrl.shop;
+      final savedShopId = prefs.getString('shop_id');
+
+      // ✅ Priority: 1) SharedPrefs → 2) apiShopId → 3) create new
+      String? finalShopId;
+      if (savedShopId != null && savedShopId.isNotEmpty) {
+        finalShopId = savedShopId;
+      } else if (apiShopId != null && apiShopId.isNotEmpty) {
+        finalShopId = apiShopId;
+      }
+
+      final bool isUpdate = finalShopId != null;
+      final url = isUpdate
+          ? ApiUrl.updateShop(shopId: finalShopId)
+          : ApiUrl.shop; // create
+
+      // final url = (shopId != null && shopId.isNotEmpty)
+      //     ? ApiUrl.updateShop(shopId: shopId)
+      //     : ApiUrl.shop;
 
       final payload = {
         "category": category,
@@ -626,6 +641,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       // 🔹 SHOP ID: can fallback to prefs
       String? shopIdToUse = apiShopId ?? prefs.getString('shop_id');
+      String? productId = apiProductId ?? prefs.getString('product_id');
 
       if (shopIdToUse == null || shopIdToUse.isEmpty) {
         return Left(
@@ -634,7 +650,7 @@ class ApiDataSource extends BaseApiDataSource {
       }
 
       // 🔹 PRODUCT ID: ONLY use what caller sends
-      final String? productId = apiProductId; // ❗ no prefs fallback here
+      // final String? productId = apiProductId; // ❗ no prefs fallback here
 
       final String url = (productId != null && productId.isNotEmpty)
           ? ApiUrl.updateProducts(productId: productId) // UPDATE
@@ -748,13 +764,18 @@ class ApiDataSource extends BaseApiDataSource {
   // }
 
   Future<Either<Failure, ShopCategoryListResponse>>
-  getProductCategories() async {
+  getProductCategories({String? apiShopId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final shopId = prefs.getString('shop_id');
-      String url = ApiUrl.productCategoryList(shopId: shopId ?? '');
+      final savedShopId = prefs.getString('shop_id');
 
+      // priority: apiShopId → savedShopId → empty
+      final shopId = (apiShopId != null && apiShopId.trim().isNotEmpty)
+          ? apiShopId
+          : (savedShopId ?? '');
+
+      final url = ApiUrl.productCategoryList(shopId: shopId);
       dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
 
       AppLogger.log.i(response);
@@ -878,14 +899,18 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, ShopDetailsResponse>> getShopDetails() async {
+  Future<Either<Failure, ShopDetailsResponse>> getShopDetails({String? apiShopId}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final shopId = prefs.getString('shop_id');
-      final productId = prefs.getString('product_id');
+      final savedShopId = prefs.getString('shop_id');
 
-      final url = ApiUrl.shopDetails(shopId: shopId ?? '');
+      // Priority: apiShopId > savedShopId > ""
+      final shopId = (apiShopId != null && apiShopId.trim().isNotEmpty)
+          ? apiShopId
+          : (savedShopId ?? '');
+
+      final url = ApiUrl.shopDetails(shopId: shopId);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'Post', true);
 
@@ -975,17 +1000,39 @@ class ApiDataSource extends BaseApiDataSource {
     // required List<Map<String, String>> features,
   }) async {
     try {
+      // final prefs = await SharedPreferences.getInstance();
+      //
+      // final serviceId = prefs.getString('service_id');
+      //
+      // AppLogger.log.i(apiServiceId);
+      // final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
+      // final url = (apiServiceId != null && apiServiceId.isNotEmpty)
+      //     ? ApiUrl.serviceEdit(serviceId: apiServiceId)
+      //     : ApiUrl.serviceInfo(shopId: shopIdToUse ?? '');
+      //
       final prefs = await SharedPreferences.getInstance();
 
-      final shopId = prefs.getString('shop_id');
+      final savedServiceId = prefs.getString('service_id');
 
-      AppLogger.log.i(apiServiceId);
-      final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
-      final url = (apiServiceId != null && apiServiceId.isNotEmpty)
-          ? ApiUrl.serviceEdit(serviceId: apiServiceId)
-          : ApiUrl.serviceInfo(shopId: shopIdToUse ?? '');
-      // final url = ApiUrl.serviceInfo(shopId: shopId);
 
+      final serviceIdToUse =
+      (apiServiceId != null && apiServiceId.trim().isNotEmpty)
+          ? apiServiceId
+          : (savedServiceId ?? '');
+      AppLogger.log.i('Service id - $apiServiceId');
+
+      final savedShopId = prefs.getString('shop_id');
+      final shopIdToUse =
+      (apiShopId != null && apiShopId.trim().isNotEmpty)
+          ? apiShopId
+          : (savedShopId ?? '');
+
+      // DECIDE CREATE OR EDIT API
+      // apiServiceId is required but may be "", so we check empty only
+      final url = serviceIdToUse.isNotEmpty
+          ? ApiUrl.serviceEdit(serviceId: serviceIdToUse)
+          : ApiUrl.serviceInfo(shopId: shopIdToUse);
+      AppLogger.log.i("SERVICE URL → $url");
       final payload = {
         "title": title,
         "tamilName": tamilName,
@@ -1327,10 +1374,9 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-
   Future<Either<Failure, EnquiryResponse>> getAllEnquiry() async {
     try {
-      final url = ApiUrl.getAllEnquiry( shopId: '');
+      final url = ApiUrl.getAllEnquiry(shopId: '');
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -1365,10 +1411,9 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-
   Future<Either<Failure, ShopsResponse>> getAllShops() async {
     try {
-      final url = ApiUrl.getAllShopsDetails( shopId: '');
+      final url = ApiUrl.getAllShopsDetails(shopId: '');
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -1402,5 +1447,4 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure(e.toString()));
     }
   }
-
 }

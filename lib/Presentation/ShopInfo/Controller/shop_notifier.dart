@@ -159,7 +159,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       type: type,
       category: category,
       weeklyHours: weeklyHours,
-      shopId: shopId,
+       apiShopId : shopId,
       subCategory: subCategory,
       englishName: englishName,
       tamilName: tamilName,
@@ -171,7 +171,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       gpsLongitude: gpsLongitude,
       primaryPhone: primaryPhone,
       alternatePhone: alternatePhone,
-      ownerImageUrl: ownerImageUrl, // empty string if not uploaded
+      ownerImageUrl: ownerImageUrl,
       contactEmail: contactEmail,
       doorDelivery: doorDelivery,
     );

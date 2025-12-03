@@ -488,6 +488,7 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                           extra: {
                             'backDisabled': true,
                             'fromSubscriptionSkip': false,
+                            'shopId': productState.productResponse?.data.shopId,
                           },
                         );
                       },
