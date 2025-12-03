@@ -157,7 +157,14 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.addProductListPath,
       name: AppRoutes.addProductList,
-      builder: (context, state) => const AddProductList(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return AddProductList(
+          isService: extra?['isService'] ?? false,
+
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.shopsDetailsPath,
@@ -167,18 +174,20 @@ final goRouter = GoRouter(
 
         bool backDisabled = false;
         bool fromSubscription = false;
+        String? shopId;
 
         if (extra is Map<String, dynamic>) {
           backDisabled = extra['backDisabled'] as bool? ?? false;
           fromSubscription = extra['fromSubscriptionSkip'] as bool? ?? false;
+          shopId = extra['shopId'] as String?;
         } else if (extra is bool) {
-          // when you do extra: true from SubscriptionScreen
           fromSubscription = extra;
         }
 
         return ShopsDetails(
           backDisabled: backDisabled,
           fromSubscriptionSkip: fromSubscription,
+          shopId: shopId,
         );
       },
     ),

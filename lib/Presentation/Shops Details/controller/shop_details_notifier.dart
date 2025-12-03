@@ -27,10 +27,10 @@ class ShopDetailsNotifier extends Notifier<ShopDetailsState> {
     return ShopDetailsState.initial();
   }
 
-  Future<void> fetchShopDetails() async {
+  Future<void> fetchShopDetails({String? apiShopId}) async {
     state = const ShopDetailsState(isLoading: true);
 
-    final result = await api.getShopDetails();
+    final result = await api.getShopDetails(apiShopId:apiShopId );
 
     result.fold(
       (failure) => state = ShopDetailsState(

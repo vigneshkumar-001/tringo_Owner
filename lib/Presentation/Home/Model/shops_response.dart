@@ -1,6 +1,6 @@
 class ShopsResponse {
   final bool status;
-  final List<Shop> data;
+  final ShopsData data;
 
   ShopsResponse({
     required this.status,
@@ -10,7 +10,24 @@ class ShopsResponse {
   factory ShopsResponse.fromJson(Map<String, dynamic> json) {
     return ShopsResponse(
       status: json['status'] ?? false,
-      data: (json['data'] as List<dynamic>? ?? [])
+      data: ShopsData.fromJson(json['data'] ?? {}),
+    );
+  }
+}
+
+class ShopsData {
+  final bool isNewOwner;
+  final List<Shop> items;
+
+  ShopsData({
+    required this.isNewOwner,
+    required this.items,
+  });
+
+  factory ShopsData.fromJson(Map<String, dynamic> json) {
+    return ShopsData(
+      isNewOwner: json['isNewOwner'] ?? true,
+      items: (json['items'] as List<dynamic>? ?? [])
           .map((e) => Shop.fromJson(e))
           .toList(),
     );
@@ -23,10 +40,11 @@ class Shop {
   final String tamilName;
   final String city;
   final String shopKind;
-  final String addressEn;
   final String category;
   final String subCategory;
-  final String primaryImageUrl;
+  final String addressEn;
+  final String addressTa;
+  final String? primaryImageUrl;
 
   Shop({
     required this.id,
@@ -34,10 +52,11 @@ class Shop {
     required this.tamilName,
     required this.city,
     required this.shopKind,
-    required this.addressEn,
     required this.category,
     required this.subCategory,
-    required this.primaryImageUrl,
+    required this.addressEn,
+    required this.addressTa,
+    this.primaryImageUrl,
   });
 
   factory Shop.fromJson(Map<String, dynamic> json) {
@@ -48,9 +67,10 @@ class Shop {
       city: json['city'] ?? '',
       shopKind: json['shopKind'] ?? '',
       category: json['category'] ?? '',
-      addressEn: json['addressEn'] ?? '',
       subCategory: json['subCategory'] ?? '',
-      primaryImageUrl: json['primaryImageUrl'] ?? '',
+      addressEn: json['addressEn'] ?? '',
+      addressTa: json['addressTa'] ?? '',
+      primaryImageUrl: json['primaryImageUrl'],
     );
   }
 }
