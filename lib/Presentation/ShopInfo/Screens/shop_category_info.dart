@@ -78,7 +78,9 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
 }
 
 class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
+
   final _formKey = GlobalKey<FormState>();
+
   List<ShopCategoryListData>? _selectedCategoryChildren;
 
   final TextEditingController _openTimeController = TextEditingController();
