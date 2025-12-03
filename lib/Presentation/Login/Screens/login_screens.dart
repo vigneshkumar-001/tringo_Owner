@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:country_picker/country_picker.dart'; // ⬅️ NEW
+import 'package:mobile_number/mobile_number.dart';
 
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -31,9 +32,25 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
 
   ProviderSubscription<LoginState>? _sub;
 
-
   String _selectedDialCode = '+91';
   String _selectedFlag = '🇮🇳';
+
+  // 🔹 Ask phone/SIM permission as soon as login screen opens
+  Future<void> _ensurePhonePermission() async {
+    try {
+      final hasPermission = await MobileNumber.hasPhonePermission;
+      if (!hasPermission) {
+        await MobileNumber.requestPhonePermission;
+      }
+
+      // Optional: debug log
+      final after = await MobileNumber.hasPhonePermission;
+      debugPrint('PHONE PERMISSION AFTER REQUEST: $after');
+    } catch (e, st) {
+      debugPrint('❌ Error requesting phone permission: $e');
+      debugPrint('$st');
+    }
+  }
 
   @override
   void initState() {
@@ -41,6 +58,8 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
 
     _sub = ref.listenManual<LoginState>(loginNotifierProvider, (prev, next) {
       if (!mounted) return;
+
+      _ensurePhonePermission();
 
       // 1) API error
       if (next.error != null) {
