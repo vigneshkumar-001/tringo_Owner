@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final bool isProfileCompleted =
         prefs.getBool("isProfileCompleted") ?? false;
 
-    final bool newOwner = prefs.getBool("isNewOwner") ?? false;
+    final bool newOwner = prefs.getBool("token") == null;
 
     await Future.delayed(const Duration(seconds: 5));
 
