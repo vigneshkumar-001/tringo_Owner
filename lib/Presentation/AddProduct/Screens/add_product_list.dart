@@ -224,15 +224,21 @@ class _AddProductListState extends ConsumerState<AddProductList> {
     //     ? serviceState.isLoading
     //     : productState.isLoading;
     final regService = RegistrationProductSeivice.instance.isServiceBusiness;
-AppLogger.log.i('regService - $regService');
+    AppLogger.log.i('regService - $regService');
     // Final values with priority
-    final isService = regService
-        ? true
-        : (RegistrationProductSeivice.instance.isServiceBusiness == false
-        ? (widget.isService ?? false)
-        : false);
+    final isService =
+        widget.isService ??
+        RegistrationProductSeivice.instance.isServiceBusiness;
+
+    final isProduct = !isService;
+
+    // final isService = regService
+    //     ? true
+    //     : (RegistrationProductSeivice.instance.isServiceBusiness == false
+    //           ? (widget.isService ?? false)
+    //           : false);
     AppLogger.log.i('isServicess - $isService');
-    final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
+    // final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
 
     final isCompany =
         RegistrationProductSeivice.instance.businessType ==
@@ -308,10 +314,10 @@ AppLogger.log.i('regService - $regService');
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isProduct ? 'Add Product' : 'Add Service',
+                        isService ? 'Add Service' : 'Add Product',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _addImageContainer(index: 0),
                       const SizedBox(height: 25),
                       Text(
@@ -350,7 +356,7 @@ AppLogger.log.i('regService - $regService');
                           ),
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      SizedBox(height: 30),
                       CommonContainer.button2(
                         context: context,
                         text: 'Save & Continue',
@@ -442,85 +448,6 @@ AppLogger.log.i('regService - $regService');
                               },
                       ),
 
-                      /*CommonContainer.button2(
-                        context: context,
-                        text: 'Save & Continue',
-                        width: double.infinity,
-                        height: 60,
-                        backgroundColor: AppColor.black,
-                        loader: isLoading ? ThreeDotsLoader() : null,
-                        onTap: isLoading
-                            ? null
-                            : () async {
-                                if (_pickedImages[0] == null) {
-                                  setState(() => _hasError[0] = true);
-                                  return;
-                                }
-
-                                final formValid =
-                                    _formKey.currentState?.validate() ?? false;
-                                setState(() {});
-                                if (!formValid) return;
-
-                                final features = _featureControllers.map((
-                                  item,
-                                ) {
-                                  return {
-                                    "label": item['heading']!.text.trim(),
-                                    "value": item['answer']!.text.trim(),
-                                  };
-                                }).toList();
-
-                                // pick correct notifier
-                                final productNotifier = ref.read(
-                                  productNotifierProvider.notifier,
-                                );
-                                final serviceNotifier = ref.read(
-                                  serviceInfoNotifierProvider.notifier,
-                                );
-
-                                bool success;
-                                if (isService) {
-                                  success = await serviceNotifier
-                                      .uploadServiceImages(
-                                        images: _pickedImages,
-                                        features: features,
-                                        context: context,
-                                      );
-                                } else {
-                                  success = await productNotifier
-                                      .uploadProductImages(
-                                        images: _pickedImages,
-                                        features: features,
-                                        context: context,
-                                      );
-                                }
-                                if (!success) {
-                                  final error =
-                                      ref
-                                          .read(serviceInfoNotifierProvider)
-                                          .error ??
-                                      "Failed. Try again.";
-
-                                  AppSnackBar.error(context, error);
-                                  return;
-                                }
-                                final isCompany =
-                                    RegistrationProductSeivice
-                                        .instance
-                                        .businessType ==
-                                    BusinessType.company;
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductSearchKeyword(
-                                      // isCompany: true,
-                                      isCompany: isCompany,
-                                    ),
-                                  ),
-                                );
-                              },
-                      ),*/
                       const SizedBox(height: 36),
                     ],
                   ),

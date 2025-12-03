@@ -46,16 +46,16 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
     required int durationMinutes,
     required String categoryId,
     required String subCategory,
-      String? apiShopId,
+    String? apiShopId,
     required List<String> tags,
   }) async {
-
     state = const ServiceInfoState(isLoading: true);
 
     final result = await api.serviceInfo(
       apiServiceId: ServiceId,
       title: title,
-      tamilName: tamilName,apiShopId:apiShopId ,
+      tamilName: tamilName,
+      apiShopId: apiShopId,
       description: description,
       startsAt: startsAt,
       offerLabel: offerLabel,
