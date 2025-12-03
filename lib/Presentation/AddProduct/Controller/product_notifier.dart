@@ -137,7 +137,7 @@ class ProductNotifier extends Notifier<ProductState> {
   Future<void> fetchProductCategories({String? apiShopId}) async {
     state = const ProductState(isLoading: true);
 
-    final result = await api.getProductCategories(apiShopId:apiShopId );
+    final result = await api.getProductCategories(apiShopId: apiShopId);
 
     result.fold(
       (failure) =>
@@ -208,8 +208,6 @@ class ProductNotifier extends Notifier<ProductState> {
       (response) async {
         state = ProductState(isLoading: false, productResponse: response);
 
-
-
         return response.status == true;
       },
     );
@@ -230,11 +228,8 @@ class ProductNotifier extends Notifier<ProductState> {
         success = false;
       },
       (response) async {
-
-
         state = ProductState(isLoading: false, productResponse: response);
         success = true;
-
       },
     );
 

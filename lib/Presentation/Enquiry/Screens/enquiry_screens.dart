@@ -13,6 +13,7 @@ import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
 import '../../Home/Model/shops_response.dart';
 import '../../Menu/Screens/menu_screens.dart';
+import '../../No Data Screen/Screen/no_data_screen.dart';
 
 class EnquiryScreens extends ConsumerStatefulWidget {
   const EnquiryScreens({super.key});
@@ -82,10 +83,14 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
       return const Scaffold(
         body: SafeArea(
           child: Center(
-            child: Text(
-              'No data found',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            child: NoDataScreen(
+              showTopBackArrow: false,
+              showBottomButton: false,
             ),
+            // Text(
+            //   'No data found',
+            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            // ),
           ),
         ),
       );
@@ -597,7 +602,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                             productTitle = data.product?.name.toString() ?? '';
                             priceText = '${data.product?.price ?? ''}';
                             offerPrice = '₹${data.product?.offerPrice ?? ''}';
-                            image = '₹${data.product?.imageUrl ?? ''}';
+                            image = data.product?.imageUrl ?? '';
                             rating = '₹${data.product?.rating ?? ''}';
                             ratingCount = '₹${data.product?.ratingCount ?? ''}';
                           }

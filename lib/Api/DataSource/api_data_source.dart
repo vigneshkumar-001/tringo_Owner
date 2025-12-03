@@ -1203,7 +1203,7 @@ class ApiDataSource extends BaseApiDataSource {
       // If your backend uses PATCH → 'Patch'
       // If it uses PUT → 'Put'
       // Only keep 'Post' if your backend really expects POST here.
-      dynamic response = await Request.sendRequest(url, payload, 'Patch', true);
+      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
 
       AppLogger.log.i(response);
       AppLogger.log.i(payload);

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -54,7 +53,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
     _updateSlideAnimation();
   }
 
-  // 👉 Build the page on demand so it always sees latest businessType
+  //  Build the page on demand so it always sees latest businessType
   ///new///
   Widget _pageForIndex(int index) {
     final regPS = RegistrationProductSeivice.instance;
@@ -66,20 +65,20 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
       case 1:
         return const EnquiryScreens();
       case 2:
-      // 🔹 Company (premium) → PremiumOffers
-      // 🔹 Individual / null (non-premium) → OfferScreens
+        // 🔹 Company (premium) → PremiumOffers
+        // 🔹 Individual / null (non-premium) → OfferScreens
         return isPremium
-            ? PremiumOffers()          // PREMIUM (company)
-            : const OfferScreens();    // NON-PREMIUM (individual)
+            ? PremiumOffers() // PREMIUM (company)
+            : NoDataScreens();
+      // const OfferScreens();    // NON-PREMIUM (individual)
       case 3:
-        return AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0,);
+        return AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0);
       case 4:
-        return const MenuScreens(page : "bottomScreen");
+        return const MenuScreens(page: "bottomScreen");
       default:
         return const SizedBox.shrink();
     }
   }
-
 
   ///old///
   // Widget _pageForIndex(int index) {
@@ -258,5 +257,3 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
     );
   }
 }
-
-
