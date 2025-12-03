@@ -302,7 +302,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                 SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.addProduct,
-                  text: isService ? 'Add Service' : 'Add Product',
+                  text: isService ? 'Add Product' : 'Add Service',
                   imageHeight: 85,
                   gradientColor: AppColor.lavenderMist,
                   value: 0.8,
@@ -314,7 +314,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isService ? 'Add Service' : 'Add Product',
+                        isService ? 'Add Product' : 'Add Service',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
