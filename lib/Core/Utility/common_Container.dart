@@ -2123,7 +2123,7 @@ class CommonContainer {
                 ),
               ),
             ),
- /*           Image.asset(
+            /*           Image.asset(
               shopImage,
               height: 100,
               width: double.infinity,
@@ -2559,9 +2559,9 @@ class CommonContainer {
                             begin: Alignment.centerLeft,
                             end: Alignment.centerRight,
                             colors: [
-                              const Color(0xFF000000).withOpacity(0.02), // 0%
-                              const Color(0xFF000000).withOpacity(0.00), // 0%
-                              const Color(0xFF000000).withOpacity(0.00), // 3%
+                              Color(0xFF000000).withOpacity(0.02), // 0%
+                              Color(0xFF000000).withOpacity(0.00), // 0%
+                              Color(0xFF000000).withOpacity(0.00), // 3%
                             ],
                           ),
                         ),
@@ -2629,21 +2629,17 @@ class CommonContainer {
                                   ],
                                 ),
                                 SizedBox(height: 10),
-
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: const [
-                                    // price
-                                  ],
-                                ),
                                 Row(
                                   children: [
-                                    Text(
-                                      priceText,
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 16,
-                                        color: AppColor.black,
-                                        fontWeight: FontWeight.bold,
+                                    Flexible(
+                                      child: Text(
+                                        overflow: TextOverflow.ellipsis,
+                                        priceText,
+                                        style: AppTextStyles.mulish(
+                                          fontSize: 14,
+                                          color: AppColor.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     SizedBox(width: 8),
@@ -2681,8 +2677,7 @@ class CommonContainer {
                               color: Colors.grey,
                             ),
                           ),
-                        )
-
+                        ),
                       ],
                     ),
                   ],
@@ -2695,10 +2690,10 @@ class CommonContainer {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundImage: (avatarAsset != null && avatarAsset.isNotEmpty)
+                  backgroundImage:
+                      (avatarAsset != null && avatarAsset.isNotEmpty)
                       ? CachedNetworkImageProvider(avatarAsset)
-                      :   AssetImage(AppImages.profile)
-                  as ImageProvider,
+                      : AssetImage(AppImages.profile) as ImageProvider,
                 ),
 
                 const SizedBox(width: 8),
