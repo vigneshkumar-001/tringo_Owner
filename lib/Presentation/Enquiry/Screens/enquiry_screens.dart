@@ -567,22 +567,25 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                           String offerPrice = '';
                           String image = '';
                           String customerName = data.customer.name;
-                          String whatsappNumber = data.customer.whatsappNumber;
+                          String whatsappNumber =
+                              data.customer.whatsappNumber;
                           String phone = data.customer.phone;
                           String customerImg = data.customer.avatarUrl
                               .toString();
                           String timeText = data.createdTime;
 
-                          if (type == 'PRODUCT_SHOP') {
+                          if (type == 'PRODUCT_SHOP' ||
+                              type == 'SERVICE_SHOP') {
                             final shop = data.shop;
                             productTitle =
-                                (shop?.englishName.toUpperCase() ?? '')
-                                    .isNotEmpty
+                            (shop?.englishName.toUpperCase() ?? '')
+                                .isNotEmpty
                                 ? shop!.englishName.toUpperCase()
                                 : 'Shop Enquiry';
                             rating = (shop?.rating ?? 0).toString();
                             ratingCount = (shop?.ratingCount ?? 0).toString();
-                            priceText = '${shop?.category.toUpperCase() ?? ''}';
+                            offerPrice =
+                            '${shop?.category.toUpperCase() ?? ''}';
                             image = shop?.primaryImageUrl ?? '';
                           } else if (type == 'PRODUCT_SERVICE' ||
                               type == 'SERVICE_SHOP') {
@@ -591,6 +594,8 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                 ? service!.name
                                 : 'Service Enquiry';
                             rating = (service?.rating ?? 0).toString();
+                            image = (service?.primaryImageUrl ?? 0)
+                                .toString();
                             ratingCount = (service?.ratingCount ?? 0)
                                 .toString();
                             if (service != null && service.startsAt > 0) {
@@ -599,16 +604,29 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                               priceText = 'Service';
                             }
                           } else if (type == 'PRODUCT') {
-                            productTitle = data.product?.name.toString() ?? '';
+                            productTitle =
+                                data.product?.name.toString() ?? '';
                             priceText = '${data.product?.price ?? ''}';
                             offerPrice = '₹${data.product?.offerPrice ?? ''}';
                             image = data.product?.imageUrl ?? '';
-                            rating = '₹${data.product?.rating ?? ''}';
-                            ratingCount = '₹${data.product?.ratingCount ?? ''}';
+                            rating = '${data.product?.rating ?? ''}';
+                            ratingCount =
+                            '${data.product?.ratingCount ?? ''}';
+                          } else if (type == 'SERVICE') {
+                            productTitle =
+                                data.service?.name.toString() ?? '';
+                            offerPrice = '₹${data.service?.startsAt ?? ''}';
+
+                            image = data.service?.primaryImageUrl ?? '';
+                            rating = '${data.service?.rating ?? ''}';
+                            ratingCount =
+                            '${data.service?.ratingCount ?? ''}';
                           }
 
                           return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                            ),
                             child: Column(
                               children: [
                                 CommonContainer.inquiryProductCard(
@@ -616,8 +634,8 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                   productTitle: productTitle,
                                   rating: rating,
                                   ratingCount: ratingCount,
-                                  priceText: priceText,
-                                  mrpText: '$offerPrice',
+                                  priceText: offerPrice,
+                                  mrpText: '$priceText',
                                   phoneImageAsset: image,
                                   avatarAsset: customerImg,
                                   customerName: customerName,
