@@ -91,4 +91,6 @@ class AppImages {
   static String whatsAppBlack = 'Assets/Images/WhatsApp_Black.png';
   static String loginScreenBottom = 'Assets/Images/Login_Screen_Bottom.png';
   static String product = 'Assets/Images/Product.png';
+  static String leftStickArrow = 'Assets/Images/LeftStickArrow.png';
+  static String noDataGif = 'Assets/Images/NoDataImage.gif';
 }

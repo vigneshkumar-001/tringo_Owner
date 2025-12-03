@@ -63,7 +63,7 @@ class ApiUrl {
     return "${base}api/v1/services/$serviceId";
   }
 
-  static String   getAllShop({required String shopId}) {
+  static String getAllShop({required String shopId}) {
     return "${base}api/v1/shops?mine=true&selectedShopId=$shopId";
   }
 
@@ -71,12 +71,11 @@ class ApiUrl {
     return "${base}api/v1/services/$serviceId";
   }
 
-
-  static String   getAllEnquiry({required String shopId}) {
+  static String getAllEnquiry({required String shopId}) {
     return "${base}api/v1/dashboard/enquiries?page=1&limit=20";
   }
 
-  static String   getAllShopsDetails({required String shopId}) {
+  static String getAllShopsDetails({required String shopId}) {
     return "${base}api/v1/dashboard/shops";
   }
 }

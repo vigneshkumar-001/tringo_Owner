@@ -184,7 +184,7 @@ class Product {
       offerPrice: json['offerPrice'],
       offerLabel: json['offerLabel'],
       offerValue: json['offerValue'],
-      imageUrl: json['imageUrl'],
+      imageUrl: json['imageUrl']??'',
       rating: json['rating'] ?? 0,
       ratingCount: json['ratingCount'] ?? 0,
     );

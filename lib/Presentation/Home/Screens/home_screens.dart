@@ -25,6 +25,8 @@ import '../../Menu/Screens/menu_screens.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 
+import '../../No Data Screen/Screen/no_data_screen.dart';
+
 class HomeScreens extends ConsumerStatefulWidget {
   const HomeScreens({super.key});
 
@@ -87,14 +89,14 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
     }
 
-    // ✅ GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
+    //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
       return const Scaffold(
         body: SafeArea(
           child: Center(
-            child: Text(
-              'No data found',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            child: NoDataScreen(
+              showBottomButton: false,
+              showTopBackArrow: false,
             ),
           ),
         ),
@@ -810,7 +812,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                 .toString();
                             String timeText = data.createdTime;
 
-                            if (type == 'PRODUCT_SHOP') {
+                            if (type == 'PRODUCT_SHOP' || type == 'SERVICE_SHOP') {
                               final shop = data.shop;
                               productTitle =
                                   (shop?.englishName.toUpperCase() ?? '')
@@ -829,6 +831,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                   ? service!.name
                                   : 'Service Enquiry';
                               rating = (service?.rating ?? 0).toString();
+                              image = (service?. primaryImageUrl ?? 0).toString();
                               ratingCount = (service?.ratingCount ?? 0)
                                   .toString();
                               if (service != null && service.startsAt > 0) {
@@ -841,7 +844,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                   data.product?.name.toString() ?? '';
                               priceText = '${data.product?.price ?? ''}';
                               offerPrice = '₹${data.product?.offerPrice ?? ''}';
-                              image = '₹${data.product?.imageUrl ?? ''}';
+                              image = data.product?.imageUrl ?? '';
                               rating = '₹${data.product?.rating ?? ''}';
                               ratingCount =
                                   '₹${data.product?.ratingCount ?? ''}';
