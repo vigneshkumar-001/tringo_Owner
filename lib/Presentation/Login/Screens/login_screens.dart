@@ -493,7 +493,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                           ),
                         ),
 
-                        const SizedBox(height: 35),
+                         SizedBox(height: 35),
 
                         // VERIFY BUTTON
                         Padding(

@@ -763,8 +763,9 @@ class ApiDataSource extends BaseApiDataSource {
   //   }
   // }
 
-  Future<Either<Failure, ShopCategoryListResponse>>
-  getProductCategories({String? apiShopId}) async {
+  Future<Either<Failure, ShopCategoryListResponse>> getProductCategories({
+    String? apiShopId,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -899,7 +900,9 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, ShopDetailsResponse>> getShopDetails({String? apiShopId}) async {
+  Future<Either<Failure, ShopDetailsResponse>> getShopDetails({
+    String? apiShopId,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -1014,16 +1017,14 @@ class ApiDataSource extends BaseApiDataSource {
 
       final savedServiceId = prefs.getString('service_id');
 
-
       final serviceIdToUse =
-      (apiServiceId != null && apiServiceId.trim().isNotEmpty)
+          (apiServiceId != null && apiServiceId.trim().isNotEmpty)
           ? apiServiceId
           : (savedServiceId ?? '');
       AppLogger.log.i('Service id - $apiServiceId');
 
       final savedShopId = prefs.getString('shop_id');
-      final shopIdToUse =
-      (apiShopId != null && apiShopId.trim().isNotEmpty)
+      final shopIdToUse = (apiShopId != null && apiShopId.trim().isNotEmpty)
           ? apiShopId
           : (savedShopId ?? '');
 
@@ -1136,19 +1137,73 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
+  // Future<Either<Failure, ServiceInfoResponse>> serviceList({
+  //   required List<String> images,
+  //   required List<Map<String, String>> features,
+  // }) async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final serviceId = prefs.getString('service_id') ?? '';
+  //
+  //     String url = ApiUrl.serviceList(serviceId: serviceId);
+  //
+  //     final payload = {"images": images, "features": features};
+  //
+  //     dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+  //
+  //     AppLogger.log.i(response);
+  //     AppLogger.log.i(payload);
+  //
+  //     if (response is! DioException) {
+  //       if (response.statusCode == 200 || response.statusCode == 201) {
+  //         if (response.data['status'] == true) {
+  //           return Right(ServiceInfoResponse.fromJson(response.data));
+  //         } else {
+  //           return Left(
+  //             ServerFailure(response.data['message'] ?? "Update failed"),
+  //           );
+  //         }
+  //       } else {
+  //         return Left(
+  //           ServerFailure(response.data['message'] ?? "Something went wrong"),
+  //         );
+  //       }
+  //     } else {
+  //       final errorData = response.response?.data;
+  //       if (errorData is Map && errorData.containsKey('message')) {
+  //         return Left(ServerFailure(errorData['message']));
+  //       }
+  //       return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+  //     }
+  //   } catch (e) {
+  //     AppLogger.log.e(e);
+  //     return Left(ServerFailure(e.toString()));
+  //   }
+  // }
+
   Future<Either<Failure, ServiceInfoResponse>> serviceList({
     required List<String> images,
     required List<Map<String, String>> features,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final serviceId = prefs.getString('service_id') ?? '';
+      final serviceId = prefs.getString('service_id');
 
-      String url = ApiUrl.serviceList(serviceId: serviceId);
+      if (serviceId == null || serviceId.isEmpty) {
+        return Left(ServerFailure("Missing service id in SharedPreferences"));
+      }
+
+      // TODO: adapt this to your actual backend route
+      // Example: PATCH /api/v1/services/{serviceId}/info
+      final String url = ApiUrl.serviceList(serviceId: serviceId);
+      // Make sure ApiUrl.serviceList builds a SERVICE URL, not PRODUCTS
 
       final payload = {"images": images, "features": features};
 
-      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+      // If your backend uses PATCH → 'Patch'
+      // If it uses PUT → 'Put'
+      // Only keep 'Post' if your backend really expects POST here.
+      dynamic response = await Request.sendRequest(url, payload, 'Patch', true);
 
       AppLogger.log.i(response);
       AppLogger.log.i(payload);
