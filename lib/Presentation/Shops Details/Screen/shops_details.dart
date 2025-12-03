@@ -24,10 +24,13 @@ import 'package:tringo_vendor/Core/Session/registration_session.dart';
 class ShopsDetails extends ConsumerStatefulWidget {
   final bool backDisabled;
   final bool fromSubscriptionSkip;
+  final String? shopId;
+
   const ShopsDetails({
     super.key,
     this.backDisabled = false,
     this.fromSubscriptionSkip = false,
+    this.shopId,
   });
 
   @override
@@ -86,7 +89,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(shopDetailsNotifierProvider.notifier).fetchShopDetails();
+      ref
+          .read(shopDetailsNotifierProvider.notifier)
+          .fetchShopDetails(apiShopId: widget.shopId);
     });
   }
 
@@ -324,7 +329,9 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 callText: 'Call Now',
                                 whatsAppIcon: true,
                                 whatsAppOnTap: () {},
-                                messageOnTap: () {},
+                                messageOnTap: () {
+
+                                },
                                 MessageIcon: true,
                                 mapText: 'Map',
                                 mapOnTap: () => _openMap(

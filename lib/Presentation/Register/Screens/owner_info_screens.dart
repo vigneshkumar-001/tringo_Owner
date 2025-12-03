@@ -472,10 +472,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           if (newState.error != null) {
                             AppSnackBar.error(context, newState.error!);
                           } else if (newState.ownerResponse != null) {
-                            AppSnackBar.success(
-                              context,
-                              "Owner information saved successfully",
-                            );
+
                             context.push(
                               AppRoutes.shopCategoryInfoPath,
                               extra: {
