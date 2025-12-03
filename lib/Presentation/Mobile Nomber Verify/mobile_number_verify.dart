@@ -13,7 +13,11 @@ import 'Controller/mobile_verify_notifier.dart';
 class MobileNumberVerify extends ConsumerStatefulWidget {
   final String loginNumber;
   final String simToken;
-  const MobileNumberVerify( {super.key, required this.loginNumber, required this.simToken,});
+  const MobileNumberVerify({
+    super.key,
+    required this.loginNumber,
+    required this.simToken,
+  });
 
   @override
   ConsumerState<MobileNumberVerify> createState() => _MobileNumberVerifyState();
@@ -68,7 +72,6 @@ class _MobileNumberVerifyState extends ConsumerState<MobileNumberVerify> {
     }
     return null;
   }
-
 
   Future<void> loadSimInfo() async {
     try {
@@ -161,87 +164,87 @@ Slot Index      : $slot
     }
   }
 
-//   Future<void> loadSimInfo() async {
-//     try {
-//       if (!await MobileNumber.hasPhonePermission) {
-//         await MobileNumber.requestPhonePermission;
-//         if (!await MobileNumber.hasPhonePermission) {
-//           if (!mounted) return;
-//           setState(() {
-//             loaded = true;
-//             anySimHasNumber = false;
-//             numberMatch = false;
-//           });
-//           return;
-//         }
-//       }
-//
-//       final simCards = await MobileNumber.getSimCards;
-//       sims = simCards ?? [];
-//       matchedSlotIndex = null;
-//
-//       bool localAnySimHasNumber = false;
-//
-//       final loginNorm = _normalizeNumber(widget.loginNumber.trim());
-//
-//       debugPrint("=== LOGIN NUMBER ===");
-//       debugPrint("RAW        : ${widget.loginNumber}");
-//       debugPrint("NORMALIZED : $loginNorm");
-//       debugPrint("\n=== DEVICE SIM INFO ===");
-//
-//       for (int i = 0; i < sims.length; i++) {
-//         final sim = sims[i];
-//
-//         final raw = (sim.number ?? '').trim();
-//         final norm = _normalizeNumber(raw);
-//         final carrier = (sim.carrierName ?? sim.displayName ?? "").trim();
-//         final slot = sim.slotIndex;
-//         final uiIndex = _uiIndexFromSlot(slot, i);
-//
-//         debugPrint("""
-// -------------------------
-// SIM (list index): $i
-// UI Slot Index   : $uiIndex  (0 = SIM1 card, 1 = SIM2 card)
-// Carrier         : $carrier
-// RAW Number      : "$raw"
-// Normalized      : "$norm"
-// Slot Index      : $slot
-// -------------------------
-// """);
-//
-//         if (norm.isNotEmpty) {
-//           localAnySimHasNumber = true;
-//
-//           if (norm == loginNorm) {
-//             matchedSlotIndex = uiIndex;
-//             debugPrint("✅ MATCH FOUND → uiIndex = $matchedSlotIndex");
-//           }
-//         } else {
-//           debugPrint(
-//             "❗ SIM uiIndex=$uiIndex has NO readable number (Number Hidden)",
-//           );
-//         }
-//       }
-//
-//       if (!mounted) return;
-//       setState(() {
-//         anySimHasNumber = localAnySimHasNumber;
-//         numberMatch =
-//             matchedSlotIndex != null; // true only if any uiIndex matched
-//         loaded = true;
-//       });
-//
-//       // If SIM matches → call backend SIM verification
-//       if (numberMatch) {
-//         _triggerSimVerify();
-//       }
-//     } catch (e, st) {
-//       debugPrint("❌ SIM Load Error: $e");
-//       debugPrint("$st");
-//       if (!mounted) return;
-//       setState(() => loaded = true);
-//     }
-//   }
+  //   Future<void> loadSimInfo() async {
+  //     try {
+  //       if (!await MobileNumber.hasPhonePermission) {
+  //         await MobileNumber.requestPhonePermission;
+  //         if (!await MobileNumber.hasPhonePermission) {
+  //           if (!mounted) return;
+  //           setState(() {
+  //             loaded = true;
+  //             anySimHasNumber = false;
+  //             numberMatch = false;
+  //           });
+  //           return;
+  //         }
+  //       }
+  //
+  //       final simCards = await MobileNumber.getSimCards;
+  //       sims = simCards ?? [];
+  //       matchedSlotIndex = null;
+  //
+  //       bool localAnySimHasNumber = false;
+  //
+  //       final loginNorm = _normalizeNumber(widget.loginNumber.trim());
+  //
+  //       debugPrint("=== LOGIN NUMBER ===");
+  //       debugPrint("RAW        : ${widget.loginNumber}");
+  //       debugPrint("NORMALIZED : $loginNorm");
+  //       debugPrint("\n=== DEVICE SIM INFO ===");
+  //
+  //       for (int i = 0; i < sims.length; i++) {
+  //         final sim = sims[i];
+  //
+  //         final raw = (sim.number ?? '').trim();
+  //         final norm = _normalizeNumber(raw);
+  //         final carrier = (sim.carrierName ?? sim.displayName ?? "").trim();
+  //         final slot = sim.slotIndex;
+  //         final uiIndex = _uiIndexFromSlot(slot, i);
+  //
+  //         debugPrint("""
+  // -------------------------
+  // SIM (list index): $i
+  // UI Slot Index   : $uiIndex  (0 = SIM1 card, 1 = SIM2 card)
+  // Carrier         : $carrier
+  // RAW Number      : "$raw"
+  // Normalized      : "$norm"
+  // Slot Index      : $slot
+  // -------------------------
+  // """);
+  //
+  //         if (norm.isNotEmpty) {
+  //           localAnySimHasNumber = true;
+  //
+  //           if (norm == loginNorm) {
+  //             matchedSlotIndex = uiIndex;
+  //             debugPrint("✅ MATCH FOUND → uiIndex = $matchedSlotIndex");
+  //           }
+  //         } else {
+  //           debugPrint(
+  //             "❗ SIM uiIndex=$uiIndex has NO readable number (Number Hidden)",
+  //           );
+  //         }
+  //       }
+  //
+  //       if (!mounted) return;
+  //       setState(() {
+  //         anySimHasNumber = localAnySimHasNumber;
+  //         numberMatch =
+  //             matchedSlotIndex != null; // true only if any uiIndex matched
+  //         loaded = true;
+  //       });
+  //
+  //       // If SIM matches → call backend SIM verification
+  //       if (numberMatch) {
+  //         _triggerSimVerify();
+  //       }
+  //     } catch (e, st) {
+  //       debugPrint("❌ SIM Load Error: $e");
+  //       debugPrint("$st");
+  //       if (!mounted) return;
+  //       setState(() => loaded = true);
+  //     }
+  //   }
 
   Future<void> _triggerSimVerify() async {
     if (_simVerifyTriggered) return; // Prevent multiple calls
@@ -268,15 +271,41 @@ Slot Index      : $slot
       ).showSnackBar(SnackBar(content: Text(state.error!)));
       return;
     }
-
     final simResponse = state.simVerifyResponse;
-    if (simResponse != null && simResponse.data.simVerified) {
-      // SIM verified successfully → go to Privacy Policy
-      context.go(AppRoutes.privacyPolicyPath);
-    } else {
-      // Backend says SIM not verified → fallback to OTP screen
+
+    // If API returned a valid response
+    if (simResponse != null) {
+      final data = simResponse.data;
+
+      // If SIM is verified
+      if (data.simVerified == true) {
+        if (data.isNewOwner == true) {
+          context.go(AppRoutes.privacyPolicyPath);
+        } else {
+          context.go(AppRoutes.homeScreenPath);
+        }
+      } else {
+        context.pushNamed(AppRoutes.otp, extra: widget.loginNumber);
+      }
+    }
+
+    else {
       context.pushNamed(AppRoutes.otp, extra: widget.loginNumber);
     }
+
+    //
+    // final simResponse = state.simVerifyResponse;
+    // if (simResponse != null && simResponse.data.simVerified) {
+    //   if(simResponse.data.isNewOwner == true){
+    //     context.go(AppRoutes.privacyPolicyPath);
+    //   }else{
+    //     context.go(AppRoutes.homeScreenPath);
+    //   }
+    //
+    // } else {
+    //
+    //   context.pushNamed(AppRoutes.otp, extra: widget.loginNumber);
+    // }
   }
 
   @override
