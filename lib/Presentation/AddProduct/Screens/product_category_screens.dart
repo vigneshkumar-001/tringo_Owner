@@ -450,7 +450,9 @@ class _ProductCategoryScreensState
     _offerPriceController.text = widget.initialOfferValue ?? '5%';
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(productNotifierProvider.notifier).fetchProductCategories();
+      ref
+          .read(productNotifierProvider.notifier)
+          .fetchProductCategories(apiShopId: widget.shopId);
     });
   }
 
@@ -545,7 +547,7 @@ class _ProductCategoryScreensState
                         onTap: () {
                           ref
                               .read(productNotifierProvider.notifier)
-                              .fetchProductCategories();
+                              .fetchProductCategories(apiShopId: widget.shopId);
 
                           _showCategoryBottomSheet(
                             context,
@@ -806,101 +808,6 @@ class _ProductCategoryScreensState
                       CommonContainer.button(
                         buttonColor: AppColor.black,
 
-                        // onTap: () async {
-                        //   FocusScope.of(context).unfocus();
-                        //
-                        //   final priceText = _productPriceController.text.trim();
-                        //   final price = int.tryParse(priceText);
-                        //
-                        //   final hasCategoryError = _categoryController.text
-                        //       .trim()
-                        //       .isEmpty;
-                        //   final hasSubCategoryError = _subCategoryController
-                        //       .text
-                        //       .trim()
-                        //       .isEmpty;
-                        //
-                        //   setState(() {
-                        //     _categoryHasError = hasCategoryError;
-                        //     _subCategoryHasError = hasSubCategoryError;
-                        //   });
-                        //
-                        //   final formValid = _formKey.currentState!.validate();
-                        //
-                        //   if (!formValid ||
-                        //       hasCategoryError ||
-                        //       hasSubCategoryError) {
-                        //     AppSnackBar.info(
-                        //       context,
-                        //       'Please fill all required fields correctly.',
-                        //     );
-                        //     return;
-                        //   }
-                        //
-                        //   // -------------------------------------------------------------------
-                        //   // 🔵 DOOR DELIVERY FIX — convert dropdown to boolean before saving
-                        //   // -------------------------------------------------------------------
-                        //   if (!isServiceFlow) {
-                        //     final ddText = _doorDeliveryController.text.trim();
-                        //
-                        //     if (ddText.isEmpty) {
-                        //       AppSnackBar.error(
-                        //         context,
-                        //         'Please select Door Delivery',
-                        //       );
-                        //       return;
-                        //     }
-                        //
-                        //     _doorDelivery =
-                        //         ddText == 'Yes'; // <-- REAL VALUE NOW
-                        //   } else {
-                        //     _doorDelivery = false; // service case
-                        //   }
-                        //   // -------------------------------------------------------------------
-                        //
-                        //   bool success = false;
-                        //
-                        //   if (isServiceFlow) {
-                        //     // service call...
-                        //   } else {
-                        //     // PRODUCT SAVE
-                        //     success = await ref
-                        //         .read(productNotifierProvider.notifier)
-                        //         .addProduct(
-                        //           doorDelivery: _doorDelivery,
-                        //           productId: widget.productId,
-                        //           shopId: widget.shopId,
-                        //           category: _categoryController.text.trim(),
-                        //           subCategory: _subCategoryController.text
-                        //               .trim(),
-                        //           englishName: _productNameController.text
-                        //               .trim(),
-                        //           price: price ?? 0,
-                        //           offerLabel: _offerController.text.trim(),
-                        //           offerValue: _offerPriceController.text.trim(),
-                        //           description: _descriptionController.text
-                        //               .trim(),
-                        //         );
-                        //
-                        //     if (!success) {
-                        //       final err = ref
-                        //           .read(productNotifierProvider)
-                        //           .error;
-                        //       if (err != null && err.isNotEmpty) {
-                        //         AppSnackBar.error(context, err);
-                        //       } else {
-                        //         AppSnackBar.error(
-                        //           context,
-                        //           'Something went wrong',
-                        //         );
-                        //       }
-                        //     }
-                        //   }
-                        //
-                        //   if (success) {
-                        //     // navigation logic...
-                        //   }
-                        // },
                         onTap: () async {
                           FocusScope.of(context).unfocus();
 
@@ -956,9 +863,8 @@ class _ProductCategoryScreensState
                             final serviceResponse = await ref
                                 .read(serviceInfoNotifierProvider.notifier)
                                 .saveServiceInfo(
-                                  ServiceId:
-                                      widget.productId ??
-                                      '', // serviceId in edit mode
+                                  apiShopId: widget.shopId,
+                                  ServiceId: widget.productId ?? '',
                                   title: _productNameController.text.trim(),
                                   tamilName: _productNameController.text.trim(),
                                   description: _descriptionController.text
@@ -1052,8 +958,10 @@ class _ProductCategoryScreensState
                                 );
                               }
                             } else {
-                              // normal registration flow or other pages
-                              context.pushNamed(AppRoutes.addProductList);
+                              context.pushNamed(
+                                AppRoutes.addProductList,
+                                extra: {'isService': isServiceFlow},
+                              );
                             }
                           }
                         },

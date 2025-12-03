@@ -46,6 +46,7 @@ class AboutMeNotifier extends Notifier<AboutMeState> {
 }
 
 final aboutMeNotifierProvider =
-    NotifierProvider.autoDispose<AboutMeNotifier, AboutMeState>(
+NotifierProvider<AboutMeNotifier, AboutMeState>(
+
       AboutMeNotifier.new,
     );

@@ -134,10 +134,10 @@ class ProductNotifier extends Notifier<ProductState> {
   //   return isSuccess;
   // }
 
-  Future<void> fetchProductCategories() async {
+  Future<void> fetchProductCategories({String? apiShopId}) async {
     state = const ProductState(isLoading: true);
 
-    final result = await api.getProductCategories();
+    final result = await api.getProductCategories(apiShopId:apiShopId );
 
     result.fold(
       (failure) =>
@@ -205,8 +205,11 @@ class ProductNotifier extends Notifier<ProductState> {
         state = ProductState(isLoading: false, error: failure.message);
         return false;
       },
-      (response) {
+      (response) async {
         state = ProductState(isLoading: false, productResponse: response);
+
+
+
         return response.status == true;
       },
     );
@@ -227,11 +230,11 @@ class ProductNotifier extends Notifier<ProductState> {
         success = false;
       },
       (response) async {
-        // final prefs = await SharedPreferences.getInstance();
-        // await prefs.remove('product_id');
+
 
         state = ProductState(isLoading: false, productResponse: response);
         success = true;
+
       },
     );
 

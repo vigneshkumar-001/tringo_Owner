@@ -95,6 +95,9 @@ class HomeNotifier extends Notifier<HomeState> {
     );
   }
 }
-
 final homeNotifierProvider =
-    NotifierProvider.autoDispose<HomeNotifier, HomeState>(HomeNotifier.new);
+NotifierProvider<HomeNotifier, HomeState>(HomeNotifier.new);
+
+
+// final homeNotifierProvider =
+//     NotifierProvider.autoDispose<HomeNotifier, HomeState>(HomeNotifier.new);
