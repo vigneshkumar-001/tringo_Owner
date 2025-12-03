@@ -762,7 +762,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     Text(
                       'Today',
                       style: AppTextStyles.mulish(
@@ -771,7 +771,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                      SizedBox(height: 20),
 
                     if (currentItems.isEmpty)
                       Padding(
