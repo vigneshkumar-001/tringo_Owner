@@ -28,13 +28,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final bool isProfileCompleted =
         prefs.getBool("isProfileCompleted") ?? false;
 
-    final bool newOwner = prefs.getBool("token") == null;
+    final bool newOwner = prefs.getBool("isNewOwner") ?? false;
 
     await Future.delayed(const Duration(seconds: 5));
 
     if (!mounted) return;
     AppLogger.log.i(newOwner);
-    if (newOwner == true) {
+    if (token == null) {
       context.go(AppRoutes.loginPath);
     } else {
       context.go(AppRoutes.homeScreenPath);
