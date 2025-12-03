@@ -28,6 +28,7 @@ class SimData {
   final String role;
   final String sessionToken;
   final bool simVerified;
+  final bool isNewOwner;
 
   SimData({
     required this.accessToken,
@@ -35,6 +36,7 @@ class SimData {
     required this.role,
     required this.sessionToken,
     required this.simVerified,
+    required this.isNewOwner,
   });
 
   factory SimData.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class SimData {
       role: json['role'] as String,
       sessionToken: json['sessionToken'] as String,
       simVerified: json['simVerified'] as bool,
+      isNewOwner: json['isNewOwner'] as bool,
     );
   }
 
@@ -54,6 +57,7 @@ class SimData {
       'role': role,
       'sessionToken': sessionToken,
       'simVerified': simVerified,
+      'isNewOwner': isNewOwner,
     };
   }
 }
