@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Screens/product_search_keyword.dart';
 
 import '../../../Core/Const/app_color.dart';
@@ -19,7 +20,8 @@ import '../Controller/product_notifier.dart';
 import '../Service Info/Controller/service_info_notifier.dart';
 
 class AddProductList extends ConsumerStatefulWidget {
-  const AddProductList({super.key});
+  final bool? isService;
+  const AddProductList({super.key, this.isService});
 
   @override
   ConsumerState<AddProductList> createState() => _AddProductListState();
@@ -208,20 +210,42 @@ class _AddProductListState extends ConsumerState<AddProductList> {
 
   @override
   Widget build(BuildContext context) {
+    // final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
+    // final isService = RegistrationProductSeivice.instance.isServiceBusiness;
+    // final isCompany =
+    //     RegistrationProductSeivice.instance.businessType ==
+    //     BusinessType.company;
+    // // watch both states
+    // final productState = ref.watch(productNotifierProvider);
+    // final serviceState = ref.watch(serviceInfoNotifierProvider);
+    //
+    // // choose loader based on which mode we're in
+    // final isLoading = isService
+    //     ? serviceState.isLoading
+    //     : productState.isLoading;
+    final regService = RegistrationProductSeivice.instance.isServiceBusiness;
+AppLogger.log.i('regService - $regService');
+    // Final values with priority
+    final isService = regService
+        ? true
+        : (RegistrationProductSeivice.instance.isServiceBusiness == false
+        ? (widget.isService ?? false)
+        : false);
+    AppLogger.log.i('isServicess - $isService');
     final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
-    final isService = RegistrationProductSeivice.instance.isServiceBusiness;
+
     final isCompany =
         RegistrationProductSeivice.instance.businessType ==
         BusinessType.company;
+
     // watch both states
     final productState = ref.watch(productNotifierProvider);
     final serviceState = ref.watch(serviceInfoNotifierProvider);
 
-    // choose loader based on which mode we're in
+    // choose loader
     final isLoading = isService
         ? serviceState.isLoading
         : productState.isLoading;
-
     return Scaffold(
       body: SafeArea(
         child: Form(
@@ -356,6 +380,97 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                                   };
                                 }).toList();
 
+                                bool success;
+                                String? apiError;
+
+                                if (isService) {
+                                  final serviceNotifier = ref.read(
+                                    serviceInfoNotifierProvider.notifier,
+                                  );
+
+                                  success = await serviceNotifier
+                                      .uploadServiceImages(
+                                        images: _pickedImages,
+                                        features: features,
+                                        context: context,
+                                      );
+
+                                  // read correct error
+                                  apiError = ref
+                                      .read(serviceInfoNotifierProvider)
+                                      .error;
+                                } else {
+                                  final productNotifier = ref.read(
+                                    productNotifierProvider.notifier,
+                                  );
+
+                                  success = await productNotifier
+                                      .uploadProductImages(
+                                        images: _pickedImages,
+                                        features: features,
+                                        context: context,
+                                      );
+
+                                  // read correct error
+                                  apiError = ref
+                                      .read(productNotifierProvider)
+                                      .error;
+                                }
+
+                                if (!success) {
+                                  AppSnackBar.error(
+                                    context,
+                                    apiError ?? "Failed. Try again.",
+                                  );
+                                  return;
+                                }
+
+                                final isCompany =
+                                    RegistrationProductSeivice
+                                        .instance
+                                        .businessType ==
+                                    BusinessType.company;
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductSearchKeyword(
+                                      isCompany: isCompany,
+                                    ),
+                                  ),
+                                );
+                              },
+                      ),
+
+                      /*CommonContainer.button2(
+                        context: context,
+                        text: 'Save & Continue',
+                        width: double.infinity,
+                        height: 60,
+                        backgroundColor: AppColor.black,
+                        loader: isLoading ? ThreeDotsLoader() : null,
+                        onTap: isLoading
+                            ? null
+                            : () async {
+                                if (_pickedImages[0] == null) {
+                                  setState(() => _hasError[0] = true);
+                                  return;
+                                }
+
+                                final formValid =
+                                    _formKey.currentState?.validate() ?? false;
+                                setState(() {});
+                                if (!formValid) return;
+
+                                final features = _featureControllers.map((
+                                  item,
+                                ) {
+                                  return {
+                                    "label": item['heading']!.text.trim(),
+                                    "value": item['answer']!.text.trim(),
+                                  };
+                                }).toList();
+
                                 // pick correct notifier
                                 final productNotifier = ref.read(
                                   productNotifierProvider.notifier,
@@ -405,8 +520,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                                   ),
                                 );
                               },
-                      ),
-
+                      ),*/
                       const SizedBox(height: 36),
                     ],
                   ),

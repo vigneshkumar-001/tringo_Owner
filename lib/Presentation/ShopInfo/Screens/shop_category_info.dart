@@ -1607,7 +1607,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                 descriptionTa: descriptionTamilController.text
                                     .trim(),
                                 doorDelivery:
-                                    isDoorDeliveryEnabled, // <-- now correct
+                                    isDoorDeliveryEnabled,
                                 englishName: _shopNameEnglishController.text
                                     .trim(),
                                 gpsLatitude: latitude,
@@ -1627,10 +1627,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               newState.error!.isNotEmpty) {
                             AppSnackBar.error(context, newState.error!);
                           } else if (response != null) {
-                            AppSnackBar.success(
-                              context,
-                              'Shop category details saved successfully',
-                            );
 
                             if (widget.pages == 'AboutMeScreens') {
                               Navigator.pop(context, true);

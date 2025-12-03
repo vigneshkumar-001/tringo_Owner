@@ -350,6 +350,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Details',
                   onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    prefs.remove('product_id');
+                    prefs.remove('shop_id');
+                    prefs.remove('service_id');
                     final selectedShop = _getSelectedShop(aboutState);
                     if (selectedShop == null) return;
 
@@ -380,7 +384,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                         builder: (context) => ShopCategoryInfo(
                           pages: "AboutMeScreens",
                           shopId: selectedShop.shopId,
-                          isService: isServiceFlow, // keep as per your flow
+                          isService: isServiceFlow,
                           isIndividual: false,
 
                           //  prefill values from Shop model
@@ -793,6 +797,18 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final aboutState = ref.watch(aboutMeNotifierProvider);
     final selectedShop = _getSelectedShop(aboutState);
     final isDoorDelivery = selectedShop?.shopDoorDelivery == true;
+    if (!aboutState.isLoading && selectedShop == null) {
+      return const Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Text(
+              'No data found',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Skeletonizer(
       enabled: aboutState.isLoading,
@@ -1023,7 +1039,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final ratingCount = (s.ratingCount ?? 0).toString();
 
                   final startsAt = s.startsAt ?? 0;
+                  final offerPrice = s.offerPrice ?? 0;
                   final priceText = ' ₹$startsAt';
+                  final offerPriceText = ' ₹$offerPrice';
+
 
                   String imageUrl = '';
                   if (s.media.isNotEmpty) {
@@ -1042,7 +1061,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                         ratingStar: rating,
                         ratingCount: ratingCount,
                         offAmound: priceText,
-                        oldAmound: '',
+                        oldAmound: offerPriceText,
                         km: '',
                         location: '',
                         Verify: false,
@@ -1055,6 +1074,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           Expanded(
                             child: GestureDetector(
                               onTap: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                // prefs.remove('product_id');
+                                prefs.remove('shop_id');
+                                prefs.remove('service_id');
                                 final selectedShop = _getSelectedShop(
                                   aboutState,
                                 );
@@ -1130,75 +1153,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                             ),
                           ),
 
-                          // Expanded(
-                          //   child: GestureDetector(
-                          //     onTap: () async {
-                          //       final selectedShop = _getSelectedShop(
-                          //         aboutState,
-                          //       );
-                          //       if (selectedShop == null) return;
-                          //
-                          //       final title =
-                          //           (s.englishName ?? s.tamilName ?? '').trim();
-                          //       final englishName = title.isEmpty
-                          //           ? 'Unnamed Product'
-                          //           : title;
-                          //       final startsAt = s.startsAt ?? 0;
-                          //
-                          //       final offerLabel = s.offerLabel;
-                          //       final offerValue = s.offerValue;
-                          //       final description = s.description;
-                          //       Navigator.push(
-                          //         context,
-                          //         MaterialPageRoute(
-                          //           builder: (context) =>
-                          //               ProductCategoryScreens(
-                          //                 page: 'AboutMeScreens',
-                          //                 isService: true, // 🔹 SERVICE FLOW
-                          //                 shopId: selectedShop?.shopId,
-                          //                 productId: s.serviceId,
-                          //                 allowOfferEdit: true,
-                          //                 initialCategoryName: s.category,
-                          //                 initialSubCategoryName: s.subCategory,
-                          //                 initialProductName: englishName,
-                          //                 initialPrice: s.startsAt,
-                          //                 initialDescription: s.description,
-                          //                 initialOfferLabel: s.offerLabel,
-                          //                 initialOfferValue: s.offerValue,
-                          //               ),
-                          //         ),
-                          //       );
-                          //     },
-                          //     child: Container(
-                          //       padding: const EdgeInsets.symmetric(
-                          //         vertical: 15,
-                          //         horizontal: 15,
-                          //       ),
-                          //       decoration: BoxDecoration(
-                          //         color: AppColor.resendOtp,
-                          //         borderRadius: BorderRadius.circular(15),
-                          //       ),
-                          //       child: Row(
-                          //         mainAxisAlignment: MainAxisAlignment.center,
-                          //         children: [
-                          //           Image.asset(
-                          //             AppImages.editImage,
-                          //             color: AppColor.white,
-                          //             height: 16,
-                          //           ),
-                          //           const SizedBox(width: 6),
-                          //           Text(
-                          //             'Edit',
-                          //             style: AppTextStyles.mulish(
-                          //               color: AppColor.white,
-                          //               fontWeight: FontWeight.bold,
-                          //             ),
-                          //           ),
-                          //         ],
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
+
                           SizedBox(width: 10),
                           Expanded(
                             child: GestureDetector(
@@ -1365,8 +1320,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final price = p.price ?? 0;
                   final priceText = '₹$price';
 
-                   final offerPrice = p.offerPrice ?? 0;
-                   final offerPriceText = '₹$offerPrice';
+                  final offerPrice = p.offerPrice ?? 0;
+                  final offerPriceText = '₹$offerPrice';
 
                   String imageUrl = '';
                   if (p.media.isNotEmpty) {
@@ -1428,7 +1383,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                     builder: (context) =>
                                         ProductCategoryScreens(
                                           page: 'AboutMeScreens',
-                                          isService: false, // 🔹 PRODUCT FLOW
+                                          isService: false,
+
                                           shopId: selectedShop.shopId,
                                           productId: p.productId,
                                           allowOfferEdit: true,
@@ -1647,6 +1603,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             // 🔹 Add Product / Service
             InkWell(
               onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                prefs.remove('product_id');
+                prefs.remove('shop_id');
+                prefs.remove('service_id');
                 final selectedShop = _getSelectedShop(aboutState);
                 if (selectedShop == null) return;
 
@@ -1656,7 +1616,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     builder: (context) => ProductCategoryScreens(
                       page: 'AboutMeScreens',
                       shopId: selectedShop.shopId,
-                      isService: hasServices, // 🔴 IMPORTANT FIX HERE
+                      isService: hasServices,
                       allowOfferEdit: true,
                     ),
                   ),
@@ -1703,7 +1663,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             ),
 
             const SizedBox(height: 30),
-            // ... (Reviews section – keep your existing code)
+
             Row(
               children: [
                 Image.asset(AppImages.reviewImage, height: 27.08, width: 26),
@@ -1742,10 +1702,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
               'Based on ${(selectedShop?.shopReviewCount ?? 0)} reviews',
               style: AppTextStyles.mulish(color: AppColor.gray84),
             ),
-            const SizedBox(height: 17),
+      /*      const SizedBox(height: 17),
             CommonContainer.reviewBox(),
             const SizedBox(height: 17),
-            CommonContainer.reviewBox(),
+            CommonContainer.reviewBox(),*/
           ],
         ),
       ),

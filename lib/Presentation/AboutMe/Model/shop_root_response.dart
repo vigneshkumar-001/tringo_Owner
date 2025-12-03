@@ -278,6 +278,7 @@ class Service {
   final String? englishName;
   final String? tamilName;
   final int? startsAt;
+  final int? offerPrice;
   final int? durationMinutes;
   final String? offerLabel;
   final String? offerValue;
@@ -298,6 +299,7 @@ class Service {
     this.englishName,
     this.tamilName,
     this.startsAt,
+    this.offerPrice,
     this.durationMinutes,
     this.offerLabel,
     this.offerValue,
@@ -319,6 +321,7 @@ class Service {
       englishName: json["englishName"] as String?,
       tamilName: json["tamilName"] as String?,
       startsAt: (json["startsAt"] as num?)?.toInt(),
+      offerPrice: (json["offerPrice"] as num?)?.toInt(),
       durationMinutes: (json["durationMinutes"] as num?)?.toInt(),
       offerLabel: json["offerLabel"] as String?,
       offerValue: json["offerValue"] as String?,
