@@ -45,7 +45,7 @@
 
     <application
         android:name="${applicationName}"
-        android:label="Tringo_Owner"
+        android:label="Tringo Business"
         android:icon="@mipmap/ic_launcher">
 
         <!-- Main Flutter Activity -->

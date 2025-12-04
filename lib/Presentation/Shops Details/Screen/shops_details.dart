@@ -17,6 +17,7 @@ import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../AddProduct/Screens/product_search_keyword.dart';
 import '../../Menu/Screens/subscription_screen.dart';
+import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 
 import 'package:tringo_vendor/Core/Session/registration_session.dart';
@@ -127,11 +128,12 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'No data available. Please try again later.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.mulish(fontSize: 18),
-                ),
+                NoDataScreen(),
+                // Text(
+                //   'No data available. Please try again later.',
+                //   textAlign: TextAlign.center,
+                //   style: AppTextStyles.mulish(fontSize: 18),
+                // ),
                 const SizedBox(height: 16),
                 CommonContainer.button(
                   onTap: state.isLoading
@@ -329,9 +331,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 callText: 'Call Now',
                                 whatsAppIcon: true,
                                 whatsAppOnTap: () {},
-                                messageOnTap: () {
-
-                                },
+                                messageOnTap: () {},
                                 MessageIcon: true,
                                 mapText: 'Map',
                                 mapOnTap: () => _openMap(

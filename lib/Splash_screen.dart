@@ -41,8 +41,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       final homeState = ref.read(homeNotifierProvider);
 
       // From your model: ShopsResponse -> ShopsData -> isNewOwner
-      final bool isNewUser =
-          homeState.shopsResponse?.data.isNewOwner ?? true;
+      final bool isNewUser = homeState.shopsResponse?.data.isNewOwner ?? true;
 
       AppLogger.log.i('isNewUser: $isNewUser');
 
@@ -94,7 +93,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     );
   }
 }
-
 
 /*
 class SplashScreen extends StatefulWidget {

@@ -859,7 +859,7 @@ class _ProductCategoryScreensState
                           }
 
                           if (isServiceFlow) {
-                            // 🔵 SERVICE SAVE / UPDATE
+
                             final serviceResponse = await ref
                                 .read(serviceInfoNotifierProvider.notifier)
                                 .saveServiceInfo(
@@ -953,7 +953,7 @@ class _ProductCategoryScreensState
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => AddProductList(),
+                                    builder: (_) => AddProductList(isService: isServiceFlow,),
                                   ),
                                 );
                               }

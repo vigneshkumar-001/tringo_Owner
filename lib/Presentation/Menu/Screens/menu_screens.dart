@@ -12,6 +12,7 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/create_surprise_offers.dart';
+import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../Offer/Screen/offer_screens.dart';
 
 class MenuScreens extends StatefulWidget {
@@ -54,9 +55,27 @@ class _MenuScreensState extends State<MenuScreens> {
     const CreateSurpriseOffers(),
     const SubscriptionScreen(),
     const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 1),
-    const SubscriptionScreen(),
-    const SubscriptionScreen(),
-    const SubscriptionScreen(),
+    const NoDataScreen(
+      showBottomButton: false,
+      showTopBackArrow: false,
+      title: 'This feature is currently under development',
+      message: '',
+      fontSize: 14,
+    ),
+    const NoDataScreen(
+      showBottomButton: false,
+      showTopBackArrow: false,
+      title: 'This feature is currently under development',
+      message: '',
+      fontSize: 14,
+    ),
+    const NoDataScreen(
+      showBottomButton: false,
+      showTopBackArrow: false,
+      title: 'This feature is currently under development',
+      message: '',
+      fontSize: 14,
+    ),
   ];
 
   @override

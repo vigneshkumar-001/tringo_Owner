@@ -210,25 +210,13 @@ class _AddProductListState extends ConsumerState<AddProductList> {
 
   @override
   Widget build(BuildContext context) {
-    // final isProduct = RegistrationProductSeivice.instance.isProductBusiness;
-    // final isService = RegistrationProductSeivice.instance.isServiceBusiness;
-    // final isCompany =
-    //     RegistrationProductSeivice.instance.businessType ==
-    //     BusinessType.company;
-    // // watch both states
-    // final productState = ref.watch(productNotifierProvider);
-    // final serviceState = ref.watch(serviceInfoNotifierProvider);
-    //
-    // // choose loader based on which mode we're in
-    // final isLoading = isService
-    //     ? serviceState.isLoading
-    //     : productState.isLoading;
+
     final regService = RegistrationProductSeivice.instance.isServiceBusiness;
     AppLogger.log.i('regService - $regService');
     // Final values with priority
-    final isService =
+    final bool isService =
         widget.isService ??
-        RegistrationProductSeivice.instance.isServiceBusiness;
+            RegistrationProductSeivice.instance.isServiceBusiness;
 
     final isProduct = !isService;
 
@@ -302,7 +290,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                 SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.addProduct,
-                  text: isService ? 'Add Product' : 'Add Service',
+                  text: isProduct ? 'Add Product' : 'Add Service',
                   imageHeight: 85,
                   gradientColor: AppColor.lavenderMist,
                   value: 0.8,
@@ -314,7 +302,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isService ? 'Add Product' : 'Add Service',
+                        isProduct ? 'Add Product' : 'Add Service',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       SizedBox(height: 10),
@@ -440,7 +428,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ProductSearchKeyword(
+                                    builder: (context) => ProductSearchKeyword(isService: isService,
                                       isCompany: isCompany,
                                     ),
                                   ),
@@ -448,7 +436,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                               },
                       ),
 
-                      const SizedBox(height: 36),
+                      SizedBox(height: 36),
                     ],
                   ),
                 ),
