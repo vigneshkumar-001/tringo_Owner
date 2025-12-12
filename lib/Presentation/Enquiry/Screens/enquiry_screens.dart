@@ -120,6 +120,32 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
     }
   }
 
+  bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  DateTime? _parseEnquiryDate(String raw) {
+    // 1) ISO parse try
+    final iso = DateTime.tryParse(raw);
+    if (iso != null) return iso.toLocal();
+
+    // 2) Try common formats (தேவைப்பட்டா இன்னும் add பண்ணலாம்)
+    final formats = <DateFormat>[
+      DateFormat("dd MMM yyyy"),
+      DateFormat("dd MMM yyyy, hh:mm a"),
+      DateFormat("yyyy-MM-dd"),
+      DateFormat("yyyy-MM-dd HH:mm:ss"),
+    ];
+
+    for (final f in formats) {
+      try {
+        return f.parse(raw, true).toLocal();
+      } catch (_) {}
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeNotifierProvider);
@@ -130,13 +156,34 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
     final List<Shop> shops = shopsRes?.data.items ?? [];
     final bool hasShops = shops.isNotEmpty;
 
-    bool hasEnquiries = false;
+    // bool hasEnquiries = false;
+
     final enquiryData = enquiry?.data;
-    if (enquiryData != null) {
-      final openItems = enquiryData.open.items;
-      final closedItems = enquiryData.closed.items;
-      hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
-    }
+
+    final openItems = enquiryData?.open.items ?? [];
+    final closedItems = enquiryData?.closed.items ?? [];
+
+    final bool hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
+
+    final filteredOpenItems = openItems.where((e) {
+      final dt = _parseEnquiryDate(e.createdTime);
+      if (dt == null) return false;
+      return _isSameDate(dt, selectedDate);
+    }).toList();
+
+    final filteredClosedItems = closedItems.where((e) {
+      final dt = _parseEnquiryDate(e.createdTime);
+      if (dt == null) return false;
+      return _isSameDate(dt, selectedDate);
+    }).toList();
+
+    final unansweredCount = filteredOpenItems.length;
+    final answeredCount = filteredClosedItems.length;
+
+    final bool isUnansweredTab = selectedIndex == 0;
+    final currentItems = isUnansweredTab
+        ? filteredOpenItems
+        : filteredClosedItems;
 
     // ✅ GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
@@ -156,23 +203,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
       );
     }
 
-    // ---------- NORMAL BUILD FLOW BELOW ----------
-
-    // Open = Unanswered
-    final openItems = enquiryData?.open.items ?? [];
-
-    // Closed = Answered
-    final closedItems = enquiryData?.closed.items ?? [];
-
-    // counts for chips
-    final unansweredCount = openItems.length;
-    final answeredCount = closedItems.length;
-
-    // main shop (first shop if available)
     final Shop? mainShop = hasShops ? shops.first : null;
-
-    final bool isUnansweredTab = selectedIndex == 0;
-    final currentItems = isUnansweredTab ? openItems : closedItems;
 
     return Skeletonizer(
       enabled: homeState.isLoading,
@@ -323,10 +354,10 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                             children: [
                               GestureDetector(
                                 onTap: () async {
-                                  final selected = await showModalBottomSheet<String>(
+                                  final pickedDate = await showModalBottomSheet<DateTime>(
                                     context: context,
                                     backgroundColor: AppColor.white,
-                                    shape: RoundedRectangleBorder(
+                                    shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.vertical(
                                         top: Radius.circular(20),
                                       ),
@@ -361,17 +392,15 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                                             25,
                                                           ),
                                                     ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 17,
-                                                            vertical: 10,
-                                                          ),
-                                                      child: Icon(
-                                                        size: 16,
-                                                        Icons.close,
-                                                        color: AppColor.red,
-                                                      ),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 17,
+                                                          vertical: 10,
+                                                        ),
+                                                    child: Icon(
+                                                      Icons.close,
+                                                      size: 16,
+                                                      color: AppColor.red,
                                                     ),
                                                   ),
                                                 ),
@@ -379,6 +408,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                             ),
                                             const SizedBox(height: 15),
                                             CommonContainer.horizonalDivider(),
+
                                             ListTile(
                                               title: Text(
                                                 'Today',
@@ -390,9 +420,10 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                               ),
                                               onTap: () => Navigator.pop(
                                                 context,
-                                                'Today',
+                                                DateTime.now(),
                                               ),
                                             ),
+
                                             ListTile(
                                               title: Text(
                                                 'Yesterday',
@@ -404,9 +435,12 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                               ),
                                               onTap: () => Navigator.pop(
                                                 context,
-                                                'Yesterday',
+                                                DateTime.now().subtract(
+                                                  const Duration(days: 1),
+                                                ),
                                               ),
                                             ),
+
                                             ListTile(
                                               title: Text(
                                                 'Custom Date',
@@ -417,7 +451,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                                 ),
                                               ),
                                               onTap: () async {
-                                                final picked = await showDatePicker(
+                                                final d = await showDatePicker(
                                                   context: context,
                                                   initialDate: selectedDate,
                                                   firstDate: DateTime(2000),
@@ -451,11 +485,11 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                                   },
                                                 );
 
-                                                if (picked != null) {
-                                                  setState(() {
-                                                    selectedDate = picked;
-                                                    selectedDay = _fmt(picked);
-                                                  });
+                                                if (d != null) {
+                                                  Navigator.pop(
+                                                    context,
+                                                    d,
+                                                  ); // ✅ IMPORTANT: close sheet + return date
                                                 }
                                               },
                                             ),
@@ -465,19 +499,182 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                     },
                                   );
 
-                                  if (selected == 'Today') {
+                                  if (pickedDate != null) {
                                     setState(() {
-                                      selectedDay = 'Today';
-                                      selectedDate = DateTime.now();
-                                    });
-                                  } else if (selected == 'Yesterday') {
-                                    setState(() {
-                                      selectedDay = 'Yesterday';
-                                      selectedDate = DateTime.now().subtract(
+                                      selectedDate = pickedDate;
+                                      final today = DateTime.now();
+                                      final yesterday = today.subtract(
                                         const Duration(days: 1),
                                       );
+
+                                      if (_isSameDate(pickedDate, today)) {
+                                        selectedDay = "Today";
+                                      } else if (_isSameDate(
+                                        pickedDate,
+                                        yesterday,
+                                      )) {
+                                        selectedDay = "Yesterday";
+                                      } else {
+                                        selectedDay = _fmt(pickedDate);
+                                      }
                                     });
                                   }
+
+                                  // final selected = await showModalBottomSheet<String>(
+                                  //   context: context,
+                                  //   backgroundColor: AppColor.white,
+                                  //   shape: RoundedRectangleBorder(
+                                  //     borderRadius: BorderRadius.vertical(
+                                  //       top: Radius.circular(20),
+                                  //     ),
+                                  //   ),
+                                  //   builder: (context) {
+                                  //     return Padding(
+                                  //       padding: const EdgeInsets.all(20.0),
+                                  //       child: Column(
+                                  //         mainAxisSize: MainAxisSize.min,
+                                  //         children: [
+                                  //           Row(
+                                  //             mainAxisAlignment:
+                                  //                 MainAxisAlignment
+                                  //                     .spaceBetween,
+                                  //             children: [
+                                  //               Text(
+                                  //                 'Select Date',
+                                  //                 style: AppTextStyles.mulish(
+                                  //                   fontSize: 22,
+                                  //                   fontWeight: FontWeight.w800,
+                                  //                   color: AppColor.darkBlue,
+                                  //                 ),
+                                  //               ),
+                                  //               GestureDetector(
+                                  //                 onTap: () =>
+                                  //                     Navigator.pop(context),
+                                  //                 child: Container(
+                                  //                   decoration: BoxDecoration(
+                                  //                     color: AppColor.mistyRose,
+                                  //                     borderRadius:
+                                  //                         BorderRadius.circular(
+                                  //                           25,
+                                  //                         ),
+                                  //                   ),
+                                  //                   child: Padding(
+                                  //                     padding:
+                                  //                         const EdgeInsets.symmetric(
+                                  //                           horizontal: 17,
+                                  //                           vertical: 10,
+                                  //                         ),
+                                  //                     child: Icon(
+                                  //                       size: 16,
+                                  //                       Icons.close,
+                                  //                       color: AppColor.red,
+                                  //                     ),
+                                  //                   ),
+                                  //                 ),
+                                  //               ),
+                                  //             ],
+                                  //           ),
+                                  //             SizedBox(height: 15),
+                                  //           CommonContainer.horizonalDivider(),
+                                  //           ListTile(
+                                  //             title: Text(
+                                  //               'Today',
+                                  //               style: AppTextStyles.mulish(
+                                  //                 fontSize: 16,
+                                  //                 fontWeight: FontWeight.w600,
+                                  //                 color: AppColor.darkBlue,
+                                  //               ),
+                                  //             ),
+                                  //             onTap: () => Navigator.pop(
+                                  //               context,
+                                  //               'Today',
+                                  //             ),
+                                  //           ),
+                                  //           ListTile(
+                                  //             title: Text(
+                                  //               'Yesterday',
+                                  //               style: AppTextStyles.mulish(
+                                  //                 fontSize: 16,
+                                  //                 fontWeight: FontWeight.w600,
+                                  //                 color: AppColor.darkBlue,
+                                  //               ),
+                                  //             ),
+                                  //             onTap: () => Navigator.pop(
+                                  //               context,
+                                  //               'Yesterday',
+                                  //             ),
+                                  //           ),
+                                  //           ListTile(
+                                  //             title: Text(
+                                  //               'Custom Date',
+                                  //               style: AppTextStyles.mulish(
+                                  //                 fontSize: 16,
+                                  //                 fontWeight: FontWeight.w600,
+                                  //                 color: AppColor.darkBlue,
+                                  //               ),
+                                  //             ),
+                                  //             onTap: () async {
+                                  //               final picked = await showDatePicker(
+                                  //                 context: context,
+                                  //                 initialDate: selectedDate,
+                                  //                 firstDate: DateTime(2000),
+                                  //                 lastDate: DateTime(2100),
+                                  //                 builder: (context, child) {
+                                  //                   return Theme(
+                                  //                     data: Theme.of(context).copyWith(
+                                  //                       dialogBackgroundColor:
+                                  //                           AppColor.white,
+                                  //                       colorScheme:
+                                  //                           ColorScheme.light(
+                                  //                             primary: AppColor
+                                  //                                 .brightBlue,
+                                  //                             onPrimary:
+                                  //                                 Colors.white,
+                                  //                             onSurface:
+                                  //                                 AppColor
+                                  //                                     .black,
+                                  //                           ),
+                                  //                       textButtonTheme:
+                                  //                           TextButtonThemeData(
+                                  //                             style: TextButton.styleFrom(
+                                  //                               foregroundColor:
+                                  //                                   AppColor
+                                  //                                       .brightBlue,
+                                  //                             ),
+                                  //                           ),
+                                  //                     ),
+                                  //                     child: child!,
+                                  //                   );
+                                  //                 },
+                                  //               );
+                                  //
+                                  //               if (picked != null) {
+                                  //                 setState(() {
+                                  //                   selectedDate = picked;
+                                  //                   selectedDay = _fmt(picked);
+                                  //                 });
+                                  //               }
+                                  //             },
+                                  //           ),
+                                  //         ],
+                                  //       ),
+                                  //     );
+                                  //   },
+                                  // );
+                                  //
+                                  // if (selected == 'Today') {
+                                  //   setState(() {
+                                  //     selectedDay = 'Today';
+                                  //     selectedDate = DateTime.now();
+                                  //   });
+                                  // } else if (selected == 'Yesterday') {
+                                  //   setState(() {
+                                  //     selectedDay = 'Yesterday';
+                                  //     selectedDate = DateTime.now().subtract(
+                                  //       const Duration(days: 1),
+                                  //     );
+                                  //   });
+                                  // }
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
@@ -604,208 +801,6 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                       ),
                     ),
 
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 15),
-                    //   child: Row(
-                    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //     children: [
-                    //       Text(
-                    //         'Enquiries',
-                    //         style: AppTextStyles.mulish(
-                    //           fontSize: 28,
-                    //           fontWeight: FontWeight.w700,
-                    //         ),
-                    //       ),
-                    //
-                    //       GestureDetector(
-                    //         onTap: () async {
-                    //           final selected = await showModalBottomSheet<String>(
-                    //             context: context,
-                    //             backgroundColor: AppColor.white,
-                    //             shape: RoundedRectangleBorder(
-                    //               borderRadius: BorderRadius.vertical(
-                    //                 top: Radius.circular(20),
-                    //               ),
-                    //             ),
-                    //             builder: (context) {
-                    //               return Padding(
-                    //                 padding: const EdgeInsets.all(20.0),
-                    //                 child: Column(
-                    //                   mainAxisSize: MainAxisSize.min,
-                    //                   children: [
-                    //                     Row(
-                    //                       mainAxisAlignment:
-                    //                           MainAxisAlignment.spaceBetween,
-                    //                       children: [
-                    //                         Text(
-                    //                           'Select Date',
-                    //                           style: AppTextStyles.mulish(
-                    //                             fontSize: 22,
-                    //                             fontWeight: FontWeight.w800,
-                    //                             color: AppColor.darkBlue,
-                    //                           ),
-                    //                         ),
-                    //                         GestureDetector(
-                    //                           onTap: () =>
-                    //                               Navigator.pop(context),
-                    //                           child: Container(
-                    //                             decoration: BoxDecoration(
-                    //                               color: AppColor.mistyRose,
-                    //                               borderRadius:
-                    //                                   BorderRadius.circular(25),
-                    //                             ),
-                    //                             child: Padding(
-                    //                               padding:
-                    //                                   const EdgeInsets.symmetric(
-                    //                                     horizontal: 17,
-                    //                                     vertical: 10,
-                    //                                   ),
-                    //                               child: Icon(
-                    //                                 size: 16,
-                    //                                 Icons.close,
-                    //                                 color: AppColor.red,
-                    //                               ),
-                    //                             ),
-                    //                           ),
-                    //                         ),
-                    //                       ],
-                    //                     ),
-                    //                     SizedBox(height: 15),
-                    //                     CommonContainer.horizonalDivider(),
-                    //                     ListTile(
-                    //                       title: Text(
-                    //                         'Today',
-                    //                         style: AppTextStyles.mulish(
-                    //                           fontSize: 16,
-                    //                           fontWeight: FontWeight.w600,
-                    //                           color: AppColor.darkBlue,
-                    //                         ),
-                    //                       ),
-                    //                       onTap: () =>
-                    //                           Navigator.pop(context, 'Today'),
-                    //                     ),
-                    //                     ListTile(
-                    //                       title: Text(
-                    //                         'Yesterday',
-                    //                         style: AppTextStyles.mulish(
-                    //                           fontSize: 16,
-                    //                           fontWeight: FontWeight.w600,
-                    //                           color: AppColor.darkBlue,
-                    //                         ),
-                    //                       ),
-                    //                       onTap: () => Navigator.pop(
-                    //                         context,
-                    //                         'Yesterday',
-                    //                       ),
-                    //                       // trailing: GestureDetector(
-                    //                       //   onTap: () =>
-                    //                       //       Navigator.pop(context, 'Yesterday'),
-                    //                       //   child: Container(
-                    //                       //     decoration: BoxDecoration(
-                    //                       //       color: AppColor.iceBlue,
-                    //                       //       borderRadius: BorderRadius.circular(
-                    //                       //         25,
-                    //                       //       ),
-                    //                       //     ),
-                    //                       //     child: Padding(
-                    //                       //       padding: const EdgeInsets.symmetric(
-                    //                       //         horizontal: 17,
-                    //                       //         vertical: 10,
-                    //                       //       ),
-                    //                       //       child: Image.asset(
-                    //                       //         AppImages.rightArrow,
-                    //                       //         height: 13,color: AppColor.skyBlue,
-                    //                       //       ),
-                    //                       //     ),
-                    //                       //   ),
-                    //                       // ),
-                    //                     ),
-                    //                     ListTile(
-                    //                       title: Text(
-                    //                         'Custom Date',
-                    //                         style: AppTextStyles.mulish(
-                    //                           fontSize: 16,
-                    //                           fontWeight: FontWeight.w600,
-                    //                           color: AppColor.darkBlue,
-                    //                         ),
-                    //                       ),
-                    //                       onTap: () async {
-                    //                         final picked = await showDatePicker(
-                    //                           context: context,
-                    //                           initialDate: selectedDate,
-                    //                           firstDate: DateTime(2000),
-                    //                           lastDate: DateTime(2100),
-                    //                           builder: (context, child) {
-                    //                             return Theme(
-                    //                               data: Theme.of(context).copyWith(
-                    //                                 dialogBackgroundColor:
-                    //                                     AppColor.white,
-                    //                                 colorScheme:
-                    //                                     ColorScheme.light(
-                    //                                       primary: AppColor
-                    //                                           .brightBlue,
-                    //                                       onPrimary:
-                    //                                           Colors.white,
-                    //                                       onSurface:
-                    //                                           AppColor.black,
-                    //                                     ),
-                    //                                 textButtonTheme:
-                    //                                     TextButtonThemeData(
-                    //                                       style: TextButton.styleFrom(
-                    //                                         foregroundColor:
-                    //                                             AppColor
-                    //                                                 .brightBlue,
-                    //                                       ),
-                    //                                     ),
-                    //                               ),
-                    //                               child: child!,
-                    //                             );
-                    //                           },
-                    //                         );
-                    //
-                    //                         if (picked != null) {
-                    //                           setState(() {
-                    //                             selectedDate = picked;
-                    //                             selectedDay = _fmt(picked);
-                    //                           });
-                    //                         }
-                    //                       },
-                    //                     ),
-                    //                   ],
-                    //                 ),
-                    //               );
-                    //             },
-                    //           );
-                    //
-                    //           if (selected == 'Today') {
-                    //             setState(() {
-                    //               selectedDay = 'Today';
-                    //               selectedDate = DateTime.now();
-                    //             });
-                    //           } else if (selected == 'Yesterday') {
-                    //             setState(() {
-                    //               selectedDay = 'Yesterday';
-                    //               selectedDate = DateTime.now().subtract(
-                    //                 const Duration(days: 1),
-                    //               );
-                    //             });
-                    //           }
-                    //         },
-                    //         child: Container(
-                    //           padding: const EdgeInsets.symmetric(
-                    //             horizontal: 10,
-                    //             vertical: 8,
-                    //           ),
-                    //           decoration: BoxDecoration(
-                    //             color: AppColor.iceBlue,
-                    //             borderRadius: BorderRadius.circular(15),
-                    //           ),
-                    //           child: Image.asset(AppImages.filter, height: 19),
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
                     SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -845,7 +840,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
@@ -899,7 +894,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                         child: Align(
                           alignment: Alignment.center,
                           child: Text(
-                            'No enquiries yet',
+                            'No enquiries',
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColor.darkGrey,
@@ -1003,7 +998,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 20),
+                                SizedBox(height: 20),
                               ],
                             ),
                           );
