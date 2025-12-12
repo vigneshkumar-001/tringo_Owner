@@ -10,6 +10,7 @@ import 'package:tringo_vendor/Api/Repository/request.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
+import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 import 'package:tringo_vendor/Presentation/Login/model/login_response.dart';
@@ -27,6 +28,7 @@ import '../../Presentation/AddProduct/Model/delete_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
 import '../../Presentation/Create App Offer/Model/create_offers.dart';
+import '../../Presentation/Create App Offer/Model/update_offer_model.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
 import '../../Presentation/Mobile Nomber Verify/Model/sim_verify_response.dart';
 import '../../Presentation/Offer/Model/offer_model.dart';
@@ -1542,6 +1544,96 @@ class ApiDataSource extends BaseApiDataSource {
 
           if (data is Map && data['status'] == true) {
             return Right(CreateOffers.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(data['message'] ?? "Offer creation failed"),
+            );
+          }
+        } else {
+          final data = response.data;
+          return Left(
+            ServerFailure(
+              (data is Map ? data['message'] : null) ??
+                  "Something went wrong (${response.statusCode})",
+            ),
+          );
+        }
+      } else {
+        // DioException case
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e, st) {
+      AppLogger.log.e("createOffer error: $e\n$st");
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, OfferProductsResponse>> productListShowForOffer({
+    required String shopId,
+    required String type,
+  }) async {
+    try {
+      final url = ApiUrl.productListShowForOffer(shopId: shopId,type: type);
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(OfferProductsResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, UpdateOfferModel>> updateOfferList({
+    required List<String> productIds,
+    required String shopId,
+    required String offerId,
+  }) async {
+    try {
+      final url = ApiUrl.updateOfferList(shopId: shopId, offerId: offerId);
+
+      final payload = {"productIds": productIds};
+
+      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        final statusCode = response.statusCode ?? 0;
+
+        if (statusCode == 200 || statusCode == 201) {
+          final data = response.data;
+
+          if (data is Map && data['status'] == true) {
+            return Right(UpdateOfferModel.fromJson(response.data));
           } else {
             return Left(
               ServerFailure(data['message'] ?? "Offer creation failed"),

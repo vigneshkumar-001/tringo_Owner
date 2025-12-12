@@ -86,4 +86,34 @@ class ApiUrl {
   static String createAppOffer({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers/app";
   }
+
+  static String productListShowForOffer({required String shopId,required String type}) {
+    return "${base}api/v1/shops/$shopId/offers/app/items?type=$type";
+  }
+  static String updateOfferList({required String shopId,required String offerId}) {
+    return "${base}api/v1/shops/$shopId/offers/app/$offerId";
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

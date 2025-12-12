@@ -40,6 +40,7 @@ class OfferData {
 
   final List<dynamic> products;
   final List<dynamic> services;
+  final String nextListType;
 
   OfferData({
     required this.id,
@@ -60,6 +61,7 @@ class OfferData {
     required this.targetSegment,
     required this.products,
     required this.services,
+    required this. nextListType ,
   });
 
   factory OfferData.fromJson(Map<String, dynamic> json) {
@@ -82,6 +84,7 @@ class OfferData {
       status: json["status"],
       autoApply: json["autoApply"] ?? false,
       targetSegment: json["targetSegment"],
+      nextListType: json["nextListType"],
 
       products: json["products"] ?? [],
       services: json["services"] ?? [],
@@ -108,6 +111,7 @@ class OfferData {
       "targetSegment": targetSegment,
       "products": products,
       "services": services,
+      "nextListType": nextListType,
     };
   }
 }

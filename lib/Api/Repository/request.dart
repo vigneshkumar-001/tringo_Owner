@@ -279,10 +279,10 @@ class Request {
     String? userId = prefs.getString('userId');
 
     Dio dio = Dio(
-        BaseOptions(
-         connectTimeout: const Duration(seconds: 10),
-         receiveTimeout: const Duration(seconds: 15),
-       ),
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
+      ),
     );
 
     dio.interceptors.add(
