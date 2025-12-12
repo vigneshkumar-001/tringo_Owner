@@ -227,7 +227,8 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                             }
 
                             final success = await notifier.updateOfferList(
-                              productIds: selectedIds, // <-- now List<String>
+                              context: context,
+                              productIds: selectedIds,
                               shopId: widget.shopId ?? '',
                               offerId: widget.offerId ?? '',
                             );
@@ -374,10 +375,12 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
               height: 60,
               width: 60,
               fit: BoxFit.cover,
-              placeholder: (context, url) => const SizedBox(
-                height: 35,
-                width: 35,
-                child: Center(child: CircularProgressIndicator(strokeAlign: 2)),
+              placeholder: (context, url) => Center(
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
               errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
