@@ -184,9 +184,7 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                               });
                             },
                             child: _buildProductTile(
-                              title:
-                                  data?.name.toUpperCase().toString() ??
-                                  '',
+                              title: data?.name.toUpperCase().toString() ?? '',
                               url: data?.imageUrl.toString() ?? '',
                               offerPrice: 0,
                               price: 0,
@@ -221,12 +219,16 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                             ];
 
                             if (selectedIds.isEmpty) {
-                              AppSnackBar.error(context, "No products selected");
+                              AppSnackBar.error(
+                                context,
+                                "No products selected",
+                              );
                               return;
                             }
 
                             final success = await notifier.updateOfferList(
-                              productIds: selectedIds,             // <-- now List<String>
+                              context: context,
+                              productIds: selectedIds,
                               shopId: widget.shopId ?? '',
                               offerId: widget.offerId ?? '',
                             );
@@ -237,7 +239,8 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CommonBottomNavigation(initialIndex: 2),
+                                  builder: (context) =>
+                                      CommonBottomNavigation(initialIndex: 2),
                                 ),
                               );
                             }
@@ -370,10 +373,12 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
               height: 60,
               width: 60,
               fit: BoxFit.cover,
-              placeholder: (context, url) => const SizedBox(
-                height: 35,
-                width: 35,
-                child: Center(child: CircularProgressIndicator(strokeAlign: 2)),
+              placeholder: (context, url) => Center(
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
               errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
