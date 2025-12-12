@@ -121,7 +121,7 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
         'isService': isServiceFlow,
         'offerId': offer.data?.id,
         'shopId': offer.data?.shop.id,
-        'type': offer.data?.products ,
+        'type': offer.data?.nextListType ,
       },
     );
 
