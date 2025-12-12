@@ -184,9 +184,7 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                               });
                             },
                             child: _buildProductTile(
-                              title:
-                                  data?.name.toUpperCase().toString() ??
-                                  '',
+                              title: data?.name.toUpperCase().toString() ?? '',
                               url: data?.imageUrl.toString() ?? '',
                               offerPrice: 0,
                               price: 0,
@@ -221,12 +219,15 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                             ];
 
                             if (selectedIds.isEmpty) {
-                              AppSnackBar.error(context, "No products selected");
+                              AppSnackBar.error(
+                                context,
+                                "No products selected",
+                              );
                               return;
                             }
 
                             final success = await notifier.updateOfferList(
-                              productIds: selectedIds,             // <-- now List<String>
+                              productIds: selectedIds, // <-- now List<String>
                               shopId: widget.shopId ?? '',
                               offerId: widget.offerId ?? '',
                             );
@@ -237,13 +238,16 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CommonBottomNavigation(initialIndex: 2),
+                                  builder: (context) =>
+                                      CommonBottomNavigation(initialIndex: 2),
                                 ),
                               );
                             }
                           },
 
-                          imagePath: AppImages.rightStickArrow,
+                          imagePath: offerState.isLoading
+                              ? null
+                              : AppImages.rightStickArrow,
                           text: offerState.updateInsertLoading
                               ? ThreeDotsLoader()
                               : Text(
@@ -255,7 +259,7 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                   ),
                 ),
