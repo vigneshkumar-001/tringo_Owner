@@ -10,6 +10,7 @@ import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart
 
 import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
+import '../../Presentation/Create App Offer/Screens/offer_products.dart';
 import '../../Presentation/Home/Screens/home_screens.dart';
 import '../../Presentation/Menu/Screens/subscription_screen.dart';
 import '../../Presentation/Mobile Nomber Verify/mobile_number_verify.dart';
@@ -36,6 +37,7 @@ class AppRoutes {
   static const String mobileNumberVerify = 'MobileNumberVerify';
   static const String privacyPolicy = 'privacyPolicy';
   static const String aboutMeScreens = 'AboutMeScreens';
+  static const String offerProducts = 'OfferProducts';
 
   static const String splashScreenPath = '/splashScreen';
   static const String loginPath = '/login';
@@ -53,6 +55,7 @@ class AppRoutes {
   static const String mobileNumberVerifyPath = '/MobileNumberVerify';
   static const String privacyPolicyPath = '/privacyPolicy';
   static const String aboutMeScreensPath = '/AboutMeScreens';
+  static const String offerProductsPath = '/OfferProducts';
 }
 
 final goRouter = GoRouter(
@@ -255,6 +258,19 @@ final goRouter = GoRouter(
         final initialIndex =
             state.extra as int? ?? 0; // default to 0 if not provided
         return CommonBottomNavigation(initialIndex: initialIndex);
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.offerProductsPath,
+      name: AppRoutes.offerProducts,
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return OfferProducts(
+          isService: extra?['isService'] ?? false,
+
+        );
       },
     ),
   ],

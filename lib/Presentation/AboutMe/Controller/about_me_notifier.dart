@@ -45,8 +45,6 @@ class AboutMeNotifier extends Notifier<AboutMeState> {
   }
 }
 
-final aboutMeNotifierProvider =
-NotifierProvider<AboutMeNotifier, AboutMeState>(
-
-      AboutMeNotifier.new,
-    );
+final aboutMeNotifierProvider = NotifierProvider<AboutMeNotifier, AboutMeState>(
+  AboutMeNotifier.new,
+);

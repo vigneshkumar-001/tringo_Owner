@@ -78,4 +78,12 @@ class ApiUrl {
   static String getAllShopsDetails({required String shopId}) {
     return "${base}api/v1/dashboard/shops";
   }
+
+  static String enguiriesDownload({required String sessionToken}) {
+    return "${base}api/v1/dashboard/enquiries/export?format=pdf&sessionToken=$sessionToken";
+  }
+
+  static String createAppOffer({required String shopId}) {
+    return "${base}api/v1/shops/$shopId/offers/app";
+  }
 }

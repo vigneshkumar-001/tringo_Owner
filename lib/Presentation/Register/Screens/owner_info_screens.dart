@@ -174,6 +174,11 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                       image: AssetImage(AppImages.registerBCImage),
                       fit: BoxFit.cover,
                     ),
+                    gradient: LinearGradient(
+                      colors: [AppColor.scaffoldColor, AppColor.lightGreen],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                     borderRadius: const BorderRadius.only(
                       bottomRight: Radius.circular(30),
                       bottomLeft: Radius.circular(30),
@@ -416,7 +421,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                             ? null
                             : AppImages.rightStickArrow,
                         text: state.isLoading
-                            ? const ThreeDotsLoader()
+                            ?   ThreeDotsLoader()
                             : Text('Save & Continue'),
                         onTap: () async {
                           setState(() => _isSubmitted = true);
@@ -472,7 +477,6 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           if (newState.error != null) {
                             AppSnackBar.error(context, newState.error!);
                           } else if (newState.ownerResponse != null) {
-
                             context.push(
                               AppRoutes.shopCategoryInfoPath,
                               extra: {
