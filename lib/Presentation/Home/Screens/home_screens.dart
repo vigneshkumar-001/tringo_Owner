@@ -643,7 +643,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CreateAppOffer(),
+                                  builder: (context) => CreateAppOffer(shopId: mainShop?.id?? '',),
                                 ),
                               );
                             },

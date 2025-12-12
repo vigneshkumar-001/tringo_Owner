@@ -38,6 +38,7 @@ class AppRoutes {
   static const String privacyPolicy = 'privacyPolicy';
   static const String aboutMeScreens = 'AboutMeScreens';
   static const String offerProducts = 'OfferProducts';
+  static const String offerScreens = 'OfferScreens';
 
   static const String splashScreenPath = '/splashScreen';
   static const String loginPath = '/login';
@@ -56,6 +57,7 @@ class AppRoutes {
   static const String privacyPolicyPath = '/privacyPolicy';
   static const String aboutMeScreensPath = '/AboutMeScreens';
   static const String offerProductsPath = '/OfferProducts';
+  static const String offerScreensPath = '/OfferScreens';
 }
 
 final goRouter = GoRouter(
@@ -163,10 +165,7 @@ final goRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
 
-        return AddProductList(
-          isService: extra?['isService'] ?? false,
-
-        );
+        return AddProductList(isService: extra?['isService'] ?? false);
       },
     ),
     GoRoute(
@@ -203,6 +202,15 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.homeScreenPath,
       name: AppRoutes.homeScreen,
+      builder: (context, state) {
+        final initialIndex =
+            state.extra as int? ?? 0; // default to 0 if not provided
+        return CommonBottomNavigation(initialIndex: initialIndex);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.offerScreensPath,
+      name: AppRoutes.offerScreens,
       builder: (context, state) {
         final initialIndex =
             state.extra as int? ?? 0; // default to 0 if not provided
@@ -269,7 +277,9 @@ final goRouter = GoRouter(
 
         return OfferProducts(
           isService: extra?['isService'] ?? false,
-
+          offerId: extra?['offerId'] ?? '',
+          shopId: extra?['shopId'] ?? '',
+          type: extra?['type'] ?? '',
         );
       },
     ),
