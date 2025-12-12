@@ -69,7 +69,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
         // 🔹 Individual / null (non-premium) → OfferScreens
         return isPremium
             ? PremiumOffers() // PREMIUM (company)
-            : NoDataScreens();
+            : OfferScreens();
       // const OfferScreens();    // NON-PREMIUM (individual)
       case 3:
         return AboutMeScreens(initialTab: widget.initialAboutMeTab ?? 0);
