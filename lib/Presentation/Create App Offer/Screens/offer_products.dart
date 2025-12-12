@@ -246,7 +246,9 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                             }
                           },
 
-                          imagePath: AppImages.rightStickArrow,
+                          imagePath: offerState.isLoading
+                              ? null
+                              : AppImages.rightStickArrow,
                           text: offerState.updateInsertLoading
                               ? ThreeDotsLoader()
                               : Text(
@@ -258,7 +260,7 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                   ),
                 ),
