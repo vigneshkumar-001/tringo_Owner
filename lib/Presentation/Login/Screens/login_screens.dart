@@ -194,35 +194,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
     );
   }
 
-  // void _showCountryPicker() {
-  //   showCountryPicker(
-  //     context: context,
-  //     showPhoneCode: true,
-  //     onSelect: (Country country) {
-  //       setState(() {
-  //         _selectedDialCode = '+${country.phoneCode}';
-  //         _selectedFlag = country.flagEmoji;
-  //       });
-  //     },
-  //     countryListTheme: CountryListThemeData(
-  //       borderRadius: const BorderRadius.only(
-  //         topLeft: Radius.circular(16),
-  //         topRight: Radius.circular(16),
-  //       ),
-  //       inputDecoration: InputDecoration(
-  //         labelText: 'Search country',
-  //         hintText: 'Start typing to search',
-  //         prefixIcon: Icon(Icons.search),
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(50),
-  //           borderSide: BorderSide(color: AppColor.borderLightGrey),
-  //         ),
-  //       ),
-  //       bottomSheetHeight: 500,
-  //     ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(loginNotifierProvider);
@@ -493,7 +464,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                           ),
                         ),
 
-                         SizedBox(height: 35),
+                        SizedBox(height: 35),
 
                         // VERIFY BUTTON
                         Padding(

@@ -728,15 +728,18 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                             ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: shop?.services.length,
+                              itemCount:
+                                  shop?.services.length ?? 0, // 👈 null-safe
                               itemBuilder: (context, index) {
-                                final data = shop?.services[index];
+                                final data = shop!.services[index];
 
-                                final imageUrl =
-                                    (data?.media != null &&
-                                        data!.media.isNotEmpty)
-                                    ? (data?.media.first.url ?? '')
+                                final imageUrl = (data.media.isNotEmpty)
+                                    ? (data.media.first.url ?? '')
                                     : '';
+
+                                // Fallbacks
+                                final double startsAt = data.startsAt ?? 0;
+                                final double offer = data.offerPrice ?? 0;
 
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 10),
@@ -747,12 +750,16 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                     onTap: () {},
                                     imageWidth: 130,
                                     image: imageUrl,
-                                    foodName: data?.englishName ?? '',
-                                    ratingStar: data?.rating?.toString() ?? '0',
-                                    ratingCount:
-                                        data?.ratingCount?.toString() ?? '0',
-                                    offAmound: '₹${data?.startsAt ?? 0}',
-                                    oldAmound: '',
+                                    foodName: data.englishName ?? '',
+                                    ratingStar: (data.rating ?? 0).toString(),
+                                    ratingCount: (data.ratingCount ?? 0)
+                                        .toString(),
+
+                                    //  show both prices
+                                    offAmound: '₹${offer.toStringAsFixed(0)}',
+                                    oldAmound:
+                                        '₹${startsAt.toStringAsFixed(0)}',
+
                                     km: '',
                                     location: '',
                                     Verify: false,
@@ -764,6 +771,44 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                               },
                             ),
 
+                            // ListView.builder(
+                            //   shrinkWrap: true,
+                            //   physics: const NeverScrollableScrollPhysics(),
+                            //   itemCount: shop?.services.length,
+                            //   itemBuilder: (context, index) {
+                            //     final data = shop?.services[index];
+                            //
+                            //     final imageUrl =
+                            //         (data?.media != null &&
+                            //             data!.media.isNotEmpty)
+                            //         ? (data?.media.first.url ?? '')
+                            //         : '';
+                            //
+                            //     return Padding(
+                            //       padding: const EdgeInsets.only(right: 10),
+                            //       child: CommonContainer.foodList(
+                            //         fontSize: 14,
+                            //         doorDelivery: false,
+                            //         titleWeight: FontWeight.w700,
+                            //         onTap: () {},
+                            //         imageWidth: 130,
+                            //         image: imageUrl,
+                            //         foodName: data?.englishName ?? '',
+                            //         ratingStar: data?.rating?.toString() ?? '0',
+                            //         ratingCount:
+                            //             data?.ratingCount?.toString() ?? '0',
+                            //         offAmound: '₹${data?.offerPrice ?? 0}',
+                            //         oldAmound:'₹${data?.startsAt ?? 0}',
+                            //         km: '',
+                            //         location: '',
+                            //         Verify: false,
+                            //         locations: false,
+                            //         weight: false,
+                            //         horizontalDivider: false,
+                            //       ),
+                            //     );
+                            //   },
+                            // ),
                             SizedBox(height: 10),
                             // InkWell(
                             //   onTap: () {
