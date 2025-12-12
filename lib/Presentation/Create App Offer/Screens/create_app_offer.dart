@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
 
 import '../../../Core/Const/app_color.dart';
@@ -12,6 +13,7 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../Model/create_offers.dart';
 import 'offer_products.dart';
 
 class CreateAppOffer extends ConsumerStatefulWidget {
@@ -43,12 +45,36 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
   }
 
   Map<String, String> _extractDateRange(String value) {
-    if (!value.contains("-")) return {"from": "", "to": ""};
+    if (value.isEmpty) return {"from": "", "to": ""};
 
-    final parts = value.split("-");
-    if (parts.length < 2) return {"from": "", "to": ""};
+    // UI format: "12-12-2025 to 15-12-2025"
+    final parts = value.split(" to ");
+
+    if (parts.length != 2) {
+      return {"from": "", "to": ""};
+    }
 
     return {"from": parts[0].trim(), "to": parts[1].trim()};
+  }
+
+  // Map<String, String> _extractDateRange(String value) {
+  //   if (!value.contains("-")) return {"from": "", "to": ""};
+  //
+  //   final parts = value.split("-");
+  //   if (parts.length < 2) return {"from": "", "to": ""};
+  //
+  //   return {"from": parts[0].trim(), "to": parts[1].trim()};
+  // }
+  String convertToApiFormat(String value) {
+    // value = "12-12-2025"
+    final parts = value.split("-");
+    if (parts.length != 3) return value;
+
+    final day = parts[0];
+    final month = parts[1];
+    final year = parts[2];
+
+    return "$year-$month-$day"; // 2025-12-12
   }
 
   Future<void> _onSubmit() async {
@@ -59,47 +85,107 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
       return;
     }
 
-    final date = _extractDateRange(_availableDateController.text);
-    if (date["from"]!.isEmpty || date["to"]!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select a valid date range")),
-      );
-      return;
-    }
+    final extracted = _extractDateRange(_availableDateController.text);
+    final announcementDate = convertToApiFormat(
+      _announcementDateController.text.trim(),
+    );
+
+    final availableFrom = convertToApiFormat(extracted["from"]!);
+    final availableTo = convertToApiFormat(extracted["to"]!);
 
     final notifier = ref.read(offerNotifierProvider.notifier);
-
-    await notifier.createOffer(
+    final bool isServiceFlow =
+        widget.isService ??
+            RegistrationProductSeivice.instance.isServiceBusiness;
+    final CreateOffers? offer = await notifier.createOffer(
       shopId: widget.shopId ?? "",
       title: _offerTitleController.text.trim(),
       description: _offerDescriptionController.text.trim(),
       discountPercentage: percentage,
-      availableFrom: date["from"]!,
-      availableTo: date["to"]!,
-      announcementAt: _announcementDateController.text.trim(),
+      availableFrom: availableFrom,
+      availableTo: availableTo,
+      announcementAt: announcementDate,
+    );
+
+    if (offer == null) {
+      AppSnackBar.error(context, "Failed to create offer");
+      return;
+    }
+
+    print("Offer ID = ${offer.data?.id}");
+    print("Shop ID  = ${offer.data?.shop.id}");
+
+    context.pushNamed(
+      AppRoutes.offerProducts,
+      extra: {
+        'isService': isServiceFlow,
+        'offerId': offer.data?.id,
+        'shopId': offer.data?.shop.id,
+        'type': offer.data?.products ,
+      },
+    );
+
+  }
+
+  /*  Future<void> _onSubmit() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill all required fields")),
+      );
+      return;
+    }
+
+    // final date = _extractDateRange(_availableDateController.text);
+    final extracted = _extractDateRange(_availableDateController.text);
+    final announcementDate = convertToApiFormat(
+      _announcementDateController.text.trim(),
+    );
+    final availableFrom = convertToApiFormat(extracted["from"]!);
+    final availableTo = convertToApiFormat(extracted["to"]!);
+    // if (date["from"]!.isEmpty || date["to"]!.isEmpty) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text("Please select a valid date range")),
+    //   );
+    //   return;
+    // }
+
+    final notifier = ref.read(offerNotifierProvider.notifier);
+
+    final id = await notifier.createOffer(
+      shopId: widget.shopId ?? "",
+      title: _offerTitleController.text.trim(),
+      description: _offerDescriptionController.text.trim(),
+      discountPercentage: percentage,
+      availableFrom: availableFrom, // 11-12-2025
+      availableTo: availableTo, // 15-12-2025
+      announcementAt: announcementDate,
     );
 
     final offerState = ref.read(offerNotifierProvider);
 
     if (offerState.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(offerState.error!)));
+      AppSnackBar.error(context, offerState.error ?? '');
+      // ScaffoldMessenger.of(
+      //   context,
+      // ).showSnackBar(SnackBar(content: Text(offerState.error!)));
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Offer created successfully")));
+    // ScaffoldMessenger.of(
+    //   context,
+    // ).showSnackBar(SnackBar(content: Text("Offer created successfully")));
     final bool isServiceFlow =
         widget.isService ??
         RegistrationProductSeivice.instance.isServiceBusiness;
     AppLogger.log.i('IS Service : $isServiceFlow');
     context.pushNamed(
       AppRoutes.offerProducts,
-      extra: {'isService': isServiceFlow},
+      extra: {
+        'isService': isServiceFlow,
+        'offerId': id,         // <-- PASS ID HERE
+      },
     );
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
