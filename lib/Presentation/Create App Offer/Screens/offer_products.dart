@@ -245,7 +245,7 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                             }
                           },
 
-                          imagePath: offerState.isLoading
+                          imagePath: offerState.updateInsertLoading
                               ? null
                               : AppImages.rightStickArrow,
                           text: offerState.updateInsertLoading
