@@ -210,13 +210,12 @@ class _AddProductListState extends ConsumerState<AddProductList> {
 
   @override
   Widget build(BuildContext context) {
-
     final regService = RegistrationProductSeivice.instance.isServiceBusiness;
     AppLogger.log.i('regService - $regService');
     // Final values with priority
     final bool isService =
         widget.isService ??
-            RegistrationProductSeivice.instance.isServiceBusiness;
+        RegistrationProductSeivice.instance.isServiceBusiness;
 
     final isProduct = !isService;
 
@@ -295,7 +294,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                   gradientColor: AppColor.lavenderMist,
                   value: 0.8,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
@@ -307,19 +306,19 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                       ),
                       SizedBox(height: 10),
                       _addImageContainer(index: 0),
-                      const SizedBox(height: 25),
+                      SizedBox(height: 25),
                       Text(
                         'Feature List',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       Column(
                         children: List.generate(
                           _featureControllers.length,
                           (index) => _buildFeatureItem(index),
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      SizedBox(height: 15),
                       GestureDetector(
                         onTap: _addFeatureList,
                         child: Container(
@@ -333,7 +332,7 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Image.asset(AppImages.addListImage, height: 20),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 10),
                               Text(
                                 'Add Feature List',
                                 style: AppTextStyles.mulish(
@@ -428,7 +427,8 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ProductSearchKeyword(isService: isService,
+                                    builder: (context) => ProductSearchKeyword(
+                                      isService: isService,
                                       isCompany: isCompany,
                                     ),
                                   ),

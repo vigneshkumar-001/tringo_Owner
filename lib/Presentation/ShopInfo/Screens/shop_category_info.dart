@@ -47,6 +47,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialDoorDeliveryText;
   final String? initialOpenTimeText;
   final String? initialCloseTimeText;
+  final String? initialOwnerImageUrl;
 
   const ShopCategoryInfo({
     super.key,
@@ -71,6 +72,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialDoorDeliveryText,
     this.initialOpenTimeText,
     this.initialCloseTimeText,
+    this.initialOwnerImageUrl,
   });
 
   @override
@@ -78,7 +80,6 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
 }
 
 class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
-
   final _formKey = GlobalKey<FormState>();
 
   List<ShopCategoryListData>? _selectedCategoryChildren;
@@ -130,6 +131,48 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   String? _timeErrorText;
   String? _imageErrorText;
   String? _gpsErrorText;
+
+  String _withCountryCode(String number) {
+    final n = number.trim();
+    if (n.isEmpty) return n;
+    if (n.startsWith('+91')) return n;
+    return '+91$n';
+  }
+
+  String _stripIndianCode(String number) {
+    var n = number.trim();
+    if (n.isEmpty) return n;
+
+    if (n.startsWith('+91')) {
+      return n.substring(3).trim();
+    }
+
+    // e.g. "91XXXXXXXXXX"
+    if (n.startsWith('91') && n.length > 10) {
+      return n.substring(n.length - 10).trim();
+    }
+
+    return n;
+  }
+
+  TimeOfDay? _parseTimeOfDay(String input) {
+    try {
+      final parts = input.trim().split(' ');
+      final hm = parts[0].split(':');
+      int hour = int.parse(hm[0]);
+      int minute = int.parse(hm[1]);
+
+      if (parts.length > 1) {
+        final period = parts[1].toUpperCase();
+        if (period == 'PM' && hour != 12) hour += 12;
+        if (period == 'AM' && hour == 12) hour = 0;
+      }
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
+    }
+  }
 
   void _showCategoryBottomSheet(
     BuildContext context,
@@ -430,6 +473,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   }
 
   XFile? _permanentImage;
+  bool _hasExistingOwnerImage = false;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -438,6 +482,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     if (pickedFile != null) {
       setState(() {
         _permanentImage = pickedFile;
+        _hasExistingOwnerImage = false;
         _timetableInvalid = false;
         _imageErrorText = null;
       });
@@ -549,33 +594,22 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
         _gpsFetched = true;
       }
 
-      // 👉 phones
+      // 👉 phones (strip +91 / 91 for edit mode)
       if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
-        var phone = widget.initialPrimaryMobile!;
-
-        // 🔹 If editing from AboutMeScreens, remove leading +91
-        if (widget.pages == "AboutMeScreens" && phone.startsWith('+91')) {
-          phone = phone.substring(3); // remove "+91"
+        var phone = widget.initialPrimaryMobile!.trim();
+        if (widget.pages == "AboutMeScreens") {
+          phone = _stripIndianCode(phone);
         }
-
-        _primaryMobileController.text = phone.trim();
+        _primaryMobileController.text = phone;
       }
 
       if (widget.initialWhatsapp?.isNotEmpty ?? false) {
-        var wa = widget.initialWhatsapp!;
-
-        if (widget.pages == "AboutMeScreens" && wa.startsWith('+91')) {
-          wa = wa.substring(3);
+        var wa = widget.initialWhatsapp!.trim();
+        if (widget.pages == "AboutMeScreens") {
+          wa = _stripIndianCode(wa); // 👈 REMOVE +91 / 91 HERE ALSO
         }
-
-        _whatsappController.text = wa.trim();
+        _whatsappController.text = wa;
       }
-      // if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
-      //   _primaryMobileController.text = widget.initialPrimaryMobile!;
-      // }
-      // if (widget.initialWhatsapp?.isNotEmpty ?? false) {
-      //   _whatsappController.text = widget.initialWhatsapp!;
-      // }
 
       // 👉 email
       if (widget.initialEmail?.isNotEmpty ?? false) {
@@ -597,17 +631,44 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
         _doorDeliveryController.text = widget.initialDoorDeliveryText!;
       }
 
-      // 👉 open / close time (only text; you can parse to TimeOfDay if needed)
+      // 👉 open / close time – text + parse to TimeOfDay
       if (widget.initialOpenTimeText?.isNotEmpty ?? false) {
-        _openTimeController.text = widget.initialOpenTimeText!;
+        final parsedOpen = _parseTimeOfDay(widget.initialOpenTimeText!);
+
+        if (parsedOpen != null) {
+          _openTod = parsedOpen;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _openTimeController.text = parsedOpen.format(context);
+            }
+          });
+        } else {
+          _openTimeController.text = widget.initialOpenTimeText!;
+        }
       }
+
       if (widget.initialCloseTimeText?.isNotEmpty ?? false) {
-        _closeTimeController.text = widget.initialCloseTimeText!;
+        final parsedClose = _parseTimeOfDay(widget.initialCloseTimeText!);
+
+        if (parsedClose != null) {
+          _closeTod = parsedClose;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _closeTimeController.text = parsedClose.format(context);
+            }
+          });
+        } else {
+          _closeTimeController.text = widget.initialCloseTimeText!;
+        }
+      }
+
+      if ((widget.initialOwnerImageUrl?.isNotEmpty ?? false) &&
+          (widget.isService == true)) {
+        _hasExistingOwnerImage = true;
       }
     }
   }
 
-  ///old///
   // @override
   // void initState() {
   //   super.initState();
@@ -615,7 +676,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   //   WidgetsBinding.instance.addPostFrameCallback((_) {
   //     ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
   //   });
+  //
   //   if (widget.pages == "AboutMeScreens") {
+  //     // 👉 shop name
   //     if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
   //       _shopNameEnglishController.text = widget.initialShopNameEnglish!;
   //     }
@@ -625,6 +688,106 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   //       _tamilPrefilled = true;
   //     } else {
   //       _prefillTamilFromEnglishOnce();
+  //     }
+  //
+  //     // 👉 description
+  //     if (widget.initialDescriptionEnglish?.isNotEmpty ?? false) {
+  //       _descriptionEnglishController.text = widget.initialDescriptionEnglish!;
+  //     }
+  //     if (widget.initialDescriptionTamil?.isNotEmpty ?? false) {
+  //       descriptionTamilController.text = widget.initialDescriptionTamil!;
+  //     }
+  //
+  //     // 👉 address
+  //     if (widget.initialAddressEnglish?.isNotEmpty ?? false) {
+  //       _addressEnglishController.text = widget.initialAddressEnglish!;
+  //     }
+  //     if (widget.initialAddressTamil?.isNotEmpty ?? false) {
+  //       addressTamilNameController.text = widget.initialAddressTamil!;
+  //     }
+  //
+  //     // 👉 GPS
+  //     if (widget.initialGps?.isNotEmpty ?? false) {
+  //       _gpsController.text = widget.initialGps!;
+  //       _gpsFetched = true;
+  //     }
+  //
+  //     // 👉 phones
+  //     // if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
+  //     //   var phone = widget.initialPrimaryMobile!;
+  //     //
+  //     //   // 🔹 If editing from AboutMeScreens, remove leading +91
+  //     //   if (widget.pages == "AboutMeScreens" && phone.startsWith('+91')) {
+  //     //     phone = phone.substring(3); // remove "+91"
+  //     //   }
+  //     //
+  //     //   _primaryMobileController.text = phone.trim();
+  //     // }
+  //     //
+  //     // if (widget.initialWhatsapp?.isNotEmpty ?? false) {
+  //     //   var wa = widget.initialWhatsapp!;
+  //     //
+  //     //   if (widget.pages == "AboutMeScreens" && wa.startsWith('+91')) {
+  //     //     wa = wa.substring(3);
+  //     //   }
+  //     //
+  //     //   _whatsappController.text = wa.trim();
+  //     // }
+  //     // 👉 phones
+  //     if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
+  //       var phone = widget.initialPrimaryMobile!.trim();
+  //
+  //       if (widget.pages == "AboutMeScreens" && phone.startsWith('+91')) {
+  //         phone = phone.substring(3); // +91 remove
+  //       }
+  //
+  //       _primaryMobileController.text = phone.trim();
+  //     }
+  //
+  //     if (widget.initialWhatsapp?.isNotEmpty ?? false) {
+  //       var wa = widget.initialWhatsapp!.trim();
+  //
+  //       // 👉 AboutMeScreens இருந்து வந்தா +91 remove பண்ணு
+  //       if (widget.pages == "AboutMeScreens" && wa.startsWith('+91')) {
+  //         wa = wa.substring(3); // +91 remove
+  //       }
+  //
+  //       _whatsappController.text = wa.trim();
+  //     }
+  //
+  //     // if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
+  //     //   _primaryMobileController.text = widget.initialPrimaryMobile!;
+  //     // }
+  //     // if (widget.initialWhatsapp?.isNotEmpty ?? false) {
+  //     //   _whatsappController.text = widget.initialWhatsapp!;
+  //     // }
+  //
+  //     // 👉 email
+  //     if (widget.initialEmail?.isNotEmpty ?? false) {
+  //       _emailController.text = widget.initialEmail!;
+  //     }
+  //
+  //     // 👉 category / subcategory
+  //     if (widget.initialCategoryName?.isNotEmpty ?? false) {
+  //       _categoryController.text = widget.initialCategoryName!;
+  //       categorySlug = widget.initialCategorySlug ?? '';
+  //     }
+  //     if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
+  //       _subCategoryController.text = widget.initialSubCategoryName!;
+  //       subCategorySlug = widget.initialSubCategorySlug ?? '';
+  //     }
+  //
+  //     // 👉 door delivery (for product flow)
+  //     if (widget.initialDoorDeliveryText?.isNotEmpty ?? false) {
+  //       _doorDeliveryController.text = widget.initialDoorDeliveryText!;
+  //     }
+  //
+  //     // 👉 open / close time (only text; you can parse to TimeOfDay if needed)
+  //     if (widget.initialOpenTimeText?.isNotEmpty ?? false) {
+  //       _openTimeController.text = widget.initialOpenTimeText!;
+  //     }
+  //     if (widget.initialCloseTimeText?.isNotEmpty ?? false) {
+  //       _closeTimeController.text = widget.initialCloseTimeText!;
   //     }
   //   }
   // }
@@ -781,7 +944,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 35),
+                  SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.shopInfoImage,
                   text: 'Shop Info',
@@ -790,7 +953,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   value: 0.3,
                 ),
 
-                const SizedBox(height: 30),
+                  SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
@@ -800,7 +963,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         'Shop Category',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      const SizedBox(height: 10),
+                        SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
                           // 1️⃣ Start API call – this will set isLoading = true
@@ -1091,12 +1254,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             },
                           ),
                         ),
-                      const SizedBox(height: 25),
+                      SizedBox(height: 25),
                       Text(
                         'Address',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _addressEnglishController,
                         maxLine: 4,
@@ -1105,7 +1268,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Address in English'
                             : null,
                       ),
-                      const SizedBox(height: 15),
+                      SizedBox(height: 15),
                       CommonContainer.fillingContainer(
                         onChanged: (value) async {
                           setState(() => isAddressLoading = true);
@@ -1229,18 +1392,18 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       const SizedBox(height: 10),
                       if (isEditFromAboutMe) ...[
-                        // 👉 Edit mode from AboutMeScreens: NORMAL field, no +91, no validation
+                        //  Edit mode from AboutMeScreens: NORMAL field, no +91, no validation
                         CommonContainer.fillingContainer(
                           controller: _primaryMobileController,
                           verticalDivider:
                               false, // optional: hide divider if you want
-                          isMobile: false, // ⚠️ IMPORTANT → disables +91 logic
+                          isMobile: false, // IMPORTANT → disables +91 logic
                           text: 'Mobile No',
                           keyboardType: TextInputType.phone,
                           validator: (_) => null, // no validation
                         ),
                       ] else ...[
-                        // 👉 Normal register flow: mobile UI + validation
+                        //  Normal register flow: mobile UI + validation
                         CommonContainer.fillingContainer(
                           controller: _primaryMobileController,
                           verticalDivider: true,
@@ -1269,19 +1432,19 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         'Whatsapp Number',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       if (isEditFromAboutMe) ...[
-                        // 👉 Edit mode: simple text field, no +91, no validation
+                        //  Edit mode: simple text field, no +91, no validation
                         CommonContainer.fillingContainer(
                           controller: _whatsappController,
                           verticalDivider: false,
-                          isMobile: false, // ⚠️ IMPORTANT
+                          isMobile: false, //  IMPORTANT
                           text: 'Mobile No',
                           keyboardType: TextInputType.phone,
                           validator: (_) => null,
                         ),
                       ] else ...[
-                        // 👉 Normal register flow
+                        //  Normal register flow
                         CommonContainer.fillingContainer(
                           controller: _whatsappController,
                           verticalDivider: true,
@@ -1443,79 +1606,81 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                 color: AppColor.white3,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: _permanentImage == null
-                                  ? Center(
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Image.asset(
-                                            AppImages.uploadImage,
-                                            height: 30,
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            'Upload',
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColor.mediumLightGray,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : Row(
-                                      children: [
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            child: Image.file(
-                                              File(_permanentImage!.path),
-                                              height: 140,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        InkWell(
-                                          onTap: () {
-                                            setState(() {
-                                              _permanentImage = null;
-                                              _imageErrorText =
-                                                  'Please Add Your Photo';
-                                              _timetableInvalid = true;
-                                            });
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 35.0,
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Image.asset(
-                                                  AppImages.closeImage,
-                                                  height: 26,
-                                                  color: AppColor.mediumGray,
-                                                ),
-                                                Text(
-                                                  'Clear',
-                                                  style: AppTextStyles.mulish(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w400,
-                                                    color: AppColor
-                                                        .mediumLightGray,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              child: _buildOwnerPhotoWidget(),
+
+                              // _permanentImage == null
+                              //     ? Center(
+                              //         child: Row(
+                              //           mainAxisSize: MainAxisSize.min,
+                              //           children: [
+                              //             Image.asset(
+                              //               AppImages.uploadImage,
+                              //               height: 30,
+                              //             ),
+                              //             const SizedBox(width: 10),
+                              //             Text(
+                              //               'Upload',
+                              //               style: AppTextStyles.mulish(
+                              //                 fontSize: 14,
+                              //                 fontWeight: FontWeight.w500,
+                              //                 color: AppColor.mediumLightGray,
+                              //               ),
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       )
+                              //     : Row(
+                              //         children: [
+                              //           Expanded(
+                              //             child: ClipRRect(
+                              //               borderRadius: BorderRadius.circular(
+                              //                 12,
+                              //               ),
+                              //               child: Image.file(
+                              //                 File(_permanentImage!.path),
+                              //                 height: 140,
+                              //                 fit: BoxFit.cover,
+                              //               ),
+                              //             ),
+                              //           ),
+                              //           const SizedBox(width: 8),
+                              //           InkWell(
+                              //             onTap: () {
+                              //               setState(() {
+                              //                 _permanentImage = null;
+                              //                 _imageErrorText =
+                              //                     'Please Add Your Photo';
+                              //                 _timetableInvalid = true;
+                              //               });
+                              //             },
+                              //             child: Padding(
+                              //               padding: const EdgeInsets.symmetric(
+                              //                 vertical: 35.0,
+                              //               ),
+                              //               child: Column(
+                              //                 mainAxisAlignment:
+                              //                     MainAxisAlignment.center,
+                              //                 children: [
+                              //                   Image.asset(
+                              //                     AppImages.closeImage,
+                              //                     height: 26,
+                              //                     color: AppColor.mediumGray,
+                              //                   ),
+                              //                   Text(
+                              //                     'Clear',
+                              //                     style: AppTextStyles.mulish(
+                              //                       fontSize: 14,
+                              //                       fontWeight: FontWeight.w400,
+                              //                       color: AppColor
+                              //                           .mediumLightGray,
+                              //                     ),
+                              //                   ),
+                              //                 ],
+                              //               ),
+                              //             ),
+                              //           ),
+                              //         ],
+                              //       ),
                             ),
                           ),
                         ),
@@ -1587,6 +1752,19 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final weeklyHoursText =
                               "${_openTimeController.text.trim()} - ${_closeTimeController.text.trim()}";
 
+                          // 🔹 Phone values
+
+                          final String primaryPhoneToSend = isEditFromAboutMe
+                              ? _primaryMobileController.text
+                                    .trim() // AboutMe edit → no +91
+                              : _withCountryCode(
+                                  _primaryMobileController.text,
+                                ); // Register → add +91
+
+                          final String alternatePhoneToSend = isEditFromAboutMe
+                              ? _whatsappController.text.trim()
+                              : _withCountryCode(_whatsappController.text);
+
                           // API CALL
                           final response = await ref
                               .read(shopCategoryNotifierProvider.notifier)
@@ -1598,7 +1776,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     .trim(),
                                 addressTa: addressTamilNameController.text
                                     .trim(),
-                                alternatePhone: _whatsappController.text.trim(),
+                                // alternatePhone: _whatsappController.text.trim(),
+                                alternatePhone: alternatePhoneToSend,
+                                primaryPhone: primaryPhoneToSend,
+
                                 category: categorySlug,
                                 contactEmail: _emailController.text.trim(),
                                 descriptionEn: _descriptionEnglishController
@@ -1606,14 +1787,13 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     .trim(),
                                 descriptionTa: descriptionTamilController.text
                                     .trim(),
-                                doorDelivery:
-                                    isDoorDeliveryEnabled,
+                                doorDelivery: isDoorDeliveryEnabled,
                                 englishName: _shopNameEnglishController.text
                                     .trim(),
                                 gpsLatitude: latitude,
                                 gpsLongitude: longitude,
-                                primaryPhone: _primaryMobileController.text
-                                    .trim(),
+                                // primaryPhone: _primaryMobileController.text
+                                //     .trim(),
                                 subCategory: subCategorySlug,
                                 tamilName: tamilNameController.text.trim(),
                                 weeklyHours: weeklyHoursText,
@@ -1627,7 +1807,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               newState.error!.isNotEmpty) {
                             AppSnackBar.error(context, newState.error!);
                           } else if (response != null) {
-
                             if (widget.pages == 'AboutMeScreens') {
                               Navigator.pop(context, true);
                             } else {
@@ -1774,6 +1953,127 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOwnerPhotoWidget() {
+    // 1️⃣ New image picked from camera
+    if (_permanentImage != null) {
+      return Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                File(_permanentImage!.path),
+                height: 140,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _permanentImage = null;
+                _imageErrorText = 'Please Add Your Photo';
+                _timetableInvalid = true;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 35.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    AppImages.closeImage,
+                    height: 26,
+                    color: AppColor.mediumGray,
+                  ),
+                  Text(
+                    'Clear',
+                    style: AppTextStyles.mulish(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColor.mediumLightGray,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 2️⃣ Existing owner image from server (edit mode)
+    if (_hasExistingOwnerImage &&
+        widget.initialOwnerImageUrl != null &&
+        widget.initialOwnerImageUrl!.trim().isNotEmpty) {
+      return Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                widget.initialOwnerImageUrl!,
+                height: 140,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _hasExistingOwnerImage = false;
+                _imageErrorText = 'Please Add Your Photo';
+                _timetableInvalid = true;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 35.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    AppImages.closeImage,
+                    height: 26,
+                    color: AppColor.mediumGray,
+                  ),
+                  Text(
+                    'Clear',
+                    style: AppTextStyles.mulish(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColor.mediumLightGray,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 3️⃣ No image → default upload UI
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(AppImages.uploadImage, height: 30),
+          const SizedBox(width: 10),
+          Text(
+            'Upload',
+            style: AppTextStyles.mulish(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColor.mediumLightGray,
+            ),
+          ),
+        ],
       ),
     );
   }

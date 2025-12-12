@@ -5,10 +5,7 @@ class ShopDetailsResponse {
   final bool status;
   final ShopData? data;
 
-  ShopDetailsResponse({
-    required this.status,
-    required this.data,
-  });
+  ShopDetailsResponse({required this.status, required this.data});
 
   factory ShopDetailsResponse.fromJson(Map<String, dynamic> json) {
     return ShopDetailsResponse(
@@ -253,7 +250,8 @@ class ServiceItem {
   final String? subCategory;
   final String? englishName;
   final String? tamilName;
-  final int? startsAt;
+  final double? startsAt;       // 👈 changed to double?
+  final double? offerPrice;
   final int? durationMinutes;
   final String? offerLabel;
   final String? offerValue;
@@ -274,6 +272,7 @@ class ServiceItem {
     this.englishName,
     this.tamilName,
     this.startsAt,
+    this.offerPrice,
     this.durationMinutes,
     this.offerLabel,
     this.offerValue,
@@ -294,7 +293,8 @@ class ServiceItem {
       subCategory: json['subCategory'],
       englishName: json['englishName'],
       tamilName: json['tamilName'],
-      startsAt: (json['startsAt'] as num?)?.toInt(),
+      startsAt: (json['startsAt'] as num?)?.toDouble(),
+      offerPrice: (json['offerPrice'] as num?)?.toDouble(),
       durationMinutes: (json['durationMinutes'] as num?)?.toInt(),
       offerLabel: json['offerLabel'],
       offerValue: json['offerValue'],
@@ -353,4 +353,3 @@ class ServiceMedia {
     );
   }
 }
-

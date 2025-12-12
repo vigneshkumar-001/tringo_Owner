@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -5,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
@@ -13,10 +17,13 @@ import 'package:tringo_vendor/Core/Utility/call_helper.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../Api/Repository/api_url.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/create_surprise_offers.dart';
@@ -35,6 +42,7 @@ class HomeScreens extends ConsumerStatefulWidget {
 }
 
 class _HomeScreensState extends ConsumerState<HomeScreens> {
+  bool _isDownloading = false;
   int selectedIndex = 0;
   bool isTexTiles = true;
   int selectIndex = -1;
@@ -68,7 +76,26 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     });
   }
 
-  @override
+  Future<void> openPdfInChrome() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionToken = prefs.getString('sessionToken') ?? '';
+
+    // Assuming this returns a String like "https://.../enquiries/export?..."
+    final String urlString = ApiUrl.enguiriesDownload(
+      sessionToken: sessionToken,
+    );
+
+    final Uri url = Uri.parse(urlString);
+
+    // Try opening in browser (Chrome if default)
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      // Optional: handle failure
+      debugPrint("Could not launch $url");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeNotifierProvider);
@@ -603,7 +630,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                       ),
                     ),
 
-                    const SizedBox(height: 140),
+                    SizedBox(height: 140),
 
                     // ---------------- OFFER CARDS ----------------
                     Padding(
@@ -655,7 +682,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               'Enquiries',
@@ -664,6 +691,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
+                            Spacer(),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
@@ -692,7 +720,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
 
                       // tabs
                       Padding(

@@ -166,7 +166,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                         ),
                         suffixIcon: _searchKeywordController.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(
+                                icon:   Icon(
                                   Icons.clear,
                                   color: Colors.grey,
                                 ),
