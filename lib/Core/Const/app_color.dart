@@ -26,6 +26,7 @@ class AppColor {
   static const shadowBlue = Color(0x1A0096FF);
   static const darkBlue = Color(0xff071016);
   static const blueGradient1 = Color(0xff0797FD);
+  static const blueGradient2 = Color(0xff07C8FD);
   static const lowLightBlue = Color(0xffE4F4FF);
   static const mediumGreen = Color(0xFF31CC64);
   static const teaGreen = Color(0xffE8F3D2);

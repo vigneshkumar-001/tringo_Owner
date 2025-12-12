@@ -26,8 +26,10 @@ import '../../Presentation/AboutMe/Model/service_remove_response.dart';
 import '../../Presentation/AddProduct/Model/delete_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
+import '../../Presentation/Create App Offer/Model/create_offers.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
 import '../../Presentation/Mobile Nomber Verify/Model/sim_verify_response.dart';
+import '../../Presentation/Offer/Model/offer_model.dart';
 import '../../Presentation/Register/model/owner_info_response.dart';
 import '../../Presentation/ShopInfo/model/user_image_response.dart';
 
@@ -1499,6 +1501,71 @@ class ApiDataSource extends BaseApiDataSource {
       }
     } catch (e) {
       AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, CreateOffers>> createOffer({
+    required String shopId,
+    required String title,
+    required String description,
+    required int discountPercentage,
+    required String availableFrom,
+    required String availableTo,
+    required String announcementAt,
+    bool autoApply = true,
+    String type = "APP",
+  }) async {
+    try {
+      final url = ApiUrl.createAppOffer(shopId: shopId);
+
+      final payload = {
+        'title': title,
+        'description': description,
+        'discountPercentage': discountPercentage,
+        'availableFrom': availableFrom,
+        'availableTo': availableTo,
+        'announcementAt': announcementAt,
+        'autoApply': autoApply,
+        'type': type,
+      };
+
+      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        final statusCode = response.statusCode ?? 0;
+
+        if (statusCode == 200 || statusCode == 201) {
+          final data = response.data;
+
+          if (data is Map && data['status'] == true) {
+            return Right(CreateOffers.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(data['message'] ?? "Offer creation failed"),
+            );
+          }
+        } else {
+          final data = response.data;
+          return Left(
+            ServerFailure(
+              (data is Map ? data['message'] : null) ??
+                  "Something went wrong (${response.statusCode})",
+            ),
+          );
+        }
+      } else {
+        // DioException case
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e, st) {
+      AppLogger.log.e("createOffer error: $e\n$st");
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -89,6 +89,7 @@ class Shop {
   });
 
   factory Shop.fromJson(Map<String, dynamic> json) {
+    final weeklyJson = json['shopWeeklyHours'] ?? json['weeklyHours'];
     return Shop(
       shopId: json["shopId"] as String?,
       shopEnglishName: json["shopEnglishName"] as String?,
@@ -344,18 +345,21 @@ class Service {
 class Media {
   final String? id;
   final String? url;
+  final String? type;
   final int? displayOrder;
 
-  Media({this.id, this.url, this.displayOrder});
+  Media({this.id, this.url, this.type, this.displayOrder});
 
   factory Media.fromJson(Map<String, dynamic> json) {
     return Media(
       id: json["id"] as String?,
       url: json["url"] as String?,
+      type: json["type"] as String?,             // 👈 NEW
       displayOrder: (json["displayOrder"] as num?)?.toInt(),
     );
   }
 }
+
 
 // ───────────────────────── REVIEW ─────────────────────────
 

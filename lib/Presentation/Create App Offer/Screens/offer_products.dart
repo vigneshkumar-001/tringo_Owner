@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 
 class OfferProducts extends StatefulWidget {
-  const OfferProducts({super.key});
+  final bool? isService;
+  const OfferProducts({super.key, required this.isService,});
 
   @override
   State<OfferProducts> createState() => _OfferProductsState();
@@ -28,6 +30,11 @@ class _OfferProductsState extends State<OfferProducts> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isService =
+        widget.isService ??
+            RegistrationProductSeivice.instance.isServiceBusiness;
+
+    final isProduct = !isService;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -67,7 +74,7 @@ class _OfferProductsState extends State<OfferProducts> {
                   children: [
                     Image.asset(AppImages.appOffer, height: 154),
                     Text(
-                      'Select Offered Products',
+                     isProduct? 'Select Offered Products': 'Select Offered Services',
                       style: AppTextStyles.mulish(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,

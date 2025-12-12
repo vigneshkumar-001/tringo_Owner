@@ -1314,10 +1314,16 @@ class CommonContainer {
     return FormField<String>(
       validator: validator,
       key: fieldKey,
+      initialValue: controller?.text,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       builder: (state) {
         final hasError = state.hasError;
-
+        if (controller != null &&
+            controller!.text.isNotEmpty &&
+            state.value == null) {
+          // prefilled value-ஐ FormField state-க்கு sync பண்ணு
+          state.didChange(controller!.text);
+        }
         // -------------------- Date Formatting Helper --------------------
         String dd(int v) => v.toString().padLeft(2, '0');
         String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
