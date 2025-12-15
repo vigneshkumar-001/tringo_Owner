@@ -201,6 +201,7 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
                             }
 
                             final success = await notifier.updateOfferList(
+                              type: widget.type ?? '',
                               context: context,
                               productIds: selectedIds,
                               shopId: widget.shopId ?? '',

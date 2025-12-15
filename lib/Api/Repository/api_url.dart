@@ -72,11 +72,11 @@ class ApiUrl {
   }
 
   static String getAllEnquiry({required String shopId}) {
-    return "${base}api/v1/dashboard/enquiries?page=1&limit=20";
+    return "${base}api/v1/dashboard/enquiries?page=1&limit=20&shopId=$shopId";
   }
 
   static String getAllShopsDetails({required String shopId}) {
-    return "${base}api/v1/dashboard/shops";
+    return "${base}api/v1/dashboard/shops?shopId=$shopId";
   }
 
   static String enguiriesDownload({required String sessionToken}) {
