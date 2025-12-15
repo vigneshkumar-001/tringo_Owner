@@ -16,6 +16,7 @@ import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../AddProduct/Screens/product_search_keyword.dart';
+import '../../Home/Controller/shopContext_provider.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
@@ -499,6 +500,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         const ShopCategoryInfo(
+                                          isEditMode: true,
                                           initialShopNameEnglish:
                                               shopDisplayName,
                                           initialShopNameTamil:
@@ -561,44 +563,6 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ListView.builder(
-                      //   shrinkWrap: true,
-                      //   physics: const NeverScrollableScrollPhysics(),
-                      //   itemCount: shop?.products.length ?? 0,
-                      //   itemBuilder: (context, index) {
-                      //     final data = shop?.products[index];
-                      //     final media =
-                      //         data?.media; // media list for this product
-                      //
-                      //     // Safely pick an image URL
-                      //     final imageUrl = (media != null && media.isNotEmpty)
-                      //         ? (media.first.url ?? '') // media[0]
-                      //         : '';
-                      //
-                      //     return Padding(
-                      //       padding: const EdgeInsets.only(right: 10),
-                      //       child: CommonContainer.foodList(
-                      //         fontSize: 14,
-                      //         doorDelivery: data?.doorDelivery ?? false,
-                      //         titleWeight: FontWeight.w700,
-                      //         onTap: () {},
-                      //         imageWidth: 130,
-                      //         image: imageUrl, // 👈 use safe image url
-                      //         foodName: data?.englishName.toString() ?? '',
-                      //         ratingStar: data?.rating.toString() ?? '',
-                      //         ratingCount: data?.ratingCount.toString() ?? '',
-                      //         offAmound: '₹${data?.price.toString() ?? ''}',
-                      //         oldAmound: '₹110',
-                      //         km: '',
-                      //         location: '',
-                      //         Verify: false,
-                      //         locations: false,
-                      //         weight: false,
-                      //         horizontalDivider: false,
-                      //       ),
-                      //     );
-                      //   },
-                      // ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -649,8 +613,8 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                     ratingStar: data.rating?.toString() ?? '0',
                                     ratingCount:
                                         data.ratingCount?.toString() ?? '0',
-                                    offAmound: '₹${data.price ?? 0}',
-                                    oldAmound: '₹${data.offerPrice ?? 0}',
+                                    offAmound: '₹${data.offerPrice ?? 0}',
+                                    oldAmound: '₹${data.price ?? 0}',
                                     km: '',
                                     location: '',
                                     Verify: false,
@@ -1018,9 +982,13 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                   vertical: 12,
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     // 1️⃣ Always navigate immediately
-                    context.goNamed(AppRoutes.aboutMeScreens, extra: 3);
+                    context.go(AppRoutes.homeScreenPath);
+                    await ref
+                        .read(selectedShopProvider.notifier)
+                        .switchShop('');
+
 
                     // 2️⃣ Reset AFTER navigation
                     Future.microtask(() {

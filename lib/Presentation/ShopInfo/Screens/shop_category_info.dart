@@ -29,6 +29,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialShopNameTamil;
   final String? shopId;
   final bool? isService;
+  final bool isEditMode;
   final bool? isIndividual;
 
   // 👉 new fields for prefill when editing
@@ -55,6 +56,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialShopNameEnglish,
     this.initialShopNameTamil,
     this.shopId,
+    required this. isEditMode ,
     required this.isService,
     required this.isIndividual,
     this.initialDescriptionEnglish,
@@ -178,7 +180,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     BuildContext context,
     TextEditingController controller, {
     void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  }) {
+  })
+
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -349,7 +353,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  ) {
+  )
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -555,117 +560,117 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   void initState() {
     super.initState();
     AppLogger.log.i(widget.shopId);
+    AppLogger.log.i(widget.isService);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
     });
+    if (widget.isEditMode) {
+      _prefillFields();
+    }
 
-    if (widget.pages == "AboutMeScreens") {
-      // 👉 shop name
-      if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
-        _shopNameEnglishController.text = widget.initialShopNameEnglish!;
-      }
 
-      if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
-        tamilNameController.text = widget.initialShopNameTamil!;
-        _tamilPrefilled = true;
+  }
+  void _prefillFields() {
+    // 👉 shop name
+    if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
+      _shopNameEnglishController.text = widget.initialShopNameEnglish!;
+    }
+
+    if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
+      tamilNameController.text = widget.initialShopNameTamil!;
+      _tamilPrefilled = true;
+    } else {
+      _prefillTamilFromEnglishOnce();
+    }
+
+    // 👉 description
+    if (widget.initialDescriptionEnglish?.isNotEmpty ?? false) {
+      _descriptionEnglishController.text = widget.initialDescriptionEnglish!;
+    }
+    if (widget.initialDescriptionTamil?.isNotEmpty ?? false) {
+      descriptionTamilController.text = widget.initialDescriptionTamil!;
+    }
+
+    // 👉 address
+    if (widget.initialAddressEnglish?.isNotEmpty ?? false) {
+      _addressEnglishController.text = widget.initialAddressEnglish!;
+    }
+    if (widget.initialAddressTamil?.isNotEmpty ?? false) {
+      addressTamilNameController.text = widget.initialAddressTamil!;
+    }
+
+    // 👉 GPS
+    if (widget.initialGps?.isNotEmpty ?? false) {
+      _gpsController.text = widget.initialGps!;
+      _gpsFetched = true;
+    }
+
+    // 👉 phones (strip +91 / 91 for edit mode)
+    if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
+      var phone = widget.initialPrimaryMobile!.trim();
+      phone = _stripIndianCode(phone);
+      _primaryMobileController.text = phone;
+    }
+
+    if (widget.initialWhatsapp?.isNotEmpty ?? false) {
+      var wa = widget.initialWhatsapp!.trim();
+      wa = _stripIndianCode(wa);
+      _whatsappController.text = wa;
+    }
+
+    // 👉 email
+    if (widget.initialEmail?.isNotEmpty ?? false) {
+      _emailController.text = widget.initialEmail!;
+    }
+
+    // 👉 category / subcategory
+    if (widget.initialCategoryName?.isNotEmpty ?? false) {
+      _categoryController.text = widget.initialCategoryName!;
+      categorySlug = widget.initialCategorySlug ?? '';
+    }
+    if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
+      _subCategoryController.text = widget.initialSubCategoryName!;
+      subCategorySlug = widget.initialSubCategorySlug ?? '';
+    }
+
+    // 👉 door delivery (for product flow)
+    if (widget.initialDoorDeliveryText?.isNotEmpty ?? false) {
+      _doorDeliveryController.text = widget.initialDoorDeliveryText!;
+    }
+
+    // 👉 open / close time – text + parse to TimeOfDay
+    if (widget.initialOpenTimeText?.isNotEmpty ?? false) {
+      final parsedOpen = _parseTimeOfDay(widget.initialOpenTimeText!);
+      if (parsedOpen != null) {
+        _openTod = parsedOpen;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _openTimeController.text = parsedOpen.format(context);
+          }
+        });
       } else {
-        _prefillTamilFromEnglishOnce();
+        _openTimeController.text = widget.initialOpenTimeText!;
       }
+    }
 
-      // 👉 description
-      if (widget.initialDescriptionEnglish?.isNotEmpty ?? false) {
-        _descriptionEnglishController.text = widget.initialDescriptionEnglish!;
+    if (widget.initialCloseTimeText?.isNotEmpty ?? false) {
+      final parsedClose = _parseTimeOfDay(widget.initialCloseTimeText!);
+      if (parsedClose != null) {
+        _closeTod = parsedClose;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _closeTimeController.text = parsedClose.format(context);
+          }
+        });
+      } else {
+        _closeTimeController.text = widget.initialCloseTimeText!;
       }
-      if (widget.initialDescriptionTamil?.isNotEmpty ?? false) {
-        descriptionTamilController.text = widget.initialDescriptionTamil!;
-      }
+    }
 
-      // 👉 address
-      if (widget.initialAddressEnglish?.isNotEmpty ?? false) {
-        _addressEnglishController.text = widget.initialAddressEnglish!;
-      }
-      if (widget.initialAddressTamil?.isNotEmpty ?? false) {
-        addressTamilNameController.text = widget.initialAddressTamil!;
-      }
-
-      // 👉 GPS
-      if (widget.initialGps?.isNotEmpty ?? false) {
-        _gpsController.text = widget.initialGps!;
-        _gpsFetched = true;
-      }
-
-      // 👉 phones (strip +91 / 91 for edit mode)
-      if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
-        var phone = widget.initialPrimaryMobile!.trim();
-        if (widget.pages == "AboutMeScreens") {
-          phone = _stripIndianCode(phone);
-        }
-        _primaryMobileController.text = phone;
-      }
-
-      if (widget.initialWhatsapp?.isNotEmpty ?? false) {
-        var wa = widget.initialWhatsapp!.trim();
-        if (widget.pages == "AboutMeScreens") {
-          wa = _stripIndianCode(wa); // 👈 REMOVE +91 / 91 HERE ALSO
-        }
-        _whatsappController.text = wa;
-      }
-
-      // 👉 email
-      if (widget.initialEmail?.isNotEmpty ?? false) {
-        _emailController.text = widget.initialEmail!;
-      }
-
-      // 👉 category / subcategory
-      if (widget.initialCategoryName?.isNotEmpty ?? false) {
-        _categoryController.text = widget.initialCategoryName!;
-        categorySlug = widget.initialCategorySlug ?? '';
-      }
-      if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
-        _subCategoryController.text = widget.initialSubCategoryName!;
-        subCategorySlug = widget.initialSubCategorySlug ?? '';
-      }
-
-      // 👉 door delivery (for product flow)
-      if (widget.initialDoorDeliveryText?.isNotEmpty ?? false) {
-        _doorDeliveryController.text = widget.initialDoorDeliveryText!;
-      }
-
-      // 👉 open / close time – text + parse to TimeOfDay
-      if (widget.initialOpenTimeText?.isNotEmpty ?? false) {
-        final parsedOpen = _parseTimeOfDay(widget.initialOpenTimeText!);
-
-        if (parsedOpen != null) {
-          _openTod = parsedOpen;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _openTimeController.text = parsedOpen.format(context);
-            }
-          });
-        } else {
-          _openTimeController.text = widget.initialOpenTimeText!;
-        }
-      }
-
-      if (widget.initialCloseTimeText?.isNotEmpty ?? false) {
-        final parsedClose = _parseTimeOfDay(widget.initialCloseTimeText!);
-
-        if (parsedClose != null) {
-          _closeTod = parsedClose;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _closeTimeController.text = parsedClose.format(context);
-            }
-          });
-        } else {
-          _closeTimeController.text = widget.initialCloseTimeText!;
-        }
-      }
-
-      if ((widget.initialOwnerImageUrl?.isNotEmpty ?? false) &&
-          (widget.isService == true)) {
-        _hasExistingOwnerImage = true;
-      }
+    // 👉 owner image
+    if ((widget.initialOwnerImageUrl?.isNotEmpty ?? false) &&
+        (widget.isService == true)) {
+      _hasExistingOwnerImage = true;
     }
   }
 
@@ -944,7 +949,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                     ],
                   ),
                 ),
-                  SizedBox(height: 35),
+                SizedBox(height: 35),
                 CommonContainer.registerTopContainer(
                   image: AppImages.shopInfoImage,
                   text: 'Shop Info',
@@ -953,7 +958,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   value: 0.3,
                 ),
 
-                  SizedBox(height: 30),
+                SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
@@ -963,7 +968,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         'Shop Category',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
-                        SizedBox(height: 10),
+                      SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
                           // 1️⃣ Start API call – this will set isLoading = true

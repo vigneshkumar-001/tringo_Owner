@@ -121,18 +121,19 @@ final goRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
       path: AppRoutes.shopCategoryInfoPath,
       name: AppRoutes.shopCategoryInfo,
       builder: (context, state) {
         final args = state.extra as Map<String, dynamic>? ?? {};
-        final isService = args['isService'] as bool? ?? false;
-        final isIndividual = args['isIndividual'] as bool? ?? true;
+
+        final bool isService = args['isService'] == true;
+        final bool isIndividual = args['isIndividual'] == true;
 
         return ShopCategoryInfo(
           isService: isService,
           isIndividual: isIndividual,
+          isEditMode: args['isEditMode'] as bool? ?? false, // ✅ add this
           initialShopNameEnglish: args['initialShopNameEnglish'] as String?,
           initialShopNameTamil: args['initialShopNameTamil'] as String?,
           pages: args['pages'] as String?,
@@ -140,6 +141,23 @@ final goRouter = GoRouter(
       },
     ),
 
+    // GoRoute(
+    //   path: AppRoutes.shopCategoryInfoPath,
+    //   name: AppRoutes.shopCategoryInfo,
+    //   builder: (context, state) {
+    //     final args = state.extra as Map<String, dynamic>? ?? {};
+    //     final isService = args['isService'] as bool? ?? false;
+    //     final isIndividual = args['isIndividual'] as bool? ?? true;
+    //
+    //     return ShopCategoryInfo(
+    //       isService: isService,
+    //       isIndividual: isIndividual,
+    //       initialShopNameEnglish: args['initialShopNameEnglish'] as String?,
+    //       initialShopNameTamil: args['initialShopNameTamil'] as String?,
+    //       pages: args['pages'] as String?,
+    //     );
+    //   },
+    // ),
     GoRoute(
       path: AppRoutes.shopPhotoInfoPath,
       name: AppRoutes.shopPhotoInfo,
@@ -203,8 +221,7 @@ final goRouter = GoRouter(
       path: AppRoutes.homeScreenPath,
       name: AppRoutes.homeScreen,
       builder: (context, state) {
-        final initialIndex =
-            state.extra as int? ?? 0; // default to 0 if not provided
+        final initialIndex = state.extra as int? ?? 0;
         return CommonBottomNavigation(initialIndex: initialIndex);
       },
     ),

@@ -12,6 +12,7 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../Home/Controller/shopContext_provider.dart';
 import '../controller/login_notifier.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -81,10 +82,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     final state = ref.watch(loginNotifierProvider);
     final notifier = ref.read(loginNotifierProvider.notifier);
     // Listen to login state changes (OTP, resend, errors)
-    ref.listen<LoginState>(loginNotifierProvider, (previous, next) {
+    ref.listen<LoginState>(loginNotifierProvider, (previous, next) async {
       final notifier = ref.read(loginNotifierProvider.notifier);
 
-      // Error case
       if (next.error != null) {
         AppSnackBar.error(context, next.error!);
         notifier.resetState();
@@ -92,9 +92,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       // OTP verified
       else if (next.otpResponse != null) {
         AppSnackBar.success(context, 'OTP verified successfully!');
-        if(next.otpResponse?.data?.isNewOwner != true){
+        if (next.otpResponse?.data?.isNewOwner != true) {
           context.goNamed(AppRoutes.homeScreen);
-        }else{
+          await ref.read(selectedShopProvider.notifier).switchShop('');
+        } else {
           context.goNamed(AppRoutes.privacyPolicy);
         }
 
