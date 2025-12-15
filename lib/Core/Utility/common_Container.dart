@@ -2096,153 +2096,176 @@ class CommonContainer {
     required String shopImage,
     required String shopLocation,
     required String shopName,
+    GestureTapCallback? onTap,
     bool isAdd = false,
+    bool addAnotherShop = false,
   }) {
-    return Container(
-      width: 345,
-      margin: const EdgeInsets.only(right: 0, left: 2),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: Stack(
-          alignment: Alignment.bottomLeft,
-          children: [
-            // ✅ Background image / fallback container
-            SizedBox(
-              width: double.infinity,
-              height: 120, // match your ListView height
-              child: shopImage.isEmpty
-                  ? Container(
-                      color: Colors.grey.shade200,
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          size: 36,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                  : CachedNetworkImage(
-                      imageUrl: shopImage,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Center(
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
-                        child: const Center(
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                            size: 36,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-
-            // ✅ Dark gradient at bottom (only when not add-card)
-            if (!isAdd)
-              Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 345,
+        margin: const EdgeInsets.only(right: 0, left: 2),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(25),
+          child: Stack(
+            alignment: Alignment.bottomLeft,
+            children: [
+              SizedBox(
                 width: double.infinity,
-                height: 100,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-                  ),
-                ),
-              ),
-
-            // ✅ Bottom content
-            if (!isAdd)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 25,
-                  vertical: 15,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      shopName,
-                      style: AppTextStyles.mulish(
-                        color: AppColor.scaffoldColor,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-
-                    // NOTE: your old condition was reversed
-                    if (shopLocation.isNotEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            color: AppColor.scaffoldColor.withOpacity(0.6),
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              shopLocation,
-                              style: AppTextStyles.mulish(
-                                color: AppColor.scaffoldColor.withOpacity(0.6),
-                                fontSize: 12,
+                height: 120,
+                child: shopImage.isEmpty
+                    ? Container(
+                        color: Colors.grey.shade200,
+                        child: addAnotherShop == true
+                            ? Center(
+                                child: Icon(
+                                  Icons.add_business_rounded,
+                                  size: 45,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            : Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 36,
+                                  color: Colors.grey,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: shopImage,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
                             ),
                           ),
-                        ],
-                      ),
-                  ],
-                ),
-              )
-            else
-              // ✅ T-Ads chip for isAdd = true
-              Padding(
-                padding: const EdgeInsets.only(right: 10, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColor.black.withOpacity(0.3),
-                        border: Border.all(
-                          color: AppColor.black.withOpacity(0.3),
                         ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.info, color: Colors.white, size: 10),
-                          SizedBox(width: 4),
-                          Text(
-                            'T-Ads',
-                            style: TextStyle(color: Colors.white, fontSize: 10),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              size: 36,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
               ),
-          ],
+
+              // ✅ Dark gradient at bottom (only when not add-card)
+              if (!isAdd)
+                Container(
+                  width: double.infinity,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // ✅ Bottom content
+              if (!isAdd)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 25,
+                    vertical: 15,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        shopName,
+                        style: AppTextStyles.mulish(
+                          color: AppColor.scaffoldColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 24,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+
+                      if (shopLocation.isNotEmpty)
+                        Row(
+                          children: [
+                            addAnotherShop == false
+                                ? Icon(
+                                    Icons.location_on,
+                                    color: AppColor.scaffoldColor.withOpacity(
+                                      0.6,
+                                    ),
+                                    size: 16,
+                                  )
+                                : SizedBox.shrink(),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                shopLocation,
+                                style: AppTextStyles.mulish(
+                                  color: AppColor.scaffoldColor.withOpacity(
+                                    0.6,
+                                  ),
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                )
+              else
+                // ✅ T-Ads chip for isAdd = true
+                Padding(
+                  padding: const EdgeInsets.only(right: 10, bottom: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.black.withOpacity(0.3),
+                          border: Border.all(
+                            color: AppColor.black.withOpacity(0.3),
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.info, color: Colors.white, size: 10),
+                            SizedBox(width: 4),
+                            Text(
+                              'T-Ads',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

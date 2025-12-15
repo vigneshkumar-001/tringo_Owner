@@ -15,6 +15,7 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Controller/product_notifier.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../../Home/Controller/shopContext_provider.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
@@ -74,28 +75,28 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       _scrollToSelected(selectedIndex);
     });
 
-    Future.microtask(() async {
-      final prefs = await SharedPreferences.getInstance();
-      final savedId = prefs.getString('currentShopId');
-      AppLogger.log.i(savedId);
-      // optional: save to local variable (used by _getSelectedShop)
-      if (mounted) {
-        setState(() {
-          _currentShopId = (savedId != null && savedId.isNotEmpty)
-              ? savedId
-              : null;
-        });
-      }
-
-      // if we have saved id → pass it, else call without shopId
-      if (savedId != null && savedId.isNotEmpty) {
-        await ref
-            .read(aboutMeNotifierProvider.notifier)
-            .fetchAllShopDetails(shopId: savedId);
-      } else {
-        await ref.read(aboutMeNotifierProvider.notifier).fetchAllShopDetails();
-      }
-    });
+    // Future.microtask(() async {
+    //   final prefs = await SharedPreferences.getInstance();
+    //   final savedId = prefs.getString('currentShopId');
+    //   AppLogger.log.i(savedId);
+    //
+    //   if (mounted) {
+    //     setState(() {
+    //       _currentShopId = (savedId != null && savedId.isNotEmpty)
+    //           ? savedId
+    //           : null;
+    //     });
+    //   }
+    //
+    //   // if we have saved id → pass it, else call without shopId
+    //   if (savedId != null && savedId.isNotEmpty) {
+    //     await ref
+    //         .read(aboutMeNotifierProvider.notifier)
+    //         .fetchAllShopDetails(shopId: savedId);
+    //   } else {
+    //     await ref.read(aboutMeNotifierProvider.notifier).fetchAllShopDetails();
+    //   }
+    // });
   }
 
   Shop? _getSelectedShop(AboutMeState aboutState) {
@@ -223,9 +224,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       });
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('currentShopId', _currentShopId ?? '');
+      AppLogger.log.i('About me shopId = $_currentShopId');
       await ref
-          .read(aboutMeNotifierProvider.notifier)
-          .fetchAllShopDetails(shopId: _currentShopId);
+          .read(selectedShopProvider.notifier)
+          .switchShop(_currentShopId ?? '');
+      // await ref
+      //     .read(aboutMeNotifierProvider.notifier)
+      //     .fetchAllShopDetails(shopId: _currentShopId);
       // If you need shop-specific APIs, call them here using _currentShopId
       // e.g. ref.read(aboutMeNotifierProvider.notifier).fetchAnalytics(_currentShopId!);
     }
@@ -246,7 +251,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return '';
   }
 
-  /// Address text used in small subtitle lines
+
   String _getShopAddress(Shop? shop) {
     if (shop == null) return 'Address not available';
 
@@ -269,7 +274,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return parts.join(', ');
   }
 
-  /// Header card shared by Shop Details & Analytics
+
   Widget _buildShopHeaderCard(AboutMeState aboutState) {
     final selectedShop = _getSelectedShop(aboutState);
     final name = _getShopTitle(selectedShop);
@@ -416,6 +421,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ShopCategoryInfo(
+                          isEditMode: true,
                           pages: "AboutMeScreens",
                           shopId: selectedShop.shopId,
                           isService: isServiceFlow,
@@ -595,6 +601,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ShopCategoryInfo(
+                          isEditMode: true,
                           pages: "AboutMeScreens",
                           shopId: selectedShop.shopId,
                           isService: isServiceFlow, // keep as per your flow

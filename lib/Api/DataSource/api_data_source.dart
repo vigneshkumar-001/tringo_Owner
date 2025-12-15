@@ -369,8 +369,8 @@ class ApiDataSource extends BaseApiDataSource {
         "addressTa": addressTa,
         "gpsLatitude": gpsLatitude,
         "gpsLongitude": gpsLongitude,
-        "primaryPhone": "+91$primaryPhone",
-        "alternatePhone": "+91$alternatePhone",
+        "primaryPhone": "$primaryPhone",
+        "alternatePhone": "$alternatePhone",
         "contactEmail": contactEmail,
         "doorDelivery": doorDelivery,
         "weeklyHours":
@@ -1433,9 +1433,11 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, EnquiryResponse>> getAllEnquiry() async {
+  Future<Either<Failure, EnquiryResponse>> getAllEnquiry({
+    required String shopId,
+  }) async {
     try {
-      final url = ApiUrl.getAllEnquiry(shopId: '');
+      final url = ApiUrl.getAllEnquiry(shopId: shopId);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -1470,9 +1472,11 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, ShopsResponse>> getAllShops() async {
+  Future<Either<Failure, ShopsResponse>> getAllShops({
+    required String shopId,
+  }) async {
     try {
-      final url = ApiUrl.getAllShopsDetails(shopId: '');
+      final url = ApiUrl.getAllShopsDetails(shopId: shopId);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -1577,7 +1581,7 @@ class ApiDataSource extends BaseApiDataSource {
     required String type,
   }) async {
     try {
-      final url = ApiUrl.productListShowForOffer(shopId: shopId,type: type);
+      final url = ApiUrl.productListShowForOffer(shopId: shopId, type: type);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -1616,11 +1620,18 @@ class ApiDataSource extends BaseApiDataSource {
     required List<String> productIds,
     required String shopId,
     required String offerId,
+    required String type,
   }) async {
     try {
       final url = ApiUrl.updateOfferList(shopId: shopId, offerId: offerId);
 
-      final payload = {"productIds": productIds};
+      final Map<String, dynamic> payload = {"type": type};
+
+      if (type == "PRODUCT") {
+        payload["productIds"] = productIds;
+      } else if (type == "SERVICE") {
+        payload["serviceIds"] = productIds;
+      }
 
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
 
@@ -1662,7 +1673,9 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, OfferModel>> offerScreen({required String shopId}) async {
+  Future<Either<Failure, OfferModel>> offerScreen({
+    required String shopId,
+  }) async {
     try {
       final url = ApiUrl.offerScreenURL(shopId: shopId);
 
