@@ -185,7 +185,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
         ? filteredOpenItems
         : filteredClosedItems;
 
-    // ✅ GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
+    //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
       return const Scaffold(
         body: SafeArea(
