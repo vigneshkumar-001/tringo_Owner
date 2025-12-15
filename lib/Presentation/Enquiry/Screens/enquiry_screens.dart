@@ -20,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../Api/Repository/api_url.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
+import '../../Home/Controller/shopContext_provider.dart';
 import '../../Home/Model/shops_response.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../Menu/Screens/menu_screens.dart';
@@ -66,10 +67,10 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(homeNotifierProvider.notifier).fetchShops();
-      await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   await ref.read(homeNotifierProvider.notifier).fetchShops();
+    //   await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
+    // });
   }
 
   Future<void> downloadPDFs() async {
@@ -166,13 +167,13 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
     final bool hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
 
     final filteredOpenItems = openItems.where((e) {
-      final dt = _parseEnquiryDate(e.createdTime);
+      final dt = _parseEnquiryDate(e.createdDate);
       if (dt == null) return false;
       return _isSameDate(dt, selectedDate);
     }).toList();
 
     final filteredClosedItems = closedItems.where((e) {
-      final dt = _parseEnquiryDate(e.createdTime);
+      final dt = _parseEnquiryDate(e.createdDate);
       if (dt == null) return false;
       return _isSameDate(dt, selectedDate);
     }).toList();
@@ -204,6 +205,753 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
     }
 
     final Shop? mainShop = hasShops ? shops.first : null;
+    return Skeletonizer(
+      enabled: homeState.isLoading,
+      enableSwitchAnimation: true,
+      child: Scaffold(
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await ref
+                  .read(homeNotifierProvider.notifier)
+                  .fetchShops(shopId: '');
+              await ref
+                  .read(homeNotifierProvider.notifier)
+                  .fetchAllEnquiry(shopId: '');
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ================= HEADER =================
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: GestureDetector(
+                              onTap: _openQrScanner,
+                              child: Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColor.shadowBlue,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Image.asset(
+                                  AppImages.qr_code,
+                                  height: 23,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: Column(
+                              children: [
+                                Text(
+                                  (mainShop?.englishName ?? '').isNotEmpty
+                                      ? mainShop!.englishName
+                                      : 'My Shop',
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                Text(
+                                  mainShop?.category ?? '',
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColor.gray84,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MenuScreens(),
+                                  ),
+                                );
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(25),
+                                child: SizedBox(
+                                  height: 52,
+                                  width: 52,
+                                  child: Image.asset(AppImages.profile),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // ================= SHOPS =================
+                    if (shops.isEmpty)
+                      CommonContainer.smallShopContainer(
+                        shopImage: '',
+                        shopLocation: '',
+                        shopName: '',
+                      )
+                    else
+                      SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: shops.length,
+                          itemBuilder: (_, index) {
+                            final shop = shops[index];
+                            return CommonContainer.smallShopContainer(
+                              onTap: () {
+                                ref
+                                    .read(selectedShopProvider.notifier)
+                                    .switchShop(shop.id);
+                              },
+                              shopImage: shop.primaryImageUrl ?? '',
+                              shopLocation: '${shop.addressEn}, ${shop.city}',
+                              shopName: shop.englishName,
+                            );
+                          },
+                        ),
+                      ),
+
+                    const SizedBox(height: 30),
+
+                    // ================= ENQUIRIES TITLE =================
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Enquiries',
+                            style: AppTextStyles.mulish(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () async {
+                                  final pickedDate = await showModalBottomSheet<DateTime>(
+                                    context: context,
+                                    backgroundColor: AppColor.white,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(20),
+                                      ),
+                                    ),
+                                    builder: (context) {
+                                      return Padding(
+                                        padding: const EdgeInsets.all(20.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  'Select Date',
+                                                  style: AppTextStyles.mulish(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: AppColor.darkBlue,
+                                                  ),
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () =>
+                                                      Navigator.pop(context),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: AppColor.mistyRose,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            25,
+                                                          ),
+                                                    ),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 17,
+                                                          vertical: 10,
+                                                        ),
+                                                    child: Icon(
+                                                      Icons.close,
+                                                      size: 16,
+                                                      color: AppColor.red,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 15),
+                                            CommonContainer.horizonalDivider(),
+
+                                            ListTile(
+                                              title: Text(
+                                                'Today',
+                                                style: AppTextStyles.mulish(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColor.darkBlue,
+                                                ),
+                                              ),
+                                              onTap: () => Navigator.pop(
+                                                context,
+                                                DateTime.now(),
+                                              ),
+                                            ),
+
+                                            ListTile(
+                                              title: Text(
+                                                'Yesterday',
+                                                style: AppTextStyles.mulish(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColor.darkBlue,
+                                                ),
+                                              ),
+                                              onTap: () => Navigator.pop(
+                                                context,
+                                                DateTime.now().subtract(
+                                                  const Duration(days: 1),
+                                                ),
+                                              ),
+                                            ),
+
+                                            ListTile(
+                                              title: Text(
+                                                'Custom Date',
+                                                style: AppTextStyles.mulish(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColor.darkBlue,
+                                                ),
+                                              ),
+                                              onTap: () async {
+                                                final d = await showDatePicker(
+                                                  context: context,
+                                                  initialDate: selectedDate,
+                                                  firstDate: DateTime(2000),
+                                                  lastDate: DateTime(2100),
+                                                  builder: (context, child) {
+                                                    return Theme(
+                                                      data: Theme.of(context).copyWith(
+                                                        dialogBackgroundColor:
+                                                            AppColor.white,
+                                                        colorScheme:
+                                                            ColorScheme.light(
+                                                              primary: AppColor
+                                                                  .brightBlue,
+                                                              onPrimary:
+                                                                  Colors.white,
+                                                              onSurface:
+                                                                  AppColor
+                                                                      .black,
+                                                            ),
+                                                        textButtonTheme:
+                                                            TextButtonThemeData(
+                                                              style: TextButton.styleFrom(
+                                                                foregroundColor:
+                                                                    AppColor
+                                                                        .brightBlue,
+                                                              ),
+                                                            ),
+                                                      ),
+                                                      child: child!,
+                                                    );
+                                                  },
+                                                );
+
+                                                if (d != null) {
+                                                  Navigator.pop(
+                                                    context,
+                                                    d,
+                                                  ); // ✅ IMPORTANT: close sheet + return date
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+
+                                  if (pickedDate != null) {
+                                    setState(() {
+                                      selectedDate = pickedDate;
+                                      final today = DateTime.now();
+                                      final yesterday = today.subtract(
+                                        const Duration(days: 1),
+                                      );
+
+                                      if (_isSameDate(pickedDate, today)) {
+                                        selectedDay = "Today";
+                                      } else if (_isSameDate(
+                                        pickedDate,
+                                        yesterday,
+                                      )) {
+                                        selectedDay = "Yesterday";
+                                      } else {
+                                        selectedDay = _fmt(pickedDate);
+                                      }
+                                    });
+                                  }
+
+                                  // final selected = await showModalBottomSheet<String>(
+                                  //   context: context,
+                                  //   backgroundColor: AppColor.white,
+                                  //   shape: RoundedRectangleBorder(
+                                  //     borderRadius: BorderRadius.vertical(
+                                  //       top: Radius.circular(20),
+                                  //     ),
+                                  //   ),
+                                  //   builder: (context) {
+                                  //     return Padding(
+                                  //       padding: const EdgeInsets.all(20.0),
+                                  //       child: Column(
+                                  //         mainAxisSize: MainAxisSize.min,
+                                  //         children: [
+                                  //           Row(
+                                  //             mainAxisAlignment:
+                                  //                 MainAxisAlignment
+                                  //                     .spaceBetween,
+                                  //             children: [
+                                  //               Text(
+                                  //                 'Select Date',
+                                  //                 style: AppTextStyles.mulish(
+                                  //                   fontSize: 22,
+                                  //                   fontWeight: FontWeight.w800,
+                                  //                   color: AppColor.darkBlue,
+                                  //                 ),
+                                  //               ),
+                                  //               GestureDetector(
+                                  //                 onTap: () =>
+                                  //                     Navigator.pop(context),
+                                  //                 child: Container(
+                                  //                   decoration: BoxDecoration(
+                                  //                     color: AppColor.mistyRose,
+                                  //                     borderRadius:
+                                  //                         BorderRadius.circular(
+                                  //                           25,
+                                  //                         ),
+                                  //                   ),
+                                  //                   child: Padding(
+                                  //                     padding:
+                                  //                         const EdgeInsets.symmetric(
+                                  //                           horizontal: 17,
+                                  //                           vertical: 10,
+                                  //                         ),
+                                  //                     child: Icon(
+                                  //                       size: 16,
+                                  //                       Icons.close,
+                                  //                       color: AppColor.red,
+                                  //                     ),
+                                  //                   ),
+                                  //                 ),
+                                  //               ),
+                                  //             ],
+                                  //           ),
+                                  //             SizedBox(height: 15),
+                                  //           CommonContainer.horizonalDivider(),
+                                  //           ListTile(
+                                  //             title: Text(
+                                  //               'Today',
+                                  //               style: AppTextStyles.mulish(
+                                  //                 fontSize: 16,
+                                  //                 fontWeight: FontWeight.w600,
+                                  //                 color: AppColor.darkBlue,
+                                  //               ),
+                                  //             ),
+                                  //             onTap: () => Navigator.pop(
+                                  //               context,
+                                  //               'Today',
+                                  //             ),
+                                  //           ),
+                                  //           ListTile(
+                                  //             title: Text(
+                                  //               'Yesterday',
+                                  //               style: AppTextStyles.mulish(
+                                  //                 fontSize: 16,
+                                  //                 fontWeight: FontWeight.w600,
+                                  //                 color: AppColor.darkBlue,
+                                  //               ),
+                                  //             ),
+                                  //             onTap: () => Navigator.pop(
+                                  //               context,
+                                  //               'Yesterday',
+                                  //             ),
+                                  //           ),
+                                  //           ListTile(
+                                  //             title: Text(
+                                  //               'Custom Date',
+                                  //               style: AppTextStyles.mulish(
+                                  //                 fontSize: 16,
+                                  //                 fontWeight: FontWeight.w600,
+                                  //                 color: AppColor.darkBlue,
+                                  //               ),
+                                  //             ),
+                                  //             onTap: () async {
+                                  //               final picked = await showDatePicker(
+                                  //                 context: context,
+                                  //                 initialDate: selectedDate,
+                                  //                 firstDate: DateTime(2000),
+                                  //                 lastDate: DateTime(2100),
+                                  //                 builder: (context, child) {
+                                  //                   return Theme(
+                                  //                     data: Theme.of(context).copyWith(
+                                  //                       dialogBackgroundColor:
+                                  //                           AppColor.white,
+                                  //                       colorScheme:
+                                  //                           ColorScheme.light(
+                                  //                             primary: AppColor
+                                  //                                 .brightBlue,
+                                  //                             onPrimary:
+                                  //                                 Colors.white,
+                                  //                             onSurface:
+                                  //                                 AppColor
+                                  //                                     .black,
+                                  //                           ),
+                                  //                       textButtonTheme:
+                                  //                           TextButtonThemeData(
+                                  //                             style: TextButton.styleFrom(
+                                  //                               foregroundColor:
+                                  //                                   AppColor
+                                  //                                       .brightBlue,
+                                  //                             ),
+                                  //                           ),
+                                  //                     ),
+                                  //                     child: child!,
+                                  //                   );
+                                  //                 },
+                                  //               );
+                                  //
+                                  //               if (picked != null) {
+                                  //                 setState(() {
+                                  //                   selectedDate = picked;
+                                  //                   selectedDay = _fmt(picked);
+                                  //                 });
+                                  //               }
+                                  //             },
+                                  //           ),
+                                  //         ],
+                                  //       ),
+                                  //     );
+                                  //   },
+                                  // );
+                                  //
+                                  // if (selected == 'Today') {
+                                  //   setState(() {
+                                  //     selectedDay = 'Today';
+                                  //     selectedDate = DateTime.now();
+                                  //   });
+                                  // } else if (selected == 'Yesterday') {
+                                  //   setState(() {
+                                  //     selectedDay = 'Yesterday';
+                                  //     selectedDate = DateTime.now().subtract(
+                                  //       const Duration(days: 1),
+                                  //     );
+                                  //   });
+                                  // }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12.5,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.iceBlue,
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  child: Image.asset(
+                                    AppImages.filter,
+                                    height: 19,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+
+                              if (currentItems.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () async {
+                                    if (_isDownloading)
+                                      return; // avoid double taps
+
+                                    setState(() => _isDownloading = true);
+
+                                    try {
+                                      await openPdfInChrome();
+                                      // Optional: small delay so animation is visible
+                                      await Future.delayed(
+                                        const Duration(milliseconds: 600),
+                                      );
+                                    } catch (e) {
+                                      AppSnackBar.error(
+                                        context,
+                                        'Failed to open PDF',
+                                      );
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _isDownloading = false);
+                                      }
+                                    }
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14.5,
+                                      vertical: 9.5,
+                                    ),
+                                    margin: EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      gradient: _isDownloading
+                                          ? LinearGradient(
+                                              colors: [
+                                                AppColor.blueGradient1,
+                                                AppColor.blueGradient2,
+                                                AppColor.blueGradient1,
+                                              ],
+                                            )
+                                          : LinearGradient(
+                                              colors: [
+                                                Colors.black,
+                                                Colors.black,
+                                              ],
+                                            ),
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
+                                      transitionBuilder: (child, animation) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: SizeTransition(
+                                            sizeFactor: animation,
+                                            axis: Axis.horizontal,
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                      child: _isDownloading
+                                          ? Row(
+                                              key: ValueKey('downloading'),
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                SizedBox(
+                                                  height: 18,
+                                                  width: 18,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: AppColor.white,
+                                                      ),
+                                                ),
+                                                SizedBox(width: 6),
+                                                Text(
+                                                  'Opening...',
+                                                  style: AppTextStyles.mulish(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColor.white,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Row(
+                                              key: ValueKey('normal'),
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Image.asset(
+                                                  AppImages.downloadImage,
+                                                  height: 15,
+                                                ),
+                                              ],
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() => selectedIndex = 0);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: selectedIndex == 0
+                                        ? AppColor.black
+                                        : AppColor.borderLightGrey,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$unansweredCount Unanswered',
+                                    style: TextStyle(
+                                      color: selectedIndex == 0
+                                          ? AppColor.black
+                                          : AppColor.borderLightGrey,
+                                      fontWeight: selectedIndex == 0
+                                          ? FontWeight.w700
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() => selectedIndex = 1);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: selectedIndex == 1
+                                        ? AppColor.black
+                                        : AppColor.borderLightGrey,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$answeredCount Answered',
+                                    style: TextStyle(
+                                      color: selectedIndex == 1
+                                          ? AppColor.black
+                                          : AppColor.borderLightGrey,
+                                      fontWeight: selectedIndex == 1
+                                          ? FontWeight.w700
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ================= LIST / EMPTY =================
+                    if (currentItems.isEmpty)
+                      const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text(
+                            'No enquiries',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColor.darkGrey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: currentItems.length,
+                        itemBuilder: (_, index) {
+                          final data = currentItems[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Column(
+                              children: [
+                                CommonContainer.inquiryProductCard(
+                                  questionText: '',
+                                  productTitle: data.product?.name ?? 'Enquiry',
+                                  rating: '${data.product?.rating ?? 0}',
+                                  ratingCount:
+                                      '${data.product?.ratingCount ?? 0}',
+                                  priceText:
+                                      '₹${data.product?.offerPrice ?? ''}',
+                                  mrpText: '₹${data.product?.price ?? ''}',
+                                  phoneImageAsset: data.product?.imageUrl ?? '',
+                                  avatarAsset: data.customer.avatarUrl ?? '',
+                                  customerName: data.customer.name,
+                                  timeText: data.createdTime,
+                                  onChatTap: () {
+                                    CallHelper.openWhatsapp(
+                                      context: context,
+                                      phone: data.customer.whatsappNumber,
+                                    );
+                                  },
+                                  onCallTap: () {
+                                    CallHelper.openDialer(
+                                      context: context,
+                                      rawPhone: data.customer.phone,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
 
     return Skeletonizer(
       enabled: homeState.isLoading,
@@ -213,10 +961,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 15),
             child: RefreshIndicator(
-              onRefresh: () async {
-                await ref.read(homeNotifierProvider.notifier).fetchShops();
-                await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
-              },
+              onRefresh: () async {},
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
                 child: Column(
@@ -889,18 +1634,27 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                     // ),
                     SizedBox(height: 20),
                     if (currentItems.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            'No enquiries',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColor.darkGrey,
-                              fontWeight: FontWeight.w500,
+                      RefreshIndicator(
+                        onRefresh: () async {},
+                        child: ListView(
+                          physics:
+                              const AlwaysScrollableScrollPhysics(), // ✅ important
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'No enquiries',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColor.darkGrey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       )
                     else

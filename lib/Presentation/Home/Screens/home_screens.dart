@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 // import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,6 +13,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/call_helper.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
@@ -21,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Api/Repository/api_url.dart';
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_snackbar.dart';
@@ -33,6 +36,7 @@ import '../../Menu/Screens/subscription_screen.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 
 import '../../No Data Screen/Screen/no_data_screen.dart';
+import '../Controller/shopContext_provider.dart';
 
 class HomeScreens extends ConsumerStatefulWidget {
   const HomeScreens({super.key});
@@ -70,10 +74,10 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(homeNotifierProvider.notifier).fetchShops();
-      await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   await ref.read(homeNotifierProvider.notifier).fetchShops();
+    //   await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
+    // });
   }
 
   Future<void> openPdfInChrome() async {
@@ -99,9 +103,10 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeNotifierProvider);
+    final homeNotifier = ref.watch(homeNotifierProvider.notifier);
     final isPremium = RegistrationProductSeivice.instance.isPremium;
     final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
-
+    final selectedShopId = homeState.selectedShopId;
     final enquiry = homeState.enquiryResponse;
     final shopsRes = homeState.shopsResponse;
 
@@ -157,8 +162,12 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
             padding: const EdgeInsets.symmetric(vertical: 25),
             child: RefreshIndicator(
               onRefresh: () async {
-                await ref.read(homeNotifierProvider.notifier).fetchShops();
-                await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
+                await ref
+                    .read(homeNotifierProvider.notifier)
+                    .fetchShops(shopId: '');
+                await ref
+                    .read(homeNotifierProvider.notifier)
+                    .fetchAllEnquiry(shopId: '');
               },
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -263,13 +272,58 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
-                          itemCount: shops.length,
+                          itemCount: shops.length + 1,
                           physics: const BouncingScrollPhysics(),
                           itemBuilder: (context, index) {
+                            if (index == shops.length) {
+                              return Row(
+                                children: [
+                                  CommonContainer.smallShopContainer(
+                                    onTap: () {
+                                      final bool isService =
+                                          shopsRes?.data.items[0].shopKind
+                                              .toUpperCase() ==
+                                          'SERVICE';
+                                      AppLogger.log.i(isService);
+                                      context.push(
+                                        AppRoutes.shopCategoryInfoPath,
+                                        extra: {
+                                          'isService': isService,
+                                          'isIndividual': '',
+                                          'initialShopNameEnglish': shopsRes
+                                              ?.data
+                                              .items[0]
+                                              .englishName,
+                                          'initialShopNameTamil':
+                                              shopsRes?.data.items[0].tamilName,
+
+                                          'isEditMode':
+                                              true, // ✅ pass the required parameter
+                                        },
+                                      );
+                                      // context.pushNamed(
+                                      //
+                                      //   AppRoutes.shopCategoryInfo,
+                                      // );
+                                    },
+                                    shopImage: '',
+                                    addAnotherShop: true,
+                                    shopLocation: 'Premium User can add branch',
+                                    shopName: 'Add Another Shop',
+                                  ),
+                                ],
+                              );
+                            }
                             final shop = shops[index];
                             return Row(
                               children: [
                                 CommonContainer.smallShopContainer(
+                                  onTap: () async {
+                                    ref
+                                        .read(selectedShopProvider.notifier)
+                                        .switchShop(shop.id);
+                                  },
+
                                   shopImage: shop.primaryImageUrl ?? '',
                                   shopLocation:
                                       '${shop.addressEn}, ${shop.city}',
@@ -632,7 +686,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
                     SizedBox(height: 140),
 
-                    // ---------------- OFFER CARDS ----------------
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: Row(
@@ -643,7 +696,9 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CreateAppOffer(shopId: mainShop?.id?? '',),
+                                  builder: (context) => CreateAppOffer(
+                                    shopId: mainShop?.id ?? '',
+                                  ),
                                 ),
                               );
                             },

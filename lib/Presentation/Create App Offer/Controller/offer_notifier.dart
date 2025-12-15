@@ -126,11 +126,13 @@ class OfferNotifier extends Notifier<createOfferState> {
     required List<String> productIds,
     required String shopId,
     required String offerId,
+    required String type,
     required BuildContext context,
   }) async {
     state = state.copyWith(updateInsertLoading: true, clearError: true);
 
     final result = await api.updateOfferList(
+      type: type,
       shopId: shopId,
       offerId: offerId,
       productIds: productIds,

@@ -8,6 +8,7 @@ import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
 import 'Presentation/Home/Controller/home_notifier.dart';
+import 'Presentation/Home/Controller/shopContext_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -32,8 +33,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       final homeNotifier = ref.read(homeNotifierProvider.notifier);
 
       // Fetch data from APIs
-      await homeNotifier.fetchShops();
-      await homeNotifier.fetchAllEnquiry();
+      ref
+          .read(selectedShopProvider.notifier)
+          .switchShop('');
 
       if (!mounted) return;
 
@@ -47,6 +49,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       if (token != null && token.isNotEmpty) {
         if (!isNewUser) {
+
           context.go(AppRoutes.homeScreenPath);
         } else {
           context.go(AppRoutes.privacyPolicyPath);
