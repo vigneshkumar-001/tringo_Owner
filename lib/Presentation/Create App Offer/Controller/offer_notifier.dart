@@ -6,6 +6,7 @@ import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_prod
 
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../Login/controller/login_notifier.dart';
+import '../../Offer/Model/offer_model.dart';
 import '../Model/create_offers.dart';
 import '../Model/update_offer_model.dart';
 
@@ -16,6 +17,7 @@ class createOfferState {
   final CreateOffers? createOffers;
   final OfferProductsResponse? offerProducts;
   final UpdateOfferModel? updateOfferModel;
+  final OfferModel? offerModel;
 
   const createOfferState({
     this.isLoading = false,
@@ -24,6 +26,7 @@ class createOfferState {
     this.createOffers,
     this.offerProducts,
     this.updateOfferModel,
+    this.offerModel,
   });
 
   factory createOfferState.initial() => const createOfferState();
@@ -35,6 +38,7 @@ class createOfferState {
     CreateOffers? createOffers,
     OfferProductsResponse? offerProducts,
     UpdateOfferModel? updateOfferModel,
+    OfferModel? offerModel,
     bool clearError = false,
   }) {
     return createOfferState(
@@ -44,6 +48,7 @@ class createOfferState {
       createOffers: createOffers ?? this.createOffers,
       offerProducts: offerProducts ?? this.offerProducts,
       updateOfferModel: updateOfferModel ?? this.updateOfferModel,
+      offerModel: offerModel ?? this.offerModel,
     );
   }
 }
@@ -133,7 +138,7 @@ class OfferNotifier extends Notifier<createOfferState> {
 
     return result.fold(
       (failure) {
-        AppSnackBar. error(context, failure.message);
+        AppSnackBar.error(context, failure.message);
         state = state.copyWith(
           updateInsertLoading: false,
           error: failure.message,
@@ -146,6 +151,30 @@ class OfferNotifier extends Notifier<createOfferState> {
           updateOfferModel: response,
         );
         return true;
+      },
+    );
+  }
+
+  Future<void> offerScreenEnquiry({String? shopId}) async {
+    // only set loading flag, keep shopsResponse as it is
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await api.offerScreen(shopId: shopId ?? '');
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          offerModel: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          offerModel: response,
+        );
       },
     );
   }
