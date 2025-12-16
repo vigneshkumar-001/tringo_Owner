@@ -143,10 +143,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     // ✅ Items ONLY for selectedDate (fixes date filter)
     final List<OfferListItem> dayItems = sections
         .where((s) {
-          final d = _sectionLabelToDate(s.dayLabel);
-          if (d == null) return false;
-          return _isSameDate(d, selectedDate);
-        })
+      final d = _sectionLabelToDate(s.dayLabel);
+      if (d == null) return false;
+      return _isSameDate(d, selectedDate);
+    })
         .expand((s) => s.items)
         .toList();
 
@@ -274,6 +274,11 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       return Row(
                         children: [
                           CommonContainer.smallShopContainer(
+                            switchOnTap: () {
+                              ref
+                                  .read(selectedShopProvider.notifier)
+                                  .switchShop(shop.id);
+                            },
                             onTap: () {
                               ref
                                   .read(selectedShopProvider.notifier)
@@ -372,7 +377,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                     children: [
                                       Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             'Select Date',
@@ -388,13 +393,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               decoration: BoxDecoration(
                                                 color: AppColor.mistyRose,
                                                 borderRadius:
-                                                    BorderRadius.circular(25),
+                                                BorderRadius.circular(25),
                                               ),
                                               padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 17,
-                                                    vertical: 10,
-                                                  ),
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 17,
+                                                vertical: 10,
+                                              ),
                                               child: Icon(
                                                 Icons.close,
                                                 size: 16,
@@ -456,24 +461,24 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               return Theme(
                                                 data: Theme.of(context).copyWith(
                                                   dialogBackgroundColor:
-                                                      AppColor.white,
+                                                  AppColor.white,
                                                   colorScheme:
-                                                      ColorScheme.light(
-                                                        primary:
-                                                            AppColor.brightBlue,
-                                                        onPrimary: Colors.white,
-                                                        onSurface:
-                                                            AppColor.black,
-                                                      ),
+                                                  ColorScheme.light(
+                                                    primary:
+                                                    AppColor.brightBlue,
+                                                    onPrimary: Colors.white,
+                                                    onSurface:
+                                                    AppColor.black,
+                                                  ),
                                                   textButtonTheme:
-                                                      TextButtonThemeData(
-                                                        style:
-                                                            TextButton.styleFrom(
-                                                              foregroundColor:
-                                                                  AppColor
-                                                                      .brightBlue,
-                                                            ),
-                                                      ),
+                                                  TextButtonThemeData(
+                                                    style:
+                                                    TextButton.styleFrom(
+                                                      foregroundColor:
+                                                      AppColor
+                                                          .brightBlue,
+                                                    ),
+                                                  ),
                                                 ),
                                                 child: child!,
                                               );
@@ -647,7 +652,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                   ),
                                   child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -670,7 +675,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                                   ? AppColor.iceBlue
                                                   : AppColor.mistyRose,
                                               borderRadius:
-                                                  BorderRadius.circular(20),
+                                              BorderRadius.circular(20),
                                             ),
                                             child: Text(
                                               offer.stateLabel,
@@ -678,7 +683,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w700,
                                                 color:
-                                                    offer.stateLabel == "LIVE"
+                                                offer.stateLabel == "LIVE"
                                                     ? AppColor.darkBlue
                                                     : AppColor.red,
                                               ),
@@ -742,13 +747,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                           ),
                                           child: Column(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                             children: [
                                               Padding(
                                                 padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                ),
                                                 child: Text(
                                                   offer.title,
                                                   style: AppTextStyles.mulish(
@@ -760,9 +765,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               const SizedBox(height: 10),
                                               Padding(
                                                 padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                ),
                                                 child: DottedBorder(
                                                   color: AppColor.black
                                                       .withOpacity(0.2),
@@ -773,14 +778,14 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                                     30,
                                                   ),
                                                   padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8,
-                                                      ),
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
                                                   child: Text(
                                                     offer.createdTime ?? '-',
                                                     overflow:
-                                                        TextOverflow.ellipsis,
+                                                    TextOverflow.ellipsis,
                                                     style: AppTextStyles.mulish(
                                                       fontSize: 12,
                                                       color: AppColor.gray84,
@@ -795,9 +800,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               const SizedBox(height: 24),
                                               Padding(
                                                 padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                ),
                                                 child: Text(
                                                   'Products',
                                                   style: AppTextStyles.mulish(
@@ -809,22 +814,22 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               const SizedBox(height: 10),
                                               Padding(
                                                 padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                ),
                                                 child: Column(
                                                   children: offer.products
                                                       .map(
                                                         (p) => Padding(
-                                                          padding:
-                                                              const EdgeInsets.only(
-                                                                bottom: 10,
-                                                              ),
-                                                          child: _productTile(
-                                                            p,
-                                                          ),
-                                                        ),
-                                                      )
+                                                      padding:
+                                                      const EdgeInsets.only(
+                                                        bottom: 10,
+                                                      ),
+                                                      child: _productTile(
+                                                        p,
+                                                      ),
+                                                    ),
+                                                  )
                                                       .toList(),
                                                 ),
                                               ),

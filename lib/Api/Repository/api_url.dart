@@ -104,4 +104,8 @@ class ApiUrl {
   static String offerScreenURL({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers?type=APP";
   }
+
+  static String markEnquiry({required String enquiryId}) {
+    return "${base}api/v1/dashboard/enquiries/$enquiryId/close";
+  }
 }

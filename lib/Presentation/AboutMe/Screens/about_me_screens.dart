@@ -251,7 +251,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return '';
   }
 
-
   String _getShopAddress(Shop? shop) {
     if (shop == null) return 'Address not available';
 
@@ -274,12 +273,11 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return parts.join(', ');
   }
 
-
   Widget _buildShopHeaderCard(AboutMeState aboutState) {
     final selectedShop = _getSelectedShop(aboutState);
     final name = _getShopTitle(selectedShop);
     final address = _getShopAddress(selectedShop);
-
+    final cityState = _getShopCityState(selectedShop);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 15),
       decoration: BoxDecoration(
@@ -307,7 +305,9 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 5),
+                  Text('- ${address}'),
+                  const SizedBox(width: 5),
                   GestureDetector(
                     onTap: () => _showShopPickerBottomSheet(aboutState),
                     child: Container(
@@ -336,7 +336,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    address,
+                    cityState,
                     style: AppTextStyles.mulish(
                       color: AppColor.darkGrey,
                       fontSize: 12,
@@ -683,6 +683,22 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
         ],
       ),
     );
+  }
+
+  String _getShopCityState(Shop? shop) {
+    if (shop == null) return '';
+
+    final city = (shop.shopCity ?? '').trim();
+    final state = (shop.shopState ?? '').trim();
+
+    if (city.isNotEmpty && state.isNotEmpty) {
+      return '$city, $state';
+    }
+
+    if (city.isNotEmpty) return city;
+    if (state.isNotEmpty) return state;
+
+    return '';
   }
 
   /// Top banner using shopImages; guarded against empty / invalid URLs

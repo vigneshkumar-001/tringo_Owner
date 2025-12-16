@@ -326,6 +326,11 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                           itemBuilder: (_, index) {
                             final shop = shops[index];
                             return CommonContainer.smallShopContainer(
+                              switchOnTap: () {
+                                ref
+                                    .read(selectedShopProvider.notifier)
+                                    .switchShop(shop.id);
+                              },
                               onTap: () {
                                 ref
                                     .read(selectedShopProvider.notifier)
@@ -701,8 +706,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                               if (currentItems.isNotEmpty)
                                 GestureDetector(
                                   onTap: () async {
-                                    if (_isDownloading)
-                                      return; // avoid double taps
+                                    if (_isDownloading) return;
 
                                     setState(() => _isDownloading = true);
 
@@ -886,7 +890,6 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                     ),
                     const SizedBox(height: 20),
 
-                    // ================= LIST / EMPTY =================
                     if (currentItems.isEmpty)
                       const SizedBox(
                         height: 200,
@@ -902,40 +905,146 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                         ),
                       )
                     else
+                      // ListView.builder(
+                      //   shrinkWrap: true,
+                      //   physics: const NeverScrollableScrollPhysics(),
+                      //   itemCount: currentItems.length,
+                      //   itemBuilder: (_, index) {
+                      //     final data = currentItems[index];
+                      //     return Padding(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 15),
+                      //       child: Column(
+                      //         children: [
+                      //           CommonContainer.inquiryProductCard(
+                      //             questionText: '',
+                      //             productTitle: data.product?.name ?? 'Enquiry',
+                      //             rating: '${data.product?.rating ?? 0}',
+                      //             ratingCount:
+                      //                 '${data.product?.ratingCount ?? 0}',
+                      //             priceText:
+                      //                 '₹${data.product?.offerPrice ?? ''}',
+                      //             mrpText: '₹${data.product?.price ?? ''}',
+                      //             phoneImageAsset: data.product?.imageUrl ?? '',
+                      //             avatarAsset: data.customer.avatarUrl ?? '',
+                      //             customerName: data.customer.name,
+                      //             timeText: data.createdTime,
+                      //             onChatTap: () {
+                      //               CallHelper.openWhatsapp(
+                      //                 context: context,
+                      //                 phone: data.customer.whatsappNumber,
+                      //               );
+                      //             },
+                      //             onCallTap: () {
+                      //               CallHelper.openDialer(
+                      //                 context: context,
+                      //                 rawPhone: data.customer.phone,
+                      //               );
+                      //             },
+                      //           ),
+                      //           const SizedBox(height: 20),
+                      //         ],
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: currentItems.length,
-                        itemBuilder: (_, index) {
+                        itemBuilder: (context, index) {
                           final data = currentItems[index];
+
+                          final type = data.contextType.toUpperCase();
+
+                          String productTitle = 'Enquiry';
+                          String rating = '0.0';
+                          String ratingCount = '0';
+                          String priceText = '';
+                          String offerPrice = '';
+                          String image = '';
+                          String customerName = data.customer.name;
+                          String whatsappNumber = data.customer.whatsappNumber;
+                          String phone = data.customer.phone;
+                          String customerImg = data.customer.avatarUrl
+                              .toString();
+                          String timeText = data.createdTime;
+
+                          if (type == 'PRODUCT_SHOP' ||
+                              type == 'SERVICE_SHOP') {
+                            final shop = data.shop;
+                            productTitle =
+                                (shop?.englishName.toUpperCase() ?? '')
+                                    .isNotEmpty
+                                ? shop!.englishName.toUpperCase()
+                                : 'Shop Enquiry';
+                            rating = (shop?.rating ?? 0).toString();
+                            ratingCount = (shop?.ratingCount ?? 0).toString();
+                            offerPrice =
+                                '${shop?.category.toUpperCase() ?? ''}';
+                            image = shop?.primaryImageUrl ?? '';
+                          } else if (type == 'PRODUCT_SERVICE' ||
+                              type == 'SERVICE_SHOP') {
+                            final service = data.service;
+                            productTitle = (service?.name ?? '').isNotEmpty
+                                ? service!.name
+                                : 'Service Enquiry';
+                            rating = (service?.rating ?? 0).toString();
+                            image = (service?.primaryImageUrl ?? 0).toString();
+                            ratingCount = (service?.ratingCount ?? 0)
+                                .toString();
+                            if (service != null && service.startsAt > 0) {
+                              priceText = 'From ₹${service.startsAt}';
+                            } else {
+                              priceText = 'Service';
+                            }
+                          } else if (type == 'PRODUCT') {
+                            productTitle = data.product?.name.toString() ?? '';
+                            priceText = '${data.product?.price ?? ''}';
+                            offerPrice = '₹${data.product?.offerPrice ?? ''}';
+                            image = data.product?.imageUrl ?? '';
+                            rating = '${data.product?.rating ?? ''}';
+                            ratingCount = '${data.product?.ratingCount ?? ''}';
+                          } else if (type == 'SERVICE') {
+                            productTitle = data.service?.name.toString() ?? '';
+                            offerPrice = '₹${data.service?.startsAt ?? ''}';
+
+                            image = data.service?.primaryImageUrl ?? '';
+                            rating = '${data.service?.rating ?? ''}';
+                            ratingCount = '${data.service?.ratingCount ?? ''}';
+                          }
+
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Column(
                               children: [
                                 CommonContainer.inquiryProductCard(
                                   questionText: '',
-                                  productTitle: data.product?.name ?? 'Enquiry',
-                                  rating: '${data.product?.rating ?? 0}',
-                                  ratingCount:
-                                      '${data.product?.ratingCount ?? 0}',
-                                  priceText:
-                                      '₹${data.product?.offerPrice ?? ''}',
-                                  mrpText: '₹${data.product?.price ?? ''}',
-                                  phoneImageAsset: data.product?.imageUrl ?? '',
-                                  avatarAsset: data.customer.avatarUrl ?? '',
-                                  customerName: data.customer.name,
-                                  timeText: data.createdTime,
+                                  productTitle: productTitle,
+                                  rating: rating,
+                                  ratingCount: ratingCount,
+                                  priceText: offerPrice,
+                                  mrpText: '$priceText',
+                                  phoneImageAsset: image,
+                                  avatarAsset: customerImg,
+                                  customerName: customerName,
+                                  timeText: timeText,
                                   onChatTap: () {
                                     CallHelper.openWhatsapp(
                                       context: context,
-                                      phone: data.customer.whatsappNumber,
+                                      phone: whatsappNumber,
                                     );
+                                    ref
+                                        .read(homeNotifierProvider.notifier)
+                                        .markEnquiry(enquiryId: data.id);
                                   },
                                   onCallTap: () {
                                     CallHelper.openDialer(
                                       context: context,
-                                      rawPhone: data.customer.phone,
+                                      rawPhone: phone,
                                     );
+                                    ref
+                                        .read(homeNotifierProvider.notifier)
+                                        .markEnquiry(enquiryId: data.id);
                                   },
                                 ),
                                 const SizedBox(height: 20),
