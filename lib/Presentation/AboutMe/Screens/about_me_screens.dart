@@ -358,7 +358,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 CommonContainer.editShopContainer(
                   text: 'Add Branch',
                   onTap: () {
-                    context.push(AppRoutes.shopCategoryInfoPath);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ShopCategoryInfo(
+                          isEditMode: true,
+                          isService: true,
+                          isIndividual: false,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 SizedBox(width: 10),
