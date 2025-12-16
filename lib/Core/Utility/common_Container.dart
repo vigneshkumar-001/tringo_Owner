@@ -2097,6 +2097,7 @@ class CommonContainer {
     required String shopLocation,
     required String shopName,
     GestureTapCallback? onTap,
+    GestureTapCallback? switchOnTap,
     bool isAdd = false,
     bool addAnotherShop = false,
   }) {
@@ -2199,16 +2200,15 @@ class CommonContainer {
                       if (shopLocation.isNotEmpty)
                         Row(
                           children: [
-                            addAnotherShop == false
-                                ? Icon(
-                                    Icons.location_on,
-                                    color: AppColor.scaffoldColor.withOpacity(
-                                      0.6,
-                                    ),
-                                    size: 16,
-                                  )
-                                : SizedBox.shrink(),
+                            if (!addAnotherShop)
+                              Icon(
+                                Icons.location_on,
+                                color: AppColor.scaffoldColor.withOpacity(0.6),
+                                size: 16,
+                              ),
+
                             const SizedBox(width: 4),
+
                             Expanded(
                               child: Text(
                                 shopLocation,
@@ -2220,6 +2220,39 @@ class CommonContainer {
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            // 👉 SWITCH SHOP PILL
+                            addAnotherShop == true? SizedBox.shrink():    GestureDetector(
+                              onTap: switchOnTap,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColor.scaffoldColor.withOpacity(
+                                    0.8,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Switch',
+                                      style: AppTextStyles.mulish(
+                                        color: AppColor.black,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Icon(Icons.swap_horiz, size: 12),
+                                  ],
+                                ),
                               ),
                             ),
                           ],

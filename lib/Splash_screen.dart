@@ -32,14 +32,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // Get notifier
       final homeNotifier = ref.read(homeNotifierProvider.notifier);
 
-      // Fetch data from APIs
-      ref
-          .read(selectedShopProvider.notifier)
-          .switchShop('');
+      await ref.read(selectedShopProvider.notifier).switchShop('');
 
       if (!mounted) return;
 
-      // Read latest state AFTER both API calls
+
       final homeState = ref.read(homeNotifierProvider);
 
       // From your model: ShopsResponse -> ShopsData -> isNewOwner
@@ -49,7 +46,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       if (token != null && token.isNotEmpty) {
         if (!isNewUser) {
-
           context.go(AppRoutes.homeScreenPath);
         } else {
           context.go(AppRoutes.privacyPolicyPath);
