@@ -143,10 +143,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     // ✅ Items ONLY for selectedDate (fixes date filter)
     final List<OfferListItem> dayItems = sections
         .where((s) {
-          final d = _sectionLabelToDate(s.dayLabel);
-          if (d == null) return false;
-          return _isSameDate(d, selectedDate);
-        })
+      final d = _sectionLabelToDate(s.dayLabel);
+      if (d == null) return false;
+      return _isSameDate(d, selectedDate);
+    })
         .expand((s) => s.items)
         .toList();
 
@@ -274,6 +274,11 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       return Row(
                         children: [
                           CommonContainer.smallShopContainer(
+                            switchOnTap: () {
+                              ref
+                                  .read(selectedShopProvider.notifier)
+                                  .switchShop(shop.id);
+                            },
                             onTap: () {
                               ref
                                   .read(selectedShopProvider.notifier)
@@ -372,7 +377,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                     children: [
                                       Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             'Select Date',
@@ -388,13 +393,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               decoration: BoxDecoration(
                                                 color: AppColor.mistyRose,
                                                 borderRadius:
-                                                    BorderRadius.circular(25),
+                                                BorderRadius.circular(25),
                                               ),
                                               padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 17,
-                                                    vertical: 10,
-                                                  ),
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 17,
+                                                vertical: 10,
+                                              ),
                                               child: Icon(
                                                 Icons.close,
                                                 size: 16,
@@ -456,24 +461,24 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                               return Theme(
                                                 data: Theme.of(context).copyWith(
                                                   dialogBackgroundColor:
-                                                      AppColor.white,
+                                                  AppColor.white,
                                                   colorScheme:
-                                                      ColorScheme.light(
-                                                        primary:
-                                                            AppColor.brightBlue,
-                                                        onPrimary: Colors.white,
-                                                        onSurface:
-                                                            AppColor.black,
-                                                      ),
+                                                  ColorScheme.light(
+                                                    primary:
+                                                    AppColor.brightBlue,
+                                                    onPrimary: Colors.white,
+                                                    onSurface:
+                                                    AppColor.black,
+                                                  ),
                                                   textButtonTheme:
-                                                      TextButtonThemeData(
-                                                        style:
-                                                            TextButton.styleFrom(
-                                                              foregroundColor:
-                                                                  AppColor
-                                                                      .brightBlue,
-                                                            ),
-                                                      ),
+                                                  TextButtonThemeData(
+                                                    style:
+                                                    TextButton.styleFrom(
+                                                      foregroundColor:
+                                                      AppColor
+                                                          .brightBlue,
+                                                    ),
+                                                  ),
                                                 ),
                                                 child: child!,
                                               );
