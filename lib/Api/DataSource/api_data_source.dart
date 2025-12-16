@@ -12,6 +12,7 @@ import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart
 import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
+import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 import 'package:tringo_vendor/Presentation/Login/model/login_response.dart';
 import 'package:tringo_vendor/Presentation/Login/model/otp_response.dart';
@@ -1688,6 +1689,45 @@ class ApiDataSource extends BaseApiDataSource {
         if (response.statusCode == 200 || response.statusCode == 201) {
           if (response.data['status'] == true) {
             return Right(OfferModel.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, MarkEnquiry>> markEnquiry({
+    required String enquiryId,
+  }) async {
+    try {
+      final url = ApiUrl.markEnquiry(enquiryId: enquiryId);
+
+      dynamic response = await Request.sendRequest(url, {}, 'POST', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(MarkEnquiry.fromJson(response.data));
           } else {
             return Left(
               ServerFailure(response.data['message'] ?? "Login failed"),
