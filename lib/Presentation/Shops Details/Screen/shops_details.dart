@@ -176,9 +176,8 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
       return const Scaffold(body: Center(child: Text('No shop data found')));
     }
 
-    const String shopDisplayNameTamil =
-        'ஸ்ரீ கிருஷ்ணா ஸ்வீட்ஸ் பிரைவேட் லிமிடெட்';
-    const String shopDisplayName = 'Sri Krishna Sweets Private Limited';
+    const String shopDisplayNameTamil = '';
+    const String shopDisplayName = '';
 
     final productSession = RegistrationProductSeivice.instance;
     final bool isPremium = productSession.isPremium;
@@ -536,7 +535,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                           AppImages.addBranch,
                                           height: 22,
                                         ),
-                                        const SizedBox(width: 10),
+                                        SizedBox(width: 10),
                                         Text(
                                           'Add Branch',
                                           style: AppTextStyles.mulish(
@@ -988,7 +987,6 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                     await ref
                         .read(selectedShopProvider.notifier)
                         .switchShop('');
-
 
                     // 2️⃣ Reset AFTER navigation
                     Future.microtask(() {
