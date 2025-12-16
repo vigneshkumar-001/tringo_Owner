@@ -3,10 +3,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
@@ -251,7 +253,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return '';
   }
 
-
   String _getShopAddress(Shop? shop) {
     if (shop == null) return 'Address not available';
 
@@ -273,7 +274,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     if (parts.isEmpty) return 'Address not available';
     return parts.join(', ');
   }
-
 
   Widget _buildShopHeaderCard(AboutMeState aboutState) {
     final selectedShop = _getSelectedShop(aboutState);
@@ -327,13 +327,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Row(
               children: [
                 Icon(Icons.location_on, color: AppColor.darkGrey, size: 14),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     address,
@@ -353,6 +353,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
+                CommonContainer.editShopContainer(
+                  text: 'Add Branch',
+                  onTap: () {
+                    context.push(AppRoutes.shopCategoryInfoPath);
+                  },
+                ),
+                SizedBox(width: 10),
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Details',
                   onTap: () async {
@@ -680,6 +687,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
               ],
             ),
           ),
+          SizedBox(height: 20),
         ],
       ),
     );
