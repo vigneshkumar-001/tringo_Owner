@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -479,20 +480,142 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
   XFile? _permanentImage;
   bool _hasExistingOwnerImage = false;
+  String? _existingUrl;
+  File? _pickedImage;
+  bool _imageInvalid = false;
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
-    if (pickedFile != null) {
-      setState(() {
-        _permanentImage = pickedFile;
-        _hasExistingOwnerImage = false;
-        _timetableInvalid = false;
-        _imageErrorText = null;
-      });
-    }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(
+      source: source,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _pickedImage = File(pickedFile.path);
+      _existingUrl = null; // clear server image
+      _imageInvalid = false;
+      _imageErrorText = null;
+    });
   }
+
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _showImageSourcePicker() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildImageWidget() {
+    if (_pickedImage != null) {
+      return Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                _pickedImage!,
+                height: 140,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _pickedImage = null;
+                _imageInvalid = true;
+                _imageErrorText = 'Please upload image';
+              });
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  AppImages.closeImage,
+                  height: 26,
+                  color: AppColor.mediumGray,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Clear',
+                  style: AppTextStyles.mulish(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColor.mediumLightGray,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_existingUrl != null && _existingUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: CachedNetworkImage(
+          imageUrl: _existingUrl!,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(AppImages.uploadImage, height: 30),
+          const SizedBox(width: 10),
+          Text(
+            'Upload',
+            style: AppTextStyles.mulish(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColor.mediumLightGray,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   TimeOfDay? _openTod;
   TimeOfDay? _closeTod;
@@ -1592,7 +1715,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         ),
                         SizedBox(height: 10),
                         GestureDetector(
-                          onTap: _pickImage,
+                          // onTap: _pickImage,
+                          onTap: _showImageSourcePicker,
                           child: DottedBorder(
                             borderType: BorderType.RRect,
                             radius: const Radius.circular(20),

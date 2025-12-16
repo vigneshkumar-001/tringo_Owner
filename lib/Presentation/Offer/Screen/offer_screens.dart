@@ -310,7 +310,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       },
                     ),
 
-                    const SizedBox(height: 35),
+                    SizedBox(height: 35),
 
                     // App Offers + actions
                     Row(
@@ -351,7 +351,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 15),
+                        SizedBox(width: 15),
 
                         // Date filter
                         GestureDetector(
@@ -525,9 +525,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
-                    // Segmented toggles (Live / Expired) ✅ date-wise counts
+                    // Segmented toggles (Live / Expired)  date-wise counts
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: Row(
@@ -602,7 +602,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                     ),
 
                     const SizedBox(height: 20),
-                    const SizedBox(height: 20),
 
                     // Offer list / empty
                     if (currentItems.isEmpty)
@@ -622,227 +621,564 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: currentItems.length,
-                        itemBuilder: (context, index) {
+                        itemBuilder: (BuildContext context, int index) {
                           final offer = currentItems[index];
 
-                          final prodCount = offer.typesCount.products;
-                          final servCount = offer.typesCount.services;
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: AppColor.floralWhite,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 20),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColor.shadowBlue,
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
+                                /// ───────── TITLE ─────────
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  child: Text(
+                                    offer.title,
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                /// ───────── CREATED TIME ─────────
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  child: DottedBorder(
+                                    color: AppColor.black.withOpacity(0.2),
+                                    dashPattern: const [2, 2],
+                                    borderType: BorderType.RRect,
+                                    //             radius: const Radius.circular(30),
+                                    radius: Radius.circular(30),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    child: Text(
+                                      offer.createdTime ?? '-',
+                                      style: AppTextStyles.mulish(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                /// ───────── STATS ─────────
+                                SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
                                     children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              offer.title,
-                                              style: AppTextStyles.mulish(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: offer.stateLabel == "LIVE"
-                                                  ? AppColor.iceBlue
-                                                  : AppColor.mistyRose,
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              offer.stateLabel,
-                                              style: AppTextStyles.mulish(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w700,
-                                                color:
-                                                    offer.stateLabel == "LIVE"
-                                                    ? AppColor.darkBlue
-                                                    : AppColor.red,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                      _infoTile(
+                                        title: 'Enquiries',
+                                        value: offer.enquiriesCount.toString(),
                                       ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            offer.createdTime ?? '',
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.gray84,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            'Expires: ${offer.expiresAt ?? '-'}',
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.gray84,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
+                                      _infoTile(
+                                        title: 'Expires on',
+                                        value: offer.expiresAt ?? '-',
                                       ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        '$prodCount Products • $servCount Services',
-                                        style: AppTextStyles.mulish(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColor.darkGrey,
-                                        ),
+                                      _infoTile(
+                                        title: 'Products',
+                                        value: offer.typesCount.products
+                                            .toString(),
                                       ),
-                                      const SizedBox(height: 10),
-
-                                      if (offer.products.isNotEmpty)
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: AppColor.floralWhite,
-                                            borderRadius: BorderRadius.circular(
-                                              15,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.04,
-                                                ),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 3),
-                                              ),
-                                            ],
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 0,
-                                            vertical: 20,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
-                                                child: Text(
-                                                  offer.title,
-                                                  style: AppTextStyles.mulish(
-                                                    fontSize: 22,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
-                                                child: DottedBorder(
-                                                  color: AppColor.black
-                                                      .withOpacity(0.2),
-                                                  strokeWidth: 1.2,
-                                                  dashPattern: const [2, 2],
-                                                  borderType: BorderType.RRect,
-                                                  radius: const Radius.circular(
-                                                    30,
-                                                  ),
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8,
-                                                      ),
-                                                  child: Text(
-                                                    offer.createdTime ?? '-',
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: AppTextStyles.mulish(
-                                                      fontSize: 12,
-                                                      color: AppColor.gray84,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 25),
-
-                                              // (your horizontal stats row unchanged)
-                                              // ... keep your existing widgets here ...
-                                              const SizedBox(height: 24),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
-                                                child: Text(
-                                                  'Products',
-                                                  style: AppTextStyles.mulish(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                    ),
-                                                child: Column(
-                                                  children: offer.products
-                                                      .map(
-                                                        (p) => Padding(
-                                                          padding:
-                                                              const EdgeInsets.only(
-                                                                bottom: 10,
-                                                              ),
-                                                          child: _productTile(
-                                                            p,
-                                                          ),
-                                                        ),
-                                                      )
-                                                      .toList(),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                            ],
-                                          ),
-                                        ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 18),
+
+                                const SizedBox(height: 24),
+
+                                /// ───────── PRODUCTS ─────────
+                                if (offer.products.isNotEmpty) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    child: Text(
+                                      'Products',
+                                      style: AppTextStyles.mulish(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+
+                                  ListView.separated(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    itemCount: offer.products.length,
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(height: 12),
+                                    itemBuilder: (context, i) {
+                                      final p = offer.products[i];
+                                      return _productCard(p);
+                                    },
+                                  ),
+                                ],
                               ],
                             ),
                           );
                         },
-                      ),
 
-                    const SizedBox(height: 24),
+                        // itemBuilder: (BuildContext context, int index) {
+                        //   final offer = currentItems[index];
+                        //
+                        //   final prodCount = offer.typesCount.products;
+                        //   final servCount = offer.typesCount.services;
+                        //
+                        //   return Container(
+                        //     decoration: BoxDecoration(
+                        //       color: AppColor.floralWhite,
+                        //       borderRadius: BorderRadius.circular(15),
+                        //       boxShadow: [
+                        //         BoxShadow(
+                        //           color: Colors.black.withOpacity(0.04),
+                        //           blurRadius: 8,
+                        //           offset: const Offset(0, 3),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //     padding: const EdgeInsets.symmetric(
+                        //       horizontal: 0,
+                        //       vertical: 20,
+                        //     ),
+                        //     child: Column(
+                        //       crossAxisAlignment: CrossAxisAlignment.start,
+                        //       children: [
+                        //         Padding(
+                        //           padding: const EdgeInsets.symmetric(
+                        //             horizontal: 20,
+                        //           ),
+                        //           child: Text(
+                        //             offer.title,
+                        //             style: AppTextStyles.mulish(
+                        //               fontSize: 22,
+                        //               fontWeight: FontWeight.bold,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //         const SizedBox(height: 10),
+                        //
+                        //         Padding(
+                        //           padding: const EdgeInsets.symmetric(
+                        //             horizontal: 20,
+                        //           ),
+                        //           child: DottedBorder(
+                        //             color: AppColor.black.withOpacity(0.2),
+                        //             strokeWidth: 1.2,
+                        //             dashPattern: const [2, 2],
+                        //             borderType: BorderType.RRect,
+                        //             radius: const Radius.circular(30),
+                        //             padding: const EdgeInsets.symmetric(
+                        //               horizontal: 12,
+                        //               vertical: 8,
+                        //             ),
+                        //             child: Text(
+                        //               offer.createdTime ?? '-',
+                        //               overflow: TextOverflow.ellipsis,
+                        //               style: AppTextStyles.mulish(
+                        //                 fontSize: 12,
+                        //                 color: AppColor.gray84,
+                        //               ),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //
+                        //         const SizedBox(height: 25),
+                        //         SingleChildScrollView(
+                        //           padding: const EdgeInsets.symmetric(
+                        //             horizontal: 20,
+                        //           ),
+                        //           scrollDirection: Axis.horizontal,
+                        //           child: Row(
+                        //             children: [
+                        //               Container(
+                        //                 padding: const EdgeInsets.symmetric(
+                        //                   horizontal: 20,
+                        //                   vertical: 10,
+                        //                 ),
+                        //                 decoration: BoxDecoration(
+                        //                   color: AppColor.white,
+                        //                   borderRadius: BorderRadius.circular(15),
+                        //                 ),
+                        //                 child: Row(
+                        //                   mainAxisAlignment:
+                        //                       MainAxisAlignment.spaceBetween,
+                        //                   children: [
+                        //                     // LEFT: two texts stacked
+                        //                     Column(
+                        //                       crossAxisAlignment:
+                        //                           CrossAxisAlignment.start,
+                        //                       mainAxisSize: MainAxisSize.min,
+                        //                       children: [
+                        //                         Text(
+                        //                           'Enquiries',
+                        //                           maxLines: 1,
+                        //                           overflow: TextOverflow.ellipsis,
+                        //                           style: AppTextStyles.mulish(
+                        //                             color: AppColor.gray84,
+                        //                             fontSize: 12,
+                        //                             fontWeight: FontWeight.w600,
+                        //                           ),
+                        //                         ),
+                        //                         const SizedBox(height: 2),
+                        //                         Text(
+                        //                           '10',
+                        //                           style: AppTextStyles.mulish(
+                        //                             fontSize: 18,
+                        //                             color: AppColor.black,
+                        //                             fontWeight: FontWeight.bold,
+                        //                           ),
+                        //                         ),
+                        //                       ],
+                        //                     ),
+                        //
+                        //                     const SizedBox(width: 8),
+                        //
+                        //                     // RIGHT: image
+                        //                     Image.asset(
+                        //                       AppImages.rightStickArrow,
+                        //                       color: AppColor.black,
+                        //                       width: 18,
+                        //                       height: 18,
+                        //                       fit: BoxFit.contain,
+                        //                     ),
+                        //                   ],
+                        //                 ),
+                        //               ),
+                        //               SizedBox(width: 15),
+                        //               Container(
+                        //                 padding: const EdgeInsets.symmetric(
+                        //                   horizontal: 20,
+                        //                   vertical: 10,
+                        //                 ),
+                        //                 decoration: BoxDecoration(
+                        //                   color: AppColor.white,
+                        //                   borderRadius: BorderRadius.circular(15),
+                        //                 ),
+                        //                 child: Row(
+                        //                   mainAxisAlignment:
+                        //                       MainAxisAlignment.spaceBetween,
+                        //                   children: [
+                        //                     // LEFT: two texts stacked
+                        //                     Column(
+                        //                       crossAxisAlignment:
+                        //                           CrossAxisAlignment.start,
+                        //                       mainAxisSize: MainAxisSize.min,
+                        //                       children: [
+                        //                         Text(
+                        //                           'Expires on',
+                        //                           maxLines: 1,
+                        //                           overflow: TextOverflow.ellipsis,
+                        //                           style: AppTextStyles.mulish(
+                        //                             color: AppColor.gray84,
+                        //                             fontSize: 12,
+                        //                             fontWeight: FontWeight.w600,
+                        //                           ),
+                        //                         ),
+                        //                         const SizedBox(height: 2),
+                        //                         Text(
+                        //                           '5 Aug 25',
+                        //                           style: AppTextStyles.mulish(
+                        //                             fontSize: 18,
+                        //                             color: AppColor.black,
+                        //                             fontWeight: FontWeight.bold,
+                        //                           ),
+                        //                         ),
+                        //                       ],
+                        //                     ),
+                        //
+                        //                     const SizedBox(width: 15),
+                        //
+                        //                     // RIGHT: image
+                        //                     Image.asset(
+                        //                       AppImages.rightStickArrow,
+                        //                       color: AppColor.black,
+                        //                       width: 18,
+                        //                       height: 18,
+                        //                       fit: BoxFit.contain,
+                        //                     ),
+                        //                   ],
+                        //                 ),
+                        //               ),
+                        //               SizedBox(width: 15),
+                        //               Container(
+                        //                 padding: const EdgeInsets.symmetric(
+                        //                   horizontal: 20,
+                        //                   vertical: 10,
+                        //                 ),
+                        //                 decoration: BoxDecoration(
+                        //                   color: AppColor.white,
+                        //                   borderRadius: BorderRadius.circular(15),
+                        //                 ),
+                        //                 child: Row(
+                        //                   mainAxisAlignment:
+                        //                       MainAxisAlignment.spaceBetween,
+                        //                   children: [
+                        //                     // LEFT: two texts stacked
+                        //                     Column(
+                        //                       crossAxisAlignment:
+                        //                           CrossAxisAlignment.start,
+                        //                       mainAxisSize: MainAxisSize.min,
+                        //                       children: [
+                        //                         Text(
+                        //                           'Types of Product',
+                        //                           maxLines: 1,
+                        //                           overflow: TextOverflow.ellipsis,
+                        //                           style: AppTextStyles.mulish(
+                        //                             color: AppColor.gray84,
+                        //                             fontSize: 12,
+                        //                             fontWeight: FontWeight.w600,
+                        //                           ),
+                        //                         ),
+                        //                         const SizedBox(height: 2),
+                        //                         Text(
+                        //                           '5 ',
+                        //                           style: AppTextStyles.mulish(
+                        //                             fontSize: 18,
+                        //                             color: AppColor.black,
+                        //                             fontWeight: FontWeight.bold,
+                        //                           ),
+                        //                         ),
+                        //                       ],
+                        //                     ),
+                        //
+                        //                     const SizedBox(width: 15),
+                        //
+                        //                     // RIGHT: image
+                        //                     Image.asset(
+                        //                       AppImages.rightStickArrow,
+                        //                       color: AppColor.black,
+                        //                       width: 18,
+                        //                       height: 18,
+                        //                       fit: BoxFit.contain,
+                        //                     ),
+                        //                   ],
+                        //                 ),
+                        //               ),
+                        //             ],
+                        //           ),
+                        //         ),
+                        //         const SizedBox(height: 24),
+                        //         Padding(
+                        //           padding: const EdgeInsets.symmetric(
+                        //             horizontal: 20,
+                        //           ),
+                        //           child: Text(
+                        //             'Products',
+                        //             style: AppTextStyles.mulish(
+                        //               fontWeight: FontWeight.bold,
+                        //               fontSize: 16,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //         const SizedBox(height: 10),
+                        //         Container(
+                        //           padding: const EdgeInsets.symmetric(
+                        //             horizontal: 20,
+                        //           ),
+                        //           decoration: BoxDecoration(
+                        //             borderRadius: BorderRadius.circular(24),
+                        //           ),
+                        //           child: ClipRRect(
+                        //             borderRadius: BorderRadius.circular(24),
+                        //             child: Stack(
+                        //               children: [
+                        //                 Positioned.fill(
+                        //                   child: const ColoredBox(
+                        //                     color: Color(0xFFF8FBF8),
+                        //                   ),
+                        //                 ),
+                        //                 Positioned.fill(
+                        //                   child: DecoratedBox(
+                        //                     decoration: BoxDecoration(
+                        //                       gradient: LinearGradient(
+                        //                         begin: Alignment.centerLeft,
+                        //                         end: Alignment.centerRight,
+                        //                         colors: [
+                        //                           const Color(
+                        //                             0xFF000000,
+                        //                           ).withOpacity(0.04), // 3%
+                        //
+                        //                           const Color(
+                        //                             0xFF000000,
+                        //                           ).withOpacity(0.00), // 0%
+                        //                         ],
+                        //                       ),
+                        //                     ),
+                        //                   ),
+                        //                 ),
+                        //
+                        //                 Row(
+                        //                   children: [
+                        //                     Expanded(
+                        //                       child: Padding(
+                        //                         padding:
+                        //                             const EdgeInsets.symmetric(
+                        //                               horizontal: 14,
+                        //                               vertical: 14,
+                        //                             ),
+                        //                         child: Column(
+                        //                           crossAxisAlignment:
+                        //                               CrossAxisAlignment.start,
+                        //                           children: [
+                        //                             Text(
+                        //                             name,
+                        //                               maxLines: 1,
+                        //                               overflow:
+                        //                                   TextOverflow.ellipsis,
+                        //                               style: AppTextStyles.mulish(
+                        //                                 fontWeight:
+                        //                                     FontWeight.normal,
+                        //                                 fontSize: 12,
+                        //                               ),
+                        //                             ),
+                        //                             const SizedBox(height: 8),
+                        //
+                        //                             Row(
+                        //                               children: [
+                        //                                 Container(
+                        //                                   padding:
+                        //                                       const EdgeInsets.symmetric(
+                        //                                         horizontal: 10,
+                        //                                         vertical: 4,
+                        //                                       ),
+                        //                                   decoration: BoxDecoration(
+                        //                                     color: const Color(
+                        //                                       0xFF31CC64,
+                        //                                     ),
+                        //                                     borderRadius:
+                        //                                         BorderRadius.circular(
+                        //                                           20,
+                        //                                         ),
+                        //                                   ),
+                        //                                   child: Row(
+                        //                                     children: [
+                        //                                       Text(
+                        //                                         rating!.toStringAsFixed(1),
+                        //                                         style: AppTextStyles.mulish(
+                        //                                           fontSize: 12,
+                        //                                           color: AppColor
+                        //                                               .white,
+                        //                                           fontWeight:
+                        //                                               FontWeight
+                        //                                                   .bold,
+                        //                                         ),
+                        //                                       ),
+                        //                                       const Icon(
+                        //                                         Icons.star,
+                        //                                         size: 14,
+                        //                                         color:
+                        //                                             Colors.white,
+                        //                                       ),
+                        //                                       Text(
+                        //                                         '${reviewCount}',
+                        //                                         style: AppTextStyles.mulish(
+                        //                                           fontSize: 12,
+                        //                                           color: AppColor
+                        //                                               .white,
+                        //                                         ),
+                        //                                       ),
+                        //                                     ],
+                        //                                   ),
+                        //                                 ),
+                        //                               ],
+                        //                             ),
+                        //                             const SizedBox(height: 10),
+                        //
+                        //                             Row(
+                        //                               crossAxisAlignment:
+                        //                                   CrossAxisAlignment.end,
+                        //                               children: const [
+                        //                                 // price
+                        //                               ],
+                        //                             ),
+                        //                             Row(
+                        //                               children: [
+                        //                                 Text(
+                        //                                   '₹${price.toStringAsFixed(0)}',
+                        //                                   style:
+                        //                                       AppTextStyles.mulish(
+                        //                                         color: AppColor
+                        //                                             .black,
+                        //                                         fontSize: 16,
+                        //                                         fontWeight:
+                        //                                             FontWeight
+                        //                                                 .bold,
+                        //                                       ),
+                        //                                 ),
+                        //                                 const SizedBox(width: 8),
+                        //                                 Text(
+                        //                                   '₹${mrp!.toStringAsFixed(0)}',
+                        //                                   style: AppTextStyles.mulish(
+                        //                                     color:
+                        //                                         AppColor.gray84,
+                        //                                     decoration:
+                        //                                         TextDecoration
+                        //                                             .lineThrough,
+                        //                                     fontSize: 11,
+                        //                                   ),
+                        //                                 ),
+                        //                               ],
+                        //                             ),
+                        //                           ],
+                        //                         ),
+                        //                       ),
+                        //                     ),
+                        //
+                        //                     ClipRRect(
+                        //                       borderRadius: BorderRadius.circular(12),
+                        //                       child: Image.network(
+                        //                         (imageUrl ?? '').isEmpty ? AppImages.phone : imageUrl!,
+                        //                         width: 90,
+                        //                         height: 100,
+                        //                         fit: BoxFit.cover,
+                        //                         errorBuilder: (_, __, ___) => Image.asset(
+                        //                           AppImages.phone,
+                        //                           width: 90,
+                        //                           height: 100,
+                        //                           fit: BoxFit.cover,
+                        //                         ),
+                        //                       ),
+                        //                     ),
+                        //                   ],
+                        //                 ),
+                        //               ],
+                        //             ),
+                        //           ),
+                        //         ),
+                        //
+                        //         const SizedBox(height: 24),
+                        //       ],
+                        //     ),
+                        //   );
+                        // },
+                      ),
                   ],
                 ),
               ),
@@ -853,160 +1189,125 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     );
   }
 
-  Widget _productTile(OfferProductItem p) {
+  Widget _infoTile({required String title, required String value}) {
     return Container(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(24)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            Positioned.fill(child: const ColoredBox(color: Color(0xFFF8FBF8))),
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      const Color(0xFF000000).withOpacity(0.04),
-                      const Color(0xFF000000).withOpacity(0.00),
-                    ],
-                  ),
-                ),
-              ),
+      margin: const EdgeInsets.only(right: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTextStyles.mulish(fontSize: 12, color: AppColor.gray84),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTextStyles.mulish(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          p.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.mulish(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (p.rating != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF31CC64),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${p.rating!.toStringAsFixed(1)} ',
-                                  style: AppTextStyles.mulish(
-                                    fontSize: 12,
-                                    color: AppColor.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.star,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${p.reviewCount}',
-                                  style: AppTextStyles.mulish(
-                                    fontSize: 12,
-                                    color: AppColor.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Text(
-                              '₹${p.price.toStringAsFixed(0)}',
-                              style: AppTextStyles.mulish(
-                                color: AppColor.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (p.mrp != null && p.mrp! > p.price)
-                              Text(
-                                '₹${p.mrp!.toStringAsFixed(0)}',
-                                style: AppTextStyles.mulish(
-                                  color: AppColor.gray84,
-                                  decoration: TextDecoration.lineThrough,
-                                  fontSize: 11,
-                                ),
-                              ),
-                          ],
-                        ),
-                        if ((p.offerValue ?? '').isNotEmpty ||
-                            p.offerPrice != null) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            '${p.offerLabel ?? "Offer"} ${p.offerValue ?? ""}${p.offerPrice != null ? " • ₹${p.offerPrice!.toStringAsFixed(0)}" : ""}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.mulish(
-                              fontSize: 11,
-                              color: AppColor.gray84,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: _productImage(p.imageUrl),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _productImage(String? url) {
-    final u = (url ?? '').trim();
-    if (u.isEmpty) {
-      return Image.asset(
-        AppImages.phone,
-        width: 100,
-        height: 110,
-        fit: BoxFit.cover,
-      );
-    }
+  Widget _productCard(OfferProductItem p) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBF8),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.mulish(fontSize: 12),
+                ),
 
-    return Image.network(
-      u,
-      width: 100,
-      height: 110,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(
-        AppImages.phone,
-        width: 100,
-        height: 110,
-        fit: BoxFit.cover,
+                const SizedBox(height: 8),
+
+                if (p.rating != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF31CC64),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          p.rating!.toStringAsFixed(1),
+                          style: AppTextStyles.mulish(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Icon(Icons.star, size: 14, color: Colors.white),
+                        Text(
+                          ' ${p.reviewCount}',
+                          style: AppTextStyles.mulish(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Text(
+                      '₹${p.price.toStringAsFixed(0)}',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (p.mrp != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '₹${p.mrp!.toStringAsFixed(0)}',
+                        style: AppTextStyles.mulish(
+                          fontSize: 11,
+                          color: AppColor.gray84,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              p.imageUrl ?? '',
+              width: 90,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Image.asset(AppImages.phone, width: 90, height: 100),
+            ),
+          ),
+        ],
       ),
     );
   }
