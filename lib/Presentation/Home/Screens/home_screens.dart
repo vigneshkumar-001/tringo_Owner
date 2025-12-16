@@ -279,6 +279,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               return Row(
                                 children: [
                                   CommonContainer.smallShopContainer(
+
                                     onTap: () {
                                       final bool isService =
                                           shopsRes?.data.items[0].shopKind
@@ -318,12 +319,18 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                             return Row(
                               children: [
                                 CommonContainer.smallShopContainer(
+
                                   onTap: () async {
                                     ref
                                         .read(selectedShopProvider.notifier)
                                         .switchShop(shop.id);
                                   },
 
+                                  switchOnTap: (){
+                                    ref
+                                        .read(selectedShopProvider.notifier)
+                                        .switchShop(shop.id);
+                                  },
                                   shopImage: shop.primaryImageUrl ?? '',
                                   shopLocation:
                                       '${shop.addressEn}, ${shop.city}',
@@ -966,12 +973,24 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                         context: context,
                                         phone: whatsappNumber,
                                       );
+                                      ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .markEnquiry(enquiryId: data.id);
+                                      ref
+                                          .read(selectedShopProvider.notifier)
+                                          .switchShop('');
                                     },
                                     onCallTap: () {
                                       CallHelper.openDialer(
                                         context: context,
                                         rawPhone: phone,
                                       );
+                                      ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .markEnquiry(enquiryId: data.id);
+                                      ref
+                                          .read(selectedShopProvider.notifier)
+                                          .switchShop('');
                                     },
                                   ),
                                   const SizedBox(height: 20),
