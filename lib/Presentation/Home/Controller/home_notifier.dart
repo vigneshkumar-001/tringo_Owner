@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
+import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
@@ -13,6 +14,7 @@ class HomeState {
   final String? error;
   final EnquiryResponse? enquiryResponse;
   final ShopsResponse? shopsResponse;
+  final MarkEnquiry? markEnquiry;
   final String? selectedShopId; // ✅ ADD THIS
   const HomeState({
     this.isLoading = false,
@@ -20,6 +22,7 @@ class HomeState {
     this.enquiryResponse,
     this.shopsResponse,
     this.selectedShopId,
+    this.markEnquiry,
   });
 
   factory HomeState.initial() => const HomeState();
@@ -30,6 +33,7 @@ class HomeState {
     EnquiryResponse? enquiryResponse,
     ShopsResponse? shopsResponse,
     String? selectedShopId,
+    MarkEnquiry? markEnquiry,
   }) {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
@@ -38,6 +42,7 @@ class HomeState {
       enquiryResponse: enquiryResponse ?? this.enquiryResponse,
       shopsResponse: shopsResponse ?? this.shopsResponse,
       selectedShopId: selectedShopId ?? this.selectedShopId,
+      markEnquiry: markEnquiry ?? this.markEnquiry,
     );
   }
 }
@@ -50,6 +55,7 @@ class HomeNotifier extends Notifier<HomeState> {
     api = ref.read(apiDataSourceProvider);
     return HomeState.initial();
   }
+
   Future<void> selectShop(String shopId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('currentShopId', shopId);
@@ -57,7 +63,7 @@ class HomeNotifier extends Notifier<HomeState> {
     state = state.copyWith(selectedShopId: shopId);
   }
 
-  Future<void> fetchAllEnquiry({ required String shopId}) async {
+  Future<void> fetchAllEnquiry({required String shopId}) async {
     // only set loading flag, keep shopsResponse as it is
     state = state.copyWith(isLoading: true, error: null);
 
@@ -82,7 +88,6 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> fetchShops({required String shopId}) async {
-
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await api.getAllShops(shopId: shopId);
@@ -104,10 +109,34 @@ class HomeNotifier extends Notifier<HomeState> {
       },
     );
   }
-}
-final homeNotifierProvider =
-NotifierProvider<HomeNotifier, HomeState>(HomeNotifier.new);
 
+  Future<void> markEnquiry({required String enquiryId}) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await api.markEnquiry(enquiryId: enquiryId);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          markEnquiry: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          markEnquiry: response,
+        );
+      },
+    );
+  }
+}
+
+final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(
+  HomeNotifier.new,
+);
 
 // final homeNotifierProvider =
 //     NotifierProvider.autoDispose<HomeNotifier, HomeState>(HomeNotifier.new);
