@@ -172,6 +172,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     final isSelected = shop.shopId == _currentShopId;
 
                     final en = (shop.shopEnglishName ?? '').trim();
+                    final shopAddressEn = (shop.shopAddressEn ?? '').trim();
                     final name = en.isEmpty
                         ? (shop.shopTamilName ?? 'Untitled Shop')
                         : en;
@@ -185,7 +186,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
                     return ListTile(
                       title: Text(
-                        name,
+                        '${name} - ${shopAddressEn}',
                         style: AppTextStyles.mulish(
                           fontWeight: isSelected
                               ? FontWeight.bold
@@ -874,13 +875,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   color: AppColor.darkBlue,
                                 ),
                               ),
-                              const SizedBox(width: 5),
+                              SizedBox(width: 5),
                               Image.asset(
                                 AppImages.starImage,
                                 height: 9,
                                 color: AppColor.green,
                               ),
-                              const SizedBox(width: 5),
+                              SizedBox(width: 5),
                               Container(
                                 width: 1.5,
                                 height: 11,

@@ -861,7 +861,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                        SizedBox(height: 20),
 
                       if (currentItems.isEmpty)
                         const Padding(
@@ -1073,8 +1073,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(height: 8),
-                                          const Text(
+                                          SizedBox(height: 8),
+                                          Text(
                                             'Sell your remaining food faster with offer',
                                             style: TextStyle(
                                               color: Colors.white70,

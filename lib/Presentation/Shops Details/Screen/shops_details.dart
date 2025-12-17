@@ -261,7 +261,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 15),
+                        SizedBox(height: 15),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
