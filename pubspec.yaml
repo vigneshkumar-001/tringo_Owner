@@ -56,7 +56,7 @@ dependencies:
   pin_code_fields: any
   skeletonizer: ^2.1.0+1
   cached_network_image: ^3.4.1
-  sim_card_info: ^1.0.2
+#  sim_card_info: ^1.0.2
   mobile_number: ^3.0.0
   crypto: ^3.0.3
   country_picker: ^2.0.25
@@ -64,6 +64,8 @@ dependencies:
   path_provider: ^2.1.0
   open_filex: ^4.7.0
   share_plus: ^10.0.0
+  call_log: ^6.0.1
+  flutter_contacts: ^1.1.9+2
 
 
 dependency_overrides:

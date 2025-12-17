@@ -696,41 +696,36 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                       ],
                                     ),
                                   ),
-
-                                  const SizedBox(height: 24),
-
-                                  /// ───────── PRODUCTS ─────────
-                                  if (offer.products.isNotEmpty) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                      ),
-                                      child: Text(
-                                        'Products',
-                                        style: AppTextStyles.mulish(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                ] else if (offer.services.isNotEmpty) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    child: Text(
+                                      'Services',
+                                      style: AppTextStyles.mulish(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 10),
+                                  ),
+                                  const SizedBox(height: 10),
 
-                                    ListView.separated(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                      ),
-                                      itemCount: offer.products.length,
-                                      separatorBuilder: (_, __) =>
-                                          const SizedBox(height: 12),
-                                      itemBuilder: (context, i) {
-                                        final p = offer.products[i];
-                                        return _productCard(p);
-                                      },
+                                  ListView.separated(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
                                     ),
-                                  ],
+                                    itemCount: offer.services.length,
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(height: 12),
+                                    itemBuilder: (context, i) {
+                                      final p = offer.services[i];
+                                      return _serviceCard(p);
+                                    },
+                                  ),
                                 ],
                               ),
                             );
@@ -1265,16 +1260,111 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                 Row(
                   children: [
                     Text(
-                      '₹${p.price.toStringAsFixed(0)}',
+                      '₹${p.offerPrice}',
                       style: AppTextStyles.mulish(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (p.mrp != null) ...[
+                    if (p.price != null) ...[
                       const SizedBox(width: 8),
                       Text(
-                        '₹${p.mrp!.toStringAsFixed(0)}',
+                        '₹${p.price}',
+                        style: AppTextStyles.mulish(
+                          fontSize: 11,
+                          color: AppColor.gray84,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              p.imageUrl ?? '',
+              width: 90,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Image.asset(AppImages.phone, width: 90, height: 100),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _serviceCard(OfferServiceItem p) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBF8),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.mulish(fontSize: 12),
+                ),
+
+                const SizedBox(height: 8),
+
+                if (p.rating != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF31CC64),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          p.rating!.toStringAsFixed(1),
+                          style: AppTextStyles.mulish(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Icon(Icons.star, size: 14, color: Colors.white),
+                        Text(
+                          ' ${p.reviewCount}',
+                          style: AppTextStyles.mulish(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Text(
+                      '₹${p.offerPrice?.toStringAsFixed(0) ?? ''}',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (p.price != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '₹${p.price.toStringAsFixed(0)}',
                         style: AppTextStyles.mulish(
                           fontSize: 11,
                           color: AppColor.gray84,

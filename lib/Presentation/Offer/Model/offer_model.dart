@@ -148,7 +148,6 @@ class OfferProductItem {
   final double? rating;
   final int reviewCount;
   final double price;
-  final double? mrp;
 
   final String? offerLabel; // ex: "chfyd"
   final String? offerValue; // ex: "6%"
@@ -162,7 +161,7 @@ class OfferProductItem {
     this.rating,
     required this.reviewCount,
     required this.price,
-    this.mrp,
+
     this.offerLabel,
     this.offerValue,
     this.offerPrice,
@@ -190,7 +189,7 @@ class OfferProductItem {
       rating: _toDoubleNullable(json['rating']),
       reviewCount: _toInt(json['reviewCount']),
       price: _toDouble(json['price']),
-      mrp: _toDoubleNullable(json['mrp']),
+
       offerLabel: json['offerLabel'],
       offerValue: json['offerValue'],
       offerPrice: _toDoubleNullable(json['offerPrice']),
@@ -201,11 +200,54 @@ class OfferProductItem {
 
 class OfferServiceItem {
   /// Your sample shows `services: []`, so keep it flexible
-  final Map<String, dynamic> raw;
+  final String id;
+  final String name;
+  final double? rating;
+  final int reviewCount;
+  final double price;
 
-  OfferServiceItem({required this.raw});
+  final String? offerLabel; // ex: "chfyd"
+  final String? offerValue; // ex: "6%"
+  final double? offerPrice;
+
+  final String? imageUrl;
+
+  OfferServiceItem({
+    required this.id,
+    required this.name,
+    this.rating,
+    required this.reviewCount,
+    required this.price,
+
+    this.offerLabel,
+    this.offerValue,
+    this.offerPrice,
+    this.imageUrl,
+  });
 
   factory OfferServiceItem.fromJson(Map<String, dynamic> json) {
-    return OfferServiceItem(raw: json);
+    double? _toDoubleNullable(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      return double.tryParse('$v');
+    }
+
+    int _toInt(dynamic v) => v is int ? v : int.tryParse('$v') ?? 0;
+
+    double _toDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      return double.tryParse('$v') ?? 0.0;
+    }
+    return OfferServiceItem(      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      rating: _toDoubleNullable(json['rating']),
+      reviewCount: _toInt(json['reviewCount']),
+      price: _toDouble(json['price']),
+
+      offerLabel: json['offerLabel'],
+      offerValue: json['offerValue'],
+      offerPrice: _toDoubleNullable(json['offerPrice']),
+      imageUrl: json['imageUrl'],);
   }
 }

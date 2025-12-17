@@ -7,6 +7,7 @@ import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.d
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/search_keyword.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_category_info.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+import 'package:tringo_vendor/main.dart';
 
 import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String aboutMeScreens = 'AboutMeScreens';
   static const String offerProducts = 'OfferProducts';
   static const String offerScreens = 'OfferScreens';
+  static const String callDashboardScreen = 'CallDashboardScreen';
 
   static const String splashScreenPath = '/splashScreen';
   static const String loginPath = '/login';
@@ -58,6 +60,7 @@ class AppRoutes {
   static const String aboutMeScreensPath = '/AboutMeScreens';
   static const String offerProductsPath = '/OfferProducts';
   static const String offerScreensPath = '/OfferScreens';
+  static const String callDashboardScreenPath = '/CallDashboardScreen';
 }
 
 final goRouter = GoRouter(
@@ -83,6 +86,11 @@ final goRouter = GoRouter(
   },
 
   routes: [
+    GoRoute(
+      path: AppRoutes.callDashboardScreenPath,
+      name: AppRoutes.callDashboardScreen,
+      builder: (context, state) => CallDashboardScreen (),
+    ),
     GoRoute(
       path: AppRoutes.splashScreenPath,
       name: AppRoutes.splashScreen,
