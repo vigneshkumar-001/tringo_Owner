@@ -3,84 +3,72 @@
     package="com.fenizo.tringo_Owner.tringo_Owner">
 
     <!-- ========== PERMISSIONS ========== -->
-
-    <!-- Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Android 13+ -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- 🔥 STORAGE PERMISSIONS (THE ONES YOU ACTUALLY NEED) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29"/>
+    <!-- Storage -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
 
+    <!-- Phone & SIM -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.READ_CALL_LOG"/>
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG"/>
+
+    <!-- Contacts -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
 
     <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
-    <!-- Phone state -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-
     <!-- Overlay / Foreground Service -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
 
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-
-    <!-- Android 13+ -->
+    <!-- Camera / Media -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
 
-
-    <!-- ===== PACKAGE VISIBILITY (single block) ===== -->
+    <!-- ===== PACKAGE VISIBILITY ===== -->
     <queries>
-
-        <!-- Needed for your PROCESS_TEXT plugin -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-
-        <!-- Allow calling dial apps -->
         <intent>
             <action android:name="android.intent.action.DIAL"/>
             <data android:scheme="tel"/>
         </intent>
-
-        <!-- WhatsApp -->
-        <package android:name="com.whatsapp" />
-
-        <!-- Browsers for https -->
+        <package android:name="com.whatsapp"/>
         <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https" />
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="https"/>
         </intent>
-
     </queries>
-
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="true" />
     <!-- ========== APPLICATION ========== -->
     <application
         android:name="${applicationName}"
         android:label="Tringo Business"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -88,7 +76,7 @@
 
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme" />
+                android:resource="@style/NormalTheme"/>
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -133,55 +121,86 @@
 <!--<manifest xmlns:android="http://schemas.android.com/apk/res/android"-->
 <!--    package="com.fenizo.tringo_Owner.tringo_Owner">-->
 
-<!--    &lt;!&ndash; ===== PERMISSIONS ===== &ndash;&gt;-->
+<!--    &lt;!&ndash; ========== PERMISSIONS ========== &ndash;&gt;-->
 
-<!--    &lt;!&ndash; Overlay + Foreground service for call UI &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>-->
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
-<!--    &lt;!&ndash; Required on API 34+ when using foregroundServiceType="phoneCall" &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>-->
+<!--    &lt;!&ndash; Internet &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.INTERNET" />-->
+<!--    &lt;!&ndash; Android 13+ &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />-->
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />-->
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />-->
+
+<!--    <uses-permission android:name="android.permission.READ_CALL_LOG"/>-->
+<!--    <uses-permission android:name="android.permission.READ_CONTACTS"/>-->
+<!--    <uses-permission android:name="android.permission.WRITE_CALL_LOG" />-->
+<!--    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />-->
+<!--    <uses-permission android:name="android.permission.CALL_PHONE"/>-->
+
+<!--    &lt;!&ndash; 🔥 STORAGE PERMISSIONS (THE ONES YOU ACTUALLY NEED) &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"-->
+<!--        android:maxSdkVersion="32"/>-->
+<!--    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"-->
+<!--        android:maxSdkVersion="29"/>-->
+
+
+<!--    &lt;!&ndash; Location &ndash;&gt;-->
 <!--    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>-->
 <!--    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>-->
 <!--    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>-->
-<!--    &lt;!&ndash; Phone state to detect call state changes &ndash;&gt;-->
+
+<!--    &lt;!&ndash; Phone state &ndash;&gt;-->
 <!--    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>-->
 
-<!--    &lt;!&ndash; Android 13+ (Tiramisu) notifications for foreground service notification &ndash;&gt;-->
+<!--    &lt;!&ndash; Overlay / Foreground Service &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>-->
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>-->
+
+<!--    &lt;!&ndash; Notifications (Android 13+) &ndash;&gt;-->
 <!--    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>-->
-<!--    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />-->
 
 
-<!--    &lt;!&ndash; (optional / commented out others you had) &ndash;&gt;-->
-<!--    &lt;!&ndash;-->
-<!--    <uses-permission android:name="android.permission.READ_CALL_LOG"/>-->
-<!--    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>-->
+<!--    &lt;!&ndash; Android 13+ &ndash;&gt;-->
 <!--    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>-->
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>-->
 <!--    <uses-permission android:name="android.permission.CAMERA"/>-->
-<!--    <uses-feature android:name="android.hardware.camera" android:required="false"/>-->
-<!--    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>-->
-<!--    &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>-->
 
-<!--    &lt;!&ndash; 🔹 ANDROID 11+ PACKAGE VISIBILITY (IMPORTANT) &ndash;&gt;-->
+
+<!--    &lt;!&ndash; ===== PACKAGE VISIBILITY (single block) ===== &ndash;&gt;-->
 <!--    <queries>-->
-<!--        &lt;!&ndash; existing from plugin &ndash;&gt;-->
+
+<!--        &lt;!&ndash; Needed for your PROCESS_TEXT plugin &ndash;&gt;-->
 <!--        <intent>-->
-<!--            <action android:name="android.intent.action.PROCESS_TEXT" />-->
-<!--            <data android:mimeType="text/plain" />-->
+<!--            <action android:name="android.intent.action.PROCESS_TEXT"/>-->
+<!--            <data android:mimeType="text/plain"/>-->
 <!--        </intent>-->
 
-<!--        &lt;!&ndash; 🔥 ADD THIS: allow querying apps that handle tel: DIAL &ndash;&gt;-->
+<!--        &lt;!&ndash; Allow calling dial apps &ndash;&gt;-->
 <!--        <intent>-->
-<!--            <action android:name="android.intent.action.DIAL" />-->
-<!--            <data android:scheme="tel" />-->
+<!--            <action android:name="android.intent.action.DIAL"/>-->
+<!--            <data android:scheme="tel"/>-->
 <!--        </intent>-->
+
+<!--        &lt;!&ndash; WhatsApp &ndash;&gt;-->
+<!--        <package android:name="com.whatsapp" />-->
+
+<!--        &lt;!&ndash; Browsers for https &ndash;&gt;-->
+<!--        <intent>-->
+<!--            <action android:name="android.intent.action.VIEW" />-->
+<!--            <category android:name="android.intent.category.BROWSABLE" />-->
+<!--            <data android:scheme="https" />-->
+<!--        </intent>-->
+
 <!--    </queries>-->
 
+<!--    &lt;!&ndash; ========== APPLICATION ========== &ndash;&gt;-->
 <!--    <application-->
 <!--        android:name="${applicationName}"-->
 <!--        android:label="Tringo Business"-->
-<!--        android:icon="@mipmap/ic_launcher">-->
+<!--        android:icon="@mipmap/ic_launcher"-->
+<!--        android:requestLegacyExternalStorage="true">-->
 
-<!--        &lt;!&ndash; Main Flutter Activity &ndash;&gt;-->
 <!--        <activity-->
 <!--            android:name=".MainActivity"-->
 <!--            android:exported="true"-->
@@ -197,51 +216,42 @@
 <!--                android:resource="@style/NormalTheme" />-->
 
 <!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--                <action android:name="android.intent.action.MAIN"/>-->
+<!--                <category android:name="android.intent.category.LAUNCHER"/>-->
 <!--            </intent-filter>-->
 <!--        </activity>-->
 
-<!--        &lt;!&ndash; ===== INCOMING CALLS ===== &ndash;&gt;-->
+<!--        &lt;!&ndash; Incoming calls &ndash;&gt;-->
 <!--        <receiver-->
 <!--            android:name=".CallReceiver"-->
 <!--            android:enabled="true"-->
 <!--            android:exported="true">-->
 <!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.PHONE_STATE" />-->
+<!--                <action android:name="android.intent.action.PHONE_STATE"/>-->
 <!--            </intent-filter>-->
 <!--        </receiver>-->
 
-<!--        &lt;!&ndash; ===== OVERLAY FOREGROUND SERVICE ===== &ndash;&gt;-->
+<!--        &lt;!&ndash; Overlay call service &ndash;&gt;-->
 <!--        <service-->
 <!--            android:name=".TringoOverlayService"-->
 <!--            android:exported="false"-->
-<!--            android:foregroundServiceType="phoneCall" />-->
+<!--            android:foregroundServiceType="phoneCall"/>-->
 
-<!--        &lt;!&ndash; ===== OUTGOING CALLS (Call Redirection) ===== &ndash;&gt;-->
+<!--        &lt;!&ndash; Call redirection &ndash;&gt;-->
 <!--        <service-->
 <!--            android:name=".TringoRedirectionService"-->
 <!--            android:permission="android.permission.BIND_CALL_REDIRECTION_SERVICE"-->
 <!--            android:exported="true">-->
 <!--            <intent-filter>-->
-<!--                <action android:name="android.telecom.CallRedirectionService" />-->
+<!--                <action android:name="android.telecom.CallRedirectionService"/>-->
 <!--            </intent-filter>-->
 <!--        </service>-->
 
-<!--        &lt;!&ndash; Flutter embedding &ndash;&gt;-->
 <!--        <meta-data-->
 <!--            android:name="flutterEmbedding"-->
-<!--            android:value="2" />-->
+<!--            android:value="2"/>-->
 <!--    </application>-->
-<!--    <queries>-->
-<!--        &lt;!&ndash; For WhatsApp app &ndash;&gt;-->
-<!--        <package android:name="com.whatsapp" />-->
-
-<!--        &lt;!&ndash; For any https browser VIEW intent &ndash;&gt;-->
-<!--        <intent>-->
-<!--            <action android:name="android.intent.action.VIEW" />-->
-<!--            <category android:name="android.intent.category.BROWSABLE" />-->
-<!--            <data android:scheme="https" />-->
-<!--        </intent>-->
-<!--    </queries>-->
 <!--</manifest>-->
+
+
+<!-- -->
