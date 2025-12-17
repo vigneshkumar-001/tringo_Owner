@@ -36,7 +36,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       if (!mounted) return;
 
-
       final homeState = ref.read(homeNotifierProvider);
 
       // From your model: ShopsResponse -> ShopsData -> isNewOwner
@@ -46,11 +45,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       if (token != null && token.isNotEmpty) {
         if (!isNewUser) {
+          //context.go(AppRoutes.callDashboardScreenPath);
           context.go(AppRoutes.homeScreenPath);
         } else {
           context.go(AppRoutes.privacyPolicyPath);
         }
       } else {
+        // context.go(AppRoutes.callDashboardScreenPath);
         context.go(AppRoutes.loginPath);
       }
     } catch (e, st) {
