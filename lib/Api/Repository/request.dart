@@ -43,7 +43,7 @@ class Request {
           final status = error.response?.statusCode;
 
           if (status == 402) {
-            // app update new version
+            // app update new versionq
             return handler.reject(error);
           } else if (status == 406 || status == 401) {
             // unauthorized, etc.
