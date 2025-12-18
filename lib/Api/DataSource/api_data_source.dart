@@ -544,7 +544,8 @@ class ApiDataSource extends BaseApiDataSource {
   Future<Either<Failure, ShopInfoPhotosResponse>> shopPhotoUpload({
     required List<Map<String, String>> items,
     String? apiShopId,
-  }) async {
+  }) async
+  {
     try {
       final prefs = await SharedPreferences.getInstance();
 
