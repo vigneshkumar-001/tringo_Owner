@@ -166,7 +166,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: shops.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, __) => Divider(height: 1),
                   itemBuilder: (ctx, index) {
                     final shop = shops[index];
                     final isSelected = shop.shopId == _currentShopId;
@@ -180,6 +180,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     final city = (shop.shopCity ?? '').toString();
                     final state = (shop.shopState ?? '').toString();
                     final subtitle = [
+                      if (shopAddressEn.isNotEmpty) shopAddressEn,
                       if (city.isNotEmpty) city,
                       if (state.isNotEmpty) state,
                     ].join(', ');
@@ -281,6 +282,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final name = _getShopTitle(selectedShop);
     final address = _getShopAddress(selectedShop);
     final cityState = _getShopCityState(selectedShop);
+    final aboutStates = ref.watch(aboutMeNotifierProvider);
+    final shopsRes = aboutStates.shopRootResponse;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 15),
       decoration: BoxDecoration(
@@ -308,9 +311,9 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 5),
+                  SizedBox(width: 5),
                   Text('- ${address}'),
-                  const SizedBox(width: 5),
+                  SizedBox(width: 5),
                   GestureDetector(
                     onTap: () => _showShopPickerBottomSheet(aboutState),
                     child: Container(
@@ -358,16 +361,31 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
               children: [
                 CommonContainer.editShopContainer(
                   text: 'Add Branch',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ShopCategoryInfo(
-                          isEditMode: true,
-                          isService: true,
-                          isIndividual: false,
-                        ),
-                      ),
+                  onTap: () async {
+                    final selectedShop = _getSelectedShop(aboutState);
+                    if (selectedShop == null) return;
+
+                    final bool isService =
+                        (selectedShop.shopKind ?? '').toUpperCase() ==
+                        'SERVICE';
+
+                    context.push(
+                      AppRoutes.shopCategoryInfoPath,
+                      extra: {
+                        'pages': 'AboutMeScreens',
+                        'isEditMode': true,
+                        'isService': isService,
+                        'isIndividual': false,
+
+                        // Branch create mode → parent shopId send pannunga
+                        'parentShopId': selectedShop.shopId,
+
+                        // (optional) prefill if needed
+                        'initialShopNameEnglish':
+                            shopsRes?.data.items[0].englishName,
+                        'initialShopNameTamil':
+                            shopsRes?.data.items[0].tamilName,
+                      },
                     );
                   },
                 ),
@@ -708,18 +726,37 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   String _getShopCityState(Shop? shop) {
     if (shop == null) return '';
 
+    final address = (shop.shopAddressEn ?? '').trim();
     final city = (shop.shopCity ?? '').trim();
     final state = (shop.shopState ?? '').trim();
 
-    if (city.isNotEmpty && state.isNotEmpty) {
-      return '$city, $state';
+    final cityState = [
+      if (city.isNotEmpty) city,
+      if (state.isNotEmpty) state,
+    ].join(', ');
+
+    if (address.isNotEmpty && cityState.isNotEmpty) {
+      return '$address, $cityState';
     }
-
-    if (city.isNotEmpty) return city;
-    if (state.isNotEmpty) return state;
-
-    return '';
+    if (address.isNotEmpty) return address;
+    return cityState;
   }
+
+  // String _getShopCityState(Shop? shop) {
+  //   if (shop == null) return '';
+  //
+  //   final city = (shop.shopCity ?? '').trim();
+  //   final state = (shop.shopState ?? '').trim();
+  //
+  //   if (city.isNotEmpty && state.isNotEmpty) {
+  //     return '$city, $state';
+  //   }
+  //
+  //   if (city.isNotEmpty) return city;
+  //   if (state.isNotEmpty) return state;
+  //
+  //   return '';
+  // }
 
   /// Top banner using shopImages; guarded against empty / invalid URLs
   Widget _buildShopHero(AboutMeState aboutState) {
@@ -939,109 +976,118 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       enableSwitchAnimation: true,
       child: Scaffold(
         body: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildShopHero(aboutState),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Row(
-                    children: [
-                      if (isDoorDelivery)
-                        CommonContainer.doorDelivery(
-                          text: 'Door Delivery',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          textColor: AppColor.skyBlue,
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Text(
-                    _getShopTitle(selectedShop),
-                    style: AppTextStyles.mulish(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: AppColor.darkBlue,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SingleChildScrollView(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Padding(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await ref
+                  .read(aboutMeNotifierProvider.notifier)
+                  .fetchAllShopDetails();
+            },
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildShopHero(aboutState),
+                  Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: Row(
-                      children: List.generate(tabs.length, (index) {
-                        final isSelected = selectedIndex == index;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() => selectedIndex = index);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollToSelected(index);
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColor.white
-                                    : AppColor.leftArrow,
-                                borderRadius: BorderRadius.circular(20),
-                                border: isSelected
-                                    ? Border.all(
-                                        color: AppColor.black,
-                                        width: 2,
-                                      )
-                                    : null,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 15,
-                              ),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    tabs[index]['icon']!,
-                                    height: 20,
-                                    color: isSelected
-                                        ? AppColor.black
-                                        : AppColor.gray84,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    tabs[index]['label']!,
-                                    style: AppTextStyles.mulish(
-                                      fontWeight: FontWeight.bold,
+                      children: [
+                        if (isDoorDelivery)
+                          CommonContainer.doorDelivery(
+                            text: 'Door Delivery',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            textColor: AppColor.skyBlue,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Text(
+                      _getShopTitle(selectedShop),
+                      style: AppTextStyles.mulish(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: AppColor.darkBlue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: List.generate(tabs.length, (index) {
+                          final isSelected = selectedIndex == index;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() => selectedIndex = index);
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _scrollToSelected(index);
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColor.white
+                                      : AppColor.leftArrow,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: isSelected
+                                      ? Border.all(
+                                          color: AppColor.black,
+                                          width: 2,
+                                        )
+                                      : null,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 15,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Image.asset(
+                                      tabs[index]['icon']!,
+                                      height: 20,
                                       color: isSelected
                                           ? AppColor.black
                                           : AppColor.gray84,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      tabs[index]['label']!,
+                                      style: AppTextStyles.mulish(
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? AppColor.black
+                                            : AppColor.gray84,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildSelectedContent(selectedIndex, aboutState),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _buildSelectedContent(selectedIndex, aboutState),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

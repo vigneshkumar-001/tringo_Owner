@@ -299,7 +299,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                               shopsRes?.data.items[0].tamilName,
 
                                           'isEditMode':
-                                              true, // ✅ pass the required parameter
+                                              true,
                                         },
                                       );
                                       // context.pushNamed(
@@ -861,7 +861,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ],
                         ),
                       ),
-                        SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       if (currentItems.isEmpty)
                         const Padding(
