@@ -100,7 +100,8 @@ class _ProductCategoryScreensState
     WidgetRef ref,
     TextEditingController controller, {
     void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  }) {
+  })
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -263,7 +264,8 @@ class _ProductCategoryScreensState
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  ) {
+  )
+  {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
