@@ -121,6 +121,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
     }
 
+    final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
+
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
       return const Scaffold(
@@ -272,61 +274,96 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
-                          itemCount: shops.length + 1,
+                          itemCount: isFreemium
+                              ? shops.length
+                              : shops.length + 1,
+                          // itemCount: shops.length + 1,
                           physics: const BouncingScrollPhysics(),
                           itemBuilder: (context, index) {
                             if (index == shops.length) {
-                              return Row(
-                                children: [
-                                  CommonContainer.smallShopContainer(
+                              if (!isFreemium && index == shops.length) {
+                                return Row(
+                                  children: [
+                                    CommonContainer.smallShopContainer(
+                                      onTap: () {
+                                        final bool isService =
+                                            shops.first.shopKind
+                                                .toUpperCase() ==
+                                            'SERVICE';
 
-                                    onTap: () {
-                                      final bool isService =
-                                          shopsRes?.data.items[0].shopKind
-                                              .toUpperCase() ==
-                                          'SERVICE';
-                                      AppLogger.log.i(isService);
-                                      context.push(
-                                        AppRoutes.shopCategoryInfoPath,
-                                        extra: {
-                                          'isService': isService,
-                                          'isIndividual': '',
-                                          'initialShopNameEnglish': shopsRes
-                                              ?.data
-                                              .items[0]
-                                              .englishName,
-                                          'initialShopNameTamil':
-                                              shopsRes?.data.items[0].tamilName,
+                                        context.push(
+                                          AppRoutes.shopCategoryInfoPath,
+                                          extra: {
+                                            'isService': isService,
+                                            'isIndividual': '',
+                                            'initialShopNameEnglish':
+                                                shops.first.englishName,
+                                            'initialShopNameTamil':
+                                                shops.first.tamilName,
+                                            'isEditMode': true,
+                                          },
+                                        );
+                                      },
+                                      shopImage: '',
+                                      addAnotherShop: true,
+                                      shopLocation:
+                                          'Premium user can add branch',
+                                      shopName: 'Add Another Shop',
+                                    ),
+                                  ],
+                                );
+                              }
 
-                                          'isEditMode':
-                                              true, // ✅ pass the required parameter
-                                        },
-                                      );
-                                      // context.pushNamed(
-                                      //
-                                      //   AppRoutes.shopCategoryInfo,
-                                      // );
-                                    },
-                                    shopImage: '',
-                                    addAnotherShop: true,
-                                    shopLocation: 'Premium User can add branch',
-                                    shopName: 'Add Another Shop',
-                                  ),
-                                ],
-                              );
+                              // return Row(
+                              //   children: [
+                              //     CommonContainer.smallShopContainer(
+                              //
+                              //       onTap: () {
+                              //         final bool isService =
+                              //             shopsRes?.data.items[0].shopKind
+                              //                 .toUpperCase() ==
+                              //             'SERVICE';
+                              //         AppLogger.log.i(isService);
+                              //         context.push(
+                              //           AppRoutes.shopCategoryInfoPath,
+                              //           extra: {
+                              //             'isService': isService,
+                              //             'isIndividual': '',
+                              //             'initialShopNameEnglish': shopsRes
+                              //                 ?.data
+                              //                 .items[0]
+                              //                 .englishName,
+                              //             'initialShopNameTamil':
+                              //                 shopsRes?.data.items[0].tamilName,
+                              //
+                              //             'isEditMode':
+                              //                 true,
+                              //           },
+                              //         );
+                              //         // context.pushNamed(
+                              //         //
+                              //         //   AppRoutes.shopCategoryInfo,
+                              //         // );
+                              //       },
+                              //       shopImage: '',
+                              //       addAnotherShop: true,
+                              //       shopLocation: 'Premium User can add branch',
+                              //       shopName: 'Add Another Shop',
+                              //     ),
+                              //   ],
+                              // );
                             }
                             final shop = shops[index];
                             return Row(
                               children: [
                                 CommonContainer.smallShopContainer(
-
                                   onTap: () async {
                                     ref
                                         .read(selectedShopProvider.notifier)
                                         .switchShop(shop.id);
                                   },
 
-                                  switchOnTap: (){
+                                  switchOnTap: () {
                                     ref
                                         .read(selectedShopProvider.notifier)
                                         .switchShop(shop.id);
@@ -861,7 +898,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ],
                         ),
                       ),
-                        SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       if (currentItems.isEmpty)
                         const Padding(

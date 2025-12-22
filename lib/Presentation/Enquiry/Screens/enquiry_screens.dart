@@ -123,9 +123,6 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
 
   bool _isSameDate(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
-
-
-
   }
 
   DateTime? _parseEnquiryDate(String raw) {
@@ -157,7 +154,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
       isScrollControlled: false,
       builder: (_) {
         return Container(
-          padding:   EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColor.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
@@ -176,8 +173,14 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
               SizedBox(height: 12),
 
               _sheetItem('Today', () => Navigator.pop(context, 'Today')),
-              _sheetItem('Yesterday', () => Navigator.pop(context, 'Yesterday')),
-              _sheetItem('Custom Date', () => Navigator.pop(context, 'Custom Date')),
+              _sheetItem(
+                'Yesterday',
+                () => Navigator.pop(context, 'Yesterday'),
+              ),
+              _sheetItem(
+                'Custom Date',
+                () => Navigator.pop(context, 'Custom Date'),
+              ),
 
               SizedBox(height: 8),
             ],
@@ -238,7 +241,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
-        padding:   EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         child: Row(
           children: [
             Text(
@@ -256,7 +259,6 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -306,10 +308,6 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
               showTopBackArrow: false,
               showBottomButton: false,
             ),
-            // Text(
-            //   'No data found',
-            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            // ),
           ),
         ),
       );
@@ -417,7 +415,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                       ),
                     ),
 
-                      SizedBox(height: 30),
+                    SizedBox(height: 30),
 
                     // ================= SHOPS =================
                     if (shops.isEmpty)
@@ -455,13 +453,13 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                         ),
                       ),
 
-                      SizedBox(height: 30),
+                    SizedBox(height: 30),
 
                     // ================= ENQUIRIES TITLE =================
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      padding: EdgeInsets.symmetric(horizontal: 15),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Enquiries',
@@ -470,11 +468,15 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
+                          Spacer(),
                           // Date filter
                           GestureDetector(
                             onTap: _openDateFilterSheet,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.8, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.8,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColor.iceBlue,
                                 borderRadius: BorderRadius.circular(25),
@@ -495,8 +497,550 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                 ],
                               ),
                             ),
-                          )
+                          ),
+                          SizedBox(width: 15),
 
+                          if (currentItems.isNotEmpty)
+                            GestureDetector(
+                              onTap: () async {
+                                if (_isDownloading) return;
+
+                                setState(() => _isDownloading = true);
+
+                                try {
+                                  await openPdfInChrome();
+                                  // Optional: small delay so animation is visible
+                                  await Future.delayed(
+                                    const Duration(milliseconds: 600),
+                                  );
+                                } catch (e) {
+                                  AppSnackBar.error(
+                                    context,
+                                    'Failed to open PDF',
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isDownloading = false);
+                                  }
+                                }
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14.5,
+                                  vertical: 9.5,
+                                ),
+                                margin: EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  gradient: _isDownloading
+                                      ? LinearGradient(
+                                          colors: [
+                                            AppColor.blueGradient1,
+                                            AppColor.blueGradient2,
+                                            AppColor.blueGradient1,
+                                          ],
+                                        )
+                                      : LinearGradient(
+                                          colors: [Colors.black, Colors.black],
+                                        ),
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  transitionBuilder: (child, animation) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SizeTransition(
+                                        sizeFactor: animation,
+                                        axis: Axis.horizontal,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: _isDownloading
+                                      ? Row(
+                                          key: ValueKey('downloading'),
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            SizedBox(
+                                              height: 18,
+                                              width: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppColor.white,
+                                              ),
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Opening...',
+                                              style: AppTextStyles.mulish(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColor.white,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : Row(
+                                          key: ValueKey('normal'),
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Image.asset(
+                                              AppImages.downloadImage,
+                                              height: 15,
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ),
+                          // Row(
+                          //   children: [
+                          //     GestureDetector(
+                          //       onTap: () async {
+                          //         final pickedDate = await showModalBottomSheet<DateTime>(
+                          //           context: context,
+                          //           backgroundColor: AppColor.white,
+                          //           shape: const RoundedRectangleBorder(
+                          //             borderRadius: BorderRadius.vertical(
+                          //               top: Radius.circular(20),
+                          //             ),
+                          //           ),
+                          //           builder: (context) {
+                          //             return Padding(
+                          //               padding: const EdgeInsets.all(20.0),
+                          //               child: Column(
+                          //                 mainAxisSize: MainAxisSize.min,
+                          //                 children: [
+                          //                   Row(
+                          //                     mainAxisAlignment:
+                          //                         MainAxisAlignment
+                          //                             .spaceBetween,
+                          //                     children: [
+                          //                       Text(
+                          //                         'Select Date',
+                          //                         style: AppTextStyles.mulish(
+                          //                           fontSize: 22,
+                          //                           fontWeight: FontWeight.w800,
+                          //                           color: AppColor.darkBlue,
+                          //                         ),
+                          //                       ),
+                          //                       GestureDetector(
+                          //                         onTap: () =>
+                          //                             Navigator.pop(context),
+                          //                         child: Container(
+                          //                           decoration: BoxDecoration(
+                          //                             color: AppColor.mistyRose,
+                          //                             borderRadius:
+                          //                                 BorderRadius.circular(
+                          //                                   25,
+                          //                                 ),
+                          //                           ),
+                          //                           padding:
+                          //                               const EdgeInsets.symmetric(
+                          //                                 horizontal: 17,
+                          //                                 vertical: 10,
+                          //                               ),
+                          //                           child: Icon(
+                          //                             Icons.close,
+                          //                             size: 16,
+                          //                             color: AppColor.red,
+                          //                           ),
+                          //                         ),
+                          //                       ),
+                          //                     ],
+                          //                   ),
+                          //                   const SizedBox(height: 15),
+                          //                   CommonContainer.horizonalDivider(),
+                          //
+                          //                   ListTile(
+                          //                     title: Text(
+                          //                       'Today',
+                          //                       style: AppTextStyles.mulish(
+                          //                         fontSize: 16,
+                          //                         fontWeight: FontWeight.w600,
+                          //                         color: AppColor.darkBlue,
+                          //                       ),
+                          //                     ),
+                          //                     onTap: () => Navigator.pop(
+                          //                       context,
+                          //                       DateTime.now(),
+                          //                     ),
+                          //                   ),
+                          //
+                          //                   ListTile(
+                          //                     title: Text(
+                          //                       'Yesterday',
+                          //                       style: AppTextStyles.mulish(
+                          //                         fontSize: 16,
+                          //                         fontWeight: FontWeight.w600,
+                          //                         color: AppColor.darkBlue,
+                          //                       ),
+                          //                     ),
+                          //                     onTap: () => Navigator.pop(
+                          //                       context,
+                          //                       DateTime.now().subtract(
+                          //                         const Duration(days: 1),
+                          //                       ),
+                          //                     ),
+                          //                   ),
+                          //
+                          //                   ListTile(
+                          //                     title: Text(
+                          //                       'Custom Date',
+                          //                       style: AppTextStyles.mulish(
+                          //                         fontSize: 16,
+                          //                         fontWeight: FontWeight.w600,
+                          //                         color: AppColor.darkBlue,
+                          //                       ),
+                          //                     ),
+                          //                     onTap: () async {
+                          //                       final d = await showDatePicker(
+                          //                         context: context,
+                          //                         initialDate: selectedDate,
+                          //                         firstDate: DateTime(2000),
+                          //                         lastDate: DateTime(2100),
+                          //                         builder: (context, child) {
+                          //                           return Theme(
+                          //                             data: Theme.of(context).copyWith(
+                          //                               dialogBackgroundColor:
+                          //                                   AppColor.white,
+                          //                               colorScheme:
+                          //                                   ColorScheme.light(
+                          //                                     primary: AppColor
+                          //                                         .brightBlue,
+                          //                                     onPrimary:
+                          //                                         Colors.white,
+                          //                                     onSurface:
+                          //                                         AppColor
+                          //                                             .black,
+                          //                                   ),
+                          //                               textButtonTheme:
+                          //                                   TextButtonThemeData(
+                          //                                     style: TextButton.styleFrom(
+                          //                                       foregroundColor:
+                          //                                           AppColor
+                          //                                               .brightBlue,
+                          //                                     ),
+                          //                                   ),
+                          //                             ),
+                          //                             child: child!,
+                          //                           );
+                          //                         },
+                          //                       );
+                          //
+                          //                       if (d != null) {
+                          //                         Navigator.pop(
+                          //                           context,
+                          //                           d,
+                          //                         ); // ✅ IMPORTANT: close sheet + return date
+                          //                       }
+                          //                     },
+                          //                   ),
+                          //                 ],
+                          //               ),
+                          //             );
+                          //           },
+                          //         );
+                          //
+                          //         if (pickedDate != null) {
+                          //           setState(() {
+                          //             selectedDate = pickedDate;
+                          //             final today = DateTime.now();
+                          //             final yesterday = today.subtract(
+                          //               const Duration(days: 1),
+                          //             );
+                          //
+                          //             if (_isSameDate(pickedDate, today)) {
+                          //               selectedDay = "Today";
+                          //             } else if (_isSameDate(
+                          //               pickedDate,
+                          //               yesterday,
+                          //             )) {
+                          //               selectedDay = "Yesterday";
+                          //             } else {
+                          //               selectedDay = _fmt(pickedDate);
+                          //             }
+                          //           });
+                          //         }
+                          //
+                          //         // final selected = await showModalBottomSheet<String>(
+                          //         //   context: context,
+                          //         //   backgroundColor: AppColor.white,
+                          //         //   shape: RoundedRectangleBorder(
+                          //         //     borderRadius: BorderRadius.vertical(
+                          //         //       top: Radius.circular(20),
+                          //         //     ),
+                          //         //   ),
+                          //         //   builder: (context) {
+                          //         //     return Padding(
+                          //         //       padding: const EdgeInsets.all(20.0),
+                          //         //       child: Column(
+                          //         //         mainAxisSize: MainAxisSize.min,
+                          //         //         children: [
+                          //         //           Row(
+                          //         //             mainAxisAlignment:
+                          //         //                 MainAxisAlignment
+                          //         //                     .spaceBetween,
+                          //         //             children: [
+                          //         //               Text(
+                          //         //                 'Select Date',
+                          //         //                 style: AppTextStyles.mulish(
+                          //         //                   fontSize: 22,
+                          //         //                   fontWeight: FontWeight.w800,
+                          //         //                   color: AppColor.darkBlue,
+                          //         //                 ),
+                          //         //               ),
+                          //         //               GestureDetector(
+                          //         //                 onTap: () =>
+                          //         //                     Navigator.pop(context),
+                          //         //                 child: Container(
+                          //         //                   decoration: BoxDecoration(
+                          //         //                     color: AppColor.mistyRose,
+                          //         //                     borderRadius:
+                          //         //                         BorderRadius.circular(
+                          //         //                           25,
+                          //         //                         ),
+                          //         //                   ),
+                          //         //                   child: Padding(
+                          //         //                     padding:
+                          //         //                         const EdgeInsets.symmetric(
+                          //         //                           horizontal: 17,
+                          //         //                           vertical: 10,
+                          //         //                         ),
+                          //         //                     child: Icon(
+                          //         //                       size: 16,
+                          //         //                       Icons.close,
+                          //         //                       color: AppColor.red,
+                          //         //                     ),
+                          //         //                   ),
+                          //         //                 ),
+                          //         //               ),
+                          //         //             ],
+                          //         //           ),
+                          //         //             SizedBox(height: 15),
+                          //         //           CommonContainer.horizonalDivider(),
+                          //         //           ListTile(
+                          //         //             title: Text(
+                          //         //               'Today',
+                          //         //               style: AppTextStyles.mulish(
+                          //         //                 fontSize: 16,
+                          //         //                 fontWeight: FontWeight.w600,
+                          //         //                 color: AppColor.darkBlue,
+                          //         //               ),
+                          //         //             ),
+                          //         //             onTap: () => Navigator.pop(
+                          //         //               context,
+                          //         //               'Today',
+                          //         //             ),
+                          //         //           ),
+                          //         //           ListTile(
+                          //         //             title: Text(
+                          //         //               'Yesterday',
+                          //         //               style: AppTextStyles.mulish(
+                          //         //                 fontSize: 16,
+                          //         //                 fontWeight: FontWeight.w600,
+                          //         //                 color: AppColor.darkBlue,
+                          //         //               ),
+                          //         //             ),
+                          //         //             onTap: () => Navigator.pop(
+                          //         //               context,
+                          //         //               'Yesterday',
+                          //         //             ),
+                          //         //           ),
+                          //         //           ListTile(
+                          //         //             title: Text(
+                          //         //               'Custom Date',
+                          //         //               style: AppTextStyles.mulish(
+                          //         //                 fontSize: 16,
+                          //         //                 fontWeight: FontWeight.w600,
+                          //         //                 color: AppColor.darkBlue,
+                          //         //               ),
+                          //         //             ),
+                          //         //             onTap: () async {
+                          //         //               final picked = await showDatePicker(
+                          //         //                 context: context,
+                          //         //                 initialDate: selectedDate,
+                          //         //                 firstDate: DateTime(2000),
+                          //         //                 lastDate: DateTime(2100),
+                          //         //                 builder: (context, child) {
+                          //         //                   return Theme(
+                          //         //                     data: Theme.of(context).copyWith(
+                          //         //                       dialogBackgroundColor:
+                          //         //                           AppColor.white,
+                          //         //                       colorScheme:
+                          //         //                           ColorScheme.light(
+                          //         //                             primary: AppColor
+                          //         //                                 .brightBlue,
+                          //         //                             onPrimary:
+                          //         //                                 Colors.white,
+                          //         //                             onSurface:
+                          //         //                                 AppColor
+                          //         //                                     .black,
+                          //         //                           ),
+                          //         //                       textButtonTheme:
+                          //         //                           TextButtonThemeData(
+                          //         //                             style: TextButton.styleFrom(
+                          //         //                               foregroundColor:
+                          //         //                                   AppColor
+                          //         //                                       .brightBlue,
+                          //         //                             ),
+                          //         //                           ),
+                          //         //                     ),
+                          //         //                     child: child!,
+                          //         //                   );
+                          //         //                 },
+                          //         //               );
+                          //         //
+                          //         //               if (picked != null) {
+                          //         //                 setState(() {
+                          //         //                   selectedDate = picked;
+                          //         //                   selectedDay = _fmt(picked);
+                          //         //                 });
+                          //         //               }
+                          //         //             },
+                          //         //           ),
+                          //         //         ],
+                          //         //       ),
+                          //         //     );
+                          //         //   },
+                          //         // );
+                          //         //
+                          //         // if (selected == 'Today') {
+                          //         //   setState(() {
+                          //         //     selectedDay = 'Today';
+                          //         //     selectedDate = DateTime.now();
+                          //         //   });
+                          //         // } else if (selected == 'Yesterday') {
+                          //         //   setState(() {
+                          //         //     selectedDay = 'Yesterday';
+                          //         //     selectedDate = DateTime.now().subtract(
+                          //         //       const Duration(days: 1),
+                          //         //     );
+                          //         //   });
+                          //         // }
+                          //       },
+                          //       child: Container(
+                          //         padding: const EdgeInsets.symmetric(
+                          //           horizontal: 12.5,
+                          //           vertical: 8,
+                          //         ),
+                          //         decoration: BoxDecoration(
+                          //           color: AppColor.iceBlue,
+                          //           borderRadius: BorderRadius.circular(25),
+                          //         ),
+                          //         child: Image.asset(
+                          //           AppImages.filter,
+                          //           height: 19,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //     SizedBox(width: 10),
+                          //
+                          //     if (currentItems.isNotEmpty)
+                          //       GestureDetector(
+                          //         onTap: () async {
+                          //           if (_isDownloading) return;
+                          //
+                          //           setState(() => _isDownloading = true);
+                          //
+                          //           try {
+                          //             await openPdfInChrome();
+                          //             // Optional: small delay so animation is visible
+                          //             await Future.delayed(
+                          //               const Duration(milliseconds: 600),
+                          //             );
+                          //           } catch (e) {
+                          //             AppSnackBar.error(
+                          //               context,
+                          //               'Failed to open PDF',
+                          //             );
+                          //           } finally {
+                          //             if (mounted) {
+                          //               setState(() => _isDownloading = false);
+                          //             }
+                          //           }
+                          //         },
+                          //         child: AnimatedContainer(
+                          //           duration: const Duration(milliseconds: 300),
+                          //           curve: Curves.easeOut,
+                          //           padding: const EdgeInsets.symmetric(
+                          //             horizontal: 14.5,
+                          //             vertical: 9.5,
+                          //           ),
+                          //           margin: EdgeInsets.only(right: 8),
+                          //           decoration: BoxDecoration(
+                          //             gradient: _isDownloading
+                          //                 ? LinearGradient(
+                          //                     colors: [
+                          //                       AppColor.blueGradient1,
+                          //                       AppColor.blueGradient2,
+                          //                       AppColor.blueGradient1,
+                          //                     ],
+                          //                   )
+                          //                 : LinearGradient(
+                          //                     colors: [
+                          //                       Colors.black,
+                          //                       Colors.black,
+                          //                     ],
+                          //                   ),
+                          //             borderRadius: BorderRadius.circular(25),
+                          //           ),
+                          //           child: AnimatedSwitcher(
+                          //             duration: const Duration(
+                          //               milliseconds: 250,
+                          //             ),
+                          //             transitionBuilder: (child, animation) {
+                          //               return FadeTransition(
+                          //                 opacity: animation,
+                          //                 child: SizeTransition(
+                          //                   sizeFactor: animation,
+                          //                   axis: Axis.horizontal,
+                          //                   child: child,
+                          //                 ),
+                          //               );
+                          //             },
+                          //             child: _isDownloading
+                          //                 ? Row(
+                          //                     key: ValueKey('downloading'),
+                          //                     mainAxisSize: MainAxisSize.min,
+                          //                     children: [
+                          //                       SizedBox(
+                          //                         height: 18,
+                          //                         width: 18,
+                          //                         child:
+                          //                             CircularProgressIndicator(
+                          //                               strokeWidth: 2,
+                          //                               color: AppColor.white,
+                          //                             ),
+                          //                       ),
+                          //                       SizedBox(width: 6),
+                          //                       Text(
+                          //                         'Opening...',
+                          //                         style: AppTextStyles.mulish(
+                          //                           fontSize: 12,
+                          //                           fontWeight: FontWeight.w700,
+                          //                           color: AppColor.white,
+                          //                         ),
+                          //                       ),
+                          //                     ],
+                          //                   )
+                          //                 : Row(
+                          //                     key: ValueKey('normal'),
+                          //                     mainAxisSize: MainAxisSize.min,
+                          //                     children: [
+                          //                       Image.asset(
+                          //                         AppImages.downloadImage,
+                          //                         height: 15,
+                          //                       ),
+                          //                     ],
+                          //                   ),
+                          //           ),
+                          //         ),
+                          //       ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),
