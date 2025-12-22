@@ -989,7 +989,6 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                         .read(selectedShopProvider.notifier)
                         .switchShop('');
 
-
                     // 2️⃣ Reset AFTER navigation
                     Future.microtask(() {
                       RegistrationSession.instance.reset();
