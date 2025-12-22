@@ -308,10 +308,6 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
               showTopBackArrow: false,
               showBottomButton: false,
             ),
-            // Text(
-            //   'No data found',
-            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            // ),
           ),
         ),
       );
@@ -461,7 +457,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
 
                     // ================= ENQUIRIES TITLE =================
                     Padding(
-                      padding:   EdgeInsets.symmetric(horizontal: 15),
+                      padding: EdgeInsets.symmetric(horizontal: 15),
                       child: Row(
                         // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -472,7 +468,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                         Spacer(),
+                          Spacer(),
                           // Date filter
                           GestureDetector(
                             onTap: _openDateFilterSheet,
@@ -502,9 +498,9 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                               ),
                             ),
                           ),
-SizedBox(width: 15,),
+                          SizedBox(width: 15),
 
-                           if (currentItems.isNotEmpty)
+                          if (currentItems.isNotEmpty)
                             GestureDetector(
                               onTap: () async {
                                 if (_isDownloading) return;

@@ -130,6 +130,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
     final selected = await showModalBottomSheet<Shop>(
       context: context,
+      backgroundColor: AppColor.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -189,9 +190,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       title: Text(
                         '${name} - ${shopAddressEn}',
                         style: AppTextStyles.mulish(
+                          fontSize: 16,
                           fontWeight: isSelected
                               ? FontWeight.bold
-                              : FontWeight.w500,
+                              : FontWeight.w600,
                           color: AppColor.darkBlue,
                         ),
                       ),
@@ -283,6 +285,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final address = _getShopAddress(selectedShop);
     final cityState = _getShopCityState(selectedShop);
     final aboutStates = ref.watch(aboutMeNotifierProvider);
+    final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
     final shopsRes = aboutStates.shopRootResponse;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 15),
@@ -359,37 +362,50 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                CommonContainer.editShopContainer(
-                  text: 'Add Branch',
-                  onTap: () async {
-                    final selectedShop = _getSelectedShop(aboutState);
-                    if (selectedShop == null) return;
+                if (!isNonPremium)
+                  CommonContainer.editShopContainer(
+                    text: 'Add Branch',
+                    onTap: () async {
+                      final selectedShop = _getSelectedShop(aboutState);
+                      if (selectedShop == null) return;
 
-                    final bool isService =
-                        (selectedShop.shopKind ?? '').toUpperCase() ==
-                        'SERVICE';
+                      final bool isService =
+                          (selectedShop.shopKind ?? '').toUpperCase() ==
+                          'SERVICE';
 
-                    context.push(
-                      AppRoutes.shopCategoryInfoPath,
-                      extra: {
-                        'pages': 'AboutMeScreens',
-                        'isEditMode': true,
-                        'isService': isService,
-                        'isIndividual': false,
+                      context.push(
+                        AppRoutes.shopCategoryInfoPath,
+                        extra: {
+                          'isEditMode': true,
+                          'isService': isService,
+                          'isIndividual': false,
 
-                        // Branch create mode → parent shopId send pannunga
-                        'parentShopId': selectedShop.shopId,
+                          // Branch create mode → parent shopId send pannunga
+                          'parentShopId': selectedShop.shopId,
 
-                        // (optional) prefill if needed
-                        'initialShopNameEnglish':
-                            shopsRes?.data.items[0].englishName,
-                        'initialShopNameTamil':
-                            shopsRes?.data.items[0].tamilName,
-                      },
-                    );
-                  },
-                ),
-                SizedBox(width: 10),
+                          // (optional) prefill if needed
+                          'initialShopNameEnglish':
+                              selectedShop.shopEnglishName,
+                          'initialShopNameTamil': selectedShop.shopTamilName,
+                        },
+                      );
+                    },
+
+                    // onTap: () {
+                    //
+                    //   Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //       builder: (context) => ShopCategoryInfo(
+                    //         isEditMode: true,
+                    //         isService: true,
+                    //         isIndividual: false,
+                    //       ),
+                    //     ),
+                    //   );
+                    // },
+                  ),
+                if (!isNonPremium) SizedBox(width: 10),
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Details',
                   onTap: () async {
@@ -741,22 +757,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     if (address.isNotEmpty) return address;
     return cityState;
   }
-
-  // String _getShopCityState(Shop? shop) {
-  //   if (shop == null) return '';
-  //
-  //   final city = (shop.shopCity ?? '').trim();
-  //   final state = (shop.shopState ?? '').trim();
-  //
-  //   if (city.isNotEmpty && state.isNotEmpty) {
-  //     return '$city, $state';
-  //   }
-  //
-  //   if (city.isNotEmpty) return city;
-  //   if (state.isNotEmpty) return state;
-  //
-  //   return '';
-  // }
 
   /// Top banner using shopImages; guarded against empty / invalid URLs
   Widget _buildShopHero(AboutMeState aboutState) {

@@ -21,6 +21,7 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
+import '../../AboutMe/Controller/about_me_notifier.dart';
 import '../../AboutMe/Screens/about_me_screens.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 
@@ -686,6 +687,14 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     AppLogger.log.i(widget.isService);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
+      final extra = GoRouterState.of(context).extra as Map<String, dynamic>;
+      final parentShopId = extra['parentShopId'] as String?;
+
+      if (parentShopId != null && parentShopId.isNotEmpty) {
+        ref.read(aboutMeNotifierProvider.notifier)
+            .fetchAllShopDetails(shopId: parentShopId);
+      }
+
     });
     if (widget.isEditMode) {
       _prefillFields();
