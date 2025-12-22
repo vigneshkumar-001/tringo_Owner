@@ -30,7 +30,7 @@ class OfferScreens extends ConsumerStatefulWidget {
 class _OfferScreensState extends ConsumerState<OfferScreens> {
   int selectedIndex = 0; // 0 = Live, 1 = Expired
   DateTime selectedDate = DateTime.now();
-  String selectedDay = 'Today';
+  String selectedDay = '';
   final GlobalKey _filterKey = GlobalKey();
 
   String _fmt(DateTime d) => DateFormat('dd MMM yyyy').format(d);
@@ -417,7 +417,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                   ),
                 ],
 
-                  SizedBox(height: 30),
+                SizedBox(height: 30),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -457,8 +457,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      CreateAppOffer(shopId: mainShop?.id ??''),
+                                  builder: (_) => CreateAppOffer(
+                                    shopId: mainShop?.id ?? '',
+                                  ),
                                 ),
                               );
                             },
@@ -481,35 +482,349 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                           ),
                           SizedBox(width: 5),
 
-                          // Date filter
-                          GestureDetector(
-                            onTap: _openDateFilterSheet,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.8,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColor.iceBlue,
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    selectedDay,
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.black,
-                                    ),
-                                  ),
-                                  SizedBox(width: 5),
-                                  Image.asset(AppImages.filter, height: 16),
-                                ],
-                              ),
-                            ),
-                          ),
+                          // Row(
+                          //   children: [
+                          //     GestureDetector(
+                          //       onTap: () async {
+                          //         final pickedDate = await showModalBottomSheet<DateTime>(
+                          //           context: context,
+                          //           backgroundColor: AppColor.white,
+                          //           shape: const RoundedRectangleBorder(
+                          //             borderRadius: BorderRadius.vertical(
+                          //               top: Radius.circular(20),
+                          //             ),
+                          //           ),
+                          //           builder: (context) {
+                          //             return Padding(
+                          //               padding: const EdgeInsets.all(20.0),
+                          //               child: Column(
+                          //                 mainAxisSize: MainAxisSize.min,
+                          //                 children: [
+                          //                   Row(
+                          //                     mainAxisAlignment:
+                          //                         MainAxisAlignment
+                          //                             .spaceBetween,
+                          //                     children: [
+                          //                       Text(
+                          //                         'Select Date',
+                          //                         style: AppTextStyles.mulish(
+                          //                           fontSize: 22,
+                          //                           fontWeight: FontWeight.w800,
+                          //                           color: AppColor.darkBlue,
+                          //                         ),
+                          //                       ),
+                          //                       GestureDetector(
+                          //                         onTap: () =>
+                          //                             Navigator.pop(context),
+                          //                         child: Container(
+                          //                           decoration: BoxDecoration(
+                          //                             color: AppColor.mistyRose,
+                          //                             borderRadius:
+                          //                                 BorderRadius.circular(
+                          //                                   25,
+                          //                                 ),
+                          //                           ),
+                          //                           padding:
+                          //                               const EdgeInsets.symmetric(
+                          //                                 horizontal: 17,
+                          //                                 vertical: 10,
+                          //                               ),
+                          //                           child: Icon(
+                          //                             Icons.close,
+                          //                             size: 16,
+                          //                             color: AppColor.red,
+                          //                           ),
+                          //                         ),
+                          //                       ),
+                          //                     ],
+                          //                   ),
+                          //                   SizedBox(height: 15),
+                          //                   CommonContainer.horizonalDivider(),
+                          //
+                          //                   ListTile(
+                          //                     title: Text(
+                          //                       'Today',
+                          //                       style: AppTextStyles.mulish(
+                          //                         fontSize: 16,
+                          //                         fontWeight: FontWeight.w600,
+                          //                         color: AppColor.darkBlue,
+                          //                       ),
+                          //                     ),
+                          //                     onTap: () => Navigator.pop(
+                          //                       context,
+                          //                       DateTime.now(),
+                          //                     ),
+                          //                   ),
+                          //
+                          //                   ListTile(
+                          //                     title: Text(
+                          //                       'Yesterday',
+                          //                       style: AppTextStyles.mulish(
+                          //                         fontSize: 16,
+                          //                         fontWeight: FontWeight.w600,
+                          //                         color: AppColor.darkBlue,
+                          //                       ),
+                          //                     ),
+                          //                     onTap: () => Navigator.pop(
+                          //                       context,
+                          //                       DateTime.now().subtract(
+                          //                         const Duration(days: 1),
+                          //                       ),
+                          //                     ),
+                          //                   ),
+                          //
+                          //                   ListTile(
+                          //                     title: Text(
+                          //                       'Custom Date',
+                          //                       style: AppTextStyles.mulish(
+                          //                         fontSize: 16,
+                          //                         fontWeight: FontWeight.w600,
+                          //                         color: AppColor.darkBlue,
+                          //                       ),
+                          //                     ),
+                          //                     onTap: () async {
+                          //                       final d = await showDatePicker(
+                          //                         context: context,
+                          //                         initialDate: selectedDate,
+                          //                         firstDate: DateTime(2000),
+                          //                         lastDate: DateTime(2100),
+                          //                         builder: (context, child) {
+                          //                           return Theme(
+                          //                             data: Theme.of(context).copyWith(
+                          //                               dialogBackgroundColor:
+                          //                                   AppColor.white,
+                          //                               colorScheme:
+                          //                                   ColorScheme.light(
+                          //                                     primary: AppColor
+                          //                                         .brightBlue,
+                          //                                     onPrimary:
+                          //                                         Colors.white,
+                          //                                     onSurface:
+                          //                                         AppColor
+                          //                                             .black,
+                          //                                   ),
+                          //                               textButtonTheme:
+                          //                                   TextButtonThemeData(
+                          //                                     style: TextButton.styleFrom(
+                          //                                       foregroundColor:
+                          //                                           AppColor
+                          //                                               .brightBlue,
+                          //                                     ),
+                          //                                   ),
+                          //                             ),
+                          //                             child: child!,
+                          //                           );
+                          //                         },
+                          //                       );
+                          //
+                          //                       if (d != null) {
+                          //                         Navigator.pop(
+                          //                           context,
+                          //                           d,
+                          //                         ); // IMPORTANT: close sheet + return date
+                          //                       }
+                          //                     },
+                          //                   ),
+                          //                 ],
+                          //               ),
+                          //             );
+                          //           },
+                          //         );
+                          //
+                          //         if (pickedDate != null) {
+                          //           setState(() {
+                          //             selectedDate = pickedDate;
+                          //             final today = DateTime.now();
+                          //             final yesterday = today.subtract(
+                          //               const Duration(days: 1),
+                          //             );
+                          //
+                          //             if (_isSameDate(pickedDate, today)) {
+                          //               selectedDay = "Today";
+                          //             } else if (_isSameDate(
+                          //               pickedDate,
+                          //               yesterday,
+                          //             )) {
+                          //               selectedDay = "Yesterday";
+                          //             } else {
+                          //               selectedDay = _fmt(pickedDate);
+                          //             }
+                          //           });
+                          //         }
+                          //
+                          //         // final selected = await showModalBottomSheet<String>(
+                          //         //   context: context,
+                          //         //   backgroundColor: AppColor.white,
+                          //         //   shape: RoundedRectangleBorder(
+                          //         //     borderRadius: BorderRadius.vertical(
+                          //         //       top: Radius.circular(20),
+                          //         //     ),
+                          //         //   ),
+                          //         //   builder: (context) {
+                          //         //     return Padding(
+                          //         //       padding: const EdgeInsets.all(20.0),
+                          //         //       child: Column(
+                          //         //         mainAxisSize: MainAxisSize.min,
+                          //         //         children: [
+                          //         //           Row(
+                          //         //             mainAxisAlignment:
+                          //         //                 MainAxisAlignment
+                          //         //                     .spaceBetween,
+                          //         //             children: [
+                          //         //               Text(
+                          //         //                 'Select Date',
+                          //         //                 style: AppTextStyles.mulish(
+                          //         //                   fontSize: 22,
+                          //         //                   fontWeight: FontWeight.w800,
+                          //         //                   color: AppColor.darkBlue,
+                          //         //                 ),
+                          //         //               ),
+                          //         //               GestureDetector(
+                          //         //                 onTap: () =>
+                          //         //                     Navigator.pop(context),
+                          //         //                 child: Container(
+                          //         //                   decoration: BoxDecoration(
+                          //         //                     color: AppColor.mistyRose,
+                          //         //                     borderRadius:
+                          //         //                         BorderRadius.circular(
+                          //         //                           25,
+                          //         //                         ),
+                          //         //                   ),
+                          //         //                   child: Padding(
+                          //         //                     padding:
+                          //         //                         const EdgeInsets.symmetric(
+                          //         //                           horizontal: 17,
+                          //         //                           vertical: 10,
+                          //         //                         ),
+                          //         //                     child: Icon(
+                          //         //                       size: 16,
+                          //         //                       Icons.close,
+                          //         //                       color: AppColor.red,
+                          //         //                     ),
+                          //         //                   ),
+                          //         //                 ),
+                          //         //               ),
+                          //         //             ],
+                          //         //           ),
+                          //         //             SizedBox(height: 15),
+                          //         //           CommonContainer.horizonalDivider(),
+                          //         //           ListTile(
+                          //         //             title: Text(
+                          //         //               'Today',
+                          //         //               style: AppTextStyles.mulish(
+                          //         //                 fontSize: 16,
+                          //         //                 fontWeight: FontWeight.w600,
+                          //         //                 color: AppColor.darkBlue,
+                          //         //               ),
+                          //         //             ),
+                          //         //             onTap: () => Navigator.pop(
+                          //         //               context,
+                          //         //               'Today',
+                          //         //             ),
+                          //         //           ),
+                          //         //           ListTile(
+                          //         //             title: Text(
+                          //         //               'Yesterday',
+                          //         //               style: AppTextStyles.mulish(
+                          //         //                 fontSize: 16,
+                          //         //                 fontWeight: FontWeight.w600,
+                          //         //                 color: AppColor.darkBlue,
+                          //         //               ),
+                          //         //             ),
+                          //         //             onTap: () => Navigator.pop(
+                          //         //               context,
+                          //         //               'Yesterday',
+                          //         //             ),
+                          //         //           ),
+                          //         //           ListTile(
+                          //         //             title: Text(
+                          //         //               'Custom Date',
+                          //         //               style: AppTextStyles.mulish(
+                          //         //                 fontSize: 16,
+                          //         //                 fontWeight: FontWeight.w600,
+                          //         //                 color: AppColor.darkBlue,
+                          //         //               ),
+                          //         //             ),
+                          //         //             onTap: () async {
+                          //         //               final picked = await showDatePicker(
+                          //         //                 context: context,
+                          //         //                 initialDate: selectedDate,
+                          //         //                 firstDate: DateTime(2000),
+                          //         //                 lastDate: DateTime(2100),
+                          //         //                 builder: (context, child) {
+                          //         //                   return Theme(
+                          //         //                     data: Theme.of(context).copyWith(
+                          //         //                       dialogBackgroundColor:
+                          //         //                           AppColor.white,
+                          //         //                       colorScheme:
+                          //         //                           ColorScheme.light(
+                          //         //                             primary: AppColor
+                          //         //                                 .brightBlue,
+                          //         //                             onPrimary:
+                          //         //                                 Colors.white,
+                          //         //                             onSurface:
+                          //         //                                 AppColor
+                          //         //                                     .black,
+                          //         //                           ),
+                          //         //                       textButtonTheme:
+                          //         //                           TextButtonThemeData(
+                          //         //                             style: TextButton.styleFrom(
+                          //         //                               foregroundColor:
+                          //         //                                   AppColor
+                          //         //                                       .brightBlue,
+                          //         //                             ),
+                          //         //                           ),
+                          //         //                     ),
+                          //         //                     child: child!,
+                          //         //                   );
+                          //         //                 },
+                          //         //               );
+                          //         //
+                          //         //               if (picked != null) {
+                          //         //                 setState(() {
+                          //         //                   selectedDate = picked;
+                          //         //                   selectedDay = _fmt(picked);
+                          //         //                 });
+                          //         //               }
+                          //         //             },
+                          //         //           ),
+                          //         //         ],
+                          //         //       ),
+                          //         //     );
+                          //         //   },
+                          //         // );
+                          //         //
+                          //         // if (selected == 'Today') {
+                          //         //   setState(() {
+                          //         //     selectedDay = 'Today';
+                          //         //     selectedDate = DateTime.now();
+                          //         //   });
+                          //         // } else if (selected == 'Yesterday') {
+                          //         //   setState(() {
+                          //         //     selectedDay = 'Yesterday';
+                          //         //     selectedDate = DateTime.now().subtract(
+                          //         //       const Duration(days: 1),
+                          //         //     );
+                          //         //   });
+                          //         // }
+                          //       },
+                          //       child: Container(
+                          //         padding: const EdgeInsets.symmetric(
+                          //           horizontal: 12.5,
+                          //           vertical: 8,
+                          //         ),
+                          //         decoration: BoxDecoration(
+                          //           color: AppColor.iceBlue,
+                          //           borderRadius: BorderRadius.circular(25),
+                          //         ),
+                          //         child: Image.asset(
+                          //           AppImages.filter,
+                          //           height: 19,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
 
@@ -635,7 +950,8 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                       horizontal: 20,
                                     ),
                                     child: Text(
-                                      offer.title,
+                                      '${offer.discountPercentage}% App offer for ${offer.title}',
+                                      // offer.title,
                                       style: AppTextStyles.mulish(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
@@ -643,7 +959,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                     ),
                                   ),
 
-                                  const SizedBox(height: 10),
+                                  SizedBox(height: 10),
 
                                   /// ───────── CREATED TIME ─────────
                                   Padding(
@@ -654,8 +970,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                       color: AppColor.black.withOpacity(0.2),
                                       dashPattern: const [2, 2],
                                       borderType: BorderType.RRect,
-                                      //             radius: const Radius.circular(30),
-                                      radius: Radius.circular(30),
+                                      radius: const Radius.circular(30),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                         vertical: 8,
@@ -669,7 +984,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                     ),
                                   ),
 
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: 20),
 
                                   /// ───────── STATS ─────────
                                   SingleChildScrollView(
@@ -680,490 +995,118 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                     child: Row(
                                       children: [
                                         _infoTile(
+                                          image: AppImages.rightArrow,
                                           title: 'Enquiries',
                                           value: offer.enquiriesCount
                                               .toString(),
                                         ),
-                                        _infoTile(
-                                          title: 'Expires on',
-                                          value: offer.expiresAt ?? '-',
-                                        ),
-                                        _infoTile(
-                                          title: 'Products',
-                                          value: offer.typesCount.products
-                                              .toString(),
-                                        ),
+                                        if (offer.expiresAt != null &&
+                                            offer.expiresAt!.isNotEmpty)
+                                          _infoTile(
+                                            image: AppImages.editImage,
+                                            title: 'Expires on',
+                                            value: offer.expiresAt!,
+                                          ),
+
+                                        // _infoTile(
+                                        //   image: AppImages.editImage,
+                                        //   title: 'Expires on',
+                                        //   value: offer.expiresAt ?? '-',
+                                        // ),
+
+                                        //  Dynamic third tile: Service / Product
+                                        if ((offer.services.isNotEmpty) ||
+                                            (offer.typesCount.services > 0))
+                                          _infoTile(
+                                            title: 'Services',
+                                            value:
+                                                (offer.services.isNotEmpty
+                                                        ? offer.services.length
+                                                        : offer
+                                                              .typesCount
+                                                              .services)
+                                                    .toString(),
+                                          )
+                                        else if ((offer.products.isNotEmpty) ||
+                                            (offer.typesCount.products > 0))
+                                          _infoTile(
+                                            title: 'Products',
+                                            value:
+                                                (offer.products.isNotEmpty
+                                                        ? offer.products.length
+                                                        : offer
+                                                              .typesCount
+                                                              .products)
+                                                    .toString(),
+                                          ),
                                       ],
                                     ),
                                   ),
-                                ] else if (offer.services.isNotEmpty) ...[
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    child: Text(
-                                      'Services',
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+
+                                  // SingleChildScrollView(
+                                  //   padding: const EdgeInsets.symmetric(
+                                  //     horizontal: 20,
+                                  //   ),
+                                  //   scrollDirection: Axis.horizontal,
+                                  //   child: Row(
+                                  //     children: [
+                                  //       _infoTile(
+                                  //         title: 'Enquiries',
+                                  //         value: offer.enquiriesCount
+                                  //             .toString(),
+                                  //       ),
+                                  //       _infoTile(
+                                  //         title: 'Expires on',
+                                  //         value: offer.expiresAt ?? '-',
+                                  //       ),
+                                  //       _infoTile(
+                                  //         title: 'Products',
+                                  //         value: offer.typesCount.products
+                                  //             .toString(),
+                                  //       ),
+                                  //     ],
+                                  //   ),
+                                  // ),
+
+                                  /// ───────── SERVICES (CONDITIONAL) ─────────
+                                  if (offer.services.isNotEmpty) ...[
+                                    const SizedBox(height: 20),
+
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      child: Text(
+                                        'Services',
+                                        style: AppTextStyles.mulish(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 10),
 
-                                  ListView.separated(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
+                                    const SizedBox(height: 10),
+
+                                    ListView.separated(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      itemCount: offer.services.length,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(height: 12),
+                                      itemBuilder: (context, i) {
+                                        final service = offer.services[i];
+                                        return _serviceCard(service);
+                                      },
                                     ),
-                                    itemCount: offer.services.length,
-                                    separatorBuilder: (_, __) =>
-                                        const SizedBox(height: 12),
-                                    itemBuilder: (context, i) {
-                                      final p = offer.services[i];
-                                      return _serviceCard(p);
-                                    },
-                                  ),
+                                  ],
                                 ],
                               ),
                             );
                           },
-
-                          // itemBuilder: (BuildContext context, int index) {
-                          //   final offer = currentItems[index];
-                          //
-                          //   final prodCount = offer.typesCount.products;
-                          //   final servCount = offer.typesCount.services;
-                          //
-                          //   return Container(
-                          //     decoration: BoxDecoration(
-                          //       color: AppColor.floralWhite,
-                          //       borderRadius: BorderRadius.circular(15),
-                          //       boxShadow: [
-                          //         BoxShadow(
-                          //           color: Colors.black.withOpacity(0.04),
-                          //           blurRadius: 8,
-                          //           offset: const Offset(0, 3),
-                          //         ),
-                          //       ],
-                          //     ),
-                          //     padding: const EdgeInsets.symmetric(
-                          //       horizontal: 0,
-                          //       vertical: 20,
-                          //     ),
-                          //     child: Column(
-                          //       crossAxisAlignment: CrossAxisAlignment.start,
-                          //       children: [
-                          //         Padding(
-                          //           padding: const EdgeInsets.symmetric(
-                          //             horizontal: 20,
-                          //           ),
-                          //           child: Text(
-                          //             offer.title,
-                          //             style: AppTextStyles.mulish(
-                          //               fontSize: 22,
-                          //               fontWeight: FontWeight.bold,
-                          //             ),
-                          //           ),
-                          //         ),
-                          //         const SizedBox(height: 10),
-                          //
-                          //         Padding(
-                          //           padding: const EdgeInsets.symmetric(
-                          //             horizontal: 20,
-                          //           ),
-                          //           child: DottedBorder(
-                          //             color: AppColor.black.withOpacity(0.2),
-                          //             strokeWidth: 1.2,
-                          //             dashPattern: const [2, 2],
-                          //             borderType: BorderType.RRect,
-                          //             radius: const Radius.circular(30),
-                          //             padding: const EdgeInsets.symmetric(
-                          //               horizontal: 12,
-                          //               vertical: 8,
-                          //             ),
-                          //             child: Text(
-                          //               offer.createdTime ?? '-',
-                          //               overflow: TextOverflow.ellipsis,
-                          //               style: AppTextStyles.mulish(
-                          //                 fontSize: 12,
-                          //                 color: AppColor.gray84,
-                          //               ),
-                          //             ),
-                          //           ),
-                          //         ),
-                          //
-                          //         const SizedBox(height: 25),
-                          //         SingleChildScrollView(
-                          //           padding: const EdgeInsets.symmetric(
-                          //             horizontal: 20,
-                          //           ),
-                          //           scrollDirection: Axis.horizontal,
-                          //           child: Row(
-                          //             children: [
-                          //               Container(
-                          //                 padding: const EdgeInsets.symmetric(
-                          //                   horizontal: 20,
-                          //                   vertical: 10,
-                          //                 ),
-                          //                 decoration: BoxDecoration(
-                          //                   color: AppColor.white,
-                          //                   borderRadius: BorderRadius.circular(15),
-                          //                 ),
-                          //                 child: Row(
-                          //                   mainAxisAlignment:
-                          //                       MainAxisAlignment.spaceBetween,
-                          //                   children: [
-                          //                     // LEFT: two texts stacked
-                          //                     Column(
-                          //                       crossAxisAlignment:
-                          //                           CrossAxisAlignment.start,
-                          //                       mainAxisSize: MainAxisSize.min,
-                          //                       children: [
-                          //                         Text(
-                          //                           'Enquiries',
-                          //                           maxLines: 1,
-                          //                           overflow: TextOverflow.ellipsis,
-                          //                           style: AppTextStyles.mulish(
-                          //                             color: AppColor.gray84,
-                          //                             fontSize: 12,
-                          //                             fontWeight: FontWeight.w600,
-                          //                           ),
-                          //                         ),
-                          //                         const SizedBox(height: 2),
-                          //                         Text(
-                          //                           '10',
-                          //                           style: AppTextStyles.mulish(
-                          //                             fontSize: 18,
-                          //                             color: AppColor.black,
-                          //                             fontWeight: FontWeight.bold,
-                          //                           ),
-                          //                         ),
-                          //                       ],
-                          //                     ),
-                          //
-                          //                     const SizedBox(width: 8),
-                          //
-                          //                     // RIGHT: image
-                          //                     Image.asset(
-                          //                       AppImages.rightStickArrow,
-                          //                       color: AppColor.black,
-                          //                       width: 18,
-                          //                       height: 18,
-                          //                       fit: BoxFit.contain,
-                          //                     ),
-                          //                   ],
-                          //                 ),
-                          //               ),
-                          //               SizedBox(width: 15),
-                          //               Container(
-                          //                 padding: const EdgeInsets.symmetric(
-                          //                   horizontal: 20,
-                          //                   vertical: 10,
-                          //                 ),
-                          //                 decoration: BoxDecoration(
-                          //                   color: AppColor.white,
-                          //                   borderRadius: BorderRadius.circular(15),
-                          //                 ),
-                          //                 child: Row(
-                          //                   mainAxisAlignment:
-                          //                       MainAxisAlignment.spaceBetween,
-                          //                   children: [
-                          //                     // LEFT: two texts stacked
-                          //                     Column(
-                          //                       crossAxisAlignment:
-                          //                           CrossAxisAlignment.start,
-                          //                       mainAxisSize: MainAxisSize.min,
-                          //                       children: [
-                          //                         Text(
-                          //                           'Expires on',
-                          //                           maxLines: 1,
-                          //                           overflow: TextOverflow.ellipsis,
-                          //                           style: AppTextStyles.mulish(
-                          //                             color: AppColor.gray84,
-                          //                             fontSize: 12,
-                          //                             fontWeight: FontWeight.w600,
-                          //                           ),
-                          //                         ),
-                          //                         const SizedBox(height: 2),
-                          //                         Text(
-                          //                           '5 Aug 25',
-                          //                           style: AppTextStyles.mulish(
-                          //                             fontSize: 18,
-                          //                             color: AppColor.black,
-                          //                             fontWeight: FontWeight.bold,
-                          //                           ),
-                          //                         ),
-                          //                       ],
-                          //                     ),
-                          //
-                          //                     const SizedBox(width: 15),
-                          //
-                          //                     // RIGHT: image
-                          //                     Image.asset(
-                          //                       AppImages.rightStickArrow,
-                          //                       color: AppColor.black,
-                          //                       width: 18,
-                          //                       height: 18,
-                          //                       fit: BoxFit.contain,
-                          //                     ),
-                          //                   ],
-                          //                 ),
-                          //               ),
-                          //               SizedBox(width: 15),
-                          //               Container(
-                          //                 padding: const EdgeInsets.symmetric(
-                          //                   horizontal: 20,
-                          //                   vertical: 10,
-                          //                 ),
-                          //                 decoration: BoxDecoration(
-                          //                   color: AppColor.white,
-                          //                   borderRadius: BorderRadius.circular(15),
-                          //                 ),
-                          //                 child: Row(
-                          //                   mainAxisAlignment:
-                          //                       MainAxisAlignment.spaceBetween,
-                          //                   children: [
-                          //                     // LEFT: two texts stacked
-                          //                     Column(
-                          //                       crossAxisAlignment:
-                          //                           CrossAxisAlignment.start,
-                          //                       mainAxisSize: MainAxisSize.min,
-                          //                       children: [
-                          //                         Text(
-                          //                           'Types of Product',
-                          //                           maxLines: 1,
-                          //                           overflow: TextOverflow.ellipsis,
-                          //                           style: AppTextStyles.mulish(
-                          //                             color: AppColor.gray84,
-                          //                             fontSize: 12,
-                          //                             fontWeight: FontWeight.w600,
-                          //                           ),
-                          //                         ),
-                          //                         const SizedBox(height: 2),
-                          //                         Text(
-                          //                           '5 ',
-                          //                           style: AppTextStyles.mulish(
-                          //                             fontSize: 18,
-                          //                             color: AppColor.black,
-                          //                             fontWeight: FontWeight.bold,
-                          //                           ),
-                          //                         ),
-                          //                       ],
-                          //                     ),
-                          //
-                          //                     const SizedBox(width: 15),
-                          //
-                          //                     // RIGHT: image
-                          //                     Image.asset(
-                          //                       AppImages.rightStickArrow,
-                          //                       color: AppColor.black,
-                          //                       width: 18,
-                          //                       height: 18,
-                          //                       fit: BoxFit.contain,
-                          //                     ),
-                          //                   ],
-                          //                 ),
-                          //               ),
-                          //             ],
-                          //           ),
-                          //         ),
-                          //         const SizedBox(height: 24),
-                          //         Padding(
-                          //           padding: const EdgeInsets.symmetric(
-                          //             horizontal: 20,
-                          //           ),
-                          //           child: Text(
-                          //             'Products',
-                          //             style: AppTextStyles.mulish(
-                          //               fontWeight: FontWeight.bold,
-                          //               fontSize: 16,
-                          //             ),
-                          //           ),
-                          //         ),
-                          //         const SizedBox(height: 10),
-                          //         Container(
-                          //           padding: const EdgeInsets.symmetric(
-                          //             horizontal: 20,
-                          //           ),
-                          //           decoration: BoxDecoration(
-                          //             borderRadius: BorderRadius.circular(24),
-                          //           ),
-                          //           child: ClipRRect(
-                          //             borderRadius: BorderRadius.circular(24),
-                          //             child: Stack(
-                          //               children: [
-                          //                 Positioned.fill(
-                          //                   child: const ColoredBox(
-                          //                     color: Color(0xFFF8FBF8),
-                          //                   ),
-                          //                 ),
-                          //                 Positioned.fill(
-                          //                   child: DecoratedBox(
-                          //                     decoration: BoxDecoration(
-                          //                       gradient: LinearGradient(
-                          //                         begin: Alignment.centerLeft,
-                          //                         end: Alignment.centerRight,
-                          //                         colors: [
-                          //                           const Color(
-                          //                             0xFF000000,
-                          //                           ).withOpacity(0.04), // 3%
-                          //
-                          //                           const Color(
-                          //                             0xFF000000,
-                          //                           ).withOpacity(0.00), // 0%
-                          //                         ],
-                          //                       ),
-                          //                     ),
-                          //                   ),
-                          //                 ),
-                          //
-                          //                 Row(
-                          //                   children: [
-                          //                     Expanded(
-                          //                       child: Padding(
-                          //                         padding:
-                          //                             const EdgeInsets.symmetric(
-                          //                               horizontal: 14,
-                          //                               vertical: 14,
-                          //                             ),
-                          //                         child: Column(
-                          //                           crossAxisAlignment:
-                          //                               CrossAxisAlignment.start,
-                          //                           children: [
-                          //                             Text(
-                          //                             name,
-                          //                               maxLines: 1,
-                          //                               overflow:
-                          //                                   TextOverflow.ellipsis,
-                          //                               style: AppTextStyles.mulish(
-                          //                                 fontWeight:
-                          //                                     FontWeight.normal,
-                          //                                 fontSize: 12,
-                          //                               ),
-                          //                             ),
-                          //                             const SizedBox(height: 8),
-                          //
-                          //                             Row(
-                          //                               children: [
-                          //                                 Container(
-                          //                                   padding:
-                          //                                       const EdgeInsets.symmetric(
-                          //                                         horizontal: 10,
-                          //                                         vertical: 4,
-                          //                                       ),
-                          //                                   decoration: BoxDecoration(
-                          //                                     color: const Color(
-                          //                                       0xFF31CC64,
-                          //                                     ),
-                          //                                     borderRadius:
-                          //                                         BorderRadius.circular(
-                          //                                           20,
-                          //                                         ),
-                          //                                   ),
-                          //                                   child: Row(
-                          //                                     children: [
-                          //                                       Text(
-                          //                                         rating!.toStringAsFixed(1),
-                          //                                         style: AppTextStyles.mulish(
-                          //                                           fontSize: 12,
-                          //                                           color: AppColor
-                          //                                               .white,
-                          //                                           fontWeight:
-                          //                                               FontWeight
-                          //                                                   .bold,
-                          //                                         ),
-                          //                                       ),
-                          //                                       const Icon(
-                          //                                         Icons.star,
-                          //                                         size: 14,
-                          //                                         color:
-                          //                                             Colors.white,
-                          //                                       ),
-                          //                                       Text(
-                          //                                         '${reviewCount}',
-                          //                                         style: AppTextStyles.mulish(
-                          //                                           fontSize: 12,
-                          //                                           color: AppColor
-                          //                                               .white,
-                          //                                         ),
-                          //                                       ),
-                          //                                     ],
-                          //                                   ),
-                          //                                 ),
-                          //                               ],
-                          //                             ),
-                          //                             const SizedBox(height: 10),
-                          //
-                          //                             Row(
-                          //                               crossAxisAlignment:
-                          //                                   CrossAxisAlignment.end,
-                          //                               children: const [
-                          //                                 // price
-                          //                               ],
-                          //                             ),
-                          //                             Row(
-                          //                               children: [
-                          //                                 Text(
-                          //                                   '₹${price.toStringAsFixed(0)}',
-                          //                                   style:
-                          //                                       AppTextStyles.mulish(
-                          //                                         color: AppColor
-                          //                                             .black,
-                          //                                         fontSize: 16,
-                          //                                         fontWeight:
-                          //                                             FontWeight
-                          //                                                 .bold,
-                          //                                       ),
-                          //                                 ),
-                          //                                 const SizedBox(width: 8),
-                          //                                 Text(
-                          //                                   '₹${mrp!.toStringAsFixed(0)}',
-                          //                                   style: AppTextStyles.mulish(
-                          //                                     color:
-                          //                                         AppColor.gray84,
-                          //                                     decoration:
-                          //                                         TextDecoration
-                          //                                             .lineThrough,
-                          //                                     fontSize: 11,
-                          //                                   ),
-                          //                                 ),
-                          //                               ],
-                          //                             ),
-                          //                           ],
-                          //                         ),
-                          //                       ),
-                          //                     ),
-                          //
-                          //                     ClipRRect(
-                          //                       borderRadius: BorderRadius.circular(12),
-                          //                       child: Image.network(
-                          //                         (imageUrl ?? '').isEmpty ? AppImages.phone : imageUrl!,
-                          //                         width: 90,
-                          //                         height: 100,
-                          //                         fit: BoxFit.cover,
-                          //                         errorBuilder: (_, __, ___) => Image.asset(
-                          //                           AppImages.phone,
-                          //                           width: 90,
-                          //                           height: 100,
-                          //                           fit: BoxFit.cover,
-                          //                         ),
-                          //                       ),
-                          //                     ),
-                          //                   ],
-                          //                 ),
-                          //               ],
-                          //             ),
-                          //           ),
-                          //         ),
-                          //
-                          //         const SizedBox(height: 24),
-                          //       ],
-                          //     ),
-                          //   );
-                          // },
                         ),
                     ],
                   ),
@@ -1176,7 +1119,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     );
   }
 
-  Widget _infoTile({required String title, required String value}) {
+  Widget _infoTile({
+    required String title,
+    required String value,
+    String? image,
+    VoidCallback? onTap,
+  }) {
     return Container(
       margin: const EdgeInsets.only(right: 15),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -1184,21 +1132,43 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
         color: AppColor.white,
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: AppTextStyles.mulish(fontSize: 12, color: AppColor.gray84),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.mulish(
+                  fontSize: 12,
+                  color: AppColor.gray84,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: AppTextStyles.mulish(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: AppTextStyles.mulish(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+
+          //  show icon ONLY if provided
+          if (image != null) ...[
+            const SizedBox(width: 20),
+            InkWell(
+              onTap: onTap,
+              child: Image.asset(
+                image,
+                color: AppColor.black,
+                width: 18,
+                height: 18,
+                fit: BoxFit.contain,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1206,9 +1176,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
 
   Widget _productCard(OfferProductItem p) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FBF8),
+        color: Color(0xFFF8FBF8),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -1224,16 +1194,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                   style: AppTextStyles.mulish(fontSize: 12),
                 ),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
 
                 if (p.rating != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF31CC64),
+                      color: Color(0xFF31CC64),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -1246,7 +1213,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const Icon(Icons.star, size: 14, color: Colors.white),
+                        Icon(Icons.star, size: 14, color: Colors.white),
                         Text(
                           ' ${p.reviewCount}',
                           style: AppTextStyles.mulish(color: Colors.white),
@@ -1255,7 +1222,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                     ),
                   ),
 
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
 
                 Row(
                   children: [
@@ -1267,7 +1234,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       ),
                     ),
                     if (p.price != null) ...[
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         '₹${p.price}',
                         style: AppTextStyles.mulish(
@@ -1290,8 +1257,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
               width: 90,
               height: 100,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Image.asset(AppImages.phone, width: 90, height: 100),
+              errorBuilder: (_, __, ___) => Container(
+                width: 90,
+                height: 100,
+                color: Colors.grey[300],
+                child: Icon(Icons.broken_image, color: Colors.grey),
+              ),
             ),
           ),
         ],
@@ -1301,9 +1272,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
 
   Widget _serviceCard(OfferServiceItem p) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FBF8),
+        color: Color(0xFFF8FBF8),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -1319,16 +1290,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                   style: AppTextStyles.mulish(fontSize: 12),
                 ),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
 
                 if (p.rating != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF31CC64),
+                      color: Color(0xFF31CC64),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -1341,7 +1309,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const Icon(Icons.star, size: 14, color: Colors.white),
+                        Icon(Icons.star, size: 14, color: Colors.white),
                         Text(
                           ' ${p.reviewCount}',
                           style: AppTextStyles.mulish(color: Colors.white),
@@ -1350,7 +1318,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                     ),
                   ),
 
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
 
                 Row(
                   children: [
@@ -1362,7 +1330,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       ),
                     ),
                     if (p.price != null) ...[
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         '₹${p.price.toStringAsFixed(0)}',
                         style: AppTextStyles.mulish(
@@ -1385,8 +1353,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
               width: 90,
               height: 100,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Image.asset(AppImages.phone, width: 90, height: 100),
+              errorBuilder: (_, __, ___) => Container(
+                width: 90,
+                height: 100,
+                color: Colors.grey[300],
+                child: Icon(Icons.broken_image, color: Colors.grey),
+              ),
             ),
           ),
         ],
@@ -1394,3 +1366,439 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     );
   }
 }
+
+//
+//   itemBuilder: (BuildContext context, int index) {
+//     final offer = currentItems[index];
+//
+//     final prodCount = offer.typesCount.products;
+//     final servCount = offer.typesCount.services;
+//
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: AppColor.floralWhite,
+//         borderRadius: BorderRadius.circular(15),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.04),
+//             blurRadius: 8,
+//             offset: const Offset(0, 3),
+//           ),
+//         ],
+//       ),
+//       padding: const EdgeInsets.symmetric(
+//         horizontal: 0,
+//         vertical: 20,
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Padding(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: 20,
+//             ),
+//             child: Text(
+//               offer.title,
+//               style: AppTextStyles.mulish(
+//                 fontSize: 22,
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+//           ),
+//           const SizedBox(height: 10),
+//
+//           Padding(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: 20,
+//             ),
+//             child: DottedBorder(
+//               color: AppColor.black.withOpacity(0.2),
+//               strokeWidth: 1.2,
+//               dashPattern: const [2, 2],
+//               borderType: BorderType.RRect,
+//               radius: const Radius.circular(30),
+//               padding: const EdgeInsets.symmetric(
+//                 horizontal: 12,
+//                 vertical: 8,
+//               ),
+//               child: Text(
+//                 offer.createdTime ?? '-',
+//                 overflow: TextOverflow.ellipsis,
+//                 style: AppTextStyles.mulish(
+//                   fontSize: 12,
+//                   color: AppColor.gray84,
+//                 ),
+//               ),
+//             ),
+//           ),
+//
+//           const SizedBox(height: 25),
+//           SingleChildScrollView(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: 20,
+//             ),
+//             scrollDirection: Axis.horizontal,
+//             child: Row(
+//               children: [
+//                 Container(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 20,
+//                     vertical: 10,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: AppColor.white,
+//                     borderRadius: BorderRadius.circular(15),
+//                   ),
+//                   child: Row(
+//                     mainAxisAlignment:
+//                         MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       // LEFT: two texts stacked
+//                       Column(
+//                         crossAxisAlignment:
+//                             CrossAxisAlignment.start,
+//                         mainAxisSize: MainAxisSize.min,
+//                         children: [
+//                           Text(
+//                             'Enquiries',
+//                             maxLines: 1,
+//                             overflow: TextOverflow.ellipsis,
+//                             style: AppTextStyles.mulish(
+//                               color: AppColor.gray84,
+//                               fontSize: 12,
+//                               fontWeight: FontWeight.w600,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 2),
+//                           Text(
+//                             '10',
+//                             style: AppTextStyles.mulish(
+//                               fontSize: 18,
+//                               color: AppColor.black,
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//
+//                         SizedBox(width: 8),
+//
+//                       // RIGHT: image
+//                       Image.asset(
+//                         AppImages.rightStickArrow,
+//                         color: AppColor.black,
+//                         width: 18,
+//                         height: 18,
+//                         fit: BoxFit.contain,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//                 SizedBox(width: 15),
+//                 Container(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 20,
+//                     vertical: 10,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: AppColor.white,
+//                     borderRadius: BorderRadius.circular(15),
+//                   ),
+//                   child: Row(
+//                     mainAxisAlignment:
+//                         MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       // LEFT: two texts stacked
+//                       Column(
+//                         crossAxisAlignment:
+//                             CrossAxisAlignment.start,
+//                         mainAxisSize: MainAxisSize.min,
+//                         children: [
+//                           Text(
+//                             'Expires on',
+//                             maxLines: 1,
+//                             overflow: TextOverflow.ellipsis,
+//                             style: AppTextStyles.mulish(
+//                               color: AppColor.gray84,
+//                               fontSize: 12,
+//                               fontWeight: FontWeight.w600,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 2),
+//                           Text(
+//                             '5 Aug 25',
+//                             style: AppTextStyles.mulish(
+//                               fontSize: 18,
+//                               color: AppColor.black,
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//
+//                       const SizedBox(width: 15),
+//
+//                       // RIGHT: image
+//                       Image.asset(
+//                         AppImages.rightStickArrow,
+//                         color: AppColor.black,
+//                         width: 18,
+//                         height: 18,
+//                         fit: BoxFit.contain,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//                 SizedBox(width: 15),
+//                 Container(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 20,
+//                     vertical: 10,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: AppColor.white,
+//                     borderRadius: BorderRadius.circular(15),
+//                   ),
+//                   child: Row(
+//                     mainAxisAlignment:
+//                         MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       // LEFT: two texts stacked
+//                       Column(
+//                         crossAxisAlignment:
+//                             CrossAxisAlignment.start,
+//                         mainAxisSize: MainAxisSize.min,
+//                         children: [
+//                           Text(
+//                             'Types of Product',
+//                             maxLines: 1,
+//                             overflow: TextOverflow.ellipsis,
+//                             style: AppTextStyles.mulish(
+//                               color: AppColor.gray84,
+//                               fontSize: 12,
+//                               fontWeight: FontWeight.w600,
+//                             ),
+//                           ),
+//                           const SizedBox(height: 2),
+//                           Text(
+//                             '5 ',
+//                             style: AppTextStyles.mulish(
+//                               fontSize: 18,
+//                               color: AppColor.black,
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//
+//                       const SizedBox(width: 15),
+//
+//                       // RIGHT: image
+//                       Image.asset(
+//                         AppImages.rightStickArrow,
+//                         color: AppColor.black,
+//                         width: 18,
+//                         height: 18,
+//                         fit: BoxFit.contain,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           const SizedBox(height: 24),
+//           Padding(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: 20,
+//             ),
+//             child: Text(
+//               'Products',
+//               style: AppTextStyles.mulish(
+//                 fontWeight: FontWeight.bold,
+//                 fontSize: 16,
+//               ),
+//             ),
+//           ),
+//           const SizedBox(height: 10),
+//           Container(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: 20,
+//             ),
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(24),
+//             ),
+//             child: ClipRRect(
+//               borderRadius: BorderRadius.circular(24),
+//               child: Stack(
+//                 children: [
+//                   Positioned.fill(
+//                     child: const ColoredBox(
+//                       color: Color(0xFFF8FBF8),
+//                     ),
+//                   ),
+//                   Positioned.fill(
+//                     child: DecoratedBox(
+//                       decoration: BoxDecoration(
+//                         gradient: LinearGradient(
+//                           begin: Alignment.centerLeft,
+//                           end: Alignment.centerRight,
+//                           colors: [
+//                             const Color(
+//                               0xFF000000,
+//                             ).withOpacity(0.04), // 3%
+//
+//                             const Color(
+//                               0xFF000000,
+//                             ).withOpacity(0.00), // 0%
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   ),
+//
+//                   Row(
+//                     children: [
+//                       Expanded(
+//                         child: Padding(
+//                           padding:
+//                               const EdgeInsets.symmetric(
+//                                 horizontal: 14,
+//                                 vertical: 14,
+//                               ),
+//                           child: Column(
+//                             crossAxisAlignment:
+//                                 CrossAxisAlignment.start,
+//                             children: [
+//                               Text(
+//                               name,
+//                                 maxLines: 1,
+//                                 overflow:
+//                                     TextOverflow.ellipsis,
+//                                 style: AppTextStyles.mulish(
+//                                   fontWeight:
+//                                       FontWeight.normal,
+//                                   fontSize: 12,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 8),
+//
+//                               Row(
+//                                 children: [
+//                                   Container(
+//                                     padding:
+//                                         const EdgeInsets.symmetric(
+//                                           horizontal: 10,
+//                                           vertical: 4,
+//                                         ),
+//                                     decoration: BoxDecoration(
+//                                       color: const Color(
+//                                         0xFF31CC64,
+//                                       ),
+//                                       borderRadius:
+//                                           BorderRadius.circular(
+//                                             20,
+//                                           ),
+//                                     ),
+//                                     child: Row(
+//                                       children: [
+//                                         Text(
+//                                           rating!.toStringAsFixed(1),
+//                                           style: AppTextStyles.mulish(
+//                                             fontSize: 12,
+//                                             color: AppColor
+//                                                 .white,
+//                                             fontWeight:
+//                                                 FontWeight
+//                                                     .bold,
+//                                           ),
+//                                         ),
+//                                         const Icon(
+//                                           Icons.star,
+//                                           size: 14,
+//                                           color:
+//                                               Colors.white,
+//                                         ),
+//                                         Text(
+//                                           '${reviewCount}',
+//                                           style: AppTextStyles.mulish(
+//                                             fontSize: 12,
+//                                             color: AppColor
+//                                                 .white,
+//                                           ),
+//                                         ),
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ],
+//                               ),
+//                               const SizedBox(height: 10),
+//
+//                               Row(
+//                                 crossAxisAlignment:
+//                                     CrossAxisAlignment.end,
+//                                 children: const [
+//                                   // price
+//                                 ],
+//                               ),
+//                               Row(
+//                                 children: [
+//                                   Text(
+//                                     '₹${price.toStringAsFixed(0)}',
+//                                     style:
+//                                         AppTextStyles.mulish(
+//                                           color: AppColor
+//                                               .black,
+//                                           fontSize: 16,
+//                                           fontWeight:
+//                                               FontWeight
+//                                                   .bold,
+//                                         ),
+//                                   ),
+//                                   const SizedBox(width: 8),
+//                                   Text(
+//                                     '₹${mrp!.toStringAsFixed(0)}',
+//                                     style: AppTextStyles.mulish(
+//                                       color:
+//                                           AppColor.gray84,
+//                                       decoration:
+//                                           TextDecoration
+//                                               .lineThrough,
+//                                       fontSize: 11,
+//                                     ),
+//                                   ),
+//                                 ],
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ),
+//
+//                       ClipRRect(
+//                         borderRadius: BorderRadius.circular(12),
+//                         child: Image.network(
+//                           (imageUrl ?? '').isEmpty ? AppImages.phone : imageUrl!,
+//                           width: 90,
+//                           height: 100,
+//                           fit: BoxFit.cover,
+//                           errorBuilder: (_, __, ___) => Image.asset(
+//                             AppImages.phone,
+//                             width: 90,
+//                             height: 100,
+//                             fit: BoxFit.cover,
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//
+//           const SizedBox(height: 24),
+//         ],
+//       ),
+//     );
+//   },
+// ),

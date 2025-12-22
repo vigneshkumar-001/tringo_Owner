@@ -55,24 +55,18 @@ class OfferSection {
     );
   }
 }
-
 class OfferListItem {
   final String id;
   final String title;
 
-  /// You can keep as String since API returns ISO string (ex: 2025-12-12T15:34:24.323Z)
+  final int discountPercentage;
+  final String offerBadgeLabel;
+
   final String? createdAt;
-
-  /// ex: "9:04pm"
   final String? createdTime;
-
-  /// ex: "19 Dec 25"
   final String? expiresAt;
 
-  /// ex: "ACTIVE", "DRAFT"
   final String statusEnum;
-
-  /// ex: "LIVE", "UPCOMING", "EXPIRED"
   final String stateLabel;
 
   final int enquiriesCount;
@@ -81,9 +75,13 @@ class OfferListItem {
   final List<OfferProductItem> products;
   final List<OfferServiceItem> services;
 
-  OfferListItem({
+  final String source;
+
+  const OfferListItem({
     required this.id,
     required this.title,
+    required this.discountPercentage,
+    required this.offerBadgeLabel,
     this.createdAt,
     this.createdTime,
     this.expiresAt,
@@ -93,32 +91,101 @@ class OfferListItem {
     required this.typesCount,
     required this.products,
     required this.services,
+    required this.source,
   });
 
   factory OfferListItem.fromJson(Map<String, dynamic> json) {
+    int _toInt(dynamic v) => v is int ? v : int.tryParse('$v') ?? 0;
+
     return OfferListItem(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
+      discountPercentage: _toInt(json['discountPercentage']),
+      offerBadgeLabel: json['offerBadgeLabel'] ?? '',
       createdAt: json['createdAt'],
       createdTime: json['createdTime'],
       expiresAt: json['expiresAt'],
       statusEnum: json['statusEnum'] ?? '',
       stateLabel: json['stateLabel'] ?? '',
-      enquiriesCount: (json['enquiriesCount'] ?? 0) is int
-          ? json['enquiriesCount']
-          : int.tryParse('${json['enquiriesCount']}') ?? 0,
-      typesCount: OfferTypesCount.fromJson(
-        json['typesCount'] as Map<String, dynamic>? ?? {},
-      ),
+      enquiriesCount: _toInt(json['enquiriesCount']),
+      typesCount:
+      OfferTypesCount.fromJson(json['typesCount'] ?? {}),
       products: (json['products'] as List<dynamic>? ?? [])
-          .map((e) => OfferProductItem.fromJson(e as Map<String, dynamic>))
+          .map((e) => OfferProductItem.fromJson(e))
           .toList(),
       services: (json['services'] as List<dynamic>? ?? [])
-          .map((e) => OfferServiceItem.fromJson(e as Map<String, dynamic>))
+          .map((e) => OfferServiceItem.fromJson(e))
           .toList(),
+      source: json['source'] ?? '',
     );
   }
 }
+
+
+
+// class OfferListItem {
+//   final String id;
+//   final String title;
+//
+//   /// You can keep as String since API returns ISO string (ex: 2025-12-12T15:34:24.323Z)
+//   final String? createdAt;
+//
+//   /// ex: "9:04pm"
+//   final String? createdTime;
+//
+//   /// ex: "19 Dec 25"
+//   final String? expiresAt;
+//
+//   /// ex: "ACTIVE", "DRAFT"
+//   final String statusEnum;
+//
+//   /// ex: "LIVE", "UPCOMING", "EXPIRED"
+//   final String stateLabel;
+//
+//   final int enquiriesCount;
+//   final OfferTypesCount typesCount;
+//
+//   final List<OfferProductItem> products;
+//   final List<OfferServiceItem> services;
+//
+//   OfferListItem({
+//     required this.id,
+//     required this.title,
+//     this.createdAt,
+//     this.createdTime,
+//     this.expiresAt,
+//     required this.statusEnum,
+//     required this.stateLabel,
+//     required this.enquiriesCount,
+//     required this.typesCount,
+//     required this.products,
+//     required this.services,
+//   });
+//
+//   factory OfferListItem.fromJson(Map<String, dynamic> json) {
+//     return OfferListItem(
+//       id: json['id'] ?? '',
+//       title: json['title'] ?? '',
+//       createdAt: json['createdAt'],
+//       createdTime: json['createdTime'],
+//       expiresAt: json['expiresAt'],
+//       statusEnum: json['statusEnum'] ?? '',
+//       stateLabel: json['stateLabel'] ?? '',
+//       enquiriesCount: (json['enquiriesCount'] ?? 0) is int
+//           ? json['enquiriesCount']
+//           : int.tryParse('${json['enquiriesCount']}') ?? 0,
+//       typesCount: OfferTypesCount.fromJson(
+//         json['typesCount'] as Map<String, dynamic>? ?? {},
+//       ),
+//       products: (json['products'] as List<dynamic>? ?? [])
+//           .map((e) => OfferProductItem.fromJson(e as Map<String, dynamic>))
+//           .toList(),
+//       services: (json['services'] as List<dynamic>? ?? [])
+//           .map((e) => OfferServiceItem.fromJson(e as Map<String, dynamic>))
+//           .toList(),
+//     );
+//   }
+// }
 
 class OfferTypesCount {
   final int products;

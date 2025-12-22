@@ -2147,19 +2147,19 @@ class CommonContainer {
                           ),
                         ),
                         errorWidget: (context, url, error) => Container(
-                          color: Colors.grey.shade200,
+                          color: AppColor.darkBlue,
                           child: const Center(
                             child: Icon(
                               Icons.broken_image_outlined,
                               size: 36,
-                              color: Colors.grey,
+                              color: AppColor.white,
                             ),
                           ),
                         ),
                       ),
               ),
 
-              // ✅ Dark gradient at bottom (only when not add-card)
+              //  Dark gradient at bottom (only when not add-card)
               if (!isAdd)
                 Container(
                   width: double.infinity,
@@ -2176,7 +2176,7 @@ class CommonContainer {
                   ),
                 ),
 
-              // ✅ Bottom content
+              //  Bottom content
               if (!isAdd)
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -2225,7 +2225,7 @@ class CommonContainer {
 
                             const SizedBox(width: 8),
 
-                            // 👉 SWITCH SHOP PILL
+                            //  SWITCH SHOP PILL
                             addAnotherShop == true
                                 ? SizedBox.shrink()
                                 : GestureDetector(
@@ -2262,7 +2262,7 @@ class CommonContainer {
                   ),
                 )
               else
-                // ✅ T-Ads chip for isAdd = true
+                //  T-Ads chip for isAdd = true
                 Padding(
                   padding: const EdgeInsets.only(right: 10, bottom: 5),
                   child: Row(

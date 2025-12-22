@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -32,11 +33,15 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
   final _availableDateController = TextEditingController();
   final _offerDescriptionController = TextEditingController();
   final _announcementDateController = TextEditingController();
+  final TextEditingController _percentageController = TextEditingController(
+    text: '1',
+  );
 
   int percentage = 1;
 
   @override
   void dispose() {
+    _percentageController.dispose();
     _offerTitleController.dispose();
     _availableDateController.dispose();
     _offerDescriptionController.dispose();
@@ -89,6 +94,8 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     final announcementDate = convertToApiFormat(
       _announcementDateController.text.trim(),
     );
+    percentage =
+        int.tryParse(_percentageController.text.trim())?.clamp(1, 100) ?? 1;
 
     final availableFrom = convertToApiFormat(extracted["from"]!);
     final availableTo = convertToApiFormat(extracted["to"]!);
@@ -288,39 +295,134 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                           InkWell(
                             onTap: () {
                               if (percentage > 1) {
-                                setState(() => percentage--);
+                                setState(() {
+                                  percentage--;
+                                  _percentageController.text = percentage
+                                      .toString();
+                                });
                               }
                             },
+
+                            // onTap: () {
+                            //   if (percentage > 1) {
+                            //     setState(() => percentage--);
+                            //   }
+                            // },
                             child: _percentButton(AppImages.sub),
                           ),
                           SizedBox(width: 10),
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 18,
-                                horizontal: 40,
-                              ),
+                              height: 56,
                               decoration: BoxDecoration(
                                 color: AppColor.leftArrow,
                                 borderRadius: BorderRadius.circular(11),
                               ),
                               child: Center(
-                                child: Text(
-                                  "$percentage%",
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                    color: AppColor.mildBlack,
+                                child: IntrinsicWidth(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 45,
+                                        child: TextFormField(
+                                          controller: _percentageController,
+                                          textAlign: TextAlign.right,
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                            LengthLimitingTextInputFormatter(3),
+                                          ],
+                                          decoration: const InputDecoration(
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                          style: AppTextStyles.mulish(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                            color: AppColor.mildBlack,
+                                          ),
+                                          onChanged: (val) {
+                                            final parsed =
+                                                int.tryParse(val) ?? 0;
+                                            final clamped = parsed.clamp(
+                                              0,
+                                              100,
+                                            );
+                                            if (clamped.toString() != val) {
+                                              _percentageController.text =
+                                                  clamped.toString();
+                                              _percentageController.selection =
+                                                  TextSelection.collapsed(
+                                                    offset:
+                                                        _percentageController
+                                                            .text
+                                                            .length,
+                                                  );
+                                            }
+                                            setState(
+                                              () => percentage = clamped,
+                                            );
+                                          },
+                                        ),
+                                      ),
+
+                                      SizedBox(width: 2),
+
+                                      // % (not editable)
+                                      Text(
+                                        '%',
+                                        style: AppTextStyles.mulish(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          color: AppColor.mildBlack,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
                           ),
+
+                          // Expanded(
+                          //   child: Container(
+                          //     padding: const EdgeInsets.symmetric(
+                          //       vertical: 18,
+                          //       horizontal: 40,
+                          //     ),
+                          //     decoration: BoxDecoration(
+                          //       color: AppColor.leftArrow,
+                          //       borderRadius: BorderRadius.circular(11),
+                          //     ),
+                          //     child: Center(
+                          //       child: Text(
+                          //         "$percentage%",
+                          //         style: AppTextStyles.mulish(
+                          //           fontWeight: FontWeight.w700,
+                          //           fontSize: 16,
+                          //           color: AppColor.mildBlack,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                           SizedBox(width: 10),
                           InkWell(
                             onTap: () {
-                              setState(() => percentage++);
+                              setState(() {
+                                percentage++;
+                                if (percentage > 100) percentage = 100;
+                                _percentageController.text = percentage
+                                    .toString();
+                              });
                             },
+
+                            // onTap: () {
+                            //   setState(() => percentage++);
+                            // },
                             child: _percentButton(AppImages.addPlus),
                           ),
                         ],
@@ -422,5 +524,3 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     );
   }
 }
-
-
