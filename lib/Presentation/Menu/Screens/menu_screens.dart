@@ -32,7 +32,7 @@ class _MenuScreensState extends State<MenuScreens> {
     'Subscription & Payment',
     'Analytics',
     'Support',
-    'Account Related',
+    'Delete Account',
     'Privacy Policy',
   ];
 
