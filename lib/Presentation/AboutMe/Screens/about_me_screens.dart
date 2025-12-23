@@ -39,7 +39,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   int selectedIndex = 0;
   int followersSelectedIndex = 0;
   int _selectedMonth = 2;
-
+  bool _isFreemium = false; // default
   String? _editingServiceId;
   String? _deletingProductId;
   String? _deletingServiceId;
@@ -68,6 +68,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     );
   }
 
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final val = prefs.getBool('isFreemium') ?? false; // null => false
+
+    if (!mounted) return;
+    setState(() {
+      _isFreemium = val;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +87,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       _scrollToSelected(selectedIndex);
     });
 
+    _loadPrefs(); // ✅ call async function
     // Future.microtask(() async {
     //   final prefs = await SharedPreferences.getInstance();
     //   final savedId = prefs.getString('currentShopId');
@@ -358,7 +369,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 CommonContainer.editShopContainer(
                   text: 'Add Branch',
                   onTap: () {
-                    context.push(AppRoutes.shopCategoryInfoPath);
+                    if (_isFreemium == false) {
+                      context.push(AppRoutes.shopCategoryInfoPath);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SubscriptionScreen(),
+                        ),
+                      );
+                    }
                   },
                 ),
                 SizedBox(width: 10),

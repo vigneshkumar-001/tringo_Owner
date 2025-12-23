@@ -279,29 +279,46 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               return Row(
                                 children: [
                                   CommonContainer.smallShopContainer(
-
                                     onTap: () {
-                                      final bool isService =
-                                          shopsRes?.data.items[0].shopKind
-                                              .toUpperCase() ==
-                                          'SERVICE';
-                                      AppLogger.log.i(isService);
-                                      context.push(
-                                        AppRoutes.shopCategoryInfoPath,
-                                        extra: {
-                                          'isService': isService,
-                                          'isIndividual': '',
-                                          'initialShopNameEnglish': shopsRes
+                                      if (homeState
+                                              .shopsResponse
                                               ?.data
-                                              .items[0]
-                                              .englishName,
-                                          'initialShopNameTamil':
-                                              shopsRes?.data.items[0].tamilName,
+                                              .subscription
+                                              ?.isFreemium ==
+                                          false) {
+                                        final bool isService =
+                                            shopsRes?.data.items[0].shopKind
+                                                .toUpperCase() ==
+                                            'SERVICE';
+                                        AppLogger.log.i(isService);
+                                        context.push(
+                                          AppRoutes.shopCategoryInfoPath,
+                                          extra: {
+                                            'isService': isService,
+                                            'isIndividual': '',
+                                            'initialShopNameEnglish': shopsRes
+                                                ?.data
+                                                .items[0]
+                                                .englishName,
+                                            'initialShopNameTamil': shopsRes
+                                                ?.data
+                                                .items[0]
+                                                .tamilName,
 
-                                          'isEditMode':
-                                              true, // ✅ pass the required parameter
-                                        },
-                                      );
+                                            'isEditMode':
+                                                true, // ✅ pass the required parameter
+                                          },
+                                        );
+                                      } else {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                SubscriptionScreen(),
+                                          ),
+                                        );
+                                      }
+
                                       // context.pushNamed(
                                       //
                                       //   AppRoutes.shopCategoryInfo,
@@ -319,14 +336,13 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                             return Row(
                               children: [
                                 CommonContainer.smallShopContainer(
-
                                   onTap: () async {
                                     ref
                                         .read(selectedShopProvider.notifier)
                                         .switchShop(shop.id);
                                   },
 
-                                  switchOnTap: (){
+                                  switchOnTap: () {
                                     ref
                                         .read(selectedShopProvider.notifier)
                                         .switchShop(shop.id);

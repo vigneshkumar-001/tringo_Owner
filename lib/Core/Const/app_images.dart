@@ -6,6 +6,8 @@ class AppImages {
   static String leftArrow = 'Assets/Images/left_Arrow.png';
   static String rightStickArrow = 'Assets/Images/Right_Stick_Arrow.png';
   static String filter = 'Assets/Images/filter.png';
+  static String paymentBCImage = 'Assets/Images/PaymentScreenBC.png';
+  static String shareImage = 'Assets/Images/ShareImage.png';
   static String iImage = 'Assets/Images/I_Image.png';
   static String registerBCImage = 'Assets/Images/Register_BCimage.png';
   static String sell = 'Assets/Images/sell.png';

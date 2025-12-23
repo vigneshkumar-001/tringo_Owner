@@ -10,7 +10,7 @@ class ShopsResponse {
   factory ShopsResponse.fromJson(Map<String, dynamic> json) {
     return ShopsResponse(
       status: json['status'] ?? false,
-      data: ShopsData.fromJson(json['data'] ?? {}),
+      data: ShopsData.fromJson(json['data'] ?? const {}),
     );
   }
 }
@@ -19,17 +19,52 @@ class ShopsData {
   final bool isNewOwner;
   final List<Shop> items;
 
+  // ✅ NEW
+  final SubscriptionInfo? subscription;
+  final bool canCreateMoreShops;
+  final int remainingShops;
+
   ShopsData({
     required this.isNewOwner,
     required this.items,
+    required this.subscription,
+    required this.canCreateMoreShops,
+    required this.remainingShops,
   });
 
   factory ShopsData.fromJson(Map<String, dynamic> json) {
     return ShopsData(
       isNewOwner: json['isNewOwner'] ?? true,
       items: (json['items'] as List<dynamic>? ?? [])
-          .map((e) => Shop.fromJson(e))
+          .map((e) => Shop.fromJson(e as Map<String, dynamic>))
           .toList(),
+
+      // ✅ NEW
+      subscription: json['subscription'] == null
+          ? null
+          : SubscriptionInfo.fromJson(json['subscription'] as Map<String, dynamic>),
+      canCreateMoreShops: json['canCreateMoreShops'] ?? false,
+      remainingShops: json['remainingShops'] ?? 0,
+    );
+  }
+}
+
+class SubscriptionInfo {
+  final bool isFreemium;
+  final int maxShopsAllowed;
+  final String planType; // "PREMIUM"
+
+  SubscriptionInfo({
+    required this.isFreemium,
+    required this.maxShopsAllowed,
+    required this.planType,
+  });
+
+  factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
+    return SubscriptionInfo(
+      isFreemium: json['isFreemium'] ?? false,
+      maxShopsAllowed: json['maxShopsAllowed'] ?? 0,
+      planType: (json['planType'] ?? '').toString(),
     );
   }
 }
@@ -70,7 +105,7 @@ class Shop {
       subCategory: json['subCategory'] ?? '',
       addressEn: json['addressEn'] ?? '',
       addressTa: json['addressTa'] ?? '',
-      primaryImageUrl: json['primaryImageUrl'],
+      primaryImageUrl: json['primaryImageUrl'], // can be null
     );
   }
 }
