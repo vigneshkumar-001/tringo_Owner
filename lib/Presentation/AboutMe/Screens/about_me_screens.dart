@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -12,6 +13,7 @@ import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/common_Container.dart';
@@ -376,14 +378,26 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 CommonContainer.editShopContainer(
                   text: 'Add Branch',
                   onTap: () {
+                    final bool isService =
+                        selectedShop?.shopKind.toString().toUpperCase() ==
+                        'SERVICE';
+
                     if (_isFreemium == false) {
-                      context.push(AppRoutes.shopCategoryInfoPath);
+                      context.push(
+                        AppRoutes.shopCategoryInfoPath,
+                        extra: {
+                          'isService': isService,
+                          'isIndividual': '',
+                          'initialShopNameEnglish':
+                              selectedShop?.shopEnglishName,
+                          'initialShopNameTamil': selectedShop?.shopTamilName,
+                          'isEditMode': true,
+                        },
+                      );
                     } else {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => SubscriptionScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => SubscriptionScreen()),
                       );
                     }
                   },
@@ -935,6 +949,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   @override
   Widget build(BuildContext context) {
     final aboutState = ref.watch(aboutMeNotifierProvider);
+
     final selectedShop = _getSelectedShop(aboutState);
     final isDoorDelivery = selectedShop?.shopDoorDelivery == true;
     if (!aboutState.isLoading && selectedShop == null) {
@@ -1097,7 +1112,19 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final selectedShop = _getSelectedShop(aboutState);
     final products = selectedShop?.products ?? [];
     final services = selectedShop?.services ?? [];
+    final planState = ref.watch(subscriptionNotifier);
+    final planData = planState.currentPlanResponse?.data;
 
+    String time = '-';
+    String date = '-';
+
+    final String? startsAt = planData?.period.startsAt;
+
+    if (startsAt != null && startsAt.isNotEmpty) {
+      final DateTime dateTime = DateTime.parse(startsAt).toLocal();
+      time = DateFormat('h.mm.a').format(dateTime);
+      date = DateFormat('dd MMM yyyy').format(dateTime);
+    }
     final bool hasServices = services.isNotEmpty;
     final bool hasProducts = products.isNotEmpty;
 
@@ -1134,18 +1161,32 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             _buildShopHeaderCard(aboutState),
             const SizedBox(height: 28),
             if (!isPremium)
-              CommonContainer.attractCustomerCard(
-                title: 'Attract More Customers',
-                description: 'Unlock premium to attract more customers',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SubscriptionScreen(),
+              planData?.isFreemium == false
+                  ? CommonContainer.paidCustomerCard(
+                      title:
+                          '${planData?.plan.durationLabel} Premium Activated',
+                      description: '${time} @ ${date}',
+                      onTap: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => SubscriptionScreen(),
+                        //   ),
+                        // );
+                      },
+                    )
+                  : CommonContainer.attractCustomerCard(
+                      title: 'Attract More Customers',
+                      description: 'Unlock premium to attract more customers',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubscriptionScreen(),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             SizedBox(height: isPremium ? 20 : 40),
             Row(
               children: [
