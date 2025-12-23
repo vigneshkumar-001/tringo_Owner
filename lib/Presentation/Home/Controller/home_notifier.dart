@@ -105,6 +105,7 @@ class HomeNotifier extends Notifier<HomeState> {
         final prefs = await SharedPreferences.getInstance();
 
         await prefs.setBool('isFreemium', isFreemium);
+        AppLogger.log.i('isNewUser Data ==== ${isFreemium}');
         state = state.copyWith(
           isLoading: false,
           error: null,

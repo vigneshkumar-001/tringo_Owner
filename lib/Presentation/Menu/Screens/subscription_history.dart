@@ -6,7 +6,15 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 
 class SubscriptionHistory extends StatefulWidget {
-  const SubscriptionHistory({super.key});
+  final String titlePlan;
+  final String fromDate;
+  final String toDate;
+  const SubscriptionHistory({
+    super.key,
+    required this.titlePlan,
+    required this.fromDate,
+    required this.toDate,
+  });
 
   @override
   State<SubscriptionHistory> createState() => _SubscriptionHistoryState();
@@ -92,7 +100,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '1 Year Premium Plan',
+                                    '${widget.titlePlan} Plan',
                                     style: AppTextStyles.mulish(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -111,7 +119,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                                           ),
                                         ),
                                         TextSpan(
-                                          text: '18-Jun-2025',
+                                          text: widget.fromDate,
                                           style: AppTextStyles.mulish(
                                             color: AppColor.gray84,
                                             fontSize: 12,
@@ -134,7 +142,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                                           ),
                                         ),
                                         TextSpan(
-                                          text: '18-Jun-2025',
+                                          text: widget.toDate,
                                           style: AppTextStyles.mulish(
                                             color: AppColor.gray84,
                                             fontSize: 12,

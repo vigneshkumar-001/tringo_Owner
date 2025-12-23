@@ -7,7 +7,7 @@ class ShopsResponse {
   factory ShopsResponse.fromJson(Map<String, dynamic> json) {
     return ShopsResponse(
       status: json['status'] ?? false,
-      data: ShopsData.fromJson(json['data'] ?? const {}),
+      data: ShopsData.fromJson(json['data'] ?? {}),
     );
   }
 }
@@ -16,11 +16,6 @@ class ShopsData {
   final bool isNewOwner;
   final List<Shop> items;
   final Subscription subscription;
-  final bool canCreateMoreShops;
-  final int remainingShops;
-
-  // ✅ NEW
-  final SubscriptionInfo? subscription;
   final bool canCreateMoreShops;
   final int remainingShops;
 
@@ -38,33 +33,31 @@ class ShopsData {
       items: (json['items'] as List<dynamic>? ?? [])
           .map((e) => Shop.fromJson(e as Map<String, dynamic>))
           .toList(),
-
-      // ✅ NEW
-      subscription: json['subscription'] == null
-          ? null
-          : SubscriptionInfo.fromJson(json['subscription'] as Map<String, dynamic>),
-      canCreateMoreShops: json['canCreateMoreShops'] ?? false,
+      subscription: Subscription.fromJson(
+        json['subscription'] as Map<String, dynamic>? ?? {},
+      ),
+      canCreateMoreShops: json['canCreateMoreShops'] == true,
       remainingShops: json['remainingShops'] ?? 0,
     );
   }
 }
 
-class SubscriptionInfo {
+class Subscription {
   final bool isFreemium;
   final int maxShopsAllowed;
-  final String planType; // "PREMIUM"
+  final String planType;
 
-  SubscriptionInfo({
+  Subscription({
     required this.isFreemium,
     required this.maxShopsAllowed,
     required this.planType,
   });
 
-  factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
-    return SubscriptionInfo(
-      isFreemium: json['isFreemium'] ?? false,
+  factory Subscription.fromJson(Map<String, dynamic> json) {
+    return Subscription(
+      isFreemium: json['isFreemium'] == true,
       maxShopsAllowed: json['maxShopsAllowed'] ?? 0,
-      planType: (json['planType'] ?? '').toString(),
+      planType: json['planType'] ?? '',
     );
   }
 }
@@ -105,7 +98,7 @@ class Shop {
       subCategory: json['subCategory'] ?? '',
       addressEn: json['addressEn'] ?? '',
       addressTa: json['addressTa'] ?? '',
-      primaryImageUrl: json['primaryImageUrl'], // can be null
+      primaryImageUrl: json['primaryImageUrl'],
     );
   }
 }

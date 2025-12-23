@@ -2730,6 +2730,88 @@ class CommonContainer {
     );
   }
 
+  static Widget paidCustomerCard({
+    required String title,
+    required String description,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            fit: BoxFit.cover,
+            image: AssetImage(AppImages.containerBCImage2),
+          ),
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [AppColor.brightBlue, AppColor.electricSkyBlue],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      title,
+                      style: AppTextStyles.mulish(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        color: AppColor.scaffoldColor,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      description,
+                      style: AppTextStyles.mulish(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColor.scaffoldColor,
+                      ),
+                    ),
+
+                    // InkWell(
+                    //   onTap: onTap,
+                    //   child: Container(
+                    //     decoration: BoxDecoration(
+                    //       color: AppColor.scaffoldColor,
+                    //       borderRadius: BorderRadius.circular(50),
+                    //     ),
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.symmetric(
+                    //         horizontal: 14.5,
+                    //         vertical: 6.5,
+                    //       ),
+                    //       child: Image.asset(
+                    //         AppImages.rightStickArrow,
+                    //         height: 20,
+                    //         color: AppColor.royalBlue,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ),
+              // SizedBox(width: 30),
+              // Image.asset(AppImages.upgrade, height: 138),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   static Widget inquiryProductCard({
     required String questionText,
     required String productTitle,
