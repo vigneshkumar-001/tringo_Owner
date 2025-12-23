@@ -1830,6 +1830,7 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure(e.toString()));
     }
   }
+
   Future<Either<Failure, CurrentPlanResponse>> getCurrentPlan() async {
     try {
       final url = ApiUrl.currentPlans;

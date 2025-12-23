@@ -9,6 +9,7 @@ import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
 import 'Presentation/Home/Controller/home_notifier.dart';
 import 'Presentation/Home/Controller/shopContext_provider.dart';
+import 'Presentation/Menu/Controller/subscripe_notifier.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -23,35 +24,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     super.initState();
     _initializeSplash();
   }
-
   Future<void> _initializeSplash() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      // Get notifier
       final homeNotifier = ref.read(homeNotifierProvider.notifier);
+      final planNotifier = ref.watch(subscriptionNotifier.notifier);
 
+      // Reset selected shop
       await ref.read(selectedShopProvider.notifier).switchShop('');
+
+      // 🔑 WAIT for API call
+      await homeNotifier. fetchShops(shopId:  '');
+      await planNotifier. getCurrentPlan();
 
       if (!mounted) return;
 
       final homeState = ref.read(homeNotifierProvider);
 
-      // From your model: ShopsResponse -> ShopsData -> isNewOwner
-      final bool isNewUser = homeState.shopsResponse?.data.isNewOwner ?? true;
+      // ✅ Safely handle nullable value
+      final bool isNewUser =
+          homeState.shopsResponse?.data.isNewOwner ?? false;
 
       AppLogger.log.i('isNewUser: $isNewUser');
 
       if (token != null && token.isNotEmpty) {
         if (!isNewUser) {
-          //context.go(AppRoutes.callDashboardScreenPath);
           context.go(AppRoutes.homeScreenPath);
         } else {
           context.go(AppRoutes.privacyPolicyPath);
         }
       } else {
-        // context.go(AppRoutes.callDashboardScreenPath);
         context.go(AppRoutes.loginPath);
       }
     } catch (e, st) {

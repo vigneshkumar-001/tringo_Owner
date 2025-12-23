@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,8 @@ import 'package:tringo_vendor/Core/Utility/call_helper.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
 import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_history.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Api/Repository/api_url.dart';
@@ -36,6 +39,7 @@ import '../../Menu/Screens/subscription_screen.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 
 import '../../No Data Screen/Screen/no_data_screen.dart';
+import '../../under_processing.dart';
 import '../Controller/shopContext_provider.dart';
 
 class HomeScreens extends ConsumerStatefulWidget {
@@ -104,6 +108,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeNotifierProvider);
     final homeNotifier = ref.watch(homeNotifierProvider.notifier);
+    final planState = ref.watch(subscriptionNotifier);
+    final planData = planState.currentPlanResponse?.data;
     final isPremium = RegistrationProductSeivice.instance.isPremium;
     final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
     final selectedShopId = homeState.selectedShopId;
@@ -121,7 +127,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
     }
 
-    final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
+    final bool isFreemium = shopsRes?.data.subscription?.isFreemium ?? true;
 
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
@@ -235,6 +241,41 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               ],
                             ),
                           ),
+                          // Expanded(
+                          //   flex: 1,
+                          //   child: GestureDetector(
+                          //     onTap: () {
+                          //       Navigator.push(
+                          //         context,
+                          //         MaterialPageRoute(
+                          //           builder: (context) => MenuScreens(),
+                          //         ),
+                          //       );
+                          //     },
+                          //     child: ClipRRect(
+                          //       borderRadius: BorderRadius.circular(25),
+                          //       child: SizedBox(
+                          //         height: 52,
+                          //         width: 52,
+                          //         child: CachedNetworkImage(
+                          //           imageUrl: mainShop?.primaryImageUrl ?? '',
+                          //           fit: BoxFit.cover,
+                          //
+                          //           // While loading
+                          //           placeholder: (context, url) => const Center(
+                          //             child: CircularProgressIndicator(
+                          //               strokeWidth: 2,
+                          //             ),
+                          //           ),
+                          //
+                          //           // If error occurs
+                          //           errorWidget: (context, url, error) =>
+                          //               const Icon(Icons.person, size: 40),
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                           Expanded(
                             flex: 1,
                             child: GestureDetector(
@@ -264,9 +305,18 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
                     if (shops.isEmpty) ...[
                       CommonContainer.smallShopContainer(
+                        addAnotherShop: true,
                         shopImage: '',
-                        shopLocation: '',
-                        shopName: '',
+                        shopName: 'Add Another Shop',
+                        shopLocation: 'Upgrade to add branch',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SubscriptionScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ] else ...[
                       SizedBox(
@@ -274,90 +324,83 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
-                          itemCount: isFreemium
-                              ? shops.length
-                              : shops.length + 1,
-                          // itemCount: shops.length + 1,
                           physics: const BouncingScrollPhysics(),
+
+                          // ✅ ALWAYS +1 for "Add Another Shop"
+                          itemCount: shops.length + 1,
+
                           itemBuilder: (context, index) {
+                            // ✅ LAST ITEM → Add Another Shop (always)
                             if (index == shops.length) {
-                              return Row(
-                                children: [
-                                  CommonContainer.smallShopContainer(
-                                    onTap: () {
-                                      if (homeState
-                                              .shopsResponse
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: CommonContainer.smallShopContainer(
+                                  addAnotherShop: true,
+                                  shopImage: '',
+                                  shopName: 'Add Another Shop',
+                                  shopLocation: isFreemium
+                                      ? 'Upgrade to add branch'
+                                      : 'Add a new branch',
+                                  onTap: () {
+                                    if (isFreemium) {
+                                      // 🔒 Freemium → subscription
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => SubscriptionScreen(),
+                                        ),
+                                      );
+                                    } else {
+                                      // ✅ Premium → add shop flow
+                                      final bool isService =
+                                          shopsRes?.data.items.first.shopKind
+                                              .toUpperCase() ==
+                                          'SERVICE';
+
+                                      context.push(
+                                        AppRoutes.shopCategoryInfoPath,
+                                        extra: {
+                                          'isService': isService,
+                                          'isIndividual': '',
+                                          'initialShopNameEnglish': shopsRes
                                               ?.data
-                                              .subscription
-                                              ?.isFreemium ==
-                                          false) {
-                                        final bool isService =
-                                            shopsRes?.data.items[0].shopKind
-                                                .toUpperCase() ==
-                                            'SERVICE';
-                                        AppLogger.log.i(isService);
-                                        context.push(
-                                          AppRoutes.shopCategoryInfoPath,
-                                          extra: {
-                                            'isService': isService,
-                                            'isIndividual': '',
-                                            'initialShopNameEnglish': shopsRes
-                                                ?.data
-                                                .items[0]
-                                                .englishName,
-                                            'initialShopNameTamil': shopsRes
-                                                ?.data
-                                                .items[0]
-                                                .tamilName,
-
-                                            'isEditMode':
-                                                true, // ✅ pass the required parameter
-                                          },
-                                        );
-                                      } else {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                SubscriptionScreen(),
-                                          ),
-                                        );
-                                      }
-
-                                      // context.pushNamed(
-                                      //
-                                      //   AppRoutes.shopCategoryInfo,
-                                      // );
-                                    },
-                                    shopImage: '',
-                                    addAnotherShop: true,
-                                    shopLocation: 'Premium User can add branch',
-                                    shopName: 'Add Another Shop',
-                                  ),
-                                ],
+                                              .items
+                                              .first
+                                              .englishName,
+                                          'initialShopNameTamil': shopsRes
+                                              ?.data
+                                              .items
+                                              .first
+                                              .tamilName,
+                                          'isEditMode': true,
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
                               );
                             }
-                            final shop = shops[index];
-                            return Row(
-                              children: [
-                                CommonContainer.smallShopContainer(
-                                  onTap: () async {
-                                    ref
-                                        .read(selectedShopProvider.notifier)
-                                        .switchShop(shop.id);
-                                  },
 
-                                  switchOnTap: () {
-                                    ref
-                                        .read(selectedShopProvider.notifier)
-                                        .switchShop(shop.id);
-                                  },
-                                  shopImage: shop.primaryImageUrl ?? '',
-                                  shopLocation:
-                                      '${shop.addressEn}, ${shop.city}',
-                                  shopName: shop.englishName,
-                                ),
-                              ],
+                            // ✅ NORMAL SHOP ITEM
+                            final shop = shops[index];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: CommonContainer.smallShopContainer(
+                                shopImage: shop.primaryImageUrl ?? '',
+                                shopName: shop.englishName,
+                                shopLocation: '${shop.addressEn}, ${shop.city}',
+                                onTap: () {
+                                  ref
+                                      .read(selectedShopProvider.notifier)
+                                      .switchShop(shop.id);
+                                },
+                                switchOnTap: () {
+                                  ref
+                                      .read(selectedShopProvider.notifier)
+                                      .switchShop(shop.id);
+                                },
+                              ),
                             );
                           },
                         ),
@@ -645,14 +688,35 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               right: 30,
                               child: GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          SubscriptionScreen(),
-                                    ),
-                                  );
+                                  final bool isFreemium =
+                                      planData?.isFreemium ?? true;
+
+                                  if (!isFreemium) {
+                                    // NOT freemium → go to subscription history
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SubscriptionHistory(
+                                              fromDate: planData?.period.startsAtLabel.toString()?? '',
+                                              titlePlan: planData?. plan.durationLabel.toString()?? '',
+                                              toDate: planData?.period.endsAtLabel.toString()?? '',
+
+                                            ),
+                                      ),
+                                    );
+                                  } else {
+                                    // Freemium → go to subscription screen
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SubscriptionScreen(),
+                                      ),
+                                    );
+                                  }
                                 },
+
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 12,
@@ -736,14 +800,20 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ),
                           CommonContainer.offerCardContainer(
                             onTap: () {
-                              final isPremium =
-                                  RegistrationProductSeivice.instance.isPremium;
+                              // final isPremium =
+                              //     RegistrationProductSeivice.instance.isPremium;
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (_) => isPremium
+                              //         ? CreateSurpriseOffers()
+                              //         : SubscriptionScreen(),
+                              //   ),
+                              // );
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => isPremium
-                                      ? CreateSurpriseOffers()
-                                      : SubscriptionScreen(),
+                                  builder: (_) => UnderProcessing(),
                                 ),
                               );
                             },
