@@ -281,77 +281,61 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           physics: const BouncingScrollPhysics(),
                           itemBuilder: (context, index) {
                             if (index == shops.length) {
-                              if (!isFreemium && index == shops.length) {
-                                return Row(
-                                  children: [
-                                    CommonContainer.smallShopContainer(
-                                      onTap: () {
+                              return Row(
+                                children: [
+                                  CommonContainer.smallShopContainer(
+                                    onTap: () {
+                                      if (homeState
+                                              .shopsResponse
+                                              ?.data
+                                              .subscription
+                                              ?.isFreemium ==
+                                          false) {
                                         final bool isService =
-                                            shops.first.shopKind
+                                            shopsRes?.data.items[0].shopKind
                                                 .toUpperCase() ==
                                             'SERVICE';
-
+                                        AppLogger.log.i(isService);
                                         context.push(
                                           AppRoutes.shopCategoryInfoPath,
                                           extra: {
                                             'isService': isService,
                                             'isIndividual': '',
-                                            'initialShopNameEnglish':
-                                                shops.first.englishName,
-                                            'initialShopNameTamil':
-                                                shops.first.tamilName,
-                                            'isEditMode': true,
+                                            'initialShopNameEnglish': shopsRes
+                                                ?.data
+                                                .items[0]
+                                                .englishName,
+                                            'initialShopNameTamil': shopsRes
+                                                ?.data
+                                                .items[0]
+                                                .tamilName,
+
+                                            'isEditMode':
+                                                true, // ✅ pass the required parameter
                                           },
                                         );
-                                      },
-                                      shopImage: '',
-                                      addAnotherShop: true,
-                                      shopLocation:
-                                          'Premium user can add branch',
-                                      shopName: 'Add Another Shop',
-                                    ),
-                                  ],
-                                );
-                              }
+                                      } else {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                SubscriptionScreen(),
+                                          ),
+                                        );
+                                      }
 
-                              // return Row(
-                              //   children: [
-                              //     CommonContainer.smallShopContainer(
-                              //
-                              //       onTap: () {
-                              //         final bool isService =
-                              //             shopsRes?.data.items[0].shopKind
-                              //                 .toUpperCase() ==
-                              //             'SERVICE';
-                              //         AppLogger.log.i(isService);
-                              //         context.push(
-                              //           AppRoutes.shopCategoryInfoPath,
-                              //           extra: {
-                              //             'isService': isService,
-                              //             'isIndividual': '',
-                              //             'initialShopNameEnglish': shopsRes
-                              //                 ?.data
-                              //                 .items[0]
-                              //                 .englishName,
-                              //             'initialShopNameTamil':
-                              //                 shopsRes?.data.items[0].tamilName,
-                              //
-                              //             'isEditMode':
-                              //                 true,
-                              //           },
-                              //         );
-                              //         // context.pushNamed(
-                              //         //
-                              //         //   AppRoutes.shopCategoryInfo,
-                              //         // );
-                              //       },
-                              //       shopImage: '',
-                              //       addAnotherShop: true,
-                              //       shopLocation: 'Premium User can add branch',
-                              //       shopName: 'Add Another Shop',
-                              //     ),
-                              //   ],
-                              // );
+                                      // context.pushNamed(
+                                      //
+                                      //   AppRoutes.shopCategoryInfo,
+                                      // );
+                                    },
+                                    shopImage: '',
+                                    addAnotherShop: true,
+                                    shopLocation: 'Premium User can add branch',
+                                    shopName: 'Add Another Shop',
+                                  ),
+                                ],
+                              );
                             }
                             final shop = shops[index];
                             return Row(

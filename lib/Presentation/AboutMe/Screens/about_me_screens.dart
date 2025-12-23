@@ -39,7 +39,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   int selectedIndex = 0;
   int followersSelectedIndex = 0;
   int _selectedMonth = 2;
-
+  bool _isFreemium = false; // default
   String? _editingServiceId;
   String? _deletingProductId;
   String? _deletingServiceId;
@@ -68,6 +68,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     );
   }
 
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final val = prefs.getBool('isFreemium') ?? false; // null => false
+
+    if (!mounted) return;
+    setState(() {
+      _isFreemium = val;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +87,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       _scrollToSelected(selectedIndex);
     });
 
+    _loadPrefs(); // ✅ call async function
     // Future.microtask(() async {
     //   final prefs = await SharedPreferences.getInstance();
     //   final savedId = prefs.getString('currentShopId');
@@ -362,50 +373,22 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                if (!isNonPremium)
-                  CommonContainer.editShopContainer(
-                    text: 'Add Branch',
-                    onTap: () async {
-                      final selectedShop = _getSelectedShop(aboutState);
-                      if (selectedShop == null) return;
-
-                      final bool isService =
-                          (selectedShop.shopKind ?? '').toUpperCase() ==
-                          'SERVICE';
-
-                      context.push(
-                        AppRoutes.shopCategoryInfoPath,
-                        extra: {
-                          'isEditMode': true,
-                          'isService': isService,
-                          'isIndividual': false,
-
-                          // Branch create mode → parent shopId send pannunga
-                          'parentShopId': selectedShop.shopId,
-
-                          // (optional) prefill if needed
-                          'initialShopNameEnglish':
-                              selectedShop.shopEnglishName,
-                          'initialShopNameTamil': selectedShop.shopTamilName,
-                        },
+                CommonContainer.editShopContainer(
+                  text: 'Add Branch',
+                  onTap: () {
+                    if (_isFreemium == false) {
+                      context.push(AppRoutes.shopCategoryInfoPath);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SubscriptionScreen(),
+                        ),
                       );
-                    },
-
-                    // onTap: () {
-                    //
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (context) => ShopCategoryInfo(
-                    //         isEditMode: true,
-                    //         isService: true,
-                    //         isIndividual: false,
-                    //       ),
-                    //     ),
-                    //   );
-                    // },
-                  ),
-                if (!isNonPremium) SizedBox(width: 10),
+                    }
+                  },
+                ),
+                SizedBox(width: 10),
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Details',
                   onTap: () async {
