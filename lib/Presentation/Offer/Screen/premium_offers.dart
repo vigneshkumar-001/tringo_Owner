@@ -267,8 +267,7 @@ class _PremiumOffersState extends State<PremiumOffers> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Select Date',
@@ -283,12 +282,10 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: AppColor.mistyRose,
-                                      borderRadius:
-                                      BorderRadius.circular(25),
+                                      borderRadius: BorderRadius.circular(25),
                                     ),
                                     child: Padding(
-                                      padding:
-                                      const EdgeInsets.symmetric(
+                                      padding: const EdgeInsets.symmetric(
                                         horizontal: 17,
                                         vertical: 10,
                                       ),
@@ -313,8 +310,7 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   color: AppColor.darkBlue,
                                 ),
                               ),
-                              onTap: () =>
-                                  Navigator.pop(context, 'Today'),
+                              onTap: () => Navigator.pop(context, 'Today'),
                             ),
                             ListTile(
                               title: Text(
@@ -325,8 +321,7 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   color: AppColor.darkBlue,
                                 ),
                               ),
-                              onTap: () =>
-                                  Navigator.pop(context, 'Yesterday'),
+                              onTap: () => Navigator.pop(context, 'Yesterday'),
                               // trailing: GestureDetector(
                               //   onTap: () =>
                               //       Navigator.pop(context, 'Yesterday'),
@@ -368,20 +363,16 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   builder: (context, child) {
                                     return Theme(
                                       data: Theme.of(context).copyWith(
-                                        dialogBackgroundColor:
-                                        AppColor.white,
+                                        dialogBackgroundColor: AppColor.white,
                                         colorScheme: ColorScheme.light(
                                           primary: AppColor.brightBlue,
                                           onPrimary: Colors.white,
                                           onSurface: AppColor.black,
                                         ),
-                                        textButtonTheme:
-                                        TextButtonThemeData(
-                                          style:
-                                          TextButton.styleFrom(
+                                        textButtonTheme: TextButtonThemeData(
+                                          style: TextButton.styleFrom(
                                             foregroundColor:
-                                            AppColor
-                                                .brightBlue,
+                                                AppColor.brightBlue,
                                           ),
                                         ),
                                       ),
@@ -765,8 +756,7 @@ class _PremiumOffersState extends State<PremiumOffers> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Select Date',
@@ -781,12 +771,10 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: AppColor.mistyRose,
-                                      borderRadius:
-                                      BorderRadius.circular(25),
+                                      borderRadius: BorderRadius.circular(25),
                                     ),
                                     child: Padding(
-                                      padding:
-                                      const EdgeInsets.symmetric(
+                                      padding: const EdgeInsets.symmetric(
                                         horizontal: 17,
                                         vertical: 10,
                                       ),
@@ -811,8 +799,7 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   color: AppColor.darkBlue,
                                 ),
                               ),
-                              onTap: () =>
-                                  Navigator.pop(context, 'Today'),
+                              onTap: () => Navigator.pop(context, 'Today'),
                             ),
                             ListTile(
                               title: Text(
@@ -823,8 +810,7 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   color: AppColor.darkBlue,
                                 ),
                               ),
-                              onTap: () =>
-                                  Navigator.pop(context, 'Yesterday'),
+                              onTap: () => Navigator.pop(context, 'Yesterday'),
                               // trailing: GestureDetector(
                               //   onTap: () =>
                               //       Navigator.pop(context, 'Yesterday'),
@@ -866,20 +852,16 @@ class _PremiumOffersState extends State<PremiumOffers> {
                                   builder: (context, child) {
                                     return Theme(
                                       data: Theme.of(context).copyWith(
-                                        dialogBackgroundColor:
-                                        AppColor.white,
+                                        dialogBackgroundColor: AppColor.white,
                                         colorScheme: ColorScheme.light(
                                           primary: AppColor.brightBlue,
                                           onPrimary: Colors.white,
                                           onSurface: AppColor.black,
                                         ),
-                                        textButtonTheme:
-                                        TextButtonThemeData(
-                                          style:
-                                          TextButton.styleFrom(
+                                        textButtonTheme: TextButtonThemeData(
+                                          style: TextButton.styleFrom(
                                             foregroundColor:
-                                            AppColor
-                                                .brightBlue,
+                                                AppColor.brightBlue,
                                           ),
                                         ),
                                       ),

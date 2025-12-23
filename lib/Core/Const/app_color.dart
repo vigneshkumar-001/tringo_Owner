@@ -5,7 +5,10 @@ class AppColor {
   static const white = Color(0xFFFFFFFF);
   static const white3 = Color(0xffF1F1F1);
   static const mediumGray = Color(0xff777777);
+  static const textWhite = Color(0xffF4FAFF);
+  static const silverGray = Color(0xffC8C8C8);
   static const ghostWhite = Color(0xffF5F7F9);
+  static const emeraldGreen = Color(0xff219F4B);
   static const darkGrey = Color(0xffA1A1A1);
   static const brightGray = Color(0xffEDF1F4);
   static const softWhiteGray = Color(0xffF6F6F6);
