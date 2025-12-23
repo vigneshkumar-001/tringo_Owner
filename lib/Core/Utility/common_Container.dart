@@ -2117,7 +2117,9 @@ class CommonContainer {
                 height: 120,
                 child: shopImage.isEmpty
                     ? Container(
-                        color: Colors.grey.shade200,
+                        color: addAnotherShop == true
+                            ? Colors.grey.shade200
+                            : AppColor.darkBlue,
                         child: addAnotherShop == true
                             ? Center(
                                 child: Icon(
@@ -2130,7 +2132,7 @@ class CommonContainer {
                                 child: Icon(
                                   Icons.broken_image_outlined,
                                   size: 36,
-                                  color: Colors.grey,
+                                  color: Colors.white,
                                 ),
                               ),
                       )
