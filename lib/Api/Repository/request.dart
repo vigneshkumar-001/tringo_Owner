@@ -10,8 +10,7 @@ class Request {
     Map<String, dynamic> body,
     String? method,
     bool isTokenRequired,
-  ) async
-  {
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('token');
     final String? sessionToken = prefs.getString('sessionToken');
@@ -281,8 +280,8 @@ class Request {
 
     Dio dio = Dio(
       BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 20),
       ),
     );
 
