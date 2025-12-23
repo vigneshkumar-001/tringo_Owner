@@ -340,9 +340,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                   ),
                                 ),
                               );
-                            }
-                            // ❌ ERROR → show snackbar
-                            else {
+                              ref
+                                  .watch(subscriptionNotifier.notifier)
+                                  .getCurrentPlan();
+                            } else {
                               showTopSnackBar(
                                 context,
                                 CustomSnackBar.error(
