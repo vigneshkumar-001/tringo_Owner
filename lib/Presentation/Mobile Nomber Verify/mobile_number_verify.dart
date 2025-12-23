@@ -590,12 +590,14 @@ class _MobileNumberVerifyState extends ConsumerState<MobileNumberVerify> {
 
   Future<void> loadSimInfo() async {
     try {
-      // Check permission first
-      final hasPermission = await MobileNumber.hasPhonePermission;
+      var hasPermission = await MobileNumber.hasPhonePermission;
+
       if (!hasPermission) {
-        debugPrint(
-          "⚠️ Phone/SIM permission not granted. Skipping SIM auto-verify.",
-        );
+        await MobileNumber.requestPhonePermission;
+        hasPermission = await MobileNumber.hasPhonePermission;
+      }
+
+      if (!hasPermission) {
         if (!mounted) return;
         setState(() {
           loaded = true;
@@ -604,6 +606,20 @@ class _MobileNumberVerifyState extends ConsumerState<MobileNumberVerify> {
         });
         return;
       }
+      // // Check permission first
+      // final hasPermission = await MobileNumber.hasPhonePermission;
+      // if (!hasPermission) {
+      //   debugPrint(
+      //     "⚠️ Phone/SIM permission not granted. Skipping SIM auto-verify.",
+      //   );
+      //   if (!mounted) return;
+      //   setState(() {
+      //     loaded = true;
+      //     anySimHasNumber = false;
+      //     numberMatch = false;
+      //   });
+      //   return;
+      // }
 
       // Get SIM cards
       final simCards = await MobileNumber.getSimCards;
