@@ -735,7 +735,7 @@ class CommonContainer {
             borderRadius: BorderRadius.circular(30),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min, // 👈 stops expanding too much
+            mainAxisSize: MainAxisSize.min, //  stops expanding too much
             children: [
               Text(
                 ratingStar!,
@@ -2147,19 +2147,19 @@ class CommonContainer {
                           ),
                         ),
                         errorWidget: (context, url, error) => Container(
-                          color: Colors.grey.shade200,
+                          color: AppColor.darkBlue,
                           child: const Center(
                             child: Icon(
                               Icons.broken_image_outlined,
                               size: 36,
-                              color: Colors.grey,
+                              color: AppColor.white,
                             ),
                           ),
                         ),
                       ),
               ),
 
-              // ✅ Dark gradient at bottom (only when not add-card)
+              //  Dark gradient at bottom (only when not add-card)
               if (!isAdd)
                 Container(
                   width: double.infinity,
@@ -2176,7 +2176,7 @@ class CommonContainer {
                   ),
                 ),
 
-              // ✅ Bottom content
+              //  Bottom content
               if (!isAdd)
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -2225,43 +2225,44 @@ class CommonContainer {
 
                             const SizedBox(width: 8),
 
-                            // 👉 SWITCH SHOP PILL
-                            addAnotherShop == true? SizedBox.shrink():    GestureDetector(
-                              onTap: switchOnTap,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColor.scaffoldColor.withOpacity(
-                                    0.8,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Switch',
-                                      style: AppTextStyles.mulish(
-                                        color: AppColor.black,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
+                            //  SWITCH SHOP PILL
+                            addAnotherShop == true
+                                ? SizedBox.shrink()
+                                : GestureDetector(
+                                    onTap: switchOnTap,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.scaffoldColor
+                                            .withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            'Switch',
+                                            style: AppTextStyles.mulish(
+                                              color: AppColor.black,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Icon(Icons.swap_horiz, size: 12),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 2),
-                                    Icon(Icons.swap_horiz, size: 12),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                  ),
                           ],
                         ),
                     ],
                   ),
                 )
               else
-                // ✅ T-Ads chip for isAdd = true
+                //  T-Ads chip for isAdd = true
                 Padding(
                   padding: const EdgeInsets.only(right: 10, bottom: 5),
                   child: Row(

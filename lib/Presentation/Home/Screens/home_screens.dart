@@ -121,6 +121,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
     }
 
+    final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
+
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
       return const Scaffold(
@@ -272,7 +274,10 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
-                          itemCount: shops.length + 1,
+                          itemCount: isFreemium
+                              ? shops.length
+                              : shops.length + 1,
+                          // itemCount: shops.length + 1,
                           physics: const BouncingScrollPhysics(),
                           itemBuilder: (context, index) {
                             if (index == shops.length) {
@@ -1089,8 +1094,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(height: 8),
-                                          const Text(
+                                          SizedBox(height: 8),
+                                          Text(
                                             'Sell your remaining food faster with offer',
                                             style: TextStyle(
                                               color: Colors.white70,
