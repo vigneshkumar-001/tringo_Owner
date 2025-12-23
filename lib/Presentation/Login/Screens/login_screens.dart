@@ -56,18 +56,25 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   void initState() {
     super.initState();
 
-    _sub = ref.listenManual<LoginState>(loginNotifierProvider, (prev, next) {
+    // ✅ Request permission immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _ensurePhonePermission();
+    });
+
+    _sub = ref.listenManual<LoginState>(loginNotifierProvider, (
+      prev,
+      next,
+    ) async {
       if (!mounted) return;
 
-      _ensurePhonePermission();
+      // ❌ remove this line from here:
+      // _ensurePhonePermission();
 
-      // 1) API error
       if (next.error != null) {
         AppSnackBar.error(context, next.error!);
         return;
       }
 
-      // 2) WhatsApp verify result
       if (next.whatsappResponse != null) {
         final resp = next.whatsappResponse!;
         final hasWhatsapp = resp.data.hasWhatsapp;
@@ -80,9 +87,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
             final fullPhone = '$_selectedDialCode$raw';
             final simToken = generateSimToken(fullPhone);
 
-            // NOTE: your backend currently builds "+91$phone" inside request.
-            // For full multi-country support, update backend later.
-            print(simToken);
             ref
                 .read(loginNotifierProvider.notifier)
                 .loginUser(phoneNumber: raw, simToken: simToken);
@@ -96,8 +100,10 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
         }
       }
 
-      // 3) Login result -> navigate to SIM/OTP verify screen
       if (next.loginResponse != null) {
+        // ✅ Ensure permission before going to SIM screen
+        await _ensurePhonePermission();
+
         final raw = _lastRawPhone ?? '';
         final fullPhone = '$_selectedDialCode$raw';
         final simToken = generateSimToken(fullPhone);
@@ -111,6 +117,66 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
       }
     });
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //
+  //   _sub = ref.listenManual<LoginState>(loginNotifierProvider, (prev, next) {
+  //     if (!mounted) return;
+  //
+  //     _ensurePhonePermission();
+  //
+  //     // 1) API error
+  //     if (next.error != null) {
+  //       AppSnackBar.error(context, next.error!);
+  //       return;
+  //     }
+  //
+  //     // 2) WhatsApp verify result
+  //     if (next.whatsappResponse != null) {
+  //       final resp = next.whatsappResponse!;
+  //       final hasWhatsapp = resp.data.hasWhatsapp;
+  //
+  //       if (hasWhatsapp) {
+  //         setState(() => isWhatsappChecked = true);
+  //
+  //         final raw = _lastRawPhone;
+  //         if (raw != null) {
+  //           final fullPhone = '$_selectedDialCode$raw';
+  //           final simToken = generateSimToken(fullPhone);
+  //
+  //           // NOTE: your backend currently builds "+91$phone" inside request.
+  //           // For full multi-country support, update backend later.
+  //           print(simToken);
+  //           ref
+  //               .read(loginNotifierProvider.notifier)
+  //               .loginUser(phoneNumber: raw, simToken: simToken);
+  //         }
+  //       } else {
+  //         setState(() => isWhatsappChecked = false);
+  //         AppSnackBar.error(
+  //           context,
+  //           'This number is not registered on WhatsApp. Please use a WhatsApp number.',
+  //         );
+  //       }
+  //     }
+  //
+  //     // 3) Login result -> navigate to SIM/OTP verify screen
+  //     if (next.loginResponse != null) {
+  //       final raw = _lastRawPhone ?? '';
+  //       final fullPhone = '$_selectedDialCode$raw';
+  //       final simToken = generateSimToken(fullPhone);
+  //
+  //       context.pushNamed(
+  //         AppRoutes.mobileNumberVerify,
+  //         extra: {'phone': raw, 'simToken': simToken},
+  //       );
+  //
+  //       ref.read(loginNotifierProvider.notifier).resetState();
+  //     }
+  //   });
+  // }
 
   @override
   void dispose() {
