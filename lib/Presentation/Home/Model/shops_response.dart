@@ -2,10 +2,7 @@ class ShopsResponse {
   final bool status;
   final ShopsData data;
 
-  ShopsResponse({
-    required this.status,
-    required this.data,
-  });
+  ShopsResponse({required this.status, required this.data});
 
   factory ShopsResponse.fromJson(Map<String, dynamic> json) {
     return ShopsResponse(
@@ -18,6 +15,9 @@ class ShopsResponse {
 class ShopsData {
   final bool isNewOwner;
   final List<Shop> items;
+  final Subscription subscription;
+  final bool canCreateMoreShops;
+  final int remainingShops;
 
   // ✅ NEW
   final SubscriptionInfo? subscription;
@@ -34,7 +34,7 @@ class ShopsData {
 
   factory ShopsData.fromJson(Map<String, dynamic> json) {
     return ShopsData(
-      isNewOwner: json['isNewOwner'] ?? true,
+      isNewOwner: json['isNewOwner'] == true,
       items: (json['items'] as List<dynamic>? ?? [])
           .map((e) => Shop.fromJson(e as Map<String, dynamic>))
           .toList(),

@@ -26,7 +26,9 @@ class AppColor {
   static const iceBlue = Color(0xFFF4FAFF);
   static const brightBlue = Color(0xff1C71FD);
   static const electricSkyBlue = Color(0xff41CEFF);
-  static const shadowBlue = Color(0x1A0096FF);
+  static const shadowBlue = Color(0xff1A0096FF);
+  static const strongBlue = Color(0xff2880E5);
+  static const paleCyan = Color(0xffD8F1FA);
   static const darkBlue = Color(0xff071016);
   static const blueGradient1 = Color(0xff0797FD);
   static const blueGradient2 = Color(0xff07C8FD);
