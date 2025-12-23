@@ -11,6 +11,9 @@ class ApiUrl {
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
   static String imageUrl =
       "https://next.fenizotechnologies.com/Adrox/api/image-save";
+  static const String plans = "${base}api/v1/subscriptions/plans";
+  static const String currentPlans = "${base}api/v1/subscriptions/current";
+  static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String categoriesShop =
       "${base}api/v1/public/categories?type=shop";
 
