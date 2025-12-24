@@ -246,11 +246,17 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final homeState = ref.watch(homeNotifierProvider);
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
-    String input = planData?.period.startsAt.toString() ?? '';
 
-    DateTime dateTime = DateTime.parse(input).toLocal();
-    String time = DateFormat('h.mm.a').format(dateTime);
-    String date = DateFormat('dd MMM yyyy').format(dateTime);
+    String time = '-';
+    String date = '-';
+
+    final String? startsAt = planData?.period.startsAt;
+
+    if (startsAt != null && startsAt.isNotEmpty) {
+      final DateTime dateTime = DateTime.parse(startsAt).toLocal();
+      time = DateFormat('h.mm.a').format(dateTime);
+      date = DateFormat('dd MMM yyyy').format(dateTime);
+    }
     final shopsRes = homeState.shopsResponse;
 
     final List<Shop> shops = shopsRes?.data.items ?? [];
@@ -1183,6 +1189,39 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                         return _serviceCard(service);
                                       },
                                     ),
+                                  ] else if (offer.products.isNotEmpty) ...[
+                                    const SizedBox(height: 20),
+
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      child: Text(
+                                        'Products',
+                                        style: AppTextStyles.mulish(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    ListView.separated(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      itemCount: offer.products.length,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(height: 12),
+                                      itemBuilder: (context, i) {
+                                        final service = offer.products[i];
+                                        return _productCard(service);
+                                      },
+                                    ),
                                   ],
                                 ],
                               ),
@@ -1352,6 +1391,102 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
   }
 
   Widget _serviceCard(OfferServiceItem p) {
+    return Container(
+      padding: EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FBF8),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.mulish(fontSize: 12),
+                ),
+
+                SizedBox(height: 8),
+
+                if (p.rating != null)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF31CC64),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          p.rating!.toStringAsFixed(1),
+                          style: AppTextStyles.mulish(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Icon(Icons.star, size: 14, color: Colors.white),
+                        Text(
+                          ' ${p.reviewCount}',
+                          style: AppTextStyles.mulish(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Text(
+                      '₹${p.offerPrice?.toStringAsFixed(0) ?? ''}',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (p.price != null) ...[
+                      SizedBox(width: 8),
+                      Text(
+                        '₹${p.price.toStringAsFixed(0)}',
+                        style: AppTextStyles.mulish(
+                          fontSize: 11,
+                          color: AppColor.gray84,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              p.imageUrl ?? '',
+              width: 90,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 90,
+                height: 100,
+                color: Colors.grey[300],
+                child: Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _productCards(OfferServiceItem p) {
     return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(

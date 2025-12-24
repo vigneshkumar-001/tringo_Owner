@@ -181,11 +181,20 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => isFreemium
-                                ?   SubscriptionHistory(
-                              fromDate: planData?.period.startsAtLabel.toString()?? '',
-                              titlePlan: planData?. plan.durationLabel.toString()?? '',
-                              toDate: planData?.period.endsAtLabel.toString()?? '',
-                            ) // <-- your history page
+                                ? SubscriptionHistory(
+                                    fromDate:
+                                        planData?.period.startsAtLabel
+                                            .toString() ??
+                                        '',
+                                    titlePlan:
+                                        planData?.plan.durationLabel
+                                            .toString() ??
+                                        '',
+                                    toDate:
+                                        planData?.period.endsAtLabel
+                                            .toString() ??
+                                        '',
+                                  ) // <-- your history page
                                 : const SubscriptionScreen(),
                           ),
                         );

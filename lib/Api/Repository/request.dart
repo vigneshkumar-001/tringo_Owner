@@ -18,8 +18,8 @@ class Request {
 
     final dio = Dio(
       BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 20),
       ),
     );
 
@@ -198,72 +198,87 @@ class Request {
 
   // ⬇ keep your existing formData and sendGetRequest as-is or update similarly if you want
 
-  static Future<dynamic> formData(
-    String url,
-    dynamic body,
-    String? method,
-    bool isTokenRequired,
-  ) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-    String? userId = prefs.getString('userId');
+  static Future<Response<dynamic>> formData(
+      String url,
+      dynamic body,
+      String? method,
+      bool isTokenRequired,
+      ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-    Dio dio = Dio();
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        responseType: ResponseType.json,
+      ),
+    );
+
     dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          return handler.next(options);
+        onRequest: (options, handler) {
+          AppLogger.log.i(
+            "REQUEST → ${options.method} ${options.uri}\nBODY → ${options.data}",
+          );
+          handler.next(options);
         },
-        onResponse:
-            (Response<dynamic> response, ResponseInterceptorHandler handler) {
-              AppLogger.log.i(
-                "sendPostRequest \n API: $url \n RESPONSE: ${response.toString()}",
-              );
-              return handler.next(response);
-            },
-        onError: (DioException error, ErrorInterceptorHandler handler) async {
-          final status = error.response?.statusCode;
-          if (status == 402) {
-            return handler.reject(error);
-          } else if (status == 406 || status == 401) {
-            return handler.reject(error);
-          } else if (status == 429) {
-            return handler.reject(error);
-          } else if (status == 409) {
-            return handler.reject(error);
-          }
-          return handler.next(error);
+        onResponse: (response, handler) {
+          AppLogger.log.i(
+            "RESPONSE ← ${response.statusCode} ${response.requestOptions.uri}\nDATA → ${response.data}",
+          );
+          handler.next(response);
+        },
+        onError: (error, handler) {
+          AppLogger.log.e(
+            "ERROR ← ${error.requestOptions.uri}\nTYPE → ${error.type}\nMESSAGE → ${error.message}",
+          );
+          handler.next(error);
         },
       ),
     );
+
     try {
-      final response = await dio.post(
+      final response = await dio.request(
         url,
         data: body,
         options: Options(
+          method: method ?? 'POST',
           headers: {
-            "Authorization": token != null ? "Bearer $token" : "",
+            if (isTokenRequired && token != null)
+              "Authorization": "Bearer $token",
             "Content-Type": body is FormData
                 ? "multipart/form-data"
                 : "application/json",
           },
           validateStatus: (status) {
-            return status != null && status < 500;
+            // Only treat 2xx–3xx as success
+            return status != null && status >= 200 && status < 400;
           },
         ),
       );
 
-      AppLogger.log.i(
-        "RESPONSE \n API: $url \n RESPONSE: ${response.toString()}",
-      );
-      AppLogger.log.i("$token");
-      AppLogger.log.i("$body");
-
       return response;
-    } catch (e) {
-      AppLogger.log.e('API: $url \n ERROR: $e ');
+    } on DioException catch (e) {
+      // TIMEOUTS — the real reason your loader spins forever
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception("Request timed out. Server or network is slow.");
+      }
 
-      return e;
+      // SERVER RESPONSE ERRORS
+      if (e.response != null) {
+        throw Exception(
+          "API Error ${e.response?.statusCode}: ${e.response?.data}",
+        );
+      }
+
+      // UNKNOWN / NETWORK
+      throw Exception("Network error: ${e.message}");
+    } catch (e) {
+      throw Exception("Unexpected error: $e");
     }
   }
 
