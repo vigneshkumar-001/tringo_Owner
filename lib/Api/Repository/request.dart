@@ -199,11 +199,11 @@ class Request {
   // ⬇ keep your existing formData and sendGetRequest as-is or update similarly if you want
 
   static Future<Response<dynamic>> formData(
-      String url,
-      dynamic body,
-      String? method,
-      bool isTokenRequired,
-      ) async {
+    String url,
+    dynamic body,
+    String? method,
+    bool isTokenRequired,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -286,8 +286,11 @@ class Request {
     String url,
     Map<String, dynamic> queryParams,
     String method,
-    bool isTokenRequired,
-  ) async {
+    bool isTokenRequired, {
+    String? appName,
+    String? appVersion,
+    String? appPlatForm,
+  }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     String? sessionToken = prefs.getString('sessionToken');
@@ -328,11 +331,14 @@ class Request {
         },
       ),
     );
-    final headers = <String, dynamic>{
+    final headers = {
       "Content-Type": "application/json",
-      if (token != null && isTokenRequired) "Authorization": "Bearer $token",
-      if (sessionToken != null && isTokenRequired)
+      if (isTokenRequired && token != null) "Authorization": "Bearer $token",
+      if (isTokenRequired && sessionToken != null)
         "x-session-token": sessionToken,
+      "X-App-Id": appName,
+      "X-App-Version": appVersion,
+      "X-Platform": appPlatForm,
     };
     try {
       Response response = await dio.get(
