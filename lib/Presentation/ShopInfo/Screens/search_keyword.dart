@@ -166,10 +166,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                         ),
                         suffixIcon: _searchKeywordController.text.isNotEmpty
                             ? IconButton(
-                                icon:   Icon(
-                                  Icons.clear,
-                                  color: Colors.grey,
-                                ),
+                                icon: Icon(Icons.clear, color: Colors.grey),
                                 onPressed: () =>
                                     _searchKeywordController.clear(),
                               )
@@ -353,19 +350,10 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                         );
 
                         if (success) {
-                          // Show success message
-                          AppSnackBar.success(
-                            context,
-                            'Keywords saved successfully!',
+                          context.pushNamed(
+                            AppRoutes.productCategoryScreens,
+                            extra: 'SearchKeyword',
                           );
-
-                          // Navigate after short delay so user sees the message
-                          Future.delayed(const Duration(milliseconds: 500), () {
-                            context.pushNamed(
-                              AppRoutes.productCategoryScreens,
-                              extra: 'SearchKeyword',
-                            );
-                          });
                         } else {
                           // Show error from state if available
                           final errorMsg =

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_history.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
@@ -14,16 +18,17 @@ import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/create_surprise_offers.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../Offer/Screen/offer_screens.dart';
+import '../../under_processing.dart';
 
-class MenuScreens extends StatefulWidget {
+class MenuScreens extends ConsumerStatefulWidget {
   final String? page;
   const MenuScreens({super.key, this.page});
 
   @override
-  State<MenuScreens> createState() => _MenuScreensState();
+  ConsumerState<MenuScreens> createState() => _MenuScreensState();
 }
 
-class _MenuScreensState extends State<MenuScreens> {
+class _MenuScreensState extends ConsumerState<MenuScreens> {
   final List<String> titles = [
     'Enquiries',
     'Shop & Products',
@@ -52,7 +57,8 @@ class _MenuScreensState extends State<MenuScreens> {
     const CommonBottomNavigation(initialIndex: 1),
     const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 0),
     const CommonBottomNavigation(initialIndex: 2),
-    const CreateSurpriseOffers(),
+    const UnderProcessing(),
+
     const SubscriptionScreen(),
     const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 1),
     const NoDataScreen(
@@ -80,8 +86,23 @@ class _MenuScreensState extends State<MenuScreens> {
 
   @override
   Widget build(BuildContext context) {
+    final planState = ref.watch(subscriptionNotifier);
+
     final isPremium = RegistrationProductSeivice.instance.isPremium;
     final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
+    final planData = planState.currentPlanResponse?.data;
+
+    String time = '-';
+    String date = '-';
+
+    final String? startsAt = planData?.period.startsAt;
+
+    if (startsAt != null && startsAt.isNotEmpty) {
+      final DateTime dateTime = DateTime.parse(startsAt).toLocal();
+      time = DateFormat('h.mm.a').format(dateTime);
+      date = DateFormat('dd MMM yyyy').format(dateTime);
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -100,18 +121,45 @@ class _MenuScreensState extends State<MenuScreens> {
 
                 SizedBox(height: 20),
                 if (!isPremium)
-                  CommonContainer.attractCustomerCard(
-                    title: 'Attract More Customers',
-                    description: 'Unlock premium to attract more customers',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SubscriptionScreen(),
+                  // CommonContainer.attractCustomerCard(
+                  //   title: 'Attract More Customers',
+                  //   description: 'Unlock premium to attract more customers',
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //         builder: (context) => SubscriptionScreen(),
+                  //       ),
+                  //     );
+                  //   },
+                  // ),
+                  planData?.isFreemium == false
+                      ? CommonContainer.paidCustomerCard(
+                          title:
+                              '${planData?.plan.durationLabel} Premium Activated',
+                          description: '${time} @ ${date}',
+                          onTap: () {
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => SubscriptionScreen(),
+                            //   ),
+                            // );
+                          },
+                        )
+                      : CommonContainer.attractCustomerCard(
+                          title: 'Attract More Customers',
+                          description:
+                              'Unlock premium to attract more customers',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SubscriptionScreen(),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 if (!isNonPremium)
                   Text(
                     'Menu',
@@ -126,14 +174,39 @@ class _MenuScreensState extends State<MenuScreens> {
                 for (int i = 0; i < titles.length; i++) ...[
                   InkWell(
                     onTap: () {
-                      print('Tapped on ${titles[i]}');
-                      // Example: Navigate or trigger Bloc here
-                      // Navigator.push(...);
+                      if (i == 4) {
+                        final bool isFreemium = planData?.isFreemium == false;
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => isFreemium
+                                ? SubscriptionHistory(
+                                    fromDate:
+                                        planData?.period.startsAtLabel
+                                            .toString() ??
+                                        '',
+                                    titlePlan:
+                                        planData?.plan.durationLabel
+                                            .toString() ??
+                                        '',
+                                    toDate:
+                                        planData?.period.endsAtLabel
+                                            .toString() ??
+                                        '',
+                                  ) // <-- your history page
+                                : const SubscriptionScreen(),
+                          ),
+                        );
+                        return;
+                      }
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => screens[i]),
                       );
                     },
+
                     child: Row(
                       children: [
                         Container(

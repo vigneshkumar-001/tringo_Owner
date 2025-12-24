@@ -1,15 +1,19 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
@@ -240,7 +244,19 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
   @override
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeNotifierProvider);
+    final planState = ref.watch(subscriptionNotifier);
+    final planData = planState.currentPlanResponse?.data;
 
+    String time = '-';
+    String date = '-';
+
+    final String? startsAt = planData?.period.startsAt;
+
+    if (startsAt != null && startsAt.isNotEmpty) {
+      final DateTime dateTime = DateTime.parse(startsAt).toLocal();
+      time = DateFormat('h.mm.a').format(dateTime);
+      date = DateFormat('dd MMM yyyy').format(dateTime);
+    }
     final shopsRes = homeState.shopsResponse;
 
     final List<Shop> shops = shopsRes?.data.items ?? [];
@@ -357,7 +373,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => MenuScreens()),
+                              MaterialPageRoute(
+                                builder: (context) => MenuScreens(),
+                              ),
                             );
                           },
                           child: ClipRRect(
@@ -389,19 +407,74 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       scrollDirection: Axis.horizontal,
-                      itemCount: shops.length,
+                      itemCount: shops.length + 1,
+                      // itemCount: shops.length + 1,
                       physics: const BouncingScrollPhysics(),
                       itemBuilder: (context, index) {
+                        if (index == shops.length) {
+                          return Row(
+                            children: [
+                              CommonContainer.smallShopContainer(
+                                onTap: () {
+                                  if (homeState
+                                          .shopsResponse
+                                          ?.data
+                                          .subscription
+                                          ?.isFreemium ==
+                                      false) {
+                                    final bool isService =
+                                        shopsRes?.data.items[0].shopKind
+                                            .toUpperCase() ==
+                                        'SERVICE';
+                                    AppLogger.log.i(isService);
+                                    context.push(
+                                      AppRoutes.shopCategoryInfoPath,
+                                      extra: {
+                                        'isService': isService,
+                                        'isIndividual': '',
+                                        'initialShopNameEnglish':
+                                            shopsRes?.data.items[0].englishName,
+                                        'initialShopNameTamil':
+                                            shopsRes?.data.items[0].tamilName,
+
+                                        'isEditMode':
+                                            true, // ✅ pass the required parameter
+                                      },
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SubscriptionScreen(),
+                                      ),
+                                    );
+                                  }
+
+                                  // context.pushNamed(
+                                  //
+                                  //   AppRoutes.shopCategoryInfo,
+                                  // );
+                                },
+                                shopImage: '',
+                                addAnotherShop: true,
+                                shopLocation: 'Premium User can add branch',
+                                shopName: 'Add Another Shop',
+                              ),
+                            ],
+                          );
+                        }
                         final shop = shops[index];
                         return Row(
                           children: [
                             CommonContainer.smallShopContainer(
-                              switchOnTap: () {
+                              onTap: () async {
                                 ref
                                     .read(selectedShopProvider.notifier)
                                     .switchShop(shop.id);
                               },
-                              onTap: () {
+
+                              switchOnTap: () {
                                 ref
                                     .read(selectedShopProvider.notifier)
                                     .switchShop(shop.id);
@@ -423,19 +496,33 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
                     children: [
-                      // Attract card
-                      CommonContainer.attractCustomerCard(
-                        title: 'Attract More Customers',
-                        description: 'Unlock premium to attract more customers',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SubscriptionScreen(),
+                      planData?.isFreemium == false
+                          ? CommonContainer.paidCustomerCard(
+                              title:
+                                  '${planData?.plan.durationLabel} Premium Activated',
+                              description: '${time} @ ${date}',
+                              onTap: () {
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => SubscriptionScreen(),
+                                //   ),
+                                // );
+                              },
+                            )
+                          : CommonContainer.attractCustomerCard(
+                              title: 'Attract More Customers',
+                              description:
+                                  'Unlock premium to attract more customers',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => SubscriptionScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
 
                       SizedBox(height: 35),
 
@@ -1102,6 +1189,39 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                         return _serviceCard(service);
                                       },
                                     ),
+                                  ] else if (offer.products.isNotEmpty) ...[
+                                    const SizedBox(height: 20),
+
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      child: Text(
+                                        'Products',
+                                        style: AppTextStyles.mulish(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    ListView.separated(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      itemCount: offer.products.length,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(height: 12),
+                                      itemBuilder: (context, i) {
+                                        final service = offer.products[i];
+                                        return _productCard(service);
+                                      },
+                                    ),
                                   ],
                                 ],
                               ),
@@ -1271,6 +1391,102 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
   }
 
   Widget _serviceCard(OfferServiceItem p) {
+    return Container(
+      padding: EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FBF8),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.mulish(fontSize: 12),
+                ),
+
+                SizedBox(height: 8),
+
+                if (p.rating != null)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF31CC64),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          p.rating!.toStringAsFixed(1),
+                          style: AppTextStyles.mulish(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Icon(Icons.star, size: 14, color: Colors.white),
+                        Text(
+                          ' ${p.reviewCount}',
+                          style: AppTextStyles.mulish(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Text(
+                      '₹${p.offerPrice?.toStringAsFixed(0) ?? ''}',
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (p.price != null) ...[
+                      SizedBox(width: 8),
+                      Text(
+                        '₹${p.price.toStringAsFixed(0)}',
+                        style: AppTextStyles.mulish(
+                          fontSize: 11,
+                          color: AppColor.gray84,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              p.imageUrl ?? '',
+              width: 90,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 90,
+                height: 100,
+                color: Colors.grey[300],
+                child: Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _productCards(OfferServiceItem p) {
     return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(

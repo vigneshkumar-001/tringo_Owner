@@ -66,7 +66,7 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
       tags: tags,
     );
 
-    // Provider may have been disposed while waiting for API
+
     if (!ref.mounted) return null;
 
     return await result.fold<Future<ServiceInfoResponse?>>(
