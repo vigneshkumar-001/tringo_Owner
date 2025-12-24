@@ -58,7 +58,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialShopNameEnglish,
     this.initialShopNameTamil,
     this.shopId,
-    required this. isEditMode ,
+    required this.isEditMode,
     required this.isService,
     required this.isIndividual,
     this.initialDescriptionEnglish,
@@ -182,9 +182,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     BuildContext context,
     TextEditingController controller, {
     void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  })
-
-  {
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -355,8 +353,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  )
-  {
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -485,8 +482,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   File? _pickedImage;
   bool _imageInvalid = false;
 
-
-
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(
       source: source,
@@ -502,7 +497,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       _imageErrorText = null;
     });
   }
-
 
   final ImagePicker _picker = ImagePicker();
 
@@ -547,11 +541,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                _pickedImage!,
-                height: 140,
-                fit: BoxFit.cover,
-              ),
+              child: Image.file(_pickedImage!, height: 140, fit: BoxFit.cover),
             ),
           ),
           const SizedBox(width: 8),
@@ -590,10 +580,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     if (_existingUrl != null && _existingUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: CachedNetworkImage(
-          imageUrl: _existingUrl!,
-          fit: BoxFit.cover,
-        ),
+        child: CachedNetworkImage(imageUrl: _existingUrl!, fit: BoxFit.cover),
       );
     }
 
@@ -615,8 +602,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       ),
     );
   }
-
-
 
   TimeOfDay? _openTod;
   TimeOfDay? _closeTod;
@@ -699,9 +684,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     if (widget.isEditMode) {
       _prefillFields();
     }
-
-
   }
+
   void _prefillFields() {
     // 👉 shop name
     if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {

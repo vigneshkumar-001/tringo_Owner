@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -12,6 +13,7 @@ import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
 import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/common_Container.dart';
@@ -39,7 +41,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   int selectedIndex = 0;
   int followersSelectedIndex = 0;
   int _selectedMonth = 2;
-
+  bool _isFreemium = false; // default
   String? _editingServiceId;
   String? _deletingProductId;
   String? _deletingServiceId;
@@ -68,6 +70,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     );
   }
 
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final val = prefs.getBool('isFreemium') ?? false; // null => false
+
+    if (!mounted) return;
+    setState(() {
+      _isFreemium = val;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +89,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       _scrollToSelected(selectedIndex);
     });
 
+    _loadPrefs(); // ✅ call async function
     // Future.microtask(() async {
     //   final prefs = await SharedPreferences.getInstance();
     //   final savedId = prefs.getString('currentShopId');
@@ -362,50 +375,34 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                if (!isNonPremium)
-                  CommonContainer.editShopContainer(
-                    text: 'Add Branch',
-                    onTap: () async {
-                      final selectedShop = _getSelectedShop(aboutState);
-                      if (selectedShop == null) return;
+                CommonContainer.editShopContainer(
+                  text: 'Add Branch',
+                  onTap: () {
+                    final bool isService =
+                        selectedShop?.shopKind.toString().toUpperCase() ==
+                        'SERVICE';
 
-                      final bool isService =
-                          (selectedShop.shopKind ?? '').toUpperCase() ==
-                          'SERVICE';
-
+                    if (_isFreemium == false) {
                       context.push(
                         AppRoutes.shopCategoryInfoPath,
                         extra: {
-                          'isEditMode': true,
                           'isService': isService,
-                          'isIndividual': false,
-
-                          // Branch create mode → parent shopId send pannunga
-                          'parentShopId': selectedShop.shopId,
-
-                          // (optional) prefill if needed
+                          'isIndividual': '',
                           'initialShopNameEnglish':
-                              selectedShop.shopEnglishName,
-                          'initialShopNameTamil': selectedShop.shopTamilName,
+                              selectedShop?.shopEnglishName,
+                          'initialShopNameTamil': selectedShop?.shopTamilName,
+                          'isEditMode': true,
                         },
                       );
-                    },
-
-                    // onTap: () {
-                    //
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (context) => ShopCategoryInfo(
-                    //         isEditMode: true,
-                    //         isService: true,
-                    //         isIndividual: false,
-                    //       ),
-                    //     ),
-                    //   );
-                    // },
-                  ),
-                if (!isNonPremium) SizedBox(width: 10),
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => SubscriptionScreen()),
+                      );
+                    }
+                  },
+                ),
+                SizedBox(width: 10),
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Details',
                   onTap: () async {
@@ -952,6 +949,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   @override
   Widget build(BuildContext context) {
     final aboutState = ref.watch(aboutMeNotifierProvider);
+
     final selectedShop = _getSelectedShop(aboutState);
     final isDoorDelivery = selectedShop?.shopDoorDelivery == true;
     if (!aboutState.isLoading && selectedShop == null) {
@@ -1114,7 +1112,19 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final selectedShop = _getSelectedShop(aboutState);
     final products = selectedShop?.products ?? [];
     final services = selectedShop?.services ?? [];
+    final planState = ref.watch(subscriptionNotifier);
+    final planData = planState.currentPlanResponse?.data;
 
+    String time = '-';
+    String date = '-';
+
+    final String? startsAt = planData?.period.startsAt;
+
+    if (startsAt != null && startsAt.isNotEmpty) {
+      final DateTime dateTime = DateTime.parse(startsAt).toLocal();
+      time = DateFormat('h.mm.a').format(dateTime);
+      date = DateFormat('dd MMM yyyy').format(dateTime);
+    }
     final bool hasServices = services.isNotEmpty;
     final bool hasProducts = products.isNotEmpty;
 
@@ -1151,18 +1161,32 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             _buildShopHeaderCard(aboutState),
             const SizedBox(height: 28),
             if (!isPremium)
-              CommonContainer.attractCustomerCard(
-                title: 'Attract More Customers',
-                description: 'Unlock premium to attract more customers',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SubscriptionScreen(),
+              planData?.isFreemium == false
+                  ? CommonContainer.paidCustomerCard(
+                      title:
+                          '${planData?.plan.durationLabel} Premium Activated',
+                      description: '${time} @ ${date}',
+                      onTap: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => SubscriptionScreen(),
+                        //   ),
+                        // );
+                      },
+                    )
+                  : CommonContainer.attractCustomerCard(
+                      title: 'Attract More Customers',
+                      description: 'Unlock premium to attract more customers',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubscriptionScreen(),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             SizedBox(height: isPremium ? 20 : 40),
             Row(
               children: [

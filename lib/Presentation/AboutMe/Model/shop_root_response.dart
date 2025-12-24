@@ -10,9 +10,9 @@ class ShopRootResponse {
     return ShopRootResponse(
       status: json["status"] ?? false,
       data:
-      (json["data"] as List<dynamic>?)
-          ?.map((x) => Shop.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["data"] as List<dynamic>?)
+              ?.map((x) => Shop.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -106,9 +106,9 @@ class Shop {
       shopGpsLongitude: json["shopGpsLongitude"] as String?,
 
       shopWeeklyHours:
-      (json['weeklyHours'] as List<dynamic>?)
-          ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+          (json['weeklyHours'] as List<dynamic>?)
+              ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
+              .toList() ??
           const [],
       category: json["category"] as String?,
       subCategory: json["subCategory"] as String?,
@@ -125,25 +125,25 @@ class Shop {
 
       // 🔹 shopImages
       shopImages:
-      (json["shopImages"] as List<dynamic>?)
-          ?.map((x) => ShopImage.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["shopImages"] as List<dynamic>?)
+              ?.map((x) => ShopImage.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
 
       products:
-      (json["products"] as List<dynamic>?)
-          ?.map((x) => Product.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["products"] as List<dynamic>?)
+              ?.map((x) => Product.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
       services:
-      (json["services"] as List<dynamic>?)
-          ?.map((x) => Service.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["services"] as List<dynamic>?)
+              ?.map((x) => Service.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
       reviews:
-      (json["reviews"] as List<dynamic>?)
-          ?.map((x) => Review.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["reviews"] as List<dynamic>?)
+              ?.map((x) => Review.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -168,6 +168,7 @@ class ShopImage {
     );
   }
 }
+
 class ShopWeeklyHour {
   final String? day;
   final String? opensAt;
@@ -260,9 +261,9 @@ class Product {
       rating: (json["rating"] as num?)?.toInt(),
       ratingCount: (json["ratingCount"] as num?)?.toInt(),
       media:
-      (json["media"] as List<dynamic>?)
-          ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["media"] as List<dynamic>?)
+              ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -332,9 +333,9 @@ class Service {
       status: json["status"] as String?,
       features: json["features"] ?? [],
       media:
-      (json["media"] as List<dynamic>?)
-          ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
-          .toList() ??
+          (json["media"] as List<dynamic>?)
+              ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
+              .toList() ??
           [],
     );
   }
@@ -354,12 +355,11 @@ class Media {
     return Media(
       id: json["id"] as String?,
       url: json["url"] as String?,
-      type: json["type"] as String?,             // 👈 NEW
+      type: json["type"] as String?, // 👈 NEW
       displayOrder: (json["displayOrder"] as num?)?.toInt(),
     );
   }
 }
-
 
 // ───────────────────────── REVIEW ─────────────────────────
 

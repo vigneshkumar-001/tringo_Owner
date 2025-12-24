@@ -1,6 +1,9 @@
 class ApiUrl {
-  static const String base =
-      "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
+  // static const String stagingBase =
+  //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
+
+  static const String base = "https://bknd.tringobiz.com/";
+
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
   static const String verifyOtp = "${base}api/v1/auth/verify-otp";
@@ -9,8 +12,12 @@ class ApiUrl {
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
+  static const String version = "${base}api/v1/app/version";
   static String imageUrl =
       "https://next.fenizotechnologies.com/Adrox/api/image-save";
+  static const String plans = "${base}api/v1/subscriptions/plans";
+  static const String currentPlans = "${base}api/v1/subscriptions/current";
+  static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String categoriesShop =
       "${base}api/v1/public/categories?type=shop";
 

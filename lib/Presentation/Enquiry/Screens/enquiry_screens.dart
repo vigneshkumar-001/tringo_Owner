@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:open_filex/open_filex.dart';
 
 import 'package:dio/dio.dart';
@@ -12,18 +14,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/call_helper.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../Api/Repository/api_url.dart';
+import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
 import '../../Home/Controller/shopContext_provider.dart';
 import '../../Home/Model/shops_response.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../Menu/Screens/menu_screens.dart';
+import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -269,7 +274,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
 
     final List<Shop> shops = shopsRes?.data.items ?? [];
     final bool hasShops = shops.isNotEmpty;
-
+    final bool isFreemium = shopsRes?.data.subscription?.isFreemium ?? true;
     // bool hasEnquiries = false;
 
     final enquiryData = enquiry?.data;
@@ -397,7 +402,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => MenuScreens(),
+                                    builder: (context) => MenuScreens(),
                                   ),
                                 );
                               },
@@ -417,41 +422,105 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
 
                     SizedBox(height: 30),
 
-                    // ================= SHOPS =================
-                    if (shops.isEmpty)
+                    if (shops.isEmpty) ...[
                       CommonContainer.smallShopContainer(
                         shopImage: '',
                         shopLocation: '',
                         shopName: '',
-                      )
-                    else
+                      ),
+                    ] else ...[
                       SizedBox(
                         height: 120,
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
+                          itemCount: shops.length + 1,
+                          // itemCount: shops.length + 1,
                           physics: const BouncingScrollPhysics(),
-                          itemCount: shops.length,
-                          itemBuilder: (_, index) {
+                          itemBuilder: (context, index) {
+                            if (index == shops.length) {
+                              return Row(
+                                children: [
+                                  CommonContainer.smallShopContainer(
+                                    onTap: () {
+                                      if (homeState
+                                              .shopsResponse
+                                              ?.data
+                                              .subscription
+                                              ?.isFreemium ==
+                                          false) {
+                                        final bool isService =
+                                            shopsRes?.data.items[0].shopKind
+                                                .toUpperCase() ==
+                                            'SERVICE';
+                                        AppLogger.log.i(isService);
+                                        context.push(
+                                          AppRoutes.shopCategoryInfoPath,
+                                          extra: {
+                                            'isService': isService,
+                                            'isIndividual': '',
+                                            'initialShopNameEnglish': shopsRes
+                                                ?.data
+                                                .items[0]
+                                                .englishName,
+                                            'initialShopNameTamil': shopsRes
+                                                ?.data
+                                                .items[0]
+                                                .tamilName,
+
+                                            'isEditMode':
+                                                true, // ✅ pass the required parameter
+                                          },
+                                        );
+                                      } else {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                SubscriptionScreen(),
+                                          ),
+                                        );
+                                      }
+
+                                      // context.pushNamed(
+                                      //
+                                      //   AppRoutes.shopCategoryInfo,
+                                      // );
+                                    },
+                                    shopImage: '',
+                                    addAnotherShop: true,
+                                    shopLocation: 'Premium User can add branch',
+                                    shopName: 'Add Another Shop',
+                                  ),
+                                ],
+                              );
+                            }
                             final shop = shops[index];
-                            return CommonContainer.smallShopContainer(
-                              switchOnTap: () {
-                                ref
-                                    .read(selectedShopProvider.notifier)
-                                    .switchShop(shop.id);
-                              },
-                              onTap: () {
-                                ref
-                                    .read(selectedShopProvider.notifier)
-                                    .switchShop(shop.id);
-                              },
-                              shopImage: shop.primaryImageUrl ?? '',
-                              shopLocation: '${shop.addressEn}, ${shop.city}',
-                              shopName: shop.englishName,
+                            return Row(
+                              children: [
+                                CommonContainer.smallShopContainer(
+                                  onTap: () async {
+                                    ref
+                                        .read(selectedShopProvider.notifier)
+                                        .switchShop(shop.id);
+                                  },
+
+                                  switchOnTap: () {
+                                    ref
+                                        .read(selectedShopProvider.notifier)
+                                        .switchShop(shop.id);
+                                  },
+                                  shopImage: shop.primaryImageUrl ?? '',
+                                  shopLocation:
+                                      '${shop.addressEn}, ${shop.city}',
+                                  shopName: shop.englishName,
+                                ),
+                              ],
                             );
                           },
                         ),
                       ),
+                    ],
 
                     SizedBox(height: 30),
 
