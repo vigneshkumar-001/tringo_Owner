@@ -12,6 +12,7 @@ class ApiUrl {
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
+  static const String version = "${base}api/v1/app/version";
   static String imageUrl =
       "https://next.fenizotechnologies.com/Adrox/api/image-save";
   static const String plans = "${base}api/v1/subscriptions/plans";
