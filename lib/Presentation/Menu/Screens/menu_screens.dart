@@ -37,7 +37,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     'Subscription & Payment',
     'Analytics',
     'Support',
-    'Account Related',
+    'Delete Account',
     'Privacy Policy',
   ];
 
