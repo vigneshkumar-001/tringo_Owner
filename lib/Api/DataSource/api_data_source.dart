@@ -14,6 +14,7 @@ import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_prod
 import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
+import 'package:tringo_vendor/Presentation/Login/model/app_version_response.dart';
 import 'package:tringo_vendor/Presentation/Login/model/login_response.dart';
 import 'package:tringo_vendor/Presentation/Login/model/otp_response.dart';
 import 'package:tringo_vendor/Presentation/Menu/Model/current_plan_response.dart';
@@ -547,8 +548,7 @@ class ApiDataSource extends BaseApiDataSource {
   Future<Either<Failure, ShopInfoPhotosResponse>> shopPhotoUpload({
     required List<Map<String, String>> items,
     String? apiShopId,
-  }) async
-  {
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -1756,7 +1756,6 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-
   Future<Either<Failure, PlanListResponse>> getPlanList() async {
     try {
       final url = ApiUrl.plans;
@@ -1792,15 +1791,19 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-
-  Future<Either<Failure, PurchaseResponse>> purchasePlan({required String planId,required String businessProfileId}) async {
+  Future<Either<Failure, PurchaseResponse>> purchasePlan({
+    required String planId,
+    required String businessProfileId,
+  }) async {
     try {
       final url = ApiUrl.purchase;
 
-      dynamic response = await Request.sendRequest(url, {
-        "planId": planId,
-
-      }, 'POST', true);
+      dynamic response = await Request.sendRequest(
+        url,
+        {"planId": planId},
+        'POST',
+        true,
+      );
 
       AppLogger.log.i(response);
 
@@ -1843,6 +1846,53 @@ class ApiDataSource extends BaseApiDataSource {
         if (response.statusCode == 200 || response.statusCode == 201) {
           if (response.data['status'] == true) {
             return Right(CurrentPlanResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, AppVersionResponse>> getAppVersion({
+    required String appName,
+    required String appVersion,
+    required String appPlatForm,
+  }) async {
+    try {
+      final url = ApiUrl.version;
+
+      dynamic response = await Request.sendGetRequest(
+        url,
+        {},
+        'GET',
+        false,
+        appName: appName,
+        appPlatForm: appPlatForm,
+        appVersion: appVersion,
+      );
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(AppVersionResponse.fromJson(response.data));
           } else {
             return Left(
               ServerFailure(response.data['message'] ?? "Login failed"),
