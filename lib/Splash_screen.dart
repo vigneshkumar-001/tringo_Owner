@@ -24,6 +24,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     super.initState();
     _initializeSplash();
   }
+
   Future<void> _initializeSplash() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -36,16 +37,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       await ref.read(selectedShopProvider.notifier).switchShop('');
 
       // 🔑 WAIT for API call
-      await homeNotifier. fetchShops(shopId:  '');
-      await planNotifier. getCurrentPlan();
+      await homeNotifier.fetchShops(shopId: '');
+      await planNotifier.getCurrentPlan();
 
       if (!mounted) return;
 
       final homeState = ref.read(homeNotifierProvider);
 
       // ✅ Safely handle nullable value
-      final bool isNewUser =
-          homeState.shopsResponse?.data.isNewOwner ?? false;
+      final bool isNewUser = homeState.shopsResponse?.data.isNewOwner ?? false;
 
       AppLogger.log.i('isNewUser: $isNewUser');
 
