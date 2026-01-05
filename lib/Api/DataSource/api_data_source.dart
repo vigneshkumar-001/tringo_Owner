@@ -32,6 +32,7 @@ import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.d
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
 import '../../Presentation/Create App Offer/Model/create_offers.dart';
 import '../../Presentation/Create App Offer/Model/update_offer_model.dart';
+import '../../Presentation/Login/model/contact_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
 import '../../Presentation/Menu/Model/plan_list_response.dart';
 import '../../Presentation/Menu/Model/purchase_response.dart';
@@ -1903,6 +1904,44 @@ class ApiDataSource extends BaseApiDataSource {
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
         }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ContactResponse>> syncContacts({
+    required List<Map<String, dynamic>> items,
+  }) async {
+    try {
+      final url = ApiUrl.contactInfo; // same endpoint
+
+      final payload = {"items": items};
+
+      final response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(ContactResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Sync failed"),
+            );
+          }
+        }
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
       } else {
         final errorData = response.response?.data;
         if (errorData is Map && errorData.containsKey('message')) {
