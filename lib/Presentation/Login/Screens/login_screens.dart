@@ -42,8 +42,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
       if (!hasPermission) {
         await MobileNumber.requestPhonePermission;
       }
-
-      // Optional: debug log
       final after = await MobileNumber.hasPhonePermission;
       debugPrint('PHONE PERMISSION AFTER REQUEST: $after');
     } catch (e, st) {
@@ -51,6 +49,21 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
       debugPrint('$st');
     }
   }
+  // Future<void> _ensurePhonePermission() async {
+  //   try {
+  //     final hasPermission = await MobileNumber.hasPhonePermission;
+  //     if (!hasPermission) {
+  //       await MobileNumber.requestPhonePermission;
+  //     }
+  //
+  //     // Optional: debug log
+  //     final after = await MobileNumber.hasPhonePermission;
+  //     debugPrint('PHONE PERMISSION AFTER REQUEST: $after');
+  //   } catch (e, st) {
+  //     debugPrint('❌ Error requesting phone permission: $e');
+  //     debugPrint('$st');
+  //   }
+  // }
 
   @override
   void initState() {
@@ -59,6 +72,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
     // ✅ Request permission immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _ensurePhonePermission();
+
     });
 
     _sub = ref.listenManual<LoginState>(loginNotifierProvider, (
