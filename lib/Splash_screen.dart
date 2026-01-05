@@ -10,6 +10,7 @@ import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
+import 'Core/permissions/permission_service.dart';
 import 'Presentation/Home/Controller/home_notifier.dart';
 import 'Presentation/Home/Controller/shopContext_provider.dart';
 import 'Presentation/Login/controller/app_version_notifier.dart';
@@ -27,6 +28,45 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     _initializeSplash();
+    checkNavigation();
+    PermissionService.requestOverlayAndContacts();
+  }
+
+  Future<void> checkNavigation() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final token = prefs.getString('token');
+    final bool isProfileCompleted =
+        prefs.getBool("isProfileCompleted") ?? false;
+
+    // 1) Check app version
+    await ref
+        .read(appVersionNotifierProvider.notifier)
+        .getAppVersion(
+          appPlatForm: 'android',
+          appVersion: appVersion,
+          appName: 'customer',
+        );
+
+    final versionState = ref.read(appVersionNotifierProvider);
+
+    if (versionState.appVersionResponse?.data?.forceUpdate == true) {
+      _showUpdateBottomSheet();
+      return;
+    }
+
+    // 3) Hold splash for 3 seconds
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    // // 4) Navigate
+    // if (token == null) {
+    //   context.go(AppRoutes.loginPath);
+    // } else if (!isProfileCompleted) {
+    //   context.go(AppRoutes.fillProfilePath);
+    // } else {
+    //   context.go(AppRoutes.homePath);
+    // }
   }
 
   String appVersion = '1.0.0';

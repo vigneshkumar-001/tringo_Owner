@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
+import '../../../Core/contacts/contacts_service.dart';
+import '../model/contact_response.dart';
 import '../model/login_response.dart';
 import '../model/otp_response.dart';
 import '../model/whatsapp_response.dart';
@@ -14,6 +16,7 @@ class LoginState {
   final OtpResponse? otpResponse;
   final String? error;
   final WhatsappResponse? whatsappResponse;
+  final ContactResponse? contactResponse;
 
   const LoginState({
     this.isLoading = false,
@@ -21,6 +24,7 @@ class LoginState {
     this.otpResponse,
     this.error,
     this.whatsappResponse,
+    this.contactResponse,
   });
 
   factory LoginState.initial() => const LoginState();
@@ -31,6 +35,7 @@ class LoginState {
     OtpResponse? otpResponse,
     String? error,
     WhatsappResponse? whatsappResponse,
+    ContactResponse? contactResponse,
   }) {
     return LoginState(
       isLoading: isLoading ?? this.isLoading,
@@ -38,6 +43,7 @@ class LoginState {
       otpResponse: otpResponse ?? this.otpResponse,
       error: error,
       whatsappResponse: whatsappResponse ?? this.whatsappResponse,
+      contactResponse: contactResponse ?? this.contactResponse,
     );
   }
 }
@@ -92,39 +98,145 @@ class LoginNotifier extends Notifier<LoginState> {
   // }
 
   Future<void> verifyOtp({required String contact, required String otp}) async {
-    state = const LoginState(isLoading: true);
+    state = state.copyWith(isLoading: true, error: null);
 
     final result = await api.otp(contact: contact, otp: otp);
 
     result.fold(
-      (failure) => state = LoginState(isLoading: false, error: failure.message),
-      (OtpResponse response) async {
-        final data = response.data;
-
+          (failure) {
+        state = state.copyWith(isLoading: false, error: failure.message);
+      },
+          (response) async {
         final prefs = await SharedPreferences.getInstance();
 
+        final data = response.data;
         await prefs.setString('token', data?.accessToken ?? '');
         await prefs.setString('refreshToken', data?.refreshToken ?? '');
         await prefs.setString('sessionToken', data?.sessionToken ?? '');
         await prefs.setString('role', data?.role ?? '');
-        await prefs.setBool('isNewOwner', data?.isNewOwner ?? false);
 
-        //  Print what was actually stored
-        final accessToken = prefs.getString('token');
-        final refreshToken = prefs.getString('refreshToken');
-        final sessionToken = prefs.getString('sessionToken');
-        final role = prefs.getString('role');
+        // ✅ OTP success state first (UI can navigate)
+        state = state.copyWith(isLoading: false, otpResponse: response);
 
-        AppLogger.log.i(' SharedPreferences stored successfully:');
-        AppLogger.log.i('token → $accessToken');
-        AppLogger.log.i('refreshToken → $refreshToken');
-        AppLogger.log.i('sessionToken → $sessionToken');
-        AppLogger.log.i('role → $role');
+        final alreadySynced = prefs.getBool('contacts_synced') ?? false;
+        if (alreadySynced) return;
 
-        state = LoginState(isLoading: false, otpResponse: response);
+        try {
+          AppLogger.log.i("✅ Contact sync started");
+
+          final contacts = await ContactsService.getAllContacts();
+          AppLogger.log.i("📞 contacts fetched = ${contacts.length}");
+
+          if (contacts.isEmpty) {
+            AppLogger.log.w(
+              "⚠️ Contacts empty OR permission denied. Not marking synced.",
+            );
+            return;
+          }
+
+          // ✅ Build items array (backend expects items[])
+          final limited = contacts.take(500).toList(); // increase if you want
+          final items = limited
+              .map(
+                (c) => {
+              "name": c.name,
+              "phone": "+91${c.phone}", // or use dialCode dynamic
+            },
+          )
+              .toList();
+
+          // ✅ Chunk to avoid huge payload (recommended)
+          const chunkSize = 200;
+          for (var i = 0; i < items.length; i += chunkSize) {
+            final chunk = items.sublist(
+              i,
+              (i + chunkSize > items.length) ? items.length : i + chunkSize,
+            );
+
+            final res = await api.syncContacts(items: chunk);
+
+            res.fold(
+                  (l) => AppLogger.log.e("❌ batch sync fail: ${l.message}"),
+                  (r) => AppLogger.log.i(
+                "✅ batch ok total=${r.data.total} inserted=${r.data.inserted} touched=${r.data.touched} skipped=${r.data.skipped}",
+              ),
+            );
+          }
+
+          await prefs.setBool('contacts_synced', true);
+          AppLogger.log.i("✅ Contacts synced done: ${limited.length}");
+        } catch (e) {
+          AppLogger.log.e("❌ Contact sync failed: $e");
+        }
       },
     );
   }
+
+
+  Future<void> syncContact({
+    required String name,
+    required String phone,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final items = [
+      {"name": name, "phone": "+91$phone"},
+    ];
+
+    final result = await api.syncContacts(items: items);
+
+    result.fold(
+          (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          contactResponse: null,
+        );
+      },
+          (response) {
+        state = state.copyWith(
+          isLoading: false,
+          contactResponse: response,
+          error: null,
+        );
+      },
+    );
+  }
+
+  // Future<void> verifyOtp({required String contact, required String otp}) async {
+  //   state = const LoginState(isLoading: true);
+  //
+  //   final result = await api.otp(contact: contact, otp: otp);
+  //
+  //   result.fold(
+  //     (failure) => state = LoginState(isLoading: false, error: failure.message),
+  //     (OtpResponse response) async {
+  //       final data = response.data;
+  //
+  //       final prefs = await SharedPreferences.getInstance();
+  //
+  //       await prefs.setString('token', data?.accessToken ?? '');
+  //       await prefs.setString('refreshToken', data?.refreshToken ?? '');
+  //       await prefs.setString('sessionToken', data?.sessionToken ?? '');
+  //       await prefs.setString('role', data?.role ?? '');
+  //       await prefs.setBool('isNewOwner', data?.isNewOwner ?? false);
+  //
+  //       //  Print what was actually stored
+  //       final accessToken = prefs.getString('token');
+  //       final refreshToken = prefs.getString('refreshToken');
+  //       final sessionToken = prefs.getString('sessionToken');
+  //       final role = prefs.getString('role');
+  //
+  //       AppLogger.log.i(' SharedPreferences stored successfully:');
+  //       AppLogger.log.i('token → $accessToken');
+  //       AppLogger.log.i('refreshToken → $refreshToken');
+  //       AppLogger.log.i('sessionToken → $sessionToken');
+  //       AppLogger.log.i('role → $role');
+  //
+  //       state = LoginState(isLoading: false, otpResponse: response);
+  //     },
+  //   );
+  // }
 
   Future<void> verifyWhatsappNumber({
     required String contact,
@@ -152,6 +264,7 @@ class LoginNotifier extends Notifier<LoginState> {
       state = LoginState(isLoading: false, error: e.toString());
     }
   }
+
 }
 
 /// --- PROVIDERS ---
