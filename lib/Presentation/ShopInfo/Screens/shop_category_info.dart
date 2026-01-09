@@ -482,6 +482,21 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   File? _pickedImage;
   bool _imageInvalid = false;
 
+  // Future<void> _pickImage(ImageSource source) async {
+  //   final pickedFile = await _picker.pickImage(
+  //     source: source,
+  //     imageQuality: 85,
+  //   );
+  //
+  //   if (pickedFile == null) return;
+  //
+  //   setState(() {
+  //     _pickedImage = File(pickedFile.path);
+  //     _existingUrl = null; // clear server image
+  //     _imageInvalid = false;
+  //     _imageErrorText = null;
+  //   });
+  // }
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(
       source: source,
@@ -491,15 +506,16 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     if (pickedFile == null) return;
 
     setState(() {
-      _pickedImage = File(pickedFile.path);
-      _existingUrl = null; // clear server image
+      _pickedImage = File(pickedFile.path); // ✅ THIS is what UI shows
+      _existingUrl = null; // ✅ clear server image
       _imageInvalid = false;
       _imageErrorText = null;
     });
+
+    debugPrint("✅ picked image path: ${_pickedImage!.path}");
   }
 
   final ImagePicker _picker = ImagePicker();
-
   Future<void> _showImageSourcePicker() async {
     showModalBottomSheet(
       context: context,
@@ -533,6 +549,40 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       },
     );
   }
+
+  // Future<void> _showImageSourcePicker() async {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+  //     ),
+  //     builder: (_) {
+  //       return SafeArea(
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             ListTile(
+  //               leading: const Icon(Icons.camera_alt),
+  //               title: const Text('Camera'),
+  //               onTap: () {
+  //                 Navigator.pop(context);
+  //                 _pickImage(ImageSource.camera);
+  //               },
+  //             ),
+  //             ListTile(
+  //               leading: const Icon(Icons.photo_library),
+  //               title: const Text('Gallery'),
+  //               onTap: () {
+  //                 Navigator.pop(context);
+  //                 _pickImage(ImageSource.gallery);
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildImageWidget() {
     if (_pickedImage != null) {
@@ -676,10 +726,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       final parentShopId = extra['parentShopId'] as String?;
 
       if (parentShopId != null && parentShopId.isNotEmpty) {
-        ref.read(aboutMeNotifierProvider.notifier)
+        ref
+            .read(aboutMeNotifierProvider.notifier)
             .fetchAllShopDetails(shopId: parentShopId);
       }
-
     });
     if (widget.isEditMode) {
       _prefillFields();
@@ -786,6 +836,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     // 👉 owner image
     if ((widget.initialOwnerImageUrl?.isNotEmpty ?? false) &&
         (widget.isService == true)) {
+      _existingUrl = widget.initialOwnerImageUrl; // optional
       _hasExistingOwnerImage = true;
     }
   }
@@ -1868,9 +1919,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
 
                           // owner image
-                          final File? ownerFile = _permanentImage == null
+                          final File? ownerFile = _pickedImage == null
                               ? null
-                              : File(_permanentImage!.path);
+                              : File(_pickedImage!.path);
                           final weeklyHoursText =
                               "${_openTimeController.text.trim()} - ${_closeTimeController.text.trim()}";
 
@@ -1945,113 +1996,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
                         },
 
-                        /*onTap: () async {
-                          FocusScope.of(context).unfocus();
-
-                          // if (!_validateAll()) {
-                          //   return;
-                          // }
-
-                          AppLogger.log.i(_gpsController.text);
-                          final bool isServiceFlow = widget.isService ?? false;
-                          final String type = isServiceFlow
-                              ? 'service'
-                              : 'product';
-                          final gpsText = _gpsController.text.trim();
-                          double latitude = 0.0;
-                          double longitude = 0.0;
-
-                          if (gpsText.isNotEmpty && gpsText.contains(',')) {
-                            final parts = gpsText.split(',');
-                            latitude = double.tryParse(parts[0].trim()) ?? 0.0;
-                            longitude = double.tryParse(parts[1].trim()) ?? 0.0;
-                          }
-
-                          bool isDoorDeliveryEnabled = false;
-                          if (!isServiceFlow) {
-                            final doorDeliveryValue = _doorDeliveryController.text.trim();
-                            final isDoorDeliveryEnabled = doorDeliveryValue == 'Yes';
-                            print(isDoorDeliveryEnabled);
-                          }
-                          // final String ownerImageUrl = isServiceFlow
-                          //     ? (_permanentImage?.path ?? '')
-                          //     : '';
-                          final File? ownerFile = _permanentImage == null
-                              ? null
-                              : File(_permanentImage!.path);
-
-                          // if (ownerFile == null) {
-                          //   AppSnackBar.error(
-                          //     context,
-                          //     "Please capture the image",
-                          //   );
-                          //   return;
-                          // }
-
-                          // final response = await ref
-                          //     .read(shopCategoryNotifierProvider.notifier)
-                          //     .shopCategoryInfo(
-                          //       shopId: widget.shopId,
-                          //       ownerImageFile: ownerFile,
-                          //       type: type,
-                          //
-                          //       addressEn: _addressEnglishController.text
-                          //           .trim(),
-                          //       addressTa: addressTamilNameController.text
-                          //           .trim(),
-                          //       alternatePhone: _whatsappController.text.trim(),
-                          //       category: categorySlug,
-                          //       contactEmail: _emailController.text.trim(),
-                          //       descriptionEn: _descriptionEnglishController
-                          //           .text
-                          //           .trim(),
-                          //       descriptionTa: descriptionTamilController.text
-                          //           .trim(),
-                          //       doorDelivery: isDoorDeliveryEnabled,
-                          //       englishName: _shopNameEnglishController.text
-                          //           .trim(),
-                          //       gpsLatitude: latitude,
-                          //       gpsLongitude: longitude,
-                          //       primaryPhone: _primaryMobileController.text
-                          //           .trim(),
-                          //       subCategory: subCategorySlug,
-                          //       tamilName: tamilNameController.text.trim(),
-                          //     );
-                          //
-                          // final newState = ref.read(
-                          //   shopCategoryNotifierProvider,
-                          // );
-                          //
-                          // if (newState.error != null &&
-                          //     newState.error!.isNotEmpty) {
-                          //   AppSnackBar.error(
-                          //     context,
-                          //     newState.error!,
-                          //   ); //  show API error
-                          // } else if (response != null) {
-                          //   AppSnackBar.success(
-                          //     context,
-                          //     'Shop category details saved successfully',
-                          //   );
-                          //   if (widget.pages == 'AboutMeScreens') {
-                          //     Navigator.pop(context, true);
-                          //     // context.pushNamed(
-                          //     //   AppRoutes.homeScreen,
-                          //     //   extra: 3, // or 3 depending on the tab you want
-                          //     // );
-                          //   } else {
-                          //     context.pushNamed(
-                          //       AppRoutes.shopPhotoInfo,
-                          //       extra: 'shopCategory',
-                          //     );
-                          //   }
-                          // } else {
-                          //   AppSnackBar.error(
-                          //     context,
-                          //     "Unexpected error, please try again",
-                          //   );
-                          // }
-                        },*/
                         text: state.isLoading
                             ? ThreeDotsLoader()
                             : Text(
@@ -2080,27 +2024,23 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   }
 
   Widget _buildOwnerPhotoWidget() {
-    // 1️⃣ New image picked from camera
-    if (_permanentImage != null) {
+    // 1️⃣ Local selected image
+    if (_pickedImage != null) {
       return Row(
         children: [
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                File(_permanentImage!.path),
-                height: 140,
-                fit: BoxFit.cover,
-              ),
+              child: Image.file(_pickedImage!, height: 140, fit: BoxFit.cover),
             ),
           ),
           const SizedBox(width: 8),
           InkWell(
             onTap: () {
               setState(() {
-                _permanentImage = null;
+                _pickedImage = null;
                 _imageErrorText = 'Please Add Your Photo';
-                _timetableInvalid = true;
+                _imageInvalid = true;
               });
             },
             child: Padding(
@@ -2129,17 +2069,15 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       );
     }
 
-    // 2️⃣ Existing owner image from server (edit mode)
-    if (_hasExistingOwnerImage &&
-        widget.initialOwnerImageUrl != null &&
-        widget.initialOwnerImageUrl!.trim().isNotEmpty) {
+    // 2️⃣ Server image (edit mode)
+    if (_existingUrl != null && _existingUrl!.trim().isNotEmpty) {
       return Row(
         children: [
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                widget.initialOwnerImageUrl!,
+                _existingUrl!,
                 height: 140,
                 fit: BoxFit.cover,
               ),
@@ -2149,9 +2087,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
           InkWell(
             onTap: () {
               setState(() {
-                _hasExistingOwnerImage = false;
+                _existingUrl = null;
                 _imageErrorText = 'Please Add Your Photo';
-                _timetableInvalid = true;
+                _imageInvalid = true;
               });
             },
             child: Padding(
@@ -2180,7 +2118,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       );
     }
 
-    // 3️⃣ No image → default upload UI
+    // 3️⃣ Default upload UI
     return Center(
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2199,4 +2137,125 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       ),
     );
   }
+
+  // Widget _buildOwnerPhotoWidget() {
+  //   // 1️⃣ New image picked from camera
+  //   if (_permanentImage != null) {
+  //     return Row(
+  //       children: [
+  //         Expanded(
+  //           child: ClipRRect(
+  //             borderRadius: BorderRadius.circular(12),
+  //             child: Image.file(
+  //               File(_permanentImage!.path),
+  //               height: 140,
+  //               fit: BoxFit.cover,
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 8),
+  //         InkWell(
+  //           onTap: () {
+  //             setState(() {
+  //               _permanentImage = null;
+  //               _imageErrorText = 'Please Add Your Photo';
+  //               _timetableInvalid = true;
+  //             });
+  //           },
+  //           child: Padding(
+  //             padding: const EdgeInsets.symmetric(vertical: 35.0),
+  //             child: Column(
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: [
+  //                 Image.asset(
+  //                   AppImages.closeImage,
+  //                   height: 26,
+  //                   color: AppColor.mediumGray,
+  //                 ),
+  //                 Text(
+  //                   'Clear',
+  //                   style: AppTextStyles.mulish(
+  //                     fontSize: 14,
+  //                     fontWeight: FontWeight.w400,
+  //                     color: AppColor.mediumLightGray,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     );
+  //   }
+  //
+  //   // 2️⃣ Existing owner image from server (edit mode)
+  //   if (_hasExistingOwnerImage &&
+  //       widget.initialOwnerImageUrl != null &&
+  //       widget.initialOwnerImageUrl!.trim().isNotEmpty) {
+  //     return Row(
+  //       children: [
+  //         Expanded(
+  //           child: ClipRRect(
+  //             borderRadius: BorderRadius.circular(12),
+  //             child: Image.network(
+  //               widget.initialOwnerImageUrl!,
+  //               height: 140,
+  //               fit: BoxFit.cover,
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 8),
+  //         InkWell(
+  //           onTap: () {
+  //             setState(() {
+  //               _hasExistingOwnerImage = false;
+  //               _imageErrorText = 'Please Add Your Photo';
+  //               _timetableInvalid = true;
+  //             });
+  //           },
+  //           child: Padding(
+  //             padding: const EdgeInsets.symmetric(vertical: 35.0),
+  //             child: Column(
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: [
+  //                 Image.asset(
+  //                   AppImages.closeImage,
+  //                   height: 26,
+  //                   color: AppColor.mediumGray,
+  //                 ),
+  //                 Text(
+  //                   'Clear',
+  //                   style: AppTextStyles.mulish(
+  //                     fontSize: 14,
+  //                     fontWeight: FontWeight.w400,
+  //                     color: AppColor.mediumLightGray,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     );
+  //   }
+  //
+  //   // 3️⃣ No image → default upload UI
+  //   return Center(
+  //     child: Row(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         Image.asset(AppImages.uploadImage, height: 30),
+  //         const SizedBox(width: 10),
+  //         Text(
+  //           'Upload',
+  //           style: AppTextStyles.mulish(
+  //             fontSize: 14,
+  //             fontWeight: FontWeight.w500,
+  //             color: AppColor.mediumLightGray,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

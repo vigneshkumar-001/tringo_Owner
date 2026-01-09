@@ -80,7 +80,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
 
   Future<void> downloadPDFs() async {
     final url =
-        "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/api/v1/dashboard/enquiries/export?format=pdf&sessionToken=8e978bad-cdd4-408d-8b37-b3dbd40f514b";
+        "${ApiUrl.base}api/v1/dashboard/enquiries/export?format=pdf&sessionToken=8e978bad-cdd4-408d-8b37-b3dbd40f514b";
 
     try {
       Directory dir;

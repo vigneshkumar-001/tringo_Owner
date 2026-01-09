@@ -62,6 +62,9 @@ class CurrentPlanData {
     'payment': payment,
     'period': period.toJson(),
   };
+  @override
+  String toString() => toJson().toString();
+
 }
 
 class Plan {
@@ -146,4 +149,7 @@ class Period {
     'daysLeft': daysLeft,
     'durationDays': durationDays,
   };
+  @override
+  String toString() => toJson().toString();
+
 }

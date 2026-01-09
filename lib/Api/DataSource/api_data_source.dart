@@ -419,8 +419,9 @@ class ApiDataSource extends BaseApiDataSource {
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e) {
-      AppLogger.log.i(e);
+    } catch (e, st) {
+      AppLogger.log.e(e);
+      AppLogger.log.e(st);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -1483,6 +1484,7 @@ class ApiDataSource extends BaseApiDataSource {
   }) async {
     try {
       final url = ApiUrl.getAllShopsDetails(shopId: shopId);
+
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 

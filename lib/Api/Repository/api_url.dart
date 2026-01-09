@@ -1,8 +1,8 @@
 class ApiUrl {
-  static const String base =
-      "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
+  // static const String base =
+  //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
-  // static const String base = "https://bknd.tringobiz.com/";
+   static const String base = "https://bknd.tringobiz.com/";
 
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
