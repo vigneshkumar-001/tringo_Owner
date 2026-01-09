@@ -131,12 +131,28 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
-      return const Scaffold(
+      return Scaffold(
         body: SafeArea(
-          child: Center(
-            child: NoDataScreen(
-              showBottomButton: false,
-              showTopBackArrow: false,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await ref
+                  .read(homeNotifierProvider.notifier)
+                  .fetchShops(shopId: '');
+              await ref
+                  .read(homeNotifierProvider.notifier)
+                  .fetchAllEnquiry(shopId: '');
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(
+                  height: 600, // ensures scroll even when empty
+                  child: NoDataScreen(
+                    showBottomButton: false,
+                    showTopBackArrow: false,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -698,10 +714,18 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             SubscriptionHistory(
-                                              fromDate: planData?.period.startsAtLabel.toString()?? '',
-                                              titlePlan: planData?. plan.durationLabel.toString()?? '',
-                                              toDate: planData?.period.endsAtLabel.toString()?? '',
-
+                                              fromDate:
+                                                  planData?.period.startsAtLabel
+                                                      .toString() ??
+                                                  '',
+                                              titlePlan:
+                                                  planData?.plan.durationLabel
+                                                      .toString() ??
+                                                  '',
+                                              toDate:
+                                                  planData?.period.endsAtLabel
+                                                      .toString() ??
+                                                  '',
                                             ),
                                       ),
                                     );
