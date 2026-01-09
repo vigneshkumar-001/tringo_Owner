@@ -1,8 +1,9 @@
-﻿package com.fenizo.tringo_Owner.tringo_Owner
-
+﻿
+package com.fenizo.tringo_Owner.tringo_Owner
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.app.role.RoleManager
 import android.telecom.TelecomManager
@@ -18,89 +19,125 @@ class MainActivity : FlutterActivity() {
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
 
-    MethodChannel(
-      flutterEngine.dartExecutor.binaryMessenger,
-      CHANNEL
-    ).setMethodCallHandler { call, result ->
+    MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+      .setMethodCallHandler { call, result ->
 
-      when (call.method) {
+        when (call.method) {
 
-        // ================= OVERLAY =================
-        "requestOverlayPermission" -> {
-          val ok = Settings.canDrawOverlays(this)
-          if (!ok) {
-            val i = Intent(
-              Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-              Uri.parse("package:$packageName")
-            )
-            startActivity(i)
-            result.success(false)
-          } else {
-            result.success(true)
+          // ================= OVERLAY =================
+          "isOverlayGranted" -> {
+            result.success(Settings.canDrawOverlays(this))
           }
-        }
 
-        "startOverlayService" -> {
-          ContextCompat.startForegroundService(
-            this,
-            Intent(this, TringoOverlayService::class.java).apply {
-              putExtra("cmd", "showManual")
-              putExtra("number", "Manual Test")
-            }
-          )
-          result.success(null)
-        }
-
-        "stopOverlayService" -> {
-          stopService(Intent(this, TringoOverlayService::class.java))
-          result.success(null)
-        }
-
-        // ================= CALL REDIRECTION ROLE =================
-        "requestCallRedirectionRole" -> {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            try {
-              val rm = getSystemService(RoleManager::class.java)
-              val intent = rm.createRequestRoleIntent(
-                RoleManager.ROLE_CALL_REDIRECTION
+          "requestOverlayPermission" -> {
+            val ok = Settings.canDrawOverlays(this)
+            if (!ok) {
+              val i = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
               )
-              startActivity(intent)
-            } catch (_: Exception) {}
+              i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+              startActivity(i)
+              result.success(false)
+            } else {
+              result.success(true)
+            }
           }
-          result.success(null)
-        }
 
-        "requestDefaultDialer" -> {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          // ================= BATTERY OPT =================
+          "isIgnoringBatteryOptimizations" -> {
             try {
-              val telecomManager =
-                getSystemService(TELECOM_SERVICE) as TelecomManager
+              val pm = getSystemService(POWER_SERVICE) as PowerManager
+              val ignoring = pm.isIgnoringBatteryOptimizations(packageName)
+              result.success(ignoring)
+            } catch (e: Exception) {
+              result.success(false)
+            }
+          }
 
-              val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                putExtra(
-                  TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME,
-                  packageName
-                )
+          "openBatteryUnrestrictedSettings" -> {
+            try {
+              // Best intent for most OEMs
+              val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
               }
-
               startActivity(intent)
               result.success(true)
             } catch (e: Exception) {
-              result.error("DIALER_ERROR", e.message, null)
+              result.success(false)
             }
-          } else {
-            result.success(false)
           }
+
+          "requestIgnoreBatteryOptimization" -> {
+            try {
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                  data = Uri.parse("package:$packageName")
+                  addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                result.success(true)
+              } else {
+                result.success(false)
+              }
+            } catch (e: Exception) {
+              result.success(false)
+            }
+          }
+
+          // ================= CALL REDIRECTION ROLE =================
+          "requestCallRedirectionRole" -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+              try {
+                val rm = getSystemService(RoleManager::class.java)
+                val intent = rm.createRequestRoleIntent(RoleManager.ROLE_CALL_REDIRECTION)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+              } catch (_: Exception) {}
+            }
+            result.success(null)
+          }
+
+          "requestDefaultDialer" -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+              try {
+                val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                  putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                  addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                result.success(true)
+              } catch (e: Exception) {
+                result.error("DIALER_ERROR", e.message, null)
+              }
+            } else {
+              result.success(false)
+            }
+          }
+
+          // ================= SERVICE =================
+          "startOverlayService" -> {
+            ContextCompat.startForegroundService(
+              this,
+              Intent(this, TringoOverlayService::class.java).apply {
+                putExtra("cmd", "showManual")
+                putExtra("number", "Manual Test")
+              }
+            )
+            result.success(null)
+          }
+
+          "stopOverlayService" -> {
+            stopService(Intent(this, TringoOverlayService::class.java))
+            result.success(null)
+          }
+
+          else -> result.notImplemented()
         }
-
-
-        else -> result.notImplemented()
       }
-    }
   }
 }
-
 
 //package com.fenizo.tringo_Owner.tringo_Owner
 //
@@ -109,65 +146,99 @@ class MainActivity : FlutterActivity() {
 //import android.os.Build
 //import android.provider.Settings
 //import android.app.role.RoleManager
+//import android.telecom.TelecomManager
 //import androidx.core.content.ContextCompat
 //import io.flutter.embedding.android.FlutterActivity
 //import io.flutter.embedding.engine.FlutterEngine
 //import io.flutter.plugin.common.MethodChannel
 //
 //class MainActivity : FlutterActivity() {
-//  private val CHANNEL = "tringo/overlay"
+//
+//  private val CHANNEL = "tringo/system"
 //
 //  override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
 //    super.configureFlutterEngine(flutterEngine)
-//    MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
-//      .setMethodCallHandler { call, result ->
-//        when (call.method) {
-//          "requestOverlayPermission" -> {
-//            val ok = Settings.canDrawOverlays(this)
-//            if (!ok) {
-//              val i = Intent(
-//                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-//                Uri.parse("package:")
-//              )
-//              startActivity(i)
-//              result.success(false)
-//            } else {
-//              result.success(true)
-//            }
-//          }
 //
-//          "startOverlayService" -> {
-//            ContextCompat.startForegroundService(
-//              this,
-//              Intent(this, TringoOverlayService::class.java).apply {
-//                putExtra("cmd", "showManual")
-//                putExtra("number", "Manual Test")
-//              }
+//    MethodChannel(
+//      flutterEngine.dartExecutor.binaryMessenger,
+//      CHANNEL
+//    ).setMethodCallHandler { call, result ->
+//
+//      when (call.method) {
+//
+//        // ================= OVERLAY =================
+//        "requestOverlayPermission" -> {
+//          val ok = Settings.canDrawOverlays(this)
+//          if (!ok) {
+//            val i = Intent(
+//              Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+//              Uri.parse("package:$packageName")
 //            )
-//            result.success(null)
+//            startActivity(i)
+//            result.success(false)
+//          } else {
+//            result.success(true)
 //          }
-//
-//          "stopOverlayService" -> {
-//            stopService(Intent(this, TringoOverlayService::class.java))
-//            result.success(null)
-//          }
-//
-//          "requestCallRedirectionRole" -> {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//              try {
-//                val rm = getSystemService(RoleManager::class.java)
-//                val intent = rm.createRequestRoleIntent(RoleManager.ROLE_CALL_REDIRECTION)
-//                // Simple start; user returns themselves. No result handling needed.
-//                startActivity(intent)
-//              } catch (_: Exception) {
-//                // ignore
-//              }
-//            }
-//            result.success(null)
-//          }
-//
-//          else -> result.notImplemented()
 //        }
+//
+//        "startOverlayService" -> {
+//          ContextCompat.startForegroundService(
+//            this,
+//            Intent(this, TringoOverlayService::class.java).apply {
+//              putExtra("cmd", "showManual")
+//              putExtra("number", "Manual Test")
+//            }
+//          )
+//          result.success(null)
+//        }
+//
+//        "stopOverlayService" -> {
+//          stopService(Intent(this, TringoOverlayService::class.java))
+//          result.success(null)
+//        }
+//
+//        // ================= CALL REDIRECTION ROLE =================
+//        "requestCallRedirectionRole" -> {
+//          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            try {
+//              val rm = getSystemService(RoleManager::class.java)
+//              val intent = rm.createRequestRoleIntent(
+//                RoleManager.ROLE_CALL_REDIRECTION
+//              )
+//              startActivity(intent)
+//            } catch (_: Exception) {}
+//          }
+//          result.success(null)
+//        }
+//
+//        "requestDefaultDialer" -> {
+//          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            try {
+//              val telecomManager =
+//                getSystemService(TELECOM_SERVICE) as TelecomManager
+//
+//              val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+//                putExtra(
+//                  TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME,
+//                  packageName
+//                )
+//                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//              }
+//
+//              startActivity(intent)
+//              result.success(true)
+//            } catch (e: Exception) {
+//              result.error("DIALER_ERROR", e.message, null)
+//            }
+//          } else {
+//            result.success(false)
+//          }
+//        }
+//
+//
+//        else -> result.notImplemented()
 //      }
+//    }
 //  }
 //}
+//

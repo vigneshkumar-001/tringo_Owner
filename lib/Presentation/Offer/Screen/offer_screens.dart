@@ -247,6 +247,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
 
+
+    AppLogger.log.i(planData);
+
+
     String time = '-';
     String date = '-';
 
