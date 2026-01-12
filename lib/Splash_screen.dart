@@ -103,11 +103,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final token = prefs.getString('token') ?? '';
 
       // 1) App version check
-      await ref.read(appVersionNotifierProvider.notifier).getAppVersion(
-        appPlatForm: 'android',
-        appVersion: appVersion,
-        appName: 'owner',
-      );
+      await ref
+          .read(appVersionNotifierProvider.notifier)
+          .getAppVersion(
+            appPlatForm: 'android',
+            appVersion: appVersion,
+            appName: 'owner',
+          );
 
       final versionState = ref.read(appVersionNotifierProvider);
       if (versionState.appVersionResponse?.data?.forceUpdate == true) {
@@ -172,11 +174,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       // 3) check twice (OEM bug sometimes)
       bool isIgnoring =
-      await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
+          await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
       if (!isIgnoring) {
         await Future.delayed(const Duration(milliseconds: 450));
-        isIgnoring =
-        await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
+        isIgnoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
       }
 
       AppLogger.log.i("🔋 isIgnoringBatteryOptimizations=$isIgnoring");
@@ -247,8 +248,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               const SizedBox(height: 12),
               Text(
                 "To show Caller ID popup reliably on Android 12–15, set Tringo battery usage to "
-                    "\"Unrestricted\".\n\n"
-                    "Settings → Apps → Tringo → Battery → Unrestricted",
+                "\"Unrestricted\".\n\n"
+                "Settings → Apps → Tringo → Battery → Unrestricted",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSans(fontSize: 14),
               ),
@@ -256,10 +257,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(
-                    context,
-                    _BatterySheetAction.openSettings,
-                  ),
+                  onPressed: () =>
+                      Navigator.pop(context, _BatterySheetAction.openSettings),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: AppColor.blueGradient1,

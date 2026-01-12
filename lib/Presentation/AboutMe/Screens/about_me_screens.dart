@@ -755,6 +755,29 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return cityState;
   }
 
+
+  void _openShopGallery(List images, int startIndex) {
+    // Extract only valid urls
+    final urls = <String>[];
+
+    for (final img in images) {
+      final u = (img.url ?? '').toString().trim();
+      if (u.isNotEmpty) urls.add(u);
+    }
+
+    if (urls.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FullScreenGalleryPage(
+          imageUrls: urls,
+          initialIndex: startIndex.clamp(0, urls.length - 1),
+        ),
+      ),
+    );
+  }
+
   /// Top banner using shopImages; guarded against empty / invalid URLs
   Widget _buildShopHero(AboutMeState aboutState) {
     final shop = _getSelectedShop(aboutState);
@@ -836,107 +859,113 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 padding: EdgeInsets.only(
                   right: index == images.length - 1 ? 0 : 10,
                 ),
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      clipBehavior: Clip.antiAlias,
-                      borderRadius: BorderRadius.circular(20),
-                      child: hasValidUrl
-                          ? CachedNetworkImage(
-                              imageUrl: url,
-                              height: 150,
-                              width: 310,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
+                child: GestureDetector(
+                  onTap: () {
+                    // ✅ open full screen gallery at tapped index
+                    _openShopGallery(images, index);
+                  },
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        clipBehavior: Clip.antiAlias,
+                        borderRadius: BorderRadius.circular(20),
+                        child: hasValidUrl
+                            ? CachedNetworkImage(
+                                imageUrl: url,
                                 height: 150,
                                 width: 310,
-                                color: AppColor.leftArrow,
-                                alignment: Alignment.center,
-                                child: const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  height: 150,
+                                  width: 310,
+                                  color: AppColor.leftArrow,
+                                  alignment: Alignment.center,
+                                  child: const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              errorWidget: (context, url, error) => Container(
+                                errorWidget: (context, url, error) => Container(
+                                  height: 150,
+                                  width: 310,
+                                  color: AppColor.leftArrow,
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    color: AppColor.gray84,
+                                  ),
+                                ),
+                              )
+                            : Container(
                                 height: 150,
                                 width: 310,
                                 color: AppColor.leftArrow,
                                 alignment: Alignment.center,
                                 child: Icon(
-                                  Icons.broken_image_outlined,
+                                  Icons.image_not_supported_outlined,
                                   color: AppColor.gray84,
+                                  size: 32,
                                 ),
                               ),
-                            )
-                          : Container(
-                              height: 150,
-                              width: 310,
-                              color: AppColor.leftArrow,
-                              alignment: Alignment.center,
-                              child: Icon(
-                                Icons.image_not_supported_outlined,
-                                color: AppColor.gray84,
-                                size: 32,
-                              ),
+                      ),
+                  
+                      // Rating chip only on first image
+                      if (index == 0)
+                        Positioned(
+                          top: 20,
+                          left: 15,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                    ),
-
-                    // Rating chip only on first image
-                    if (index == 0)
-                      Positioned(
-                        top: 20,
-                        left: 15,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColor.scaffoldColor,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                rating.toStringAsFixed(1),
-                                style: AppTextStyles.mulish(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: AppColor.darkBlue,
+                            decoration: BoxDecoration(
+                              color: AppColor.scaffoldColor,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  rating.toStringAsFixed(1),
+                                  style: AppTextStyles.mulish(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: AppColor.darkBlue,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 5),
-                              Image.asset(
-                                AppImages.starImage,
-                                height: 9,
-                                color: AppColor.green,
-                              ),
-                              SizedBox(width: 5),
-                              Container(
-                                width: 1.5,
-                                height: 11,
-                                decoration: BoxDecoration(
-                                  color: AppColor.darkBlue.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(1),
+                                SizedBox(width: 5),
+                                Image.asset(
+                                  AppImages.starImage,
+                                  height: 9,
+                                  color: AppColor.green,
                                 ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                reviewCount.toString(),
-                                style: AppTextStyles.mulish(
-                                  fontSize: 12,
-                                  color: AppColor.darkBlue,
+                                SizedBox(width: 5),
+                                Container(
+                                  width: 1.5,
+                                  height: 11,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.darkBlue.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(1),
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 5),
+                                Text(
+                                  reviewCount.toString(),
+                                  style: AppTextStyles.mulish(
+                                    fontSize: 12,
+                                    color: AppColor.darkBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             }),
@@ -2638,6 +2667,83 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
           ),
         ),
       ],
+    );
+  }
+}
+class FullScreenGalleryPage extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const FullScreenGalleryPage({
+    super.key,
+    required this.imageUrls,
+    this.initialIndex = 0,
+  });
+
+  @override
+  State<FullScreenGalleryPage> createState() => _FullScreenGalleryPageState();
+}
+
+class _FullScreenGalleryPageState extends State<FullScreenGalleryPage> {
+  late final PageController _controller;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _controller = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          '${_current + 1}/${widget.imageUrls.length}',
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      body: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: PageView.builder(
+          controller: _controller,
+          itemCount: widget.imageUrls.length,
+          onPageChanged: (i) => setState(() => _current = i),
+          itemBuilder: (context, index) {
+            final url = widget.imageUrls[index];
+
+            return InteractiveViewer(
+              minScale: 1,
+              maxScale: 4,
+              child: Center(
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.contain,
+                  placeholder: (_, __) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  errorWidget: (_, __, ___) => const Icon(
+                    Icons.broken_image,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
