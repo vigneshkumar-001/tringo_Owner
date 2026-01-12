@@ -55,16 +55,16 @@ class ApiDataSource extends BaseApiDataSource {
     String simToken, {
     String page = "",
   }) async {
-    String url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
+    try {
+      final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
 
-    final response = await Request.sendRequest(
-      url,
-      {"contact": "+91$phone", "purpose": "owner"},
-      'Post',
-      false,
-    );
+      final response = await Request.sendRequest(
+        url,
+        {"contact": "+91$phone", "purpose": "owner"},
+        'Post',
+        false,
+      );
 
-    if (response is! DioException) {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.data['status'] == true) {
           return Right(LoginResponse.fromJson(response.data));
@@ -73,62 +73,63 @@ class ApiDataSource extends BaseApiDataSource {
             ServerFailure(response.data['message'] ?? "Login failed"),
           );
         }
-      } else {
-        return Left(
-          ServerFailure(response.data['message'] ?? "Something went wrong"),
-        );
       }
-    } else {
-      final errorData = response.response?.data;
-      if (errorData is Map && errorData.containsKey('message')) {
+
+      return Left(
+        ServerFailure(response.data['message'] ?? "Something went wrong"),
+      );
+    } on DioException catch (e) {
+      // 🔴 NO INTERNET
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown) {
+        return Left(ServerFailure("No internet connection. Please try again"));
+      }
+
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData['message'] != null) {
         return Left(ServerFailure(errorData['message']));
       }
-      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+
+      return Left(ServerFailure("Request failed"));
+    } catch (_) {
+      return Left(ServerFailure("Unexpected error occurred"));
     }
   }
 
   // Future<Either<Failure, LoginResponse>> mobileNumberLogin(
   //   String phone,
-  //   String page,
-  // ) async {
-  //   try {
-  //     String url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
-  //     AppLogger.log.i(url);
+  //   String simToken, {
+  //   String page = "",
+  // }) async {
+  //   String url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
   //
-  //     dynamic response = await Request.sendRequest(
-  //       url,
-  //       {"contact": "+91$phone", "purpose": "owner"},
-  //       'Post',
-  //       false,
-  //     );
+  //   final response = await Request.sendRequest(
+  //     url,
+  //     {"contact": "+91$phone", "purpose": "owner"},
+  //     'Post',
+  //     false,
+  //   );
   //
-  //     AppLogger.log.i(response);
-  //
-  //     if (response is! DioException) {
-  //       // If status code is success
-  //       if (response.statusCode == 200 || response.statusCode == 201) {
-  //         if (response.data['status'] == true) {
-  //           return Right(LoginResponse.fromJson(response.data));
-  //         } else {
-  //           return Left(
-  //             ServerFailure(response.data['message'] ?? "Login failed"),
-  //           );
-  //         }
+  //   if (response is! DioException) {
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       if (response.data['status'] == true) {
+  //         return Right(LoginResponse.fromJson(response.data));
   //       } else {
-  //         // ❗ API returned non-success code but has JSON error message
   //         return Left(
-  //           ServerFailure(response.data['message'] ?? "Something went wrong"),
+  //           ServerFailure(response.data['message'] ?? "Login failed"),
   //         );
   //       }
   //     } else {
-  //       final errorData = response.response?.data;
-  //       if (errorData is Map && errorData.containsKey('message')) {
-  //         return Left(ServerFailure(errorData['message']));
-  //       }
-  //       return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+  //       return Left(
+  //         ServerFailure(response.data['message'] ?? "Something went wrong"),
+  //       );
   //     }
-  //   } catch (e) {
-  //     return Left(ServerFailure(e.toString()));
+  //   } else {
+  //     final errorData = response.response?.data;
+  //     if (errorData is Map && errorData.containsKey('message')) {
+  //       return Left(ServerFailure(errorData['message']));
+  //     }
+  //     return Left(ServerFailure(response.message ?? "Unknown Dio error"));
   //   }
   // }
 
@@ -970,30 +971,71 @@ class ApiDataSource extends BaseApiDataSource {
 
       final response = await Request.sendRequest(url, payload, 'Post', true);
 
-      AppLogger.log.i(response);
-
-      // assuming response.data is already a Map<String, dynamic>
       final data = response.data;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (data['status'] == true) {
           return Right(WhatsappResponse.fromJson(data));
         } else {
-          return Left(ServerFailure(data['message'] ?? "Login failed"));
+          return Left(ServerFailure(data['message'] ?? "Verification failed"));
         }
-      } else {
-        return Left(ServerFailure(data['message'] ?? "Something went wrong"));
       }
-    } on DioException catch (dioError) {
-      final errorData = dioError.response?.data;
-      if (errorData is Map && errorData.containsKey('message')) {
+
+      return Left(ServerFailure(data['message'] ?? "Something went wrong"));
+    }
+    // 🔴 NETWORK / INTERNET ERRORS
+    on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown) {
+        return Left(ServerFailure("No internet connection. Please try again"));
+      }
+
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData['message'] != null) {
         return Left(ServerFailure(errorData['message']));
       }
-      return Left(ServerFailure(dioError.message ?? "Unknown Dio error"));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+
+      return Left(ServerFailure("Request failed"));
+    } catch (_) {
+      return Left(ServerFailure("Unexpected error occurred"));
     }
   }
+
+  // Future<Either<Failure, WhatsappResponse>> whatsAppNumberVerify({
+  //   required String contact,
+  //   required String purpose,
+  // }) async {
+  //   try {
+  //     final url = ApiUrl.whatsAppVerify;
+  //
+  //     final payload = {"contact": "+91$contact", "purpose": purpose};
+  //
+  //     final response = await Request.sendRequest(url, payload, 'Post', true);
+  //
+  //     AppLogger.log.i(response);
+  //
+  //     // assuming response.data is already a Map<String, dynamic>
+  //     final data = response.data;
+  //
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       if (data['status'] == true) {
+  //         return Right(WhatsappResponse.fromJson(data));
+  //       } else {
+  //         return Left(ServerFailure(data['message'] ?? "Login failed"));
+  //       }
+  //     } else {
+  //       return Left(ServerFailure(data['message'] ?? "Something went wrong"));
+  //     }
+  //   } on DioException catch (dioError) {
+  //     final errorData = dioError.response?.data;
+  //     if (errorData is Map && errorData.containsKey('message')) {
+  //       return Left(ServerFailure(errorData['message']));
+  //     }
+  //     return Left(ServerFailure(dioError.message ?? "Unknown Dio error"));
+  //   } catch (e) {
+  //     return Left(ServerFailure(e.toString()));
+  //   }
+  // }
 
   Future<Either<Failure, ServiceInfoResponse>> serviceInfo({
     required String title,
@@ -1484,7 +1526,6 @@ class ApiDataSource extends BaseApiDataSource {
   }) async {
     try {
       final url = ApiUrl.getAllShopsDetails(shopId: shopId);
-
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 

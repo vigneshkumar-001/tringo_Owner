@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
@@ -16,10 +17,12 @@ import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Controller/shop_notifier.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
+import '../../../Core/Utility/map_picker_page.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
 import '../../AboutMe/Controller/about_me_notifier.dart';
 import '../../AboutMe/Screens/about_me_screens.dart';
@@ -157,6 +160,81 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     }
 
     return n;
+  }
+
+  Future<void> _openGoogleMapsFromGpsField() async {
+    try {
+      // 1) Try from existing text (lat,lng)
+      double? lat;
+      double? lng;
+
+      final t = _gpsController.text.trim();
+      final parts = t.split(',');
+      if (parts.length == 2) {
+        lat = double.tryParse(parts[0].trim());
+        lng = double.tryParse(parts[1].trim());
+      }
+
+      // 2) If not available, get current location
+      if (lat == null || lng == null) {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location services are disabled.')),
+          );
+          return;
+        }
+
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied.')),
+          );
+          return;
+        }
+        if (permission == LocationPermission.deniedForever) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permissions are permanently denied.'),
+            ),
+          );
+          return;
+        }
+
+        final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        lat = pos.latitude;
+        lng = pos.longitude;
+
+        // Optional: field-la update pannalam
+        setState(() {
+          _gpsController.text =
+              '${lat!.toStringAsFixed(6)}, ${lng!.toStringAsFixed(6)}';
+          _gpsFetched = true;
+        });
+      }
+
+      // 3) Launch Google Maps app
+      final uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+      );
+
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open Google Maps')),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Google Maps open error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to open Google Maps')),
+      );
+    }
   }
 
   TimeOfDay? _parseTimeOfDay(String input) {
@@ -347,6 +425,21 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
         );
       },
     );
+  }
+
+  Future<void> openGoogleMapsApp() async {
+    // optional: current location எடுத்துக்கொள்
+    final pos = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    final Uri uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}',
+    );
+
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch Google Maps';
+    }
   }
 
   void _showCategoryChildrenBottomSheet(
@@ -1131,6 +1224,32 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Shop name',
+                            style: AppTextStyles.mulish(
+                              color: AppColor.mildBlack,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '( As per Govt Certificate )',
+                            style: AppTextStyles.mulish(
+                              color: AppColor.mediumLightGray,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      CommonContainer.fillingContainer(
+                        controller: _shopNameEnglishController,
+                        text: 'English',
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please Enter Shop Name in English'
+                            : null,
+                      ),
+                      const SizedBox(height: 25),
                       Text(
                         'Shop Category',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -1267,93 +1386,67 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           ),
                         ),
 
-                      const SizedBox(height: 25),
-                      Row(
-                        children: [
-                          Text(
-                            'Shop name',
-                            style: AppTextStyles.mulish(
-                              color: AppColor.mildBlack,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            '( As per Govt Certificate )',
-                            style: AppTextStyles.mulish(
-                              color: AppColor.mediumLightGray,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      CommonContainer.fillingContainer(
-                        controller: _shopNameEnglishController,
-                        text: 'English',
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Shop Name in English'
-                            : null,
-                      ),
-                      const SizedBox(height: 15),
-                      CommonContainer.fillingContainer(
-                        controller: tamilNameController,
-                        text: 'Tamil',
-                        isTamil: true,
-                        validator: (v) => (v == null || v.isEmpty)
-                            ? 'Please Enter Shop Name in Tamil'
-                            : null,
-                        onChanged: (value) async {
-                          // your existing suggestion logic can remain
-                          setState(() => isTamilNameLoading = true);
-                          final result =
-                              await TanglishTamilHelper.transliterate(value);
-                          setState(() {
-                            tamilNameSuggestion = result;
-                            isTamilNameLoading = false;
-                            _tamilPrefilled =
-                                true; // user started typing; stop auto-updates
-                          });
-                        },
-                      ),
-                      if (isTamilNameLoading)
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      if (isTamilNameLoading)
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      if (tamilNameSuggestion.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          constraints: const BoxConstraints(maxHeight: 150),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: tamilNameSuggestion.length,
-                            itemBuilder: (context, index) {
-                              final suggestion = tamilNameSuggestion[index];
-                              return ListTile(
-                                title: Text(suggestion),
-                                onTap: () {
-                                  print("Selected suggestion: $suggestion");
-                                  TanglishTamilHelper.applySuggestion(
-                                    controller: tamilNameController,
-                                    suggestion: suggestion,
-                                    onSuggestionApplied: () {
-                                      setState(() => tamilNameSuggestion = []);
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
+                      // const SizedBox(height: 15),
+                      // CommonContainer.fillingContainer(
+                      //   controller: tamilNameController,
+                      //   text: 'Tamil',
+                      //   isTamil: true,
+                      //   validator: (v) => (v == null || v.isEmpty)
+                      //       ? 'Please Enter Shop Name in Tamil'
+                      //       : null,
+                      //   onChanged: (value) async {
+                      //     // your existing suggestion logic can remain
+                      //     setState(() => isTamilNameLoading = true);
+                      //     final result =
+                      //         await TanglishTamilHelper.transliterate(value);
+                      //     setState(() {
+                      //       tamilNameSuggestion = result;
+                      //       isTamilNameLoading = false;
+                      //       _tamilPrefilled =
+                      //           true; // user started typing; stop auto-updates
+                      //     });
+                      //   },
+                      // ),
+                      // if (isTamilNameLoading)
+                      //   const Padding(
+                      //     padding: EdgeInsets.all(8.0),
+                      //     child: CircularProgressIndicator(strokeWidth: 2),
+                      //   ),
+                      // if (isTamilNameLoading)
+                      //   const Padding(
+                      //     padding: EdgeInsets.all(8.0),
+                      //     child: CircularProgressIndicator(strokeWidth: 2),
+                      //   ),
+                      // if (tamilNameSuggestion.isNotEmpty)
+                      //   Container(
+                      //     margin: const EdgeInsets.only(top: 4),
+                      //     constraints: const BoxConstraints(maxHeight: 150),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.white,
+                      //       borderRadius: BorderRadius.circular(15),
+                      //       border: Border.all(color: Colors.grey),
+                      //     ),
+                      //     child: ListView.builder(
+                      //       shrinkWrap: true,
+                      //       itemCount: tamilNameSuggestion.length,
+                      //       itemBuilder: (context, index) {
+                      //         final suggestion = tamilNameSuggestion[index];
+                      //         return ListTile(
+                      //           title: Text(suggestion),
+                      //           onTap: () {
+                      //             print("Selected suggestion: $suggestion");
+                      //             TanglishTamilHelper.applySuggestion(
+                      //               controller: tamilNameController,
+                      //               suggestion: suggestion,
+                      //               onSuggestionApplied: () {
+                      //                 setState(() => tamilNameSuggestion = []);
+                      //               },
+                      //             );
+                      //           },
+                      //         );
+                      //       },
+                      //     ),
+                      //   ),
                       const SizedBox(height: 25),
                       Text(
                         'Describe Shop',
@@ -1368,64 +1461,64 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Describe in English'
                             : null,
                       ),
-                      const SizedBox(height: 15),
-                      CommonContainer.fillingContainer(
-                        onChanged: (value) async {
-                          setState(() => isDescriptionTamilLoading = true);
-                          final result =
-                              await TanglishTamilHelper.transliterate(value);
-
-                          setState(() {
-                            descriptionTamilSuggestion = result;
-                            isDescriptionTamilLoading = false;
-                          });
-                        },
-                        controller: descriptionTamilController,
-                        maxLine: 4,
-                        text: 'Tamil',
-                        isTamil: true,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Describe in Tamil'
-                            : null,
-                      ),
-                      if (isDescriptionTamilLoading)
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      if (descriptionTamilSuggestion.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          constraints: const BoxConstraints(maxHeight: 150),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: descriptionTamilSuggestion.length,
-                            itemBuilder: (context, index) {
-                              final suggestion =
-                                  descriptionTamilSuggestion[index];
-                              return ListTile(
-                                title: Text(suggestion),
-                                onTap: () {
-                                  print("Selected suggestion: $suggestion");
-                                  TanglishTamilHelper.applySuggestion(
-                                    controller: descriptionTamilController,
-                                    suggestion: suggestion,
-                                    onSuggestionApplied: () {
-                                      setState(
-                                        () => descriptionTamilSuggestion = [],
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
+                      // const SizedBox(height: 15),
+                      // CommonContainer.fillingContainer(
+                      //   onChanged: (value) async {
+                      //     setState(() => isDescriptionTamilLoading = true);
+                      //     final result =
+                      //         await TanglishTamilHelper.transliterate(value);
+                      //
+                      //     setState(() {
+                      //       descriptionTamilSuggestion = result;
+                      //       isDescriptionTamilLoading = false;
+                      //     });
+                      //   },
+                      //   controller: descriptionTamilController,
+                      //   maxLine: 4,
+                      //   text: 'Tamil',
+                      //   isTamil: true,
+                      //   validator: (value) => value == null || value.isEmpty
+                      //       ? 'Please Enter Describe in Tamil'
+                      //       : null,
+                      // ),
+                      // if (isDescriptionTamilLoading)
+                      //   const Padding(
+                      //     padding: EdgeInsets.all(8.0),
+                      //     child: CircularProgressIndicator(strokeWidth: 2),
+                      //   ),
+                      // if (descriptionTamilSuggestion.isNotEmpty)
+                      //   Container(
+                      //     margin: const EdgeInsets.only(top: 4),
+                      //     constraints: const BoxConstraints(maxHeight: 150),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.white,
+                      //       borderRadius: BorderRadius.circular(15),
+                      //       border: Border.all(color: Colors.grey),
+                      //     ),
+                      //     child: ListView.builder(
+                      //       shrinkWrap: true,
+                      //       itemCount: descriptionTamilSuggestion.length,
+                      //       itemBuilder: (context, index) {
+                      //         final suggestion =
+                      //             descriptionTamilSuggestion[index];
+                      //         return ListTile(
+                      //           title: Text(suggestion),
+                      //           onTap: () {
+                      //             print("Selected suggestion: $suggestion");
+                      //             TanglishTamilHelper.applySuggestion(
+                      //               controller: descriptionTamilController,
+                      //               suggestion: suggestion,
+                      //               onSuggestionApplied: () {
+                      //                 setState(
+                      //                   () => descriptionTamilSuggestion = [],
+                      //                 );
+                      //               },
+                      //             );
+                      //           },
+                      //         );
+                      //       },
+                      //     ),
+                      //   ),
                       SizedBox(height: 25),
                       Text(
                         'Address',
@@ -1440,63 +1533,63 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             ? 'Please Enter Address in English'
                             : null,
                       ),
-                      SizedBox(height: 15),
-                      CommonContainer.fillingContainer(
-                        onChanged: (value) async {
-                          setState(() => isAddressLoading = true);
-                          final result =
-                              await TanglishTamilHelper.transliterate(value);
-
-                          setState(() {
-                            addressTamilSuggestion = result;
-                            isAddressLoading = false;
-                          });
-                        },
-                        controller: addressTamilNameController,
-                        maxLine: 4,
-                        text: 'Tamil',
-                        isTamil: true,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Address in Tamil'
-                            : null,
-                      ),
-                      if (isAddressLoading)
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      if (addressTamilSuggestion.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          constraints: const BoxConstraints(maxHeight: 150),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: addressTamilSuggestion.length,
-                            itemBuilder: (context, index) {
-                              final suggestion = addressTamilSuggestion[index];
-                              return ListTile(
-                                title: Text(suggestion),
-                                onTap: () {
-                                  print("Selected suggestion: $suggestion");
-                                  TanglishTamilHelper.applySuggestion(
-                                    controller: addressTamilNameController,
-                                    suggestion: suggestion,
-                                    onSuggestionApplied: () {
-                                      setState(
-                                        () => addressTamilSuggestion = [],
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
+                      // SizedBox(height: 15),
+                      // CommonContainer.fillingContainer(
+                      //   onChanged: (value) async {
+                      //     setState(() => isAddressLoading = true);
+                      //     final result =
+                      //         await TanglishTamilHelper.transliterate(value);
+                      //
+                      //     setState(() {
+                      //       addressTamilSuggestion = result;
+                      //       isAddressLoading = false;
+                      //     });
+                      //   },
+                      //   controller: addressTamilNameController,
+                      //   maxLine: 4,
+                      //   text: 'Tamil',
+                      //   isTamil: true,
+                      //   validator: (value) => value == null || value.isEmpty
+                      //       ? 'Please Enter Address in Tamil'
+                      //       : null,
+                      // ),
+                      // if (isAddressLoading)
+                      //   const Padding(
+                      //     padding: EdgeInsets.all(8.0),
+                      //     child: CircularProgressIndicator(strokeWidth: 2),
+                      //   ),
+                      // if (addressTamilSuggestion.isNotEmpty)
+                      //   Container(
+                      //     margin: const EdgeInsets.only(top: 4),
+                      //     constraints: const BoxConstraints(maxHeight: 150),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.white,
+                      //       borderRadius: BorderRadius.circular(15),
+                      //       border: Border.all(color: Colors.grey),
+                      //     ),
+                      //     child: ListView.builder(
+                      //       shrinkWrap: true,
+                      //       itemCount: addressTamilSuggestion.length,
+                      //       itemBuilder: (context, index) {
+                      //         final suggestion = addressTamilSuggestion[index];
+                      //         return ListTile(
+                      //           title: Text(suggestion),
+                      //           onTap: () {
+                      //             print("Selected suggestion: $suggestion");
+                      //             TanglishTamilHelper.applySuggestion(
+                      //               controller: addressTamilNameController,
+                      //               suggestion: suggestion,
+                      //               onSuggestionApplied: () {
+                      //                 setState(
+                      //                   () => addressTamilSuggestion = [],
+                      //                 );
+                      //               },
+                      //             );
+                      //           },
+                      //         );
+                      //       },
+                      //     ),
+                      //   ),
                       const SizedBox(height: 25),
                       Text(
                         'GPS Location',
@@ -1506,49 +1599,117 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                       GestureDetector(
                         onTap: () async {
-                          setState(
-                            () => _isFetchingGps = true,
-                          ); // new bool to track loading
-                          await _getCurrentLocation();
-                          setState(() => _isFetchingGps = false);
+                          setState(() => _isFetchingGps = true);
+                          await _openGoogleMapsFromGpsField();
+                          if (mounted) setState(() => _isFetchingGps = false);
                         },
+                        // onTap: () async {
+                        //   setState(() => _isFetchingGps = true);
+                        //
+                        //   // current text ல lat,lng இருந்தா parse பண்ணி initial position கொடுக்கலாம்
+                        //   LatLng? initial;
+                        //   final t = _gpsController.text.trim();
+                        //   final parts = t.split(',');
+                        //   if (parts.length == 2) {
+                        //     final lat = double.tryParse(parts[0].trim());
+                        //     final lng = double.tryParse(parts[1].trim());
+                        //     if (lat != null && lng != null)
+                        //       initial = LatLng(lat, lng);
+                        //   }
+                        //
+                        //   final picked = await Navigator.push<LatLng>(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (_) =>
+                        //           MapPickerPage(initialLatLng: initial),
+                        //     ),
+                        //   );
+                        //
+                        //   if (picked != null) {
+                        //     setState(() {
+                        //       _gpsController.text =
+                        //           '${picked.latitude.toStringAsFixed(6)}, ${picked.longitude.toStringAsFixed(6)}';
+                        //       _gpsFetched = true;
+                        //     });
+                        //
+                        //     if (_isSubmitted) {
+                        //       _formKey.currentState?.validate();
+                        //     }
+                        //
+                        //     debugPrint(
+                        //       '📍 Picked Location → ${_gpsController.text}',
+                        //     );
+                        //   }
+                        //
+                        //   setState(() => _isFetchingGps = false);
+                        // },
                         child: AbsorbPointer(
                           child: CommonContainer.fillingContainer(
                             controller: _gpsController,
-                            text: _isFetchingGps ? '' : 'Get by GPS',
+                            text: _isFetchingGps ? '' : 'Shop Location',
                             textColor: _gpsController.text.isEmpty
                                 ? AppColor.skyBlue
                                 : AppColor.mildBlack,
                             textFontWeight: FontWeight.w700,
                             suffixWidget: _isFetchingGps
-                                ? SizedBox(
+                                ? const SizedBox(
                                     width: 16,
                                     height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColor.skyBlue,
                                     ),
                                   )
                                 : null,
                             validator: (_) => null,
-                            // validator: (value) {
-                            //   if (!_isSubmitted) return null;
-                            //
-                            //   // 🔹 Service business → NO GPS validation
-                            //   if (widget.isService == true) {
-                            //     return null;
-                            //   }
-                            //
-                            //   // 🔹 Product business → GPS required (only based on value)
-                            //   if (value == null || value.trim().isEmpty) {
-                            //     return 'Please get GPS location';
-                            //   }
-                            //
-                            //   return null;
-                            // },
                           ),
                         ),
                       ),
+
+                      // GestureDetector(
+                      //   onTap: () async {
+                      //     setState(
+                      //       () => _isFetchingGps = true,
+                      //     ); // new bool to track loading
+                      //     await _getCurrentLocation();
+                      //     setState(() => _isFetchingGps = false);
+                      //   },
+                      //   child: AbsorbPointer(
+                      //     child: CommonContainer.fillingContainer(
+                      //       controller: _gpsController,
+                      //       text: _isFetchingGps ? '' : 'Get by GPS',
+                      //       textColor: _gpsController.text.isEmpty
+                      //           ? AppColor.skyBlue
+                      //           : AppColor.mildBlack,
+                      //       textFontWeight: FontWeight.w700,
+                      //       suffixWidget: _isFetchingGps
+                      //           ? SizedBox(
+                      //               width: 16,
+                      //               height: 16,
+                      //               child: CircularProgressIndicator(
+                      //                 strokeWidth: 2,
+                      //                 color: AppColor.skyBlue,
+                      //               ),
+                      //             )
+                      //           : null,
+                      //       validator: (_) => null,
+                      //       // validator: (value) {
+                      //       //   if (!_isSubmitted) return null;
+                      //       //
+                      //       //   // 🔹 Service business → NO GPS validation
+                      //       //   if (widget.isService == true) {
+                      //       //     return null;
+                      //       //   }
+                      //       //
+                      //       //   // 🔹 Product business → GPS required (only based on value)
+                      //       //   if (value == null || value.trim().isEmpty) {
+                      //       //     return 'Please get GPS location';
+                      //       //   }
+                      //       //
+                      //       //   return null;
+                      //       // },
+                      //     ),
+                      //   ),
+                      // ),
                       // if (_gpsErrorText != null)
                       //   Padding(
                       //     padding: const EdgeInsets.only(top: 6.0, left: 4),
@@ -1564,7 +1725,34 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       const SizedBox(height: 10),
                       if (isEditFromAboutMe) ...[
-                        //  Edit mode from AboutMeScreens: NORMAL field, no +91, no validation
+                        // AnimatedSwitcher(
+                        //   duration: const Duration(milliseconds: 400),
+                        //   transitionBuilder:
+                        //       (child, animation) => FadeTransition(
+                        //     opacity: animation,
+                        //     child: child,
+                        //   ),
+                        //   child: OwnerVerifyField(
+                        //     controller: _primaryMobileController,
+                        //     isLoading: state.isSendingOtp,
+                        //     isOtpVerifying: state.isVerifyingOtp,
+                        //     onSendOtp: (mobile) {
+                        //       return ref
+                        //           .read(addEmployeeNotifier.notifier)
+                        //           .employeeAddNumberRequest(
+                        //         phoneNumber: mobile,
+                        //       );
+                        //     },
+                        //     onVerifyOtp: (mobile, otp) {
+                        //       return ref
+                        //           .read(addEmployeeNotifier.notifier)
+                        //           .employeeAddOtpRequest(
+                        //         phoneNumber: mobile,
+                        //         code: otp,
+                        //       );
+                        //     },
+                        //   ),
+                        // ),
                         CommonContainer.fillingContainer(
                           controller: _primaryMobileController,
                           verticalDivider:
@@ -1575,7 +1763,34 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           validator: (_) => null, // no validation
                         ),
                       ] else ...[
-                        //  Normal register flow: mobile UI + validation
+                        // AnimatedSwitcher(
+                        //   duration: const Duration(milliseconds: 400),
+                        //   transitionBuilder:
+                        //       (child, animation) => FadeTransition(
+                        //     opacity: animation,
+                        //     child: child,
+                        //   ),
+                        //   child: OwnerVerifyField(
+                        //     controller: _primaryMobileController,
+                        //     isLoading: state.isSendingOtp,
+                        //     isOtpVerifying: state.isVerifyingOtp,
+                        //     onSendOtp: (mobile) {
+                        //       return ref
+                        //           .read(addEmployeeNotifier.notifier)
+                        //           .employeeAddNumberRequest(
+                        //         phoneNumber: mobile,
+                        //       );
+                        //     },
+                        //     onVerifyOtp: (mobile, otp) {
+                        //       return ref
+                        //           .read(addEmployeeNotifier.notifier)
+                        //           .employeeAddOtpRequest(
+                        //         phoneNumber: mobile,
+                        //         code: otp,
+                        //       );
+                        //     },
+                        //   ),
+                        // ),
                         CommonContainer.fillingContainer(
                           controller: _primaryMobileController,
                           verticalDivider: true,
@@ -1652,16 +1867,42 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         imagePath: AppImages.clock,
                         imageWidth: 25,
                         readOnly: true,
+
                         onFieldTap: () async {
                           final picked = await showTimePicker(
                             context: context,
                             initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  timePickerTheme: TimePickerThemeData(
+                                    backgroundColor: Colors.white,
+                                    hourMinuteTextColor: Colors.black,
+                                    hourMinuteColor: AppColor.ghostWhite,
+                                    dialHandColor: Colors.black,
+                                    dialBackgroundColor: AppColor.white,
+                                    entryModeIconColor: AppColor.black,
+                                    dayPeriodTextColor:
+                                        AppColor.borderLightGrey,
+                                    dayPeriodColor: AppColor.black,
+                                  ),
+                                  colorScheme: ColorScheme.light(
+                                    primary: Colors.black,
+                                    onPrimary: AppColor.white,
+                                    onSurface: Colors.black,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
+
                           if (picked != null) {
                             _openTimeController.text = picked.format(context);
                             setState(() => _openTod = picked);
                           }
                         },
+
                         validator: (v) => (v == null || v.isEmpty)
                             ? 'Please select Open Time'
                             : null,
@@ -1682,10 +1923,34 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final picked = await showTimePicker(
                             context: context,
                             initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  timePickerTheme: TimePickerThemeData(
+                                    backgroundColor: Colors.white,
+                                    hourMinuteTextColor: Colors.black,
+                                    hourMinuteColor: AppColor.ghostWhite,
+                                    dialHandColor: Colors.black,
+                                    dialBackgroundColor: AppColor.white,
+                                    entryModeIconColor: AppColor.black,
+                                    dayPeriodTextColor:
+                                        AppColor.borderLightGrey,
+                                    dayPeriodColor: AppColor.black,
+                                  ),
+                                  colorScheme: ColorScheme.light(
+                                    primary: Colors.black,
+                                    onPrimary: AppColor.white,
+                                    onSurface: Colors.black,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
+
                           if (picked != null) {
-                            _closeTimeController.text = picked.format(context);
-                            setState(() => _closeTod = picked);
+                            _openTimeController.text = picked.format(context);
+                            setState(() => _openTod = picked);
                           }
                         },
                         validator: (v) => (v == null || v.isEmpty)
