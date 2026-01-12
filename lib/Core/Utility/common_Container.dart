@@ -1329,32 +1329,34 @@ class CommonContainer {
         String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
 
         void _handleTap() async {
-          // Single Date Picker
           if (datePickMode == DatePickMode.single) {
             if (context == null) return;
+
+            final now = DateTime.now();
+            final maxDob = DateTime(
+              now.year - 18,
+              now.month,
+              now.day,
+            ); // 18 years completed
+
             final picked = await showDatePicker(
               context: context!,
-              initialDate: DateTime.now(),
+              initialDate: maxDob, // default = 18 years age
               firstDate: DateTime(1900),
-              lastDate: DateTime(2100),
+              lastDate: maxDob, // ❌ below 18 not allowed
               builder: (ctx, child) => Theme(
                 data: Theme.of(ctx).copyWith(
-                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  dialogBackgroundColor: AppColor.white,
                   colorScheme: ColorScheme.light(
-                    primary: AppColor.resendOtp,
+                    primary: AppColor.skyBlue,
                     onPrimary: Colors.white,
                     onSurface: AppColor.black,
-                  ),
-                  textButtonTheme: TextButtonThemeData(
-                    style: TextButton.styleFrom(
-                      textStyle: AppTextStyles.mulish(),
-                      foregroundColor: AppColor.resendOtp,
-                    ),
                   ),
                 ),
                 child: child!,
               ),
             );
+
             if (picked != null) {
               controller?.text =
                   '${picked.day.toString().padLeft(2, '0')}-'
@@ -1363,6 +1365,42 @@ class CommonContainer {
             }
             return;
           }
+
+          // Single Date Picker
+          // if (datePickMode == DatePickMode.single) {
+          //   if (context == null) return;
+          //   final picked = await showDatePicker(
+          //     context: context!,
+          //     initialDate: DateTime.now(),
+          //     firstDate: DateTime(1900),
+          //     lastDate: DateTime(2100),
+          //     builder:
+          //         (ctx, child) => Theme(
+          //           data: Theme.of(ctx).copyWith(
+          //             dialogBackgroundColor: AppColor.white,
+          //             colorScheme: ColorScheme.light(
+          //               primary: AppColor.blue,
+          //               onPrimary: Colors.white,
+          //               onSurface: AppColor.black,
+          //             ),
+          //             textButtonTheme: TextButtonThemeData(
+          //               style: TextButton.styleFrom(
+          //                 textStyle: AppTextStyles.mulish(),
+          //                 foregroundColor: AppColor.blue,
+          //               ),
+          //             ),
+          //           ),
+          //           child: child!,
+          //         ),
+          //   );
+          //   if (picked != null) {
+          //     controller?.text =
+          //         '${picked.day.toString().padLeft(2, '0')}-'
+          //         '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+          //     state.didChange(controller?.text);
+          //   }
+          //   return;
+          // }
 
           // Range Picker
           if (datePickMode == DatePickMode.range) {
@@ -1377,9 +1415,9 @@ class CommonContainer {
               ),
               builder: (ctx, child) => Theme(
                 data: Theme.of(ctx).copyWith(
-                  dialogBackgroundColor: AppColor.scaffoldColor,
+                  dialogBackgroundColor: AppColor.white,
                   colorScheme: ColorScheme.light(
-                    primary: AppColor.resendOtp,
+                    primary: AppColor.skyBlue,
                     onPrimary: Colors.white,
                     onSurface: AppColor.black,
                   ),
@@ -1427,6 +1465,106 @@ class CommonContainer {
             state.didChange(controller?.text); // sync to FormField
           }
         }
+
+        // void _handleTap() async {
+        //   // Single Date Picker
+        //   if (datePickMode == DatePickMode.single) {
+        //     if (context == null) return;
+        //     final picked = await showDatePicker(
+        //       context: context!,
+        //       initialDate: DateTime.now(),
+        //       firstDate: DateTime(1900),
+        //       lastDate: DateTime(2100),
+        //       builder: (ctx, child) => Theme(
+        //         data: Theme.of(ctx).copyWith(
+        //           dialogBackgroundColor: AppColor.scaffoldColor,
+        //           colorScheme: ColorScheme.light(
+        //             primary: AppColor.resendOtp,
+        //             onPrimary: Colors.white,
+        //             onSurface: AppColor.black,
+        //           ),
+        //           textButtonTheme: TextButtonThemeData(
+        //             style: TextButton.styleFrom(
+        //               textStyle: AppTextStyles.mulish(),
+        //               foregroundColor: AppColor.resendOtp,
+        //             ),
+        //           ),
+        //         ),
+        //         child: child!,
+        //       ),
+        //     );
+        //     if (picked != null) {
+        //       controller?.text =
+        //           '${picked.day.toString().padLeft(2, '0')}-'
+        //           '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+        //       state.didChange(controller?.text);
+        //     }
+        //     return;
+        //   }
+        //
+        //   // Range Picker
+        //   if (datePickMode == DatePickMode.range) {
+        //     if (context == null) return;
+        //     final picked = await showDateRangePicker(
+        //       context: context!,
+        //       firstDate: DateTime(2000),
+        //       lastDate: DateTime(2100),
+        //       initialDateRange: DateTimeRange(
+        //         start: DateTime.now(),
+        //         end: DateTime.now().add(const Duration(days: 7)),
+        //       ),
+        //       builder: (ctx, child) => Theme(
+        //         data: Theme.of(ctx).copyWith(
+        //           dialogBackgroundColor: AppColor.scaffoldColor,
+        //           colorScheme: ColorScheme.light(
+        //             primary: AppColor.resendOtp,
+        //             onPrimary: Colors.white,
+        //             onSurface: AppColor.black,
+        //           ),
+        //           textButtonTheme: TextButtonThemeData(
+        //             style: TextButton.styleFrom(
+        //               textStyle: AppTextStyles.mulish(
+        //                 fontWeight: FontWeight.w700,
+        //               ),
+        //               foregroundColor: AppColor.lightSkyBlue,
+        //             ),
+        //           ),
+        //         ),
+        //         child: child!,
+        //       ),
+        //     );
+        //     if (picked != null) {
+        //       controller?.text =
+        //           '${picked.start.day.toString().padLeft(2, '0')}-'
+        //           '${picked.start.month.toString().padLeft(2, '0')}-${picked.start.year}'
+        //           '  to  '
+        //           '${picked.end.day.toString().padLeft(2, '0')}-'
+        //           '${picked.end.month.toString().padLeft(2, '0')}-${picked.end.year}';
+        //       state.didChange(controller?.text);
+        //     }
+        //     return;
+        //   }
+        //
+        //   // Dropdown
+        //   if (isDropdown && dropdownItems?.isNotEmpty == true) {
+        //     if (context == null) return;
+        //     FocusScope.of(context!).unfocus();
+        //     await Future.delayed(const Duration(milliseconds: 100));
+        //     _showDropdownBottomSheet(
+        //       context!,
+        //       dropdownItems!,
+        //       controller,
+        //       state,
+        //     );
+        //     return;
+        //   }
+        //
+        //   // Default (time fields etc.) — no context required
+        //   if (onFieldTap != null) {
+        //     await onFieldTap!(); // open your showTimePicker
+        //     state.didChange(controller?.text); // sync to FormField
+        //   }
+        // }
 
         final effectiveInputFormatters = isMobile || isAadhaar || isPincode
             ? <TextInputFormatter>[

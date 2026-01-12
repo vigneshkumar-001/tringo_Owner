@@ -13,6 +13,7 @@ import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Core/Utility/common_Container.dart';
 
+import '../../../Core/Utility/network_util.dart';
 import '../../../Core/Utility/sim_token.dart';
 import '../controller/login_notifier.dart';
 
@@ -31,7 +32,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   String? _lastRawPhone;
 
   ProviderSubscription<LoginState>? _sub;
-
   String _selectedDialCode = '+91';
   String _selectedFlag = '🇮🇳';
 
@@ -49,28 +49,16 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
       debugPrint('$st');
     }
   }
-  // Future<void> _ensurePhonePermission() async {
-  //   try {
-  //     final hasPermission = await MobileNumber.hasPhonePermission;
-  //     if (!hasPermission) {
-  //       await MobileNumber.requestPhonePermission;
-  //     }
-  //
-  //     // Optional: debug log
-  //     final after = await MobileNumber.hasPhonePermission;
-  //     debugPrint('PHONE PERMISSION AFTER REQUEST: $after');
-  //   } catch (e, st) {
-  //     debugPrint('❌ Error requesting phone permission: $e');
-  //     debugPrint('$st');
-  //   }
-  // }
+
+  bool _askedPhonePermission = false;
 
   @override
   void initState() {
     super.initState();
 
-    // ✅ Request permission immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_askedPhonePermission) return;
+      _askedPhonePermission = true;
       await _ensurePhonePermission();
     });
 
@@ -80,8 +68,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
     ) async {
       if (!mounted) return;
 
-      // ❌ remove this line from here:
-      // _ensurePhonePermission();
+      // ✅ DO NOT call _ensurePhonePermission() here anywhere
 
       if (next.error != null) {
         AppSnackBar.error(context, next.error!);
@@ -100,9 +87,12 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
             final fullPhone = '$_selectedDialCode$raw';
             final simToken = generateSimToken(fullPhone);
 
-            ref
-                .read(loginNotifierProvider.notifier)
-                .loginUser(phoneNumber: raw, simToken: simToken);
+            context.pushNamed(
+              AppRoutes.mobileNumberVerify,
+              extra: {'phone': raw, 'simToken': simToken},
+            );
+
+            ref.read(loginNotifierProvider.notifier).resetState();
           }
         } else {
           setState(() => isWhatsappChecked = false);
@@ -134,18 +124,25 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   // void initState() {
   //   super.initState();
   //
-  //   _sub = ref.listenManual<LoginState>(loginNotifierProvider, (prev, next) {
+  //   // ✅ Request permission immediately
+  //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //     await _ensurePhonePermission();
+  //   });
+  //
+  //   _sub = ref.listenManual<LoginState>(loginNotifierProvider, (
+  //     prev,
+  //     next,
+  //   ) async {
   //     if (!mounted) return;
   //
-  //     _ensurePhonePermission();
+  //     // ❌ remove this line from here:
+  //     // _ensurePhonePermission();
   //
-  //     // 1) API error
   //     if (next.error != null) {
   //       AppSnackBar.error(context, next.error!);
   //       return;
   //     }
   //
-  //     // 2) WhatsApp verify result
   //     if (next.whatsappResponse != null) {
   //       final resp = next.whatsappResponse!;
   //       final hasWhatsapp = resp.data.hasWhatsapp;
@@ -158,12 +155,17 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   //           final fullPhone = '$_selectedDialCode$raw';
   //           final simToken = generateSimToken(fullPhone);
   //
-  //           // NOTE: your backend currently builds "+91$phone" inside request.
-  //           // For full multi-country support, update backend later.
-  //           print(simToken);
-  //           ref
-  //               .read(loginNotifierProvider.notifier)
-  //               .loginUser(phoneNumber: raw, simToken: simToken);
+  //           // ✅ IMPORTANT: loginUser() call REMOVE (this is what sends OTP)
+  //           // ref.read(loginNotifierProvider.notifier)
+  //           //     .loginUser(phoneNumber: raw, simToken: simToken);
+  //
+  //           // ✅ Directly go to SIM verify screen
+  //           context.pushNamed(
+  //             AppRoutes.mobileNumberVerify,
+  //             extra: {'phone': raw, 'simToken': simToken},
+  //           );
+  //
+  //           ref.read(loginNotifierProvider.notifier).resetState();
   //         }
   //       } else {
   //         setState(() => isWhatsappChecked = false);
@@ -174,8 +176,35 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   //       }
   //     }
   //
-  //     // 3) Login result -> navigate to SIM/OTP verify screen
+  //     // if (next.whatsappResponse != null) {
+  //     //   final resp = next.whatsappResponse!;
+  //     //   final hasWhatsapp = resp.data.hasWhatsapp;
+  //     //
+  //     //   if (hasWhatsapp) {
+  //     //     setState(() => isWhatsappChecked = true);
+  //     //
+  //     //     final raw = _lastRawPhone;
+  //     //     if (raw != null) {
+  //     //       final fullPhone = '$_selectedDialCode$raw';
+  //     //       final simToken = generateSimToken(fullPhone);
+  //     //
+  //     //       ref
+  //     //           .read(loginNotifierProvider.notifier)
+  //     //           .loginUser(phoneNumber: raw, simToken: simToken);
+  //     //     }
+  //     //   } else {
+  //     //     setState(() => isWhatsappChecked = false);
+  //     //     AppSnackBar.error(
+  //     //       context,
+  //     //       'This number is not registered on WhatsApp. Please use a WhatsApp number.',
+  //     //     );
+  //     //   }
+  //     // }
+  //
   //     if (next.loginResponse != null) {
+  //       // ✅ Ensure permission before going to SIM screen
+  //       //await _ensurePhonePermission();
+  //
   //       final raw = _lastRawPhone ?? '';
   //       final fullPhone = '$_selectedDialCode$raw';
   //       final simToken = generateSimToken(fullPhone);
@@ -189,6 +218,7 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
   //     }
   //   });
   // }
+  //
 
   @override
   void dispose() {
@@ -555,6 +585,16 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
                             onTap: state.isLoading
                                 ? null
                                 : () async {
+                                    // 🔴 INTERNET CHECK FIRST
+                                    final hasInternet =
+                                        await NetworkUtil.hasInternet();
+                                    if (!hasInternet) {
+                                      AppSnackBar.error(
+                                        context,
+                                        "You're offline. Check your network connection",
+                                      );
+                                      return; // ⛔ STOP HERE
+                                    }
                                     final formatted = mobileNumberController
                                         .text
                                         .trim();
