@@ -72,7 +72,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
     // ✅ Request permission immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _ensurePhonePermission();
-
     });
 
     _sub = ref.listenManual<LoginState>(loginNotifierProvider, (
@@ -115,17 +114,16 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber> {
       }
 
       if (next.loginResponse != null) {
-        // ✅ Ensure permission before going to SIM screen
         await _ensurePhonePermission();
 
         final raw = _lastRawPhone ?? '';
         final fullPhone = '$_selectedDialCode$raw';
         final simToken = generateSimToken(fullPhone);
-
-        context.pushNamed(
-          AppRoutes.mobileNumberVerify,
-          extra: {'phone': raw, 'simToken': simToken},
-        );
+        context.pushNamed(AppRoutes.otp, extra: raw);
+        // context.pushNamed(
+        //   AppRoutes.mobileNumberVerify,
+        //   extra: {'phone': raw, 'simToken': simToken},
+        // );
 
         ref.read(loginNotifierProvider.notifier).resetState();
       }
