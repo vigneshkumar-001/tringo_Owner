@@ -755,7 +755,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return cityState;
   }
 
-
   void _openShopGallery(List images, int startIndex) {
     // Extract only valid urls
     final urls = <String>[];
@@ -911,7 +910,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 ),
                               ),
                       ),
-                  
+
                       // Rating chip only on first image
                       if (index == 0)
                         Positioned(
@@ -982,10 +981,15 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final selectedShop = _getSelectedShop(aboutState);
     final isDoorDelivery = selectedShop?.shopDoorDelivery == true;
     if (!aboutState.isLoading && selectedShop == null) {
-      return const Scaffold(
+      return Scaffold(
         body: SafeArea(
           child: Center(
             child: NoDataScreen(
+              onRefresh: () async {
+                await ref
+                    .read(aboutMeNotifierProvider.notifier)
+                    .fetchAllShopDetails();
+              },
               showBottomButton: false,
               showTopBackArrow: false,
             ),
@@ -2670,6 +2674,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     );
   }
 }
+
 class FullScreenGalleryPage extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
@@ -2730,9 +2735,8 @@ class _FullScreenGalleryPageState extends State<FullScreenGalleryPage> {
                 child: CachedNetworkImage(
                   imageUrl: url,
                   fit: BoxFit.contain,
-                  placeholder: (_, __) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  placeholder: (_, __) =>
+                      const Center(child: CircularProgressIndicator()),
                   errorWidget: (_, __, ___) => const Icon(
                     Icons.broken_image,
                     color: Colors.white,

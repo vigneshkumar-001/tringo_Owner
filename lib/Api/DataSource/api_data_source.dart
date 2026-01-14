@@ -25,6 +25,7 @@ import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_respo
 import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
 
 import '../../Core/Session/registration_product_seivice.dart';
+import '../../Core/Utility/app_prefs.dart';
 import '../../Presentation/AboutMe/Model/service_edit_response.dart';
 import '../../Presentation/AboutMe/Model/service_remove_response.dart';
 import '../../Presentation/AddProduct/Model/delete_response.dart';
@@ -33,12 +34,15 @@ import '../../Presentation/AddProduct/Service Info/Model/service_info_response.d
 import '../../Presentation/Create App Offer/Model/create_offers.dart';
 import '../../Presentation/Create App Offer/Model/update_offer_model.dart';
 import '../../Presentation/Login/model/contact_response.dart';
+import '../../Presentation/Login/model/login_new_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
 import '../../Presentation/Menu/Model/plan_list_response.dart';
 import '../../Presentation/Menu/Model/purchase_response.dart';
 import '../../Presentation/Mobile Nomber Verify/Model/sim_verify_response.dart';
 import '../../Presentation/Offer/Model/offer_model.dart';
 import '../../Presentation/Register/model/owner_info_response.dart';
+import '../../Presentation/ShopInfo/model/shop_number_otp_response.dart';
+import '../../Presentation/ShopInfo/model/shop_number_verify_response.dart';
 import '../../Presentation/ShopInfo/model/user_image_response.dart';
 
 abstract class BaseApiDataSource {
@@ -68,6 +72,58 @@ class ApiDataSource extends BaseApiDataSource {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.data['status'] == true) {
           return Right(LoginResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      }
+
+      return Left(
+        ServerFailure(response.data['message'] ?? "Something went wrong"),
+      );
+    } on DioException catch (e) {
+      // 🔴 NO INTERNET
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown) {
+        return Left(ServerFailure("No internet connection. Please try again"));
+      }
+
+      final errorData = e.response?.data;
+      if (errorData is Map && errorData['message'] != null) {
+        return Left(ServerFailure(errorData['message']));
+      }
+
+      return Left(ServerFailure("Request failed"));
+    } catch (_) {
+      return Left(ServerFailure("Unexpected error occurred"));
+    }
+  }
+
+  Future<Either<Failure, OtpLoginResponse>> mobileNewNumberLogin(
+    String phone,
+    String simToken, {
+    String page = "",
+  }) async {
+    try {
+      // final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
+      final url = ApiUrl.requestLogin;
+      final method = simToken.isEmpty ? 'OTP' : 'SIM';
+      final response = await Request.sendRequest(
+        url,
+        {
+          "contact": "+91$phone",
+          "purpose": "owner",
+          "loginMethod": method,
+          "simToken": simToken,
+        },
+        'Post',
+        false,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data['status'] == true) {
+          return Right(OtpLoginResponse.fromJson(response.data));
         } else {
           return Left(
             ServerFailure(response.data['message'] ?? "Login failed"),
@@ -245,7 +301,7 @@ class ApiDataSource extends BaseApiDataSource {
   //   required String englishName,
   //   required String tamilName,
   //   required String descriptionEn,
-  //   String? shopId,
+  //   String? apiShopId,
   //   required String type,
   //   required String descriptionTa,
   //   required String addressEn,
@@ -258,13 +314,29 @@ class ApiDataSource extends BaseApiDataSource {
   //   required String contactEmail,
   //   required bool doorDelivery,
   //   required String weeklyHours,
-  // }) async {
+  // }) async
+  // {
   //   try {
   //     final prefs = await SharedPreferences.getInstance();
   //
-  //     final url = (shopId != null && shopId.isNotEmpty)
-  //         ? ApiUrl.updateShop(shopId: shopId)
-  //         : ApiUrl.shop;
+  //     final savedShopId = prefs.getString('shop_id');
+  //
+  //     // ✅ Priority: 1) SharedPrefs → 2) apiShopId → 3) create new
+  //     String? finalShopId;
+  //     if (savedShopId != null && savedShopId.isNotEmpty) {
+  //       finalShopId = savedShopId;
+  //     } else if (apiShopId != null && apiShopId.isNotEmpty) {
+  //       finalShopId = apiShopId;
+  //     }
+  //
+  //     final bool isUpdate = finalShopId != null;
+  //     final url = isUpdate
+  //         ? ApiUrl.updateShop(shopId: finalShopId)
+  //         : ApiUrl.shop; // create
+  //
+  //     // final url = (shopId != null && shopId.isNotEmpty)
+  //     //     ? ApiUrl.updateShop(shopId: shopId)
+  //     //     : ApiUrl.shop;
   //
   //     final payload = {
   //       "category": category,
@@ -277,32 +349,51 @@ class ApiDataSource extends BaseApiDataSource {
   //       "addressTa": addressTa,
   //       "gpsLatitude": gpsLatitude,
   //       "gpsLongitude": gpsLongitude,
-  //       "primaryPhone": "+91$primaryPhone",
-  //       "alternatePhone": "+91$alternatePhone",
+  //       "primaryPhone": "$primaryPhone",
+  //       "alternatePhone": "$alternatePhone",
   //       "contactEmail": contactEmail,
   //       "doorDelivery": doorDelivery,
-  //       "weeklyHours": weeklyHours,
+  //       "weeklyHours":
+  //           weeklyHours, // <== keep as your backend expects (string/JSON)
   //     };
+  //
   //     if (type == "service") {
   //       payload["ownerImageUrl"] = ownerImageUrl;
   //     }
-  //     // else {
-  //     //   payload["doorDelivery"] = true;
-  //     // }
-  //     dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+  //
+  //     final phoneVerifyToken = await AppPrefs.getVerificationToken();
+  //
+  //     dynamic response = await Request.sendRequest(
+  //       url,
+  //       payload,
+  //       'Post',
+  //       true,
+  //       extraHeaders: {
+  //         // ✅ Send token only if available
+  //         if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+  //           "x-phone-verify-token": phoneVerifyToken,
+  //       },
+  //     );
   //
   //     AppLogger.log.i(response);
   //     AppLogger.log.i(payload);
   //
   //     if (response is! DioException) {
   //       if (response.statusCode == 200 || response.statusCode == 201) {
-  //         if (response.data['status'] == true) {
-  //           final data =
-  //               response.data['data'] as Map<String, dynamic>; // cast safely
-  //           return Right(ShopCategoryResponse.fromJson(data));
+  //         final body = response.data;
+  //
+  //         if (body is Map && body['status'] == true) {
+  //           // ✅ pass full response JSON here
+  //           final shopResponse = ShopCategoryResponse.fromJson(
+  //             body as Map<String, dynamic>,
+  //           );
+  //
+  //           await AppPrefs.clearVerificationToken();
+  //
+  //           return Right(shopResponse);
   //         } else {
   //           return Left(
-  //             ServerFailure(response.data['message'] ?? "Something went wrong"),
+  //             ServerFailure(body['message'] ?? "Something went wrong"),
   //           );
   //         }
   //       } else {
@@ -317,8 +408,9 @@ class ApiDataSource extends BaseApiDataSource {
   //       }
   //       return Left(ServerFailure(response.message ?? "Unknown Dio error"));
   //     }
-  //   } catch (e) {
-  //     AppLogger.log.i(e);
+  //   } catch (e, st) {
+  //     AppLogger.log.e(e);
+  //     AppLogger.log.e(st);
   //     return Left(ServerFailure(e.toString()));
   //   }
   // }
@@ -336,6 +428,7 @@ class ApiDataSource extends BaseApiDataSource {
     required String addressTa,
     required double gpsLatitude,
     required double gpsLongitude,
+    String? primaryPhoneVerificationToken,
     required String primaryPhone,
     required String alternatePhone,
     required String ownerImageUrl,
@@ -345,10 +438,9 @@ class ApiDataSource extends BaseApiDataSource {
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
       final savedShopId = prefs.getString('shop_id');
 
-      // ✅ Priority: 1) SharedPrefs → 2) apiShopId → 3) create new
+      // ✅ Priority: 1) SharedPrefs → 2) apiShopId
       String? finalShopId;
       if (savedShopId != null && savedShopId.isNotEmpty) {
         finalShopId = savedShopId;
@@ -359,13 +451,12 @@ class ApiDataSource extends BaseApiDataSource {
       final bool isUpdate = finalShopId != null;
       final url = isUpdate
           ? ApiUrl.updateShop(shopId: finalShopId)
-          : ApiUrl.shop; // create
+          : ApiUrl.shop;
 
-      // final url = (shopId != null && shopId.isNotEmpty)
-      //     ? ApiUrl.updateShop(shopId: shopId)
-      //     : ApiUrl.shop;
+      // ✅ READ verification token (saved after OTP verify)
+      final phoneVerifyToken = await AppPrefs.getVerificationToken();
 
-      final payload = {
+      final payload = <String, dynamic>{
         "category": category,
         "subCategory": subCategory,
         "englishName": englishName,
@@ -376,19 +467,41 @@ class ApiDataSource extends BaseApiDataSource {
         "addressTa": addressTa,
         "gpsLatitude": gpsLatitude,
         "gpsLongitude": gpsLongitude,
-        "primaryPhone": "$primaryPhone",
-        "alternatePhone": "$alternatePhone",
+        "primaryPhone": primaryPhone,
+        "alternatePhone": alternatePhone,
         "contactEmail": contactEmail,
         "doorDelivery": doorDelivery,
-        "weeklyHours":
-            weeklyHours, // <== keep as your backend expects (string/JSON)
+        "weeklyHours": weeklyHours,
+
+        // ✅ IMPORTANT: backend expects this
+        if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+          "primaryPhoneVerificationToken": phoneVerifyToken,
+
+        // ✅ keep this also (safe fallback)
+        if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+          "phoneVerifyToken": phoneVerifyToken,
       };
 
       if (type == "service") {
         payload["ownerImageUrl"] = ownerImageUrl;
       }
 
-      dynamic response = await Request.sendRequest(url, payload, 'Post', true);
+      dynamic response = await Request.sendRequest(
+        url,
+        payload,
+        'Post',
+        true,
+        extraHeaders: {
+          if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+            "x-phone-verify-token": phoneVerifyToken,
+
+          // ✅ fallback header keys (safe)
+          if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+            "x-phone-verification-token": phoneVerifyToken,
+          if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+            "x-verification-token": phoneVerifyToken,
+        },
+      );
 
       AppLogger.log.i(response);
       AppLogger.log.i(payload);
@@ -398,10 +511,13 @@ class ApiDataSource extends BaseApiDataSource {
           final body = response.data;
 
           if (body is Map && body['status'] == true) {
-            // ✅ pass full response JSON here
             final shopResponse = ShopCategoryResponse.fromJson(
               body as Map<String, dynamic>,
             );
+
+            // ✅ clear token only after success
+            await AppPrefs.clearVerificationToken();
+
             return Right(shopResponse);
           } else {
             return Left(
@@ -1995,6 +2111,79 @@ class ApiDataSource extends BaseApiDataSource {
     } catch (e) {
       AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ShopNumberVerifyResponse>> shopAddNumberRequest({
+    required String phone,
+    required String type,
+  }) async {
+    String url = ApiUrl.shopNumberVerify;
+
+    final response = await Request.sendRequest(
+      url,
+      {"phone": "+91$phone", "type": type},
+      'Post',
+      true,
+    );
+
+    if (response is! DioException) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data['status'] == true) {
+          return Right(ShopNumberVerifyResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
+      }
+    } else {
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+    }
+  }
+
+  Future<Either<Failure, ShopNumberOtpResponse>> shopAddOtpRequest({
+    required String phone,
+    required String type,
+    required String code,
+  }) async {
+    String url = ApiUrl.shopNumberOtpVerify;
+
+    final response = await Request.sendRequest(
+      url,
+      {"phone": "+91$phone", "code": code, "type": type},
+      'Post',
+      true,
+    );
+
+    if (response is! DioException) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data['status'] == true) {
+          return Right(ShopNumberOtpResponse.fromJson(response.data));
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Login failed"),
+          );
+        }
+      } else {
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
+      }
+    } else {
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
     }
   }
 }
