@@ -21,12 +21,116 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/map_picker_page.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
+import '../../../Core/Widgets/owner_verify_feild.dart';
 import '../../AboutMe/Controller/about_me_notifier.dart';
 import '../../AboutMe/Screens/about_me_screens.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
+
+class GpsInputField extends StatelessWidget {
+  final TextEditingController controller;
+  final bool isLoading;
+  final VoidCallback onMapTap;
+  final String hintText;
+
+  const GpsInputField({
+    super.key,
+    required this.controller,
+    required this.isLoading,
+    required this.onMapTap,
+    this.hintText = 'Enter lat,lng or pick from map',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColor.lightGray,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.transparent, width: 1.5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Row(
+        children: [
+          // ✅ LEFT: editable text field
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              keyboardType: TextInputType.text,
+              style: AppTextStyles.textWith700(fontSize: 16),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: hintText,
+                hintStyle: AppTextStyles.mulish(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColor.skyBlue,
+                ),
+              ),
+            ),
+          ),
+
+          // ✅ divider
+          Container(
+            width: 2,
+            height: 30,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.grey.shade200,
+                  Colors.grey.shade300,
+                  Colors.grey.shade200,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+
+          // ✅ RIGHT: map button only
+          InkWell(
+            onTap: isLoading ? null : onMapTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isLoading)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else ...[
+                    const Icon(
+                      Icons.location_on,
+                      size: 18,
+                      color: AppColor.resendOtp,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Shop Location',
+                      style: AppTextStyles.mulish(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColor.resendOtp,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? pages;
@@ -162,6 +266,24 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     return n;
   }
 
+  String _normalizeIndianPhone10(String input) {
+    var p = input.trim();
+    p = p.replaceAll(RegExp(r'[^0-9]'), '');
+    if (p.startsWith('91') && p.length == 12) {
+      p = p.substring(2);
+    }
+    if (p.length > 10) {
+      p = p.substring(p.length - 10);
+    }
+    return p;
+  }
+
+  String _toE164India(String input) {
+    final ten = _normalizeIndianPhone10(input); // your existing helper
+    if (ten.isEmpty) return '';
+    return '+91$ten';
+  }
+
   Future<void> _openGoogleMapsFromGpsField() async {
     try {
       // 1) Try from existing text (lat,lng)
@@ -179,9 +301,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       if (lat == null || lng == null) {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location services are disabled.')),
-          );
+          AppSnackBar.info(context, 'Turn on Location.');
+          // ScaffoldMessenger.of(context).
+          // showSnackBar(
+          //   const SnackBar(content: Text('Turn on Location.')),
+          // );
           return;
         }
 
@@ -934,129 +1058,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     }
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   AppLogger.log.i(widget.shopId);
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
-  //   });
-  //
-  //   if (widget.pages == "AboutMeScreens") {
-  //     // 👉 shop name
-  //     if (widget.initialShopNameEnglish?.isNotEmpty ?? false) {
-  //       _shopNameEnglishController.text = widget.initialShopNameEnglish!;
-  //     }
-  //
-  //     if (widget.initialShopNameTamil?.isNotEmpty ?? false) {
-  //       tamilNameController.text = widget.initialShopNameTamil!;
-  //       _tamilPrefilled = true;
-  //     } else {
-  //       _prefillTamilFromEnglishOnce();
-  //     }
-  //
-  //     // 👉 description
-  //     if (widget.initialDescriptionEnglish?.isNotEmpty ?? false) {
-  //       _descriptionEnglishController.text = widget.initialDescriptionEnglish!;
-  //     }
-  //     if (widget.initialDescriptionTamil?.isNotEmpty ?? false) {
-  //       descriptionTamilController.text = widget.initialDescriptionTamil!;
-  //     }
-  //
-  //     // 👉 address
-  //     if (widget.initialAddressEnglish?.isNotEmpty ?? false) {
-  //       _addressEnglishController.text = widget.initialAddressEnglish!;
-  //     }
-  //     if (widget.initialAddressTamil?.isNotEmpty ?? false) {
-  //       addressTamilNameController.text = widget.initialAddressTamil!;
-  //     }
-  //
-  //     // 👉 GPS
-  //     if (widget.initialGps?.isNotEmpty ?? false) {
-  //       _gpsController.text = widget.initialGps!;
-  //       _gpsFetched = true;
-  //     }
-  //
-  //     // 👉 phones
-  //     // if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
-  //     //   var phone = widget.initialPrimaryMobile!;
-  //     //
-  //     //   // 🔹 If editing from AboutMeScreens, remove leading +91
-  //     //   if (widget.pages == "AboutMeScreens" && phone.startsWith('+91')) {
-  //     //     phone = phone.substring(3); // remove "+91"
-  //     //   }
-  //     //
-  //     //   _primaryMobileController.text = phone.trim();
-  //     // }
-  //     //
-  //     // if (widget.initialWhatsapp?.isNotEmpty ?? false) {
-  //     //   var wa = widget.initialWhatsapp!;
-  //     //
-  //     //   if (widget.pages == "AboutMeScreens" && wa.startsWith('+91')) {
-  //     //     wa = wa.substring(3);
-  //     //   }
-  //     //
-  //     //   _whatsappController.text = wa.trim();
-  //     // }
-  //     // 👉 phones
-  //     if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
-  //       var phone = widget.initialPrimaryMobile!.trim();
-  //
-  //       if (widget.pages == "AboutMeScreens" && phone.startsWith('+91')) {
-  //         phone = phone.substring(3); // +91 remove
-  //       }
-  //
-  //       _primaryMobileController.text = phone.trim();
-  //     }
-  //
-  //     if (widget.initialWhatsapp?.isNotEmpty ?? false) {
-  //       var wa = widget.initialWhatsapp!.trim();
-  //
-  //       // 👉 AboutMeScreens இருந்து வந்தா +91 remove பண்ணு
-  //       if (widget.pages == "AboutMeScreens" && wa.startsWith('+91')) {
-  //         wa = wa.substring(3); // +91 remove
-  //       }
-  //
-  //       _whatsappController.text = wa.trim();
-  //     }
-  //
-  //     // if (widget.initialPrimaryMobile?.isNotEmpty ?? false) {
-  //     //   _primaryMobileController.text = widget.initialPrimaryMobile!;
-  //     // }
-  //     // if (widget.initialWhatsapp?.isNotEmpty ?? false) {
-  //     //   _whatsappController.text = widget.initialWhatsapp!;
-  //     // }
-  //
-  //     // 👉 email
-  //     if (widget.initialEmail?.isNotEmpty ?? false) {
-  //       _emailController.text = widget.initialEmail!;
-  //     }
-  //
-  //     // 👉 category / subcategory
-  //     if (widget.initialCategoryName?.isNotEmpty ?? false) {
-  //       _categoryController.text = widget.initialCategoryName!;
-  //       categorySlug = widget.initialCategorySlug ?? '';
-  //     }
-  //     if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
-  //       _subCategoryController.text = widget.initialSubCategoryName!;
-  //       subCategorySlug = widget.initialSubCategorySlug ?? '';
-  //     }
-  //
-  //     // 👉 door delivery (for product flow)
-  //     if (widget.initialDoorDeliveryText?.isNotEmpty ?? false) {
-  //       _doorDeliveryController.text = widget.initialDoorDeliveryText!;
-  //     }
-  //
-  //     // 👉 open / close time (only text; you can parse to TimeOfDay if needed)
-  //     if (widget.initialOpenTimeText?.isNotEmpty ?? false) {
-  //       _openTimeController.text = widget.initialOpenTimeText!;
-  //     }
-  //     if (widget.initialCloseTimeText?.isNotEmpty ?? false) {
-  //       _closeTimeController.text = widget.initialCloseTimeText!;
-  //     }
-  //   }
-  // }
-
   Future<void> _prefillTamilFromEnglishOnce() async {
     if (_tamilPrefilled) return;
     final english = _shopNameEnglishController.text.trim();
@@ -1100,6 +1101,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
   // 🔹 Central validation function
   bool _validateAll() {
+    final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
+    if (isEditFromAboutMe) {
+      // ✅ AboutMe update screen: no validation at all
+      return true;
+    }
+
     setState(() {
       _isSubmitted = true;
       _categoryErrorText = null;
@@ -1113,37 +1120,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     final baseValid = _formKey.currentState?.validate() ?? false;
     bool extraValid = true;
 
-    // Category
-    if (_categoryController.text.trim().isEmpty) {
-      _categoryErrorText = 'Please select a category';
-      extraValid = false;
-    }
-
-    // Subcategory
-    if (_subCategoryController.text.trim().isEmpty) {
-      _subCategoryErrorText = 'Please select a subcategory';
-      extraValid = false;
-    }
-
-    // Time order
-    if (_openTod != null && _closeTod != null && !validateTimes()) {
-      _timeErrorText = 'Close Time must be after Open Time';
-      extraValid = false;
-    }
-
-    // Image validation for service
-    if (widget.isService == true && _permanentImage == null) {
-      _imageErrorText = 'Please add your Photo';
-      _timetableInvalid = true;
-      extraValid = false;
-    }
-
-    if (widget.isService != true) {
-      if (_gpsController.text.trim().isEmpty) {
-        _gpsErrorText = 'Please get GPS location';
-        extraValid = false;
-      }
-    }
+    // ... your existing validations
 
     final allGood = baseValid && extraValid;
 
@@ -1154,6 +1131,62 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     setState(() {});
     return allGood;
   }
+
+  // bool _validateAll() {
+  //   setState(() {
+  //     _isSubmitted = true;
+  //     _categoryErrorText = null;
+  //     _subCategoryErrorText = null;
+  //     _timeErrorText = null;
+  //     _imageErrorText = null;
+  //     _timetableInvalid = false;
+  //     _gpsErrorText = null;
+  //   });
+  //
+  //   final baseValid = _formKey.currentState?.validate() ?? false;
+  //   bool extraValid = true;
+  //
+  //   // Category
+  //   if (_categoryController.text.trim().isEmpty) {
+  //     _categoryErrorText = 'Please select a category';
+  //     extraValid = false;
+  //   }
+  //
+  //   // Subcategory
+  //   if (_subCategoryController.text.trim().isEmpty) {
+  //     _subCategoryErrorText = 'Please select a subcategory';
+  //     extraValid = false;
+  //   }
+  //
+  //   // Time order
+  //   if (_openTod != null && _closeTod != null && !validateTimes()) {
+  //     _timeErrorText = 'Close Time must be after Open Time';
+  //     extraValid = false;
+  //   }
+  //
+  //   // Image validation for service
+  //   if (widget.isService == true && _permanentImage == null) {
+  //     _imageErrorText = 'Please add your Photo';
+  //     _timetableInvalid = true;
+  //     extraValid = false;
+  //   }
+  //
+  //   if (widget.isService != true) {
+  //     if (_gpsController.text.trim().isEmpty) {
+  //       _gpsErrorText = 'Please get GPS location';
+  //       extraValid = false;
+  //     }
+  //   }
+  //
+  //   final allGood = baseValid && extraValid;
+  //
+  //   if (!allGood) {
+  //     AppSnackBar.error(context, 'Please fill all required fields correctly');
+  //   }
+  //
+  //   setState(() {});
+  //   return allGood;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -1243,10 +1276,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       const SizedBox(height: 10),
                       CommonContainer.fillingContainer(
+                        verticalDivider: false,
                         controller: _shopNameEnglishController,
-                        text: 'English',
+                        text: '',
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Shop Name in English'
+                            ? 'Please Enter Shop Name'
                             : null,
                       ),
                       const SizedBox(height: 25),
@@ -1456,9 +1490,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       CommonContainer.fillingContainer(
                         controller: _descriptionEnglishController,
                         maxLine: 4,
-                        text: 'English',
+                        text: '',
+                        verticalDivider: false,
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Describe in English'
+                            ? 'Please Enter Describe'
                             : null,
                       ),
                       // const SizedBox(height: 15),
@@ -1528,9 +1563,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       CommonContainer.fillingContainer(
                         controller: _addressEnglishController,
                         maxLine: 4,
-                        text: 'English',
+                        text: '',
+                        verticalDivider: false,
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Please Enter Address in English'
+                            ? 'Please Enter Address'
                             : null,
                       ),
                       // SizedBox(height: 15),
@@ -1596,128 +1632,83 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
                       const SizedBox(height: 10),
-
-                      GestureDetector(
-                        onTap: () async {
+                      GpsInputField(
+                        controller: _gpsController,
+                        isLoading: _isFetchingGps,
+                        onMapTap: () async {
                           setState(() => _isFetchingGps = true);
                           await _openGoogleMapsFromGpsField();
                           if (mounted) setState(() => _isFetchingGps = false);
                         },
-                        // onTap: () async {
-                        //   setState(() => _isFetchingGps = true);
-                        //
-                        //   // current text ல lat,lng இருந்தா parse பண்ணி initial position கொடுக்கலாம்
-                        //   LatLng? initial;
-                        //   final t = _gpsController.text.trim();
-                        //   final parts = t.split(',');
-                        //   if (parts.length == 2) {
-                        //     final lat = double.tryParse(parts[0].trim());
-                        //     final lng = double.tryParse(parts[1].trim());
-                        //     if (lat != null && lng != null)
-                        //       initial = LatLng(lat, lng);
-                        //   }
-                        //
-                        //   final picked = await Navigator.push<LatLng>(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (_) =>
-                        //           MapPickerPage(initialLatLng: initial),
-                        //     ),
-                        //   );
-                        //
-                        //   if (picked != null) {
-                        //     setState(() {
-                        //       _gpsController.text =
-                        //           '${picked.latitude.toStringAsFixed(6)}, ${picked.longitude.toStringAsFixed(6)}';
-                        //       _gpsFetched = true;
-                        //     });
-                        //
-                        //     if (_isSubmitted) {
-                        //       _formKey.currentState?.validate();
-                        //     }
-                        //
-                        //     debugPrint(
-                        //       '📍 Picked Location → ${_gpsController.text}',
-                        //     );
-                        //   }
-                        //
-                        //   setState(() => _isFetchingGps = false);
-                        // },
-                        child: AbsorbPointer(
-                          child: CommonContainer.fillingContainer(
-                            controller: _gpsController,
-                            text: _isFetchingGps ? '' : 'Shop Location',
-                            textColor: _gpsController.text.isEmpty
-                                ? AppColor.skyBlue
-                                : AppColor.mildBlack,
-                            textFontWeight: FontWeight.w700,
-                            suffixWidget: _isFetchingGps
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : null,
-                            validator: (_) => null,
-                          ),
-                        ),
                       ),
 
                       // GestureDetector(
                       //   onTap: () async {
-                      //     setState(
-                      //       () => _isFetchingGps = true,
-                      //     ); // new bool to track loading
-                      //     await _getCurrentLocation();
-                      //     setState(() => _isFetchingGps = false);
+                      //     setState(() => _isFetchingGps = true);
+                      //     await _openGoogleMapsFromGpsField();
+                      //     if (mounted) setState(() => _isFetchingGps = false);
                       //   },
+                      //   // onTap: () async {
+                      //   //   setState(() => _isFetchingGps = true);
+                      //   //
+                      //   //   // current text ல lat,lng இருந்தா parse பண்ணி initial position கொடுக்கலாம்
+                      //   //   LatLng? initial;
+                      //   //   final t = _gpsController.text.trim();
+                      //   //   final parts = t.split(',');
+                      //   //   if (parts.length == 2) {
+                      //   //     final lat = double.tryParse(parts[0].trim());
+                      //   //     final lng = double.tryParse(parts[1].trim());
+                      //   //     if (lat != null && lng != null)
+                      //   //       initial = LatLng(lat, lng);
+                      //   //   }
+                      //   //
+                      //   //   final picked = await Navigator.push<LatLng>(
+                      //   //     context,
+                      //   //     MaterialPageRoute(
+                      //   //       builder: (_) =>
+                      //   //           MapPickerPage(initialLatLng: initial),
+                      //   //     ),
+                      //   //   );
+                      //   //
+                      //   //   if (picked != null) {
+                      //   //     setState(() {
+                      //   //       _gpsController.text =
+                      //   //           '${picked.latitude.toStringAsFixed(6)}, ${picked.longitude.toStringAsFixed(6)}';
+                      //   //       _gpsFetched = true;
+                      //   //     });
+                      //   //
+                      //   //     if (_isSubmitted) {
+                      //   //       _formKey.currentState?.validate();
+                      //   //     }
+                      //   //
+                      //   //     debugPrint(
+                      //   //       '📍 Picked Location → ${_gpsController.text}',
+                      //   //     );
+                      //   //   }
+                      //   //
+                      //   //   setState(() => _isFetchingGps = false);
+                      //   // },
                       //   child: AbsorbPointer(
                       //     child: CommonContainer.fillingContainer(
                       //       controller: _gpsController,
-                      //       text: _isFetchingGps ? '' : 'Get by GPS',
+                      //       text: _isFetchingGps ? '' : 'Shop Location',
                       //       textColor: _gpsController.text.isEmpty
                       //           ? AppColor.skyBlue
                       //           : AppColor.mildBlack,
                       //       textFontWeight: FontWeight.w700,
                       //       suffixWidget: _isFetchingGps
-                      //           ? SizedBox(
+                      //           ? const SizedBox(
                       //               width: 16,
                       //               height: 16,
                       //               child: CircularProgressIndicator(
                       //                 strokeWidth: 2,
-                      //                 color: AppColor.skyBlue,
                       //               ),
                       //             )
                       //           : null,
                       //       validator: (_) => null,
-                      //       // validator: (value) {
-                      //       //   if (!_isSubmitted) return null;
-                      //       //
-                      //       //   // 🔹 Service business → NO GPS validation
-                      //       //   if (widget.isService == true) {
-                      //       //     return null;
-                      //       //   }
-                      //       //
-                      //       //   // 🔹 Product business → GPS required (only based on value)
-                      //       //   if (value == null || value.trim().isEmpty) {
-                      //       //     return 'Please get GPS location';
-                      //       //   }
-                      //       //
-                      //       //   return null;
-                      //       // },
                       //     ),
                       //   ),
                       // ),
-                      // if (_gpsErrorText != null)
-                      //   Padding(
-                      //     padding: const EdgeInsets.only(top: 6.0, left: 4),
-                      //     child: Text(
-                      //       _gpsErrorText!,
-                      //       style: TextStyle(color: Colors.red, fontSize: 12),
-                      //     ),
-                      //   ),
                       const SizedBox(height: 25),
                       Text(
                         'Primary Mobile Number',
@@ -1725,85 +1716,87 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       const SizedBox(height: 10),
                       if (isEditFromAboutMe) ...[
-                        // AnimatedSwitcher(
-                        //   duration: const Duration(milliseconds: 400),
-                        //   transitionBuilder:
-                        //       (child, animation) => FadeTransition(
-                        //     opacity: animation,
-                        //     child: child,
-                        //   ),
-                        //   child: OwnerVerifyField(
-                        //     controller: _primaryMobileController,
-                        //     isLoading: state.isSendingOtp,
-                        //     isOtpVerifying: state.isVerifyingOtp,
-                        //     onSendOtp: (mobile) {
-                        //       return ref
-                        //           .read(addEmployeeNotifier.notifier)
-                        //           .employeeAddNumberRequest(
-                        //         phoneNumber: mobile,
-                        //       );
-                        //     },
-                        //     onVerifyOtp: (mobile, otp) {
-                        //       return ref
-                        //           .read(addEmployeeNotifier.notifier)
-                        //           .employeeAddOtpRequest(
-                        //         phoneNumber: mobile,
-                        //         code: otp,
-                        //       );
-                        //     },
-                        //   ),
-                        // ),
-                        CommonContainer.fillingContainer(
-                          controller: _primaryMobileController,
-                          verticalDivider:
-                              false, // optional: hide divider if you want
-                          isMobile: false, // IMPORTANT → disables +91 logic
-                          text: 'Mobile No',
-                          keyboardType: TextInputType.phone,
-                          validator: (_) => null, // no validation
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: OwnerVerifyField(
+                            controller: _primaryMobileController,
+                            isLoading: state.isSendingOtp,
+                            isOtpVerifying: state.isVerifyingOtp,
+                            onSendOtp: (mobile) {
+                              final phone10 = _normalizeIndianPhone10(mobile);
+                              return ref
+                                  .read(shopCategoryNotifierProvider.notifier)
+                                  .shopAddNumberRequest(
+                                    type: "SHOP_PRIMARY_PHONE",
+                                    phoneNumber: phone10,
+                                  );
+                            },
+                            onVerifyOtp: (mobile, otp) {
+                              final phone10 = _normalizeIndianPhone10(mobile);
+                              return ref
+                                  .read(shopCategoryNotifierProvider.notifier)
+                                  .shopAddOtpRequest(
+                                    phoneNumber: phone10,
+                                    type: "SHOP_PRIMARY_PHONE",
+                                    code: otp,
+                                  );
+                            },
+                          ),
                         ),
+                        // CommonContainer.fillingContainer(
+                        //   controller: _primaryMobileController,
+                        //   verticalDivider:
+                        //       false, // optional: hide divider if you want
+                        //   isMobile: false, // IMPORTANT → disables +91 logic
+                        //   text: 'Mobile No',
+                        //   keyboardType: TextInputType.phone,
+                        //   validator: (_) => null, // no validation
+                        // ),
                       ] else ...[
-                        // AnimatedSwitcher(
-                        //   duration: const Duration(milliseconds: 400),
-                        //   transitionBuilder:
-                        //       (child, animation) => FadeTransition(
-                        //     opacity: animation,
-                        //     child: child,
-                        //   ),
-                        //   child: OwnerVerifyField(
-                        //     controller: _primaryMobileController,
-                        //     isLoading: state.isSendingOtp,
-                        //     isOtpVerifying: state.isVerifyingOtp,
-                        //     onSendOtp: (mobile) {
-                        //       return ref
-                        //           .read(addEmployeeNotifier.notifier)
-                        //           .employeeAddNumberRequest(
-                        //         phoneNumber: mobile,
-                        //       );
-                        //     },
-                        //     onVerifyOtp: (mobile, otp) {
-                        //       return ref
-                        //           .read(addEmployeeNotifier.notifier)
-                        //           .employeeAddOtpRequest(
-                        //         phoneNumber: mobile,
-                        //         code: otp,
-                        //       );
-                        //     },
-                        //   ),
-                        // ),
-                        CommonContainer.fillingContainer(
-                          controller: _primaryMobileController,
-                          verticalDivider: true,
-                          isMobile: true, // mobile behavior +91 etc
-                          text: 'Mobile No',
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please Enter Primary Mobile Number';
-                            }
-                            return null;
-                          },
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: OwnerVerifyField(
+                            controller: _primaryMobileController,
+                            isLoading: state.isSendingOtp,
+                            isOtpVerifying: state.isVerifyingOtp,
+                            onSendOtp: (mobile) {
+                              final phone10 = _normalizeIndianPhone10(mobile);
+                              return ref
+                                  .read(shopCategoryNotifierProvider.notifier)
+                                  .shopAddNumberRequest(
+                                    type: "SHOP_PRIMARY_PHONE",
+                                    phoneNumber: phone10,
+                                  );
+                            },
+                            onVerifyOtp: (mobile, otp) {
+                              final phone10 = _normalizeIndianPhone10(mobile);
+                              return ref
+                                  .read(shopCategoryNotifierProvider.notifier)
+                                  .shopAddOtpRequest(
+                                    phoneNumber: phone10,
+                                    type: "SHOP_PRIMARY_PHONE",
+                                    code: otp,
+                                  );
+                            },
+                          ),
                         ),
+                        // CommonContainer.fillingContainer(
+                        //   controller: _primaryMobileController,
+                        //   verticalDivider: true,
+                        //   isMobile: true, // mobile behavior +91 etc
+                        //   text: 'Mobile No',
+                        //   keyboardType: TextInputType.phone,
+                        //   validator: (value) {
+                        //     if (value == null || value.isEmpty) {
+                        //       return 'Please Enter Primary Mobile Number';
+                        //     }
+                        //     return null;
+                        //   },
+                        // ),
                       ],
                       // CommonContainer.fillingContainer(
                       //   controller: _primaryMobileController,
@@ -1903,9 +1896,13 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
                         },
 
-                        validator: (v) => (v == null || v.isEmpty)
-                            ? 'Please select Open Time'
-                            : null,
+                        validator: (v) {
+                          if (isEditFromAboutMe)
+                            return null; // ✅ skip validation
+                          return (v == null || v.isEmpty)
+                              ? 'Please select Open Time'
+                              : null;
+                        },
                       ),
                       const SizedBox(height: 25),
                       Text(
@@ -1949,13 +1946,17 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           );
 
                           if (picked != null) {
-                            _openTimeController.text = picked.format(context);
-                            setState(() => _openTod = picked);
+                            _closeTimeController.text = picked.format(context);
+                            setState(() => _closeTod = picked);
                           }
                         },
-                        validator: (v) => (v == null || v.isEmpty)
-                            ? 'Please select Close Time'
-                            : null,
+                        validator: (v) {
+                          if (isEditFromAboutMe)
+                            return null; // ✅ skip validation
+                          return (v == null || v.isEmpty)
+                              ? 'Please select Close Time'
+                              : null;
+                        },
                       ),
                       if (_timeErrorText != null)
                         Padding(
@@ -1981,9 +1982,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         verticalDivider: true,
                         text: 'Email Id',
                         validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Email required';
-                          }
+                          if (isEditFromAboutMe)
+                            return null; // ✅ skip validation
+                          if (v == null || v.isEmpty) return 'Email required';
                           if (!RegExp(
                             r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
                           ).hasMatch(v)) {
@@ -1991,6 +1992,18 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
                           return null;
                         },
+
+                        // validator: (v) {
+                        //   if (v == null || v.isEmpty) {
+                        //     return 'Email required';
+                        //   }
+                        //   if (!RegExp(
+                        //     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                        //   ).hasMatch(v)) {
+                        //     return 'Enter valid email';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       SizedBox(height: 25),
                       // if (widget.isService ??
@@ -2138,15 +2151,24 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       SizedBox(height: 30),
                       CommonContainer.button(
                         buttonColor: AppColor.black,
+
                         onTap: () async {
                           FocusScope.of(context).unfocus();
+
+                          final bool isEditFromAboutMe =
+                              widget.pages == "AboutMeScreens";
+
+                          // ✅ Only register flow should validate
+                          if (!isEditFromAboutMe) {
+                            if (!_validateAll()) return;
+                          }
 
                           final bool isServiceFlow = widget.isService ?? false;
                           final String type = isServiceFlow
                               ? 'service'
                               : 'product';
 
-                          // GPS handling
+                          // GPS parsing
                           final gpsText = _gpsController.text.trim();
                           double latitude = 0.0;
                           double longitude = 0.0;
@@ -2157,53 +2179,85 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             longitude = double.tryParse(parts[1].trim()) ?? 0.0;
                           }
 
-                          // -----------------------------
-                          // DOOR DELIVERY HANDLING
-                          // -----------------------------
+                          // door delivery
                           bool isDoorDeliveryEnabled = false;
-
                           if (!isServiceFlow) {
-                            // PRODUCT flow → must validate dropdown
                             final doorDeliveryValue = _doorDeliveryController
                                 .text
                                 .trim();
-
                             if (doorDeliveryValue.isEmpty) {
                               AppSnackBar.error(
                                 context,
                                 'Please select Door Delivery',
                               );
-                              return; // stop flow
+                              return;
                             }
-
                             isDoorDeliveryEnabled = doorDeliveryValue == 'Yes';
-                            print('Door Delivery: $isDoorDeliveryEnabled');
-                          } else {
-                            // SERVICE flow → always false, no validation
-                            isDoorDeliveryEnabled = false;
                           }
 
                           // owner image
                           final File? ownerFile = _pickedImage == null
                               ? null
                               : File(_pickedImage!.path);
+
                           final weeklyHoursText =
                               "${_openTimeController.text.trim()} - ${_closeTimeController.text.trim()}";
 
-                          // 🔹 Phone values
+                          final String primaryPhoneToSend = _toE164India(
+                            _primaryMobileController.text,
+                          );
+                          final String alternatePhoneToSend = _toE164India(
+                            _whatsappController.text,
+                          );
 
-                          final String primaryPhoneToSend = isEditFromAboutMe
-                              ? _primaryMobileController.text
-                                    .trim() // AboutMe edit → no +91
-                              : _withCountryCode(
-                                  _primaryMobileController.text,
-                                ); // Register → add +91
+                          // ✅ VERIFIED CHECK FIX (OTP or Pref token)
+                          // ✅ OTP verified required ONLY in register flow
+                          if (!isEditFromAboutMe) {
+                            final shopState = ref.read(
+                              shopCategoryNotifierProvider,
+                            );
+                            final savedToken =
+                                await AppPrefs.getVerificationToken();
 
-                          final String alternatePhoneToSend = isEditFromAboutMe
-                              ? _whatsappController.text.trim()
-                              : _withCountryCode(_whatsappController.text);
+                            final isVerified =
+                                (shopState
+                                        .shopNumberOtpResponse
+                                        ?.data
+                                        ?.verified ==
+                                    true) ||
+                                (savedToken != null && savedToken.isNotEmpty);
 
-                          // API CALL
+                            if (!isVerified) {
+                              AppSnackBar.error(
+                                context,
+                                "Please verify Primary Mobile Number",
+                              );
+                              return;
+                            }
+                          }
+
+                          // final shopState = ref.read(
+                          //   shopCategoryNotifierProvider,
+                          // );
+                          // final savedToken =
+                          //     await AppPrefs.getVerificationToken();
+                          //
+                          // final isVerified =
+                          //     (shopState
+                          //             .shopNumberOtpResponse
+                          //             ?.data
+                          //             ?.verified ==
+                          //         true) ||
+                          //     (savedToken != null && savedToken.isNotEmpty);
+                          //
+                          // if (!isVerified) {
+                          //   AppSnackBar.error(
+                          //     context,
+                          //     "Please verify Primary Mobile Number",
+                          //   );
+                          //   return;
+                          // }
+
                           final response = await ref
                               .read(shopCategoryNotifierProvider.notifier)
                               .shopCategoryInfo(
@@ -2214,10 +2268,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     .trim(),
                                 addressTa: addressTamilNameController.text
                                     .trim(),
-                                // alternatePhone: _whatsappController.text.trim(),
                                 alternatePhone: alternatePhoneToSend,
                                 primaryPhone: primaryPhoneToSend,
-
                                 category: categorySlug,
                                 contactEmail: _emailController.text.trim(),
                                 descriptionEn: _descriptionEnglishController
@@ -2230,8 +2282,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     .trim(),
                                 gpsLatitude: latitude,
                                 gpsLongitude: longitude,
-                                // primaryPhone: _primaryMobileController.text
-                                //     .trim(),
                                 subCategory: subCategorySlug,
                                 tamilName: tamilNameController.text.trim(),
                                 weeklyHours: weeklyHoursText,
@@ -2261,6 +2311,143 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
                         },
 
+                        // onTap: () async {
+                        //   FocusScope.of(context).unfocus();
+                        //
+                        //   final bool isServiceFlow = widget.isService ?? false;
+                        //   final String type = isServiceFlow
+                        //       ? 'service'
+                        //       : 'product';
+                        //
+                        //   // GPS handling
+                        //   final gpsText = _gpsController.text.trim();
+                        //   double latitude = 0.0;
+                        //   double longitude = 0.0;
+                        //
+                        //   if (gpsText.isNotEmpty && gpsText.contains(',')) {
+                        //     final parts = gpsText.split(',');
+                        //     latitude = double.tryParse(parts[0].trim()) ?? 0.0;
+                        //     longitude = double.tryParse(parts[1].trim()) ?? 0.0;
+                        //   }
+                        //
+                        //   // -----------------------------
+                        //   // DOOR DELIVERY HANDLING
+                        //   // -----------------------------
+                        //   bool isDoorDeliveryEnabled = false;
+                        //
+                        //   if (!isServiceFlow) {
+                        //     // PRODUCT flow → must validate dropdown
+                        //     final doorDeliveryValue = _doorDeliveryController
+                        //         .text
+                        //         .trim();
+                        //
+                        //     if (doorDeliveryValue.isEmpty) {
+                        //       AppSnackBar.error(
+                        //         context,
+                        //         'Please select Door Delivery',
+                        //       );
+                        //       return; // stop flow
+                        //     }
+                        //
+                        //     isDoorDeliveryEnabled = doorDeliveryValue == 'Yes';
+                        //     print('Door Delivery: $isDoorDeliveryEnabled');
+                        //   } else {
+                        //     // SERVICE flow → always false, no validation
+                        //     isDoorDeliveryEnabled = false;
+                        //   }
+                        //
+                        //   // owner image
+                        //   final File? ownerFile = _pickedImage == null
+                        //       ? null
+                        //       : File(_pickedImage!.path);
+                        //   final weeklyHoursText =
+                        //       "${_openTimeController.text.trim()} - ${_closeTimeController.text.trim()}";
+                        //
+                        //   // 🔹 Phone values
+                        //
+                        //   final String primaryPhoneToSend = _toE164India(
+                        //     _primaryMobileController.text,
+                        //   );
+                        //   final String alternatePhoneToSend = _toE164India(
+                        //     _whatsappController.text,
+                        //   );
+                        //
+                        //   final shopState = ref.read(shopCategoryNotifierProvider);
+                        //   final isVerified = shopState.shopNumberOtpResponse?.data?.verified == true;
+                        //
+                        //   if (!isVerified) {
+                        //     AppSnackBar.error(context, "Please verify Primary Mobile Number");
+                        //     return;
+                        //   }
+                        //
+                        //   // final String primaryPhoneToSend = isEditFromAboutMe
+                        //   //     ? _primaryMobileController.text
+                        //   //           .trim() // AboutMe edit → no +91
+                        //   //     : _withCountryCode(
+                        //   //         _primaryMobileController.text,
+                        //   //       ); // Register → add +91
+                        //   //
+                        //   // final String alternatePhoneToSend = isEditFromAboutMe
+                        //   //     ? _whatsappController.text.trim()
+                        //   //     : _withCountryCode(_whatsappController.text);
+                        //
+                        //   // API CALL
+                        //   final response = await ref
+                        //       .read(shopCategoryNotifierProvider.notifier)
+                        //       .shopCategoryInfo(
+                        //         shopId: widget.shopId,
+                        //         ownerImageFile: ownerFile,
+                        //         type: type,
+                        //         addressEn: _addressEnglishController.text
+                        //             .trim(),
+                        //         addressTa: addressTamilNameController.text
+                        //             .trim(),
+                        //         // alternatePhone: _whatsappController.text.trim(),
+                        //         alternatePhone: alternatePhoneToSend,
+                        //         primaryPhone: primaryPhoneToSend,
+                        //
+                        //         category: categorySlug,
+                        //         contactEmail: _emailController.text.trim(),
+                        //         descriptionEn: _descriptionEnglishController
+                        //             .text
+                        //             .trim(),
+                        //         descriptionTa: descriptionTamilController.text
+                        //             .trim(),
+                        //         doorDelivery: isDoorDeliveryEnabled,
+                        //         englishName: _shopNameEnglishController.text
+                        //             .trim(),
+                        //         gpsLatitude: latitude,
+                        //         gpsLongitude: longitude,
+                        //         // primaryPhone: _primaryMobileController.text
+                        //         //     .trim(),
+                        //         subCategory: subCategorySlug,
+                        //         tamilName: tamilNameController.text.trim(),
+                        //         weeklyHours: weeklyHoursText,
+                        //       );
+                        //
+                        //   final newState = ref.read(
+                        //     shopCategoryNotifierProvider,
+                        //   );
+                        //
+                        //   if (newState.error != null &&
+                        //       newState.error!.isNotEmpty) {
+                        //     AppSnackBar.error(context, newState.error!);
+                        //   } else if (response != null) {
+                        //     if (widget.pages == 'AboutMeScreens') {
+                        //       Navigator.pop(context, true);
+                        //     } else {
+                        //       context.pushNamed(
+                        //         AppRoutes.shopPhotoInfo,
+                        //         extra: 'shopCategory',
+                        //       );
+                        //     }
+                        //   } else {
+                        //     AppSnackBar.error(
+                        //       context,
+                        //       "Unexpected error, please try again",
+                        //     );
+                        //   }
+                        // },
                         text: state.isLoading
                             ? ThreeDotsLoader()
                             : Text(

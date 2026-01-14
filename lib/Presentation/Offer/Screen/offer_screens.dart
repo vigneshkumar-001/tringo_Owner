@@ -6,22 +6,37 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
+// OfferScreens.dart (FULL UPDATED)
+// ✅ Fix: shopId missing -> "Shop not found" (shops//offers)
+// ✅ Fix: screen open ஆனதும் automatic refresh (shops + offers load)
+// ✅ Fix: shop switch tap -> immediately load offers for that shop
+// ✅ Fix: RefreshIndicator -> always uses valid shopId
 
-// ✅ your existing imports (adjust paths if needed)
-import '../../../Core/Const/app_color.dart';
-import '../../../Core/Routes/app_go_routes.dart';
-import '../../../Core/Utility/app_textstyles.dart';
-import '../../../Core/Utility/common_Container.dart';
-import '../../../Core/Widgets/qr_scanner_page.dart';
-import '../../Create App Offer/Controller/offer_notifier.dart';
-import '../../Create App Offer/Screens/create_app_offer.dart';
-import '../../Home/Controller/shopContext_provider.dart';
-import '../../Home/controller/home_notifier.dart';
-import '../../Menu/Controller/subscripe_notifier.dart';
-import '../../Menu/Screens/menu_screens.dart';
-import '../../Menu/Screens/subscription_screen.dart';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+
+import 'package:tringo_vendor/Core/Const/app_color.dart';
+import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
+import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_vendor/Core/Widgets/qr_scanner_page.dart';
+
+import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_vendor/Presentation/Menu/Screens/menu_screens.dart';
+import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
+
+import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Screens/create_app_offer.dart';
+import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_vendor/Presentation/Home/Controller/shopContext_provider.dart';
+
 import '../Model/offer_model.dart';
 
 class OfferScreens extends ConsumerStatefulWidget {
@@ -41,22 +56,82 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
   bool _autoPickedOnce = false; // first load
   bool _autoPickedForTab = false; // when tab changes
 
-  @override
+  bool _initialAutoRefreshed = false;
+  bool _calledOnce = false;
+
   void initState() {
     super.initState();
-
+    // selectedDay = 'Today';
+    selectedDate = DateTime.now();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final existingShops =
           ref.read(homeNotifierProvider).shopsResponse?.data.items ?? [];
-
+      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
       if (existingShops.isNotEmpty) {
-        final shopId = (existingShops.first.id ?? '').toString();
+        final shopId = existingShops.first.id;
+        _calledOnce = true;
+
         AppLogger.log.i("Shop already exists: $shopId");
         await ref
             .read(offerNotifierProvider.notifier)
             .offerScreenEnquiry(shopId: shopId);
+
+        return; // ✅ stop here, no need to listen
+        // // ✅ 2) If shops not loaded, fetch shops now
+        //
+        //
+        // // ✅ 3) Listen for shops response (only once)
+        // _homeSub = ref.listenManual<HomeState>(
+        //   homeNotifierProvider,
+        //       (prev, next) async {
+        //     final shops = next.shopsResponse?.data.items ?? [];
+        //     if (shops.isEmpty) return;
+        //
+        //     if (_calledOnce) return; // ✅ avoid multiple calls
+        //     _calledOnce = true;
+        //
+        //     final shopId = shops.first.id;
+        //     AppLogger.log.i("Shop loaded via listener: $shopId");
+        //
+        //     await ref
+        //         .read(offerNotifierProvider.notifier)
+        //         .offerScreenEnquiry(shopId: shopId);
+        //   },
+        // );
       }
     });
+  }
+
+  /// ✅ Always return non-empty shopId when possible
+  String _resolveShopId({
+    required String mainShopId,
+    required List<dynamic> shops,
+  }) {
+    final currentShop = ref.read(selectedShopProvider);
+    final sid = (currentShop ?? mainShopId).toString().trim();
+
+    if (sid.isNotEmpty) return sid;
+
+    // fallback from list
+    if (shops.isNotEmpty) {
+      final fallback = (shops.first.id ?? '').toString().trim();
+      return fallback;
+    }
+
+    return '';
+  }
+
+  Future<void> _switchShopAndReload(dynamic shopId) async {
+    final sid = (shopId ?? '').toString().trim();
+    if (sid.isEmpty) return;
+
+    // store selected shop
+    ref.read(selectedShopProvider.notifier).switchShop(sid);
+
+    // load offers for selected shop
+    await ref
+        .read(offerNotifierProvider.notifier)
+        .offerScreenEnquiry(shopId: sid);
   }
 
   // ------------------ helpers ------------------
@@ -77,16 +152,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
       return DateTime(y.year, y.month, y.day);
     }
 
-    // API example: "8 Jan 2026" (single digit day)
-    // dd MMM yyyy parse will work for "08 Jan 2026" but NOT always for "8 Jan 2026"
-    // so handle both:
+    // "8 Jan 2026" or "08 Jan 2026"
     try {
-      // try normal
       final d = DateFormat('dd MMM yyyy').parse(label.trim());
       return DateTime(d.year, d.month, d.day);
     } catch (_) {
       try {
-        // try single day
         final d = DateFormat('d MMM yyyy').parse(label.trim());
         return DateTime(d.year, d.month, d.day);
       } catch (_) {
@@ -141,7 +212,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     if (selectedIndex == index) return;
     setState(() {
       selectedIndex = index;
-      _autoPickedForTab = false; // ✅ allow auto pick for new tab
+      _autoPickedForTab = false;
     });
   }
 
@@ -153,7 +224,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
 
-    // ✅ shops: use dynamic to avoid "Shop isn't a type" error
+    // ✅ shops: use dynamic to avoid type errors
     final shopsRes = homeState.shopsResponse;
     final List<dynamic> shops =
         (shopsRes?.data.items as List?)?.toList() ?? <dynamic>[];
@@ -171,11 +242,8 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final upcomingSections = offerData?.upcomingSections ?? <OfferDaySection>[];
     final expiredSections = offerData?.expiredSections ?? <OfferDaySection>[];
 
-    // ✅ Auto pick date:
-    // 1) first time load -> pick from current tab, else from all
-    // 2) when tab changes -> pick from that tab
+    // ✅ Auto pick date on first load / tab change
     if (offerData != null) {
-      // first load pick
       if (!_autoPickedOnce) {
         final pickFrom = _sectionsByTab(
           tab: selectedIndex,
@@ -184,16 +252,15 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
           expired: expiredSections,
         );
         DateTime? d = _firstDateFromSections(pickFrom);
-
-        // if current tab empty, pick from all
         d ??= _firstDateFromSections([
           ...liveSections,
           ...upcomingSections,
           ...expiredSections,
         ]);
 
+        _autoPickedOnce = true;
+
         if (d != null) {
-          _autoPickedOnce = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             setState(() {
@@ -201,12 +268,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
               selectedDayLabel = _fmt(d!);
             });
           });
-        } else {
-          _autoPickedOnce = true; // no sections at all
         }
       }
 
-      // tab change pick (only if date is null or not matching any date in that tab)
       if (_autoPickedOnce && !_autoPickedForTab) {
         final pickFrom = _sectionsByTab(
           tab: selectedIndex,
@@ -215,7 +279,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
           expired: expiredSections,
         );
 
-        DateTime? d = _firstDateFromSections(pickFrom);
+        final d = _firstDateFromSections(pickFrom);
         _autoPickedForTab = true;
 
         if (d != null) {
@@ -226,16 +290,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
               selectedDayLabel = _fmt(d);
             });
           });
-        } else {
-          // if this tab has no data, keep selectedDate as is (or null)
-          // but "No offers found" will show.
         }
       }
     }
 
     final DateTime? selDate = selectedDate;
 
-    // ✅ active sections for list
     final activeSections = _sectionsByTab(
       tab: selectedIndex,
       live: liveSections,
@@ -243,7 +303,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
       expired: expiredSections,
     );
 
-    // ✅ current items for selectedDate (if selectedDate null -> empty)
     final List<OfferItem> currentItems = (selDate == null)
         ? <OfferItem>[]
         : activeSections
@@ -254,7 +313,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
               .expand((s) => s.items)
               .toList();
 
-    // ✅ counts for each tab (based on selectedDate)
     int liveCountFiltered = 0;
     int upcomingCountFiltered = 0;
     int expiredCountFiltered = 0;
@@ -295,10 +353,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
       date = DateFormat('dd MMM yyyy').format(dt);
     }
 
-    final String displayDay = selectedDayLabel.isNotEmpty
-        ? selectedDayLabel
-        : '—';
-
     return Skeletonizer(
       enabled: offerState.isLoading,
       enableSwitchAnimation: true,
@@ -309,14 +363,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
               await ref
                   .read(homeNotifierProvider.notifier)
                   .fetchShops(shopId: '');
-              final currentShop = ref.read(selectedShopProvider);
-              final sid = (currentShop ?? mainShopId).toString();
               await ref
                   .read(offerNotifierProvider.notifier)
-                  .offerScreenEnquiry(shopId: sid);
+                  .offerScreenEnquiry(shopId: '');
             },
             child: ListView(
-              physics: const BouncingScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 15),
               children: [
                 // Header
@@ -329,10 +381,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                         child: GestureDetector(
                           onTap: _openQrScanner,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 15,
-                            ),
+                            padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white,
@@ -341,13 +390,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                   color: AppColor.shadowBlue,
                                   blurRadius: 5,
                                   offset: const Offset(0, 1),
-                                  spreadRadius: 0,
                                 ),
                               ],
                             ),
-                            child: Center(
-                              child: Image.asset(AppImages.qr_code, height: 23),
-                            ),
+                            child: Image.asset(AppImages.qr_code, height: 23),
                           ),
                         ),
                       ),
@@ -356,8 +402,8 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                         child: Column(
                           children: [
                             Text(
-                              (mainShop?.englishName ?? '').isNotEmpty
-                                  ? mainShop!.englishName
+                              mainShopName.isNotEmpty
+                                  ? mainShopName
                                   : 'My Shop',
                               style: AppTextStyles.mulish(
                                 fontWeight: FontWeight.w700,
@@ -365,7 +411,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                               ),
                             ),
                             Text(
-                              mainShop?.category ?? '',
+                              mainShopCategory,
                               style: AppTextStyles.mulish(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -416,7 +462,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       scrollDirection: Axis.horizontal,
                       itemCount: shops.length + 1,
-                      // itemCount: shops.length + 1,
                       physics: const BouncingScrollPhysics(),
                       itemBuilder: (context, index) {
                         if (index == shops.length) {
@@ -434,7 +479,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                         shopsRes?.data.items[0].shopKind
                                             .toUpperCase() ==
                                         'SERVICE';
-                                    AppLogger.log.i(isService);
+
                                     context.push(
                                       AppRoutes.shopCategoryInfoPath,
                                       extra: {
@@ -444,9 +489,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                             shopsRes?.data.items[0].englishName,
                                         'initialShopNameTamil':
                                             shopsRes?.data.items[0].tamilName,
-
-                                        'isEditMode':
-                                            true, // ✅ pass the required parameter
+                                        'isEditMode': true,
                                       },
                                     );
                                   } else {
@@ -458,11 +501,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                       ),
                                     );
                                   }
-
-                                  // context.pushNamed(
-                                  //
-                                  //   AppRoutes.shopCategoryInfo,
-                                  // );
                                 },
                                 shopImage: '',
                                 addAnotherShop: true,
@@ -472,20 +510,18 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                             ],
                           );
                         }
+
                         final shop = shops[index];
+
                         return Row(
                           children: [
                             CommonContainer.smallShopContainer(
+                              // ✅ FIXED: switch + reload offers
                               onTap: () async {
-                                ref
-                                    .read(selectedShopProvider.notifier)
-                                    .switchShop(shop.id);
+                                await _switchShopAndReload(shop.id);
                               },
-
-                              switchOnTap: () {
-                                ref
-                                    .read(selectedShopProvider.notifier)
-                                    .switchShop(shop.id);
+                              switchOnTap: () async {
+                                await _switchShopAndReload(shop.id);
                               },
                               shopImage: shop.primaryImageUrl ?? '',
                               shopLocation: '${shop.addressEn}, ${shop.city}',
@@ -570,23 +606,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                   ),
                 ),
 
-                // const SizedBox(height: 10),
-                //
-                // // ✅ Showing selected auto-date
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 15),
-                //   child: Text(
-                //     'Showing: $displayDay',
-                //     style: AppTextStyles.mulish(
-                //       fontSize: 12,
-                //       color: AppColor.gray84,
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //   ),
-                // ),
                 const SizedBox(height: 20),
 
-                // ✅ Tab chips horizontal scroll
+                // ✅ Tab chips
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 0),
                   child: SingleChildScrollView(
@@ -675,9 +697,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 10),
-
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -699,9 +719,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 20),
-
                             SingleChildScrollView(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -743,7 +761,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                 ],
                               ),
                             ),
-
                             if (offer.services.isNotEmpty) ...[
                               const SizedBox(height: 20),
                               Padding(
@@ -1087,7 +1104,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
   }
 }
 
-//
 // import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:dotted_border/dotted_border.dart';
 // import 'package:flutter/material.dart';

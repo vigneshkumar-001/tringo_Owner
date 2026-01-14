@@ -12,6 +12,8 @@ import 'app_textstyles.dart';
 
 enum DatePickMode { none, single, range }
 
+enum DateSingleType { normal, dob18Plus }
+
 class CommonContainer {
   static topLeftArrow({required VoidCallback onTap, bool isMenu = false}) {
     return Row(
@@ -1309,6 +1311,7 @@ class CommonContainer {
 
     // 🔹 New
     DatePickMode datePickMode = DatePickMode.none,
+    DateSingleType singleType = DateSingleType.normal,
     bool styledRangeText = false,
   }) {
     return FormField<String>(
@@ -1329,21 +1332,79 @@ class CommonContainer {
         String fmt(DateTime d) => '${dd(d.day)}-${dd(d.month)}-${d.year}';
 
         void _handleTap() async {
+          // if (datePickMode == DatePickMode.single) {
+          //   if (context == null) return;
+          //
+          //   final now = DateTime.now();
+          //   final maxDob = DateTime(
+          //     now.year - 18,
+          //     now.month,
+          //     now.day,
+          //   ); // 18 years completed
+          //
+          //   final picked = await showDatePicker(
+          //     context: context!,
+          //     initialDate: maxDob, // default = 18 years age
+          //     firstDate: DateTime(1900),
+          //     lastDate: maxDob, // ❌ below 18 not allowed
+          //     builder: (ctx, child) => Theme(
+          //       data: Theme.of(ctx).copyWith(
+          //         dialogBackgroundColor: AppColor.white,
+          //         colorScheme: ColorScheme.light(
+          //           primary: AppColor.skyBlue,
+          //           onPrimary: Colors.white,
+          //           onSurface: AppColor.black,
+          //         ),
+          //       ),
+          //       child: child!,
+          //     ),
+          //   );
+          //
+          //   if (picked != null) {
+          //     controller?.text =
+          //         '${picked.day.toString().padLeft(2, '0')}-'
+          //         '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+          //     state.didChange(controller?.text);
+          //   }
+          //   return;
+          // }
+
           if (datePickMode == DatePickMode.single) {
             if (context == null) return;
 
             final now = DateTime.now();
-            final maxDob = DateTime(
-              now.year - 18,
-              now.month,
-              now.day,
-            ); // 18 years completed
+
+            final DateTime firstDate = DateTime(1900);
+
+            final DateTime lastDate = (singleType == DateSingleType.dob18Plus)
+                ? DateTime(now.year - 18, now.month, now.day) // ✅ DOB மட்டும் 18+
+                : DateTime(2100); // ✅ மற்ற fields normal
+
+            final DateTime initialDate = () {
+              if (controller?.text.trim().isNotEmpty == true) {
+                try {
+                  final parts = controller!.text.trim().split('-');
+                  if (parts.length == 3) {
+                    final d = int.parse(parts[0]);
+                    final m = int.parse(parts[1]);
+                    final y = int.parse(parts[2]);
+                    final parsed = DateTime(y, m, d);
+                    if (parsed.isBefore(firstDate)) return firstDate;
+                    if (parsed.isAfter(lastDate)) return lastDate;
+                    return parsed;
+                  }
+                } catch (_) {}
+              }
+
+              if (singleType == DateSingleType.dob18Plus) return lastDate; // ✅ DOB default 18+
+              return now; // ✅ normal default today
+            }();
 
             final picked = await showDatePicker(
               context: context!,
-              initialDate: maxDob, // default = 18 years age
-              firstDate: DateTime(1900),
-              lastDate: maxDob, // ❌ below 18 not allowed
+              initialDate: initialDate,
+              firstDate: firstDate,
+              lastDate: lastDate,
               builder: (ctx, child) => Theme(
                 data: Theme.of(ctx).copyWith(
                   dialogBackgroundColor: AppColor.white,
@@ -1359,12 +1420,13 @@ class CommonContainer {
 
             if (picked != null) {
               controller?.text =
-                  '${picked.day.toString().padLeft(2, '0')}-'
+              '${picked.day.toString().padLeft(2, '0')}-'
                   '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
               state.didChange(controller?.text);
             }
             return;
           }
+
 
           // Single Date Picker
           // if (datePickMode == DatePickMode.single) {
@@ -1445,6 +1507,70 @@ class CommonContainer {
             return;
           }
 
+          if (datePickMode == DatePickMode.single) {
+            if (context == null) return;
+
+            final now = DateTime.now();
+
+            // ✅ normal vs DOB(18+) based on singleType
+            final DateTime firstDate = DateTime(1900);
+            final DateTime lastDate = (singleType == DateSingleType.dob18Plus)
+                ? DateTime(now.year - 18, now.month, now.day)
+                : DateTime(2100);
+
+            // ✅ initialDate
+            final DateTime initialDate = () {
+              if (controller?.text.trim().isNotEmpty == true) {
+                // Try parse dd-MM-yyyy from controller
+                try {
+                  final parts = controller!.text.trim().split('-');
+                  if (parts.length == 3) {
+                    final d = int.parse(parts[0]);
+                    final m = int.parse(parts[1]);
+                    final y = int.parse(parts[2]);
+                    final parsed = DateTime(y, m, d);
+                    // clamp to allowed range
+                    if (parsed.isBefore(firstDate)) return firstDate;
+                    if (parsed.isAfter(lastDate)) return lastDate;
+                    return parsed;
+                  }
+                } catch (_) {}
+              }
+
+              // default
+              if (singleType == DateSingleType.dob18Plus) {
+                return lastDate; // 18 years completed
+              }
+              return now;
+            }();
+
+            final picked = await showDatePicker(
+              context: context!,
+              initialDate: initialDate,
+              firstDate: firstDate,
+              lastDate: lastDate,
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  dialogBackgroundColor: AppColor.white,
+                  colorScheme: ColorScheme.light(
+                    primary: AppColor.skyBlue,
+                    onPrimary: Colors.white,
+                    onSurface: AppColor.black,
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+
+            if (picked != null) {
+              controller?.text =
+                  '${picked.day.toString().padLeft(2, '0')}-'
+                  '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+              state.didChange(controller?.text);
+            }
+            return;
+          }
+
           // Dropdown
           if (isDropdown && dropdownItems?.isNotEmpty == true) {
             if (context == null) return;
@@ -1465,6 +1591,90 @@ class CommonContainer {
             state.didChange(controller?.text); // sync to FormField
           }
         }
+
+        // void _handleTap() async {
+        //   // ✅ SINGLE DATE PICKER (Normal vs DOB18+)
+        //   if (datePickMode == DatePickMode.single) {
+        //     if (context == null) return;
+        //
+        //     final now = DateTime.now();
+        //
+        //     final DateTime firstDate = DateTime(1900);
+        //
+        //     final DateTime lastDate = (singleType == DateSingleType.dob18Plus)
+        //         ? DateTime(now.year - 18, now.month, now.day)
+        //         : DateTime(2100, 12, 31);
+        //
+        //     // ✅ initial date (existing value இருந்தா அதையே open பண்ணும்)
+        //     DateTime initialDate = now;
+        //     if (singleType == DateSingleType.dob18Plus) {
+        //       initialDate = lastDate; // default 18+
+        //     }
+        //
+        //     final txt = controller?.text.trim() ?? '';
+        //     if (txt.isNotEmpty) {
+        //       try {
+        //         final parts = txt.split('-'); // dd-MM-yyyy
+        //         if (parts.length == 3) {
+        //           final d = int.parse(parts[0]);
+        //           final m = int.parse(parts[1]);
+        //           final y = int.parse(parts[2]);
+        //           final parsed = DateTime(y, m, d);
+        //
+        //           if (parsed.isBefore(firstDate)) {
+        //             initialDate = firstDate;
+        //           } else if (parsed.isAfter(lastDate)) {
+        //             initialDate = lastDate;
+        //           } else {
+        //             initialDate = parsed;
+        //           }
+        //         }
+        //       } catch (_) {}
+        //     }
+        //
+        //     final picked = await showDatePicker(
+        //       context: context!,
+        //       initialDate: initialDate,
+        //       firstDate: firstDate,
+        //       lastDate: lastDate,
+        //       builder: (ctx, child) => Theme(
+        //         data: Theme.of(ctx).copyWith(
+        //           dialogBackgroundColor: AppColor.white,
+        //           colorScheme: ColorScheme.light(
+        //             primary: AppColor.skyBlue,
+        //             onPrimary: Colors.white,
+        //             onSurface: AppColor.black,
+        //           ),
+        //         ),
+        //         child: child!,
+        //       ),
+        //     );
+        //
+        //     if (picked != null) {
+        //       controller?.text =
+        //           '${picked.day.toString().padLeft(2, '0')}-'
+        //           '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+        //       state.didChange(controller?.text);
+        //     }
+        //     return;
+        //   }
+        //
+        //   // ✅ RANGE PICKER
+        //   if (datePickMode == DatePickMode.range) {
+        //     return;
+        //   }
+        //
+        //   // ✅ DROPDOWN
+        //   if (isDropdown && dropdownItems?.isNotEmpty == true) {
+        //     return;
+        //   }
+        //
+        //   // ✅ DEFAULT FIELD TAP (time picker etc.)
+        //   if (onFieldTap != null) {
+        //     await onFieldTap!();
+        //     state.didChange(controller?.text);
+        //   }
+        // }
 
         // void _handleTap() async {
         //   // Single Date Picker

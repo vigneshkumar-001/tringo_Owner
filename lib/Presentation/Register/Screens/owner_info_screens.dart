@@ -245,13 +245,12 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
 
                       /// ENGLISH NAME
                       CommonContainer.fillingContainer(
-                        text: 'English',
+                        text: '',
                         verticalDivider: true,
                         controller: englishNameController,
                         context: context,
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Enter English name'
-                            : null,
+                        validator: (v) =>
+                            v == null || v.trim().isEmpty ? 'Enter name' : null,
                       ),
 
                       //const SizedBox(height: 10),
@@ -312,7 +311,6 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                       //       },
                       //     ),
                       //   ),
-
                       const SizedBox(height: 30),
 
                       /// MOBILE NUMBER
@@ -379,19 +377,31 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                       const SizedBox(height: 10),
 
                       CommonContainer.fillingContainer(
+                        controller: dateOfBirthController,
                         isDOB: true,
                         verticalDivider: true,
-                        imagePath: AppImages.dob,
-                        imageWidth: 20,
-                        imageHight: 25,
-                        controller: dateOfBirthController,
-                        textFontWeight: FontWeight.w700,
-                        context: context,
                         datePickMode: DatePickMode.single,
+                        singleType:
+                            DateSingleType.dob18Plus, // ✅ 18+ restriction
+                        context: context,
+                        readOnly: true,
                         validator: (v) =>
-                            v == null || v.isEmpty ? 'DOB required' : null,
+                            v == null || v.isEmpty ? "Select DOB" : null,
                       ),
 
+                      // CommonContainer.fillingContainer(
+                      //   isDOB: true,
+                      //   verticalDivider: true,
+                      //   imagePath: AppImages.dob,
+                      //   imageWidth: 20,
+                      //   imageHight: 25,
+                      //   controller: dateOfBirthController,
+                      //   textFontWeight: FontWeight.w700,
+                      //   context: context,
+                      //   datePickMode: DatePickMode.single,
+                      //   validator: (v) =>
+                      //       v == null || v.isEmpty ? 'DOB required' : null,
+                      // ),
                       const SizedBox(height: 30),
 
                       /// GENDER

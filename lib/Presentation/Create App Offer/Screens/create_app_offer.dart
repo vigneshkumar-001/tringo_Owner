@@ -466,12 +466,21 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                         "Announcement Date",
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
                       ),
+
                       SizedBox(height: 10),
+
+                      // AnnouncementDateField(
+                      //   controller: _announcementDateController,
+                      //   // validator: (v) => v == null || v.isEmpty
+                      //   //     ? "Select announcement date"
+                      //   //     : null,
+                      // ),
                       CommonContainer.fillingContainer(
                         controller: _announcementDateController,
                         isDOB: true,
                         verticalDivider: true,
                         datePickMode: DatePickMode.single,
+                        singleType: DateSingleType.normal,
                         context: context,
                         imagePath: AppImages.dob,
                         imageWidth: 20,
@@ -480,7 +489,6 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                             ? "Select announcement date"
                             : null,
                       ),
-
                       SizedBox(height: 30),
 
                       CommonContainer.button(
@@ -524,3 +532,197 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     );
   }
 }
+
+// class AnnouncementDateField extends StatefulWidget {
+//   final TextEditingController controller;
+//   final String hintText;
+//   final String? label;
+//   final String dateFormat; // default: dd MMM yyyy
+//   final FormFieldValidator<String>? validator;
+//   final bool readOnly; // default: true
+//
+//   const AnnouncementDateField({
+//     super.key,
+//     required this.controller,
+//     this.hintText = '',
+//     this.label,
+//     this.dateFormat = 'dd MMM yyyy',
+//     this.validator,
+//     this.readOnly = true,
+//   });
+//
+//   @override
+//   State<AnnouncementDateField> createState() => _AnnouncementDateFieldState();
+// }
+//
+// class _AnnouncementDateFieldState extends State<AnnouncementDateField> {
+//   Future<void> _pickDate() async {
+//     FocusScope.of(context).unfocus();
+//
+//     final now = DateTime.now();
+//     final picked = await showDatePicker(
+//       context: context,
+//       initialDate: _tryParse(widget.controller.text) ?? now,
+//       firstDate: DateTime(2000),
+//       lastDate: DateTime(2100),
+//       helpText: 'Select announcement date',
+//
+//       // ✅ calendar popup white background
+//       builder: (context, child) {
+//         final base = Theme.of(context);
+//         return Theme(
+//           data: base.copyWith(
+//             dialogBackgroundColor: Colors.white,
+//
+//             // ✅ Flutter datepicker uses ColorScheme + DatePickerTheme
+//             colorScheme: base.colorScheme.copyWith(
+//               brightness: Brightness.light,
+//               primary: Colors.black, // selected day / buttons color
+//               onPrimary: Colors.white,
+//               surface: Colors.white,
+//               onSurface: Colors.black,
+//             ),
+//
+//             datePickerTheme: const DatePickerThemeData(
+//               backgroundColor: Colors.white, // whole calendar bg
+//             ),
+//
+//             textButtonTheme: TextButtonThemeData(
+//               style: TextButton.styleFrom(
+//                 foregroundColor: Colors.black, // OK / CANCEL
+//               ),
+//             ),
+//           ),
+//           child: child!,
+//         );
+//       },
+//     );
+//
+//     if (picked == null) return;
+//
+//     final formatted = DateFormat(widget.dateFormat).format(picked);
+//     setState(() {
+//       widget.controller.text = formatted;
+//     });
+//   }
+//
+//   DateTime? _tryParse(String v) {
+//     if (v.trim().isEmpty) return null;
+//     try {
+//       return DateFormat(widget.dateFormat).parseStrict(v.trim());
+//     } catch (_) {
+//       return null;
+//     }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return FormField<String>(
+//       validator: widget.validator,
+//       autovalidateMode: AutovalidateMode.onUserInteraction,
+//       builder: (state) {
+//         final hasError = state.hasError;
+//
+//         final hasValue = widget.controller.text.trim().isNotEmpty;
+//
+//         return Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             if (widget.label != null) ...[
+//               Text(
+//                 widget.label!,
+//                 style: const TextStyle(
+//                   fontSize: 14,
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+//               const SizedBox(height: 8),
+//             ],
+//
+//             GestureDetector(
+//               onTap: _pickDate,
+//               child: AbsorbPointer(
+//                 absorbing: widget.readOnly, // ✅ keyboard open ஆகாது
+//                 child: TextFormField(
+//                   controller: widget.controller,
+//                   readOnly: true,
+//                   onChanged: (v) => state.didChange(v),
+//                   decoration: InputDecoration(
+//                     hintText: widget.hintText,
+//
+//                     // ✅ icon RIGHT side
+//                     prefixIcon: null,
+//                     suffixIcon: Row(
+//                       mainAxisSize: MainAxisSize.min,
+//                       children: [
+//                         // ✅ clear icon (only after selected)
+//                         // if (hasValue)
+//                         //   IconButton(
+//                         //     icon: const Icon(Icons.close),
+//                         //     onPressed: () {
+//                         //       widget.controller.clear();
+//                         //       state.didChange('');
+//                         //       setState(() {});
+//                         //     },
+//                         //   ),
+//
+//                         // ✅ calendar icon always visible right side
+//                         Padding(
+//                           padding: EdgeInsets.only(right: 6),
+//                           child: Image.asset(AppImages.dob, height: 20),
+//                           // Icon(Icons.calendar_month),
+//                         ),
+//                       ],
+//                     ),
+//
+//                     filled: true,
+//                     fillColor: const Color(0xFFF5F5F5),
+//                     contentPadding: const EdgeInsets.symmetric(
+//                       horizontal: 14,
+//                       vertical: 14,
+//                     ),
+//
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(16),
+//                       borderSide: BorderSide(
+//                         color: hasError ? Colors.red : Colors.transparent,
+//                         width: 1.5,
+//                       ),
+//                     ),
+//                     enabledBorder: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(16),
+//                       borderSide: BorderSide(
+//                         color: hasError ? Colors.red : Colors.transparent,
+//                         width: 1.5,
+//                       ),
+//                     ),
+//                     focusedBorder: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(16),
+//                       borderSide: BorderSide(
+//                         color: hasError ? Colors.red : Colors.black,
+//                         width: 2,
+//                       ),
+//                     ),
+//                     errorText: null,
+//                   ),
+//                   inputFormatters: [
+//                     FilteringTextInputFormatter.singleLineFormatter,
+//                   ],
+//                 ),
+//               ),
+//             ),
+//
+//             if (hasError)
+//               Padding(
+//                 padding: const EdgeInsets.only(left: 12, top: 6),
+//                 child: Text(
+//                   state.errorText ?? '',
+//                   style: const TextStyle(color: Colors.red, fontSize: 12),
+//                 ),
+//               ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+// }
