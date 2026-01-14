@@ -23,6 +23,7 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
+import '../../../Core/Utility/location_helper.dart';
 import '../../../Core/Utility/map_picker_page.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
 import '../../../Core/Widgets/owner_verify_feild.dart';
@@ -34,6 +35,7 @@ class GpsInputField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final VoidCallback onMapTap;
+  final VoidCallback onSearchTap; // ✅ NEW
   final String hintText;
 
   const GpsInputField({
@@ -41,7 +43,8 @@ class GpsInputField extends StatelessWidget {
     required this.controller,
     required this.isLoading,
     required this.onMapTap,
-    this.hintText = 'Enter lat,lng or pick from map',
+    required this.onSearchTap, // ✅ NEW
+    this.hintText = 'Enter lat,lng or search place',
   });
 
   @override
@@ -72,6 +75,16 @@ class GpsInputField extends StatelessWidget {
               ),
             ),
           ),
+          //
+          // // ✅ SEARCH button (new)
+          // InkWell(
+          //   onTap: isLoading ? null : onSearchTap,
+          //   borderRadius: BorderRadius.circular(14),
+          //   child: const Padding(
+          //     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          //     child: Icon(Icons.search, size: 20, color: AppColor.resendOtp),
+          //   ),
+          // ),
 
           // ✅ divider
           Container(
@@ -91,9 +104,9 @@ class GpsInputField extends StatelessWidget {
             ),
           ),
 
-          // ✅ RIGHT: map button only
+          // ✅ RIGHT: map button
           InkWell(
-            onTap: isLoading ? null : onMapTap,
+            onTap: isLoading ? null : onSearchTap,
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
@@ -108,7 +121,7 @@ class GpsInputField extends StatelessWidget {
                     )
                   else ...[
                     const Icon(
-                      Icons.location_on,
+                      Icons.search,
                       size: 18,
                       color: AppColor.resendOtp,
                     ),
@@ -378,6 +391,318 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> _openGoogleSearchBottomSheet() async {
+    final picked = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (ctx) {
+        final TextEditingController q = TextEditingController();
+        bool loading = false;
+        List<Map<String, dynamic>> results = [];
+
+        Future<void> doSearch(
+          String text,
+          void Function(void Function()) setSheetState,
+        ) async {
+          final query = text.trim();
+          if (query.isEmpty) {
+            setSheetState(() => results = []);
+            return;
+          }
+
+          setSheetState(() => loading = true);
+          try {
+            final r = await LocationHelper.searchPlaces(
+              query,
+              radiusMeters: 10000,
+            );
+            setSheetState(() => results = r);
+          } finally {
+            setSheetState(() => loading = false);
+          }
+        }
+
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.8,
+              minChildSize: 0.4,
+              maxChildSize: 0.95,
+              expand: false,
+              snap: true,
+              snapSizes: const [0.4, 0.6, 0.95],
+              builder: (context, scrollController) {
+                final size = MediaQuery.of(context).size;
+                final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+                // Adjust sizing for tablets/large screens
+                final isTablet = size.shortestSide >= 600;
+                final horizontalPadding = isTablet ? 24.0 : 16.0;
+
+                return AnimatedPadding(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(bottom: bottomInset),
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: isTablet ? 600 : double.infinity,
+                    ),
+                    margin: isTablet
+                        ? EdgeInsets.symmetric(
+                            horizontal: (size.width - 600) / 2,
+                          )
+                        : EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Drag handle
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12, bottom: 8),
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+
+                        // Header with title
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Search Location',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(ctx),
+                                tooltip: 'Close',
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Search field
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                            vertical: 8,
+                          ),
+                          child: TextField(
+                            controller: q,
+                            autofocus: true,
+                            textInputAction: TextInputAction.search,
+                            decoration: InputDecoration(
+                              hintText: 'Search for a place...',
+                              prefixIcon: const Icon(Icons.search, size: 22),
+                              suffixIcon: loading
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(14),
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                        ),
+                                      ),
+                                    )
+                                  : q.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, size: 20),
+                                      onPressed: () {
+                                        q.clear();
+                                        setSheetState(() => results = []);
+                                      },
+                                      tooltip: 'Clear',
+                                    )
+                                  : null,
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            onChanged: (v) {
+                              setSheetState(() {});
+                              doSearch(v, setSheetState);
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Results list
+                        Flexible(
+                          child: results.isEmpty
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(32),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          loading
+                                              ? Icons.search
+                                              : Icons.location_on_outlined,
+                                          size: 48,
+                                          color: Colors.grey.shade400,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          loading
+                                              ? 'Searching...'
+                                              : 'Type to search for places',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 16,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : ListView.separated(
+                                  controller: scrollController,
+                                  padding: EdgeInsets.only(
+                                    left: horizontalPadding,
+                                    right: horizontalPadding,
+                                    bottom:
+                                        16 +
+                                        MediaQuery.of(context).padding.bottom,
+                                  ),
+                                  itemCount: results.length,
+                                  separatorBuilder: (_, __) =>
+                                      const Divider(height: 1, indent: 16),
+                                  itemBuilder: (_, i) {
+                                    final r = results[i];
+                                    final lat = r['lat'];
+                                    final lng = r['lng'];
+                                    final distM =
+                                        r['distanceMeters'] as double?;
+                                    final distKm = distM == null
+                                        ? ''
+                                        : '${(distM / 1000).toStringAsFixed(1)} km away';
+
+                                    return ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 0,
+                                            vertical: 8,
+                                          ),
+                                      leading: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(
+                                            context,
+                                          ).primaryColor.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.place,
+                                          color: Theme.of(context).primaryColor,
+                                          size: 22,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        (r['description'] ?? '').toString(),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      subtitle: distKm.isNotEmpty
+                                          ? Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4,
+                                              ),
+                                              child: Text(
+                                                distKm,
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                      trailing: const Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16,
+                                      ),
+                                      onTap: () => Navigator.pop(ctx, r),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+
+    if (picked == null) return;
+
+    final lat = (picked['lat'] as num).toDouble();
+    final lng = (picked['lng'] as num).toDouble();
+    final desc = (picked['description'] ?? '').toString();
+
+    setState(() {
+      _gpsController.text =
+          '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+      _gpsFetched = true;
+    });
+
+    AppLogger.log.i('✅ Selected place: $desc');
+    AppLogger.log.i('✅ LatLng: $lat, $lng');
   }
 
   void _showCategoryBottomSheet(
@@ -1635,10 +1960,14 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       GpsInputField(
                         controller: _gpsController,
                         isLoading: _isFetchingGps,
+                        onSearchTap: () async {
+                          await _openGoogleSearchBottomSheet();
+                        },
                         onMapTap: () async {
-                          setState(() => _isFetchingGps = true);
-                          await _openGoogleMapsFromGpsField();
-                          if (mounted) setState(() => _isFetchingGps = false);
+                          _openGoogleSearchBottomSheet();
+                          // setState(() => _isFetchingGps = true);
+                          // await _openGoogleMapsFromGpsField();
+                          // if (mounted) setState(() => _isFetchingGps = false);
                         },
                       ),
 
