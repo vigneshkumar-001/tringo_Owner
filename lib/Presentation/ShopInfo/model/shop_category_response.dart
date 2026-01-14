@@ -36,6 +36,7 @@ class ShopDetails {
   final double? gpsLatitude;
   final double? gpsLongitude;
 
+  final String? primaryPhoneVerificationToken;
   final String? primaryPhone;
   final String? alternatePhone;
   final String? contactEmail;
@@ -74,6 +75,7 @@ class ShopDetails {
     this.addressTa,
     this.gpsLatitude,
     this.gpsLongitude,
+    this.primaryPhoneVerificationToken,
     this.primaryPhone,
     this.alternatePhone,
     this.contactEmail,
@@ -110,6 +112,7 @@ class ShopDetails {
       addressTa: json['addressTa'],
       gpsLatitude: (json['gpsLatitude'] as num?)?.toDouble(),
       gpsLongitude: (json['gpsLongitude'] as num?)?.toDouble(),
+      primaryPhoneVerificationToken: json['primaryPhoneVerificationToken'],
       primaryPhone: json['primaryPhone'],
       alternatePhone: json['alternatePhone'],
       contactEmail: json['contactEmail'],
@@ -151,6 +154,7 @@ class ShopDetails {
       'addressTa': addressTa,
       'gpsLatitude': gpsLatitude,
       'gpsLongitude': gpsLongitude,
+      'primaryPhoneVerificationToken': primaryPhoneVerificationToken,
       'primaryPhone': primaryPhone,
       'alternatePhone': alternatePhone,
       'contactEmail': contactEmail,
