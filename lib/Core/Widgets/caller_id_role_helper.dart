@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 final callerIdAskedProvider = StateProvider<bool>((ref) => false);
 
-const MethodChannel _native = MethodChannel('sim_info');
+const MethodChannel _native = MethodChannel('tringo/system');
 
 class CallerIdRoleHelper {
   // ---------------- Role methods ----------------
@@ -73,8 +73,9 @@ class CallerIdRoleHelper {
   static Future<bool> isBackgroundRestricted() async {
     if (!Platform.isAndroid) return false;
     try {
-      final restricted =
-      await _native.invokeMethod<bool>('isBackgroundRestricted');
+      final restricted = await _native.invokeMethod<bool>(
+        'isBackgroundRestricted',
+      );
       return restricted ?? false;
     } catch (_) {
       return false;
@@ -84,8 +85,9 @@ class CallerIdRoleHelper {
   static Future<bool> isIgnoringBatteryOptimizations() async {
     if (!Platform.isAndroid) return true;
     try {
-      final ok =
-      await _native.invokeMethod<bool>('isIgnoringBatteryOptimizations');
+      final ok = await _native.invokeMethod<bool>(
+        'isIgnoringBatteryOptimizations',
+      );
       return ok ?? false;
     } catch (_) {
       return false;

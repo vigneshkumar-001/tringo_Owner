@@ -23,7 +23,7 @@ class ApiUrl {
   static const String shopNumberVerify =
       "${base}api/v1/auth/phone-verification/request";
   static const String shopNumberOtpVerify =
-      "${base}api/v1/auth/phone-verification/verify"; 
+      "${base}api/v1/auth/phone-verification/verify";
   static const String categoriesShop =
       "${base}api/v1/public/categories?type=shop";
 
