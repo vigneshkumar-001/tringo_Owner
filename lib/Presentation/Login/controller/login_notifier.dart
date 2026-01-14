@@ -92,7 +92,8 @@ class LoginNotifier extends Notifier<LoginState> {
     required String phoneNumber,
     String? simToken,
     String? page,
-  }) async {
+  }) async
+  {
     state = state.copyWith(
       isLoading: true,
       error: null,
