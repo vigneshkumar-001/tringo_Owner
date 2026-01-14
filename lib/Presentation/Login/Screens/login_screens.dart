@@ -19,7 +19,6 @@ import '../../../Core/Utility/common_Container.dart';
 import '../../Mobile Nomber Verify/Controller/mobile_verify_notifier.dart';
 import '../controller/login_notifier.dart';
 
-
 class LoginMobileNumber extends ConsumerStatefulWidget {
   final String loginNumber;
   final String simToken;
@@ -744,8 +743,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber>
     );
   }
 }
-
-
 
 ///old////
 // import 'package:flutter/material.dart';
