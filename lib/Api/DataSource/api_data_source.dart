@@ -589,8 +589,9 @@ class ApiDataSource extends BaseApiDataSource {
         return Left(ServerFailure('Image file does not exist.'));
       }
 
-      String url = ApiUrl.imageUrl;
-      FormData formData = FormData.fromMap({
+      final url = ApiUrl.imageUrl;
+
+      final formData = FormData.fromMap({
         'images': await MultipartFile.fromFile(
           imageFile.path,
           filename: imageFile.path.split('/').last,
@@ -598,27 +599,69 @@ class ApiDataSource extends BaseApiDataSource {
       });
 
       final response = await Request.formData(url, formData, 'POST', true);
-      Map<String, dynamic> responseData =
-          jsonDecode(response.data) as Map<String, dynamic>;
-      if (response.statusCode == 200) {
-        if (responseData['status'] == true) {
-          return Right(UserImageResponse.fromJson(responseData));
-        } else {
-          return Left(ServerFailure(responseData['message']));
-        }
-      } else if (response is Response && response.statusCode == 409) {
-        return Left(ServerFailure(responseData['message']));
-      } else if (response is Response) {
-        return Left(ServerFailure(responseData['message'] ?? "Unknown error"));
-      } else {
-        return Left(ServerFailure("Unexpected error"));
+
+      if (response is! Response) {
+        return Left(ServerFailure('Invalid server response'));
       }
-    } catch (e) {
-      // CommonLogger.log.e(e);
-      print(e);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data as Map<String, dynamic>;
+
+        if (data['status'] == true) {
+          return Right(UserImageResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? 'Upload failed'));
+        }
+      }
+
+      return Left(
+        ServerFailure((response.data as Map?)?['message'] ?? 'Unknown error'),
+      );
+    } catch (e, st) {
+      AppLogger.log.e(e);
+      AppLogger.log.e(st);
       return Left(ServerFailure('Something went wrong'));
     }
   }
+
+  // Future<Either<Failure, UserImageResponse>> userProfileUpload({
+  //   required File imageFile,
+  // }) async {
+  //   try {
+  //     if (!await imageFile.exists()) {
+  //       return Left(ServerFailure('Image file does not exist.'));
+  //     }
+  //
+  //     String url = ApiUrl.imageUrl;
+  //     FormData formData = FormData.fromMap({
+  //       'images': await MultipartFile.fromFile(
+  //         imageFile.path,
+  //         filename: imageFile.path.split('/').last,
+  //       ),
+  //     });
+  //
+  //     final response = await Request.formData(url, formData, 'POST', true);
+  //     Map<String, dynamic> responseData =
+  //         jsonDecode(response.data) as Map<String, dynamic>;
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       if (responseData['status'] == true) {
+  //         return Right(UserImageResponse.fromJson(responseData));
+  //       } else {
+  //         return Left(ServerFailure(responseData['message']));
+  //       }
+  //     } else if (response is Response && response.statusCode == 409) {
+  //       return Left(ServerFailure(responseData['message']));
+  //     } else if (response is Response) {
+  //       return Left(ServerFailure(responseData['message'] ?? "Unknown error"));
+  //     } else {
+  //       return Left(ServerFailure("Unexpected error"));
+  //     }
+  //   } catch (e) {
+  //     // CommonLogger.log.e(e);
+  //     AppLogger.log.e(e);
+  //     return Left(ServerFailure('Something went wrong'));
+  //   }
+  // }
 
   // Future<Either<Failure, ShopInfoPhotosResponse>> shopPhotoUpload({
   //   required List<Map<String, String>> items,

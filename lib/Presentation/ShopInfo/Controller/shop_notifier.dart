@@ -170,15 +170,87 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       ),
     );
   }
-
-  /// Returns true on success; false otherwise.
-  /// No SnackBars here — let the UI decide what to show.
+  //
+  // /// Returns true on success; false otherwise.
+  // /// No SnackBars here — let the UI decide what to show.
+  // Future<bool> uploadShopImages({
+  //   required List<File?> images,
+  //   required BuildContext context,
+  //   String? shopId,
+  // }) async {
+  //
+  //   if (images.isEmpty || images.every((e) => e == null)) {
+  //     state = const ShopCategoryState(
+  //       isLoading: false,
+  //       error: 'No images selected',
+  //     );
+  //     return false;
+  //   }
+  //
+  //   state = const ShopCategoryState(isLoading: true);
+  //
+  //   final types = ["SIGN_BOARD", "OUTSIDE", "INSIDE", "INSIDE"];
+  //   final List<Map<String, String>> items = [];
+  //
+  //   for (int i = 0; i < images.length; i++) {
+  //     final file = images[i];
+  //     if (file == null) continue;
+  //
+  //     final uploadResult = await apiDataSource.userProfileUpload(
+  //       imageFile: file,
+  //     );
+  //
+  //     final uploadedUrl = uploadResult.fold<String?>(
+  //       (failure) => null,
+  //       (success) => success.message,
+  //     );
+  //
+  //     if (uploadedUrl != null) {
+  //       items.add({"type": types[i], "url": uploadedUrl});
+  //     }
+  //   }
+  //
+  //   if (items.isEmpty) {
+  //     state = const ShopCategoryState(isLoading: false, error: 'Upload failed');
+  //     return false;
+  //   }
+  //
+  //   final apiResult = await apiDataSource.shopPhotoUpload(
+  //     items: items,
+  //     apiShopId: shopId,
+  //   );
+  //
+  //   return apiResult.fold(
+  //     (failure) {
+  //       state = ShopCategoryState(isLoading: false, error: failure.message);
+  //       AppLogger.log.e(failure.message);
+  //       return false;
+  //     },
+  //     (response) {
+  //       state = ShopCategoryState(
+  //         isLoading: false,
+  //         shopPhotoResponse: response,
+  //       );
+  //       return response.status == true;
+  //     },
+  //   );
+  //
+  //   // IMPORTANT: do NOT reset state again; that would erase success/error.
+  // }
   Future<bool> uploadShopImages({
     required List<File?> images,
     required BuildContext context,
     String? shopId,
+    List<String?>? existingUrls, // ✅ add this
   }) async {
-    if (images.isEmpty || images.every((e) => e == null)) {
+    final types = ["SIGN_BOARD", "OUTSIDE", "INSIDE", "INSIDE"];
+
+    // ✅ If no new images AND no existing urls -> error
+    final hasAnyPicked = images.any((e) => e != null);
+    final hasAnyExisting =
+    (existingUrls ?? []).any((e) => e != null && e.trim().isNotEmpty);
+
+    if (!hasAnyPicked && !hasAnyExisting) {
       state = const ShopCategoryState(
         isLoading: false,
         error: 'No images selected',
@@ -188,24 +260,35 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
     state = const ShopCategoryState(isLoading: true);
 
-    final types = ["SIGN_BOARD", "OUTSIDE", "INSIDE", "INSIDE"];
     final List<Map<String, String>> items = [];
 
-    for (int i = 0; i < images.length; i++) {
-      final file = images[i];
-      if (file == null) continue;
+    // ✅ Build items for each slot (0..3)
+    for (int i = 0; i < 4; i++) {
+      // 1) If user picked a new file -> upload and use returned url
+      final file = (i < images.length) ? images[i] : null;
+      if (file != null) {
+        final uploadResult = await apiDataSource.userProfileUpload(
+          imageFile: file,
+        );
 
-      final uploadResult = await apiDataSource.userProfileUpload(
-        imageFile: file,
-      );
+        final uploadedUrl = uploadResult.fold<String?>(
+              (failure) => null,
+              (success) => success.message,
+        );
 
-      final uploadedUrl = uploadResult.fold<String?>(
-        (failure) => null,
-        (success) => success.message,
-      );
+        if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+          items.add({"type": types[i], "url": uploadedUrl});
+        }
+        continue;
+      }
 
-      if (uploadedUrl != null) {
-        items.add({"type": types[i], "url": uploadedUrl});
+      // 2) Otherwise, keep existing url (for update flow)
+      final url = (existingUrls != null && i < existingUrls.length)
+          ? existingUrls[i]
+          : null;
+
+      if (url != null && url.trim().isNotEmpty) {
+        items.add({"type": types[i], "url": url});
       }
     }
 
@@ -220,12 +303,12 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     );
 
     return apiResult.fold(
-      (failure) {
+          (failure) {
         state = ShopCategoryState(isLoading: false, error: failure.message);
         AppLogger.log.e(failure.message);
         return false;
       },
-      (response) {
+          (response) {
         state = ShopCategoryState(
           isLoading: false,
           shopPhotoResponse: response,
@@ -233,8 +316,6 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         return response.status == true;
       },
     );
-
-    // IMPORTANT: do NOT reset state again; that would erase success/error.
   }
 
   Future<bool> searchKeywords({required List<String> keywords}) async {
