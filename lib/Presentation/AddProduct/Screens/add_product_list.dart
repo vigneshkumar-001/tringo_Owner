@@ -195,14 +195,14 @@ class _AddProductListState extends ConsumerState<AddProductList> {
     final answerController = _featureControllers[index]['answer']!;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 25),
+      padding: const EdgeInsets.only(bottom: 25, right: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Text(
-                '${index + 1}. Feature',
+                '${index + 1}. Description',
                 style: AppTextStyles.mulish(color: AppColor.mildBlack),
               ),
               const Spacer(),
@@ -226,10 +226,16 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                 ),
               ),
               SizedBox(width: 15),
-              Text(
-                'Heading',
-                style: AppTextStyles.mulish(color: AppColor.mildBlack),
+              CommonContainer.containerTitle(
+                context: context,
+                title: '',
+                image: AppImages.iImage,
+                infoMessage: 'For Example – Product Title: Smartphone.',
               ),
+              // Text(
+              //   'Heading',
+              //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
+              // ),
             ],
           ),
           SizedBox(height: 10),
@@ -245,10 +251,17 @@ class _AddProductListState extends ConsumerState<AddProductList> {
                 ),
               ),
               SizedBox(width: 15),
-              Text(
-                'Answer',
-                style: AppTextStyles.mulish(color: AppColor.mildBlack),
+              CommonContainer.containerTitle(
+                context: context,
+                title: '',
+                image: AppImages.iImage,
+                infoMessage:
+                    'For Example – Product Description: “A smart device for calling, messaging, photos, and internet use.”',
               ),
+              // Text(
+              //   'Answer',
+              //   style: AppTextStyles.mulish(color: AppColor.mildBlack),
+              // ),
             ],
           ),
         ],

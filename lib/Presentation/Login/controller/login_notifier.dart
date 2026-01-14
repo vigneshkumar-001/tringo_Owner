@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
+import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/contacts/contacts_service.dart';
 import '../model/contact_response.dart';
+import '../model/login_new_response.dart';
 import '../model/login_response.dart';
 import '../model/otp_response.dart';
 import '../model/whatsapp_response.dart';
@@ -13,6 +15,7 @@ import '../model/whatsapp_response.dart';
 class LoginState {
   final bool isLoading;
   final LoginResponse? loginResponse;
+  final OtpLoginResponse? otpLoginResponse;
   final OtpResponse? otpResponse;
   final String? error;
   final WhatsappResponse? whatsappResponse;
@@ -21,6 +24,7 @@ class LoginState {
   const LoginState({
     this.isLoading = false,
     this.loginResponse,
+    this.otpLoginResponse,
     this.otpResponse,
     this.error,
     this.whatsappResponse,
@@ -32,6 +36,7 @@ class LoginState {
   LoginState copyWith({
     bool? isLoading,
     LoginResponse? loginResponse,
+    OtpLoginResponse? otpLoginResponse,
     OtpResponse? otpResponse,
     String? error,
     WhatsappResponse? whatsappResponse,
@@ -44,6 +49,7 @@ class LoginState {
       error: error,
       whatsappResponse: whatsappResponse ?? this.whatsappResponse,
       contactResponse: contactResponse ?? this.contactResponse,
+      otpLoginResponse: otpLoginResponse ?? this.otpLoginResponse,
     );
   }
 }
@@ -82,6 +88,100 @@ class LoginNotifier extends Notifier<LoginState> {
     );
   }
 
+  Future<void> loginNewUser({
+    required String phoneNumber,
+    String? simToken,
+    String? page,
+  }) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      otpLoginResponse: null,
+    );
+
+    final result = await api.mobileNewNumberLogin(
+      phoneNumber,
+      simToken ?? "",
+      page: page ?? "",
+    );
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          otpLoginResponse: null,
+        );
+      },
+      (response) async {
+        state = state.copyWith(
+          isLoading: false,
+          otpLoginResponse: response,
+          error: null,
+        );
+
+        final prefs = await SharedPreferences.getInstance();
+        await AppPrefs.setToken(response.data?.accessToken ?? '');
+        await AppPrefs.setRefreshToken(response.data?.refreshToken ?? '');
+        await AppPrefs.setSessionToken(response.data?.sessionToken ?? '');
+        await AppPrefs.setRole(response.data?.role ?? '');
+
+        AppLogger.log.i('✅ SIM login token stored');
+
+        //  HERE: contacts sync for SIM-direct login
+        final alreadySynced = prefs.getBool('contacts_synced') ?? false;
+
+        // Optional: only sync when SIM verified true
+        final simVerified = response.data?.simVerified == true;
+
+        if (!alreadySynced && simVerified) {
+          try {
+            AppLogger.log.i("✅ Contact sync started (SIM login)");
+
+            final contacts = await ContactsService.getAllContacts();
+            AppLogger.log.i("📞 contacts fetched = ${contacts.length}");
+
+            if (contacts.isEmpty) {
+              AppLogger.log.w(
+                "⚠️ Contacts empty / permission denied. Will retry later.",
+              );
+              return;
+            }
+
+            final limited = contacts.take(500).toList();
+
+            final items = limited
+                .map((c) => {"name": c.name, "phone": "+91${c.phone}"})
+                .toList();
+
+            // ✅ chunk to reduce payload size (recommended)
+            const chunkSize = 200;
+            for (var i = 0; i < items.length; i += chunkSize) {
+              final chunk = items.sublist(
+                i,
+                (i + chunkSize > items.length) ? items.length : i + chunkSize,
+              );
+
+              final res = await api.syncContacts(items: chunk);
+
+              res.fold(
+                (l) => AppLogger.log.e("❌ batch sync fail: ${l.message}"),
+                (r) => AppLogger.log.i(
+                  "✅ batch ok total=${r.data.total} inserted=${r.data.inserted} touched=${r.data.touched} skipped=${r.data.skipped}",
+                ),
+              );
+            }
+
+            await prefs.setBool('contacts_synced', true);
+            AppLogger.log.i("✅ Contacts synced (SIM login): ${limited.length}");
+          } catch (e) {
+            AppLogger.log.e("❌ Contact sync failed (SIM login): $e");
+          }
+        }
+      },
+    );
+  }
+
   // Future<void> loginUser({required String phoneNumber, String? page}) async {
   //   state = const LoginState(isLoading: true);
   //
@@ -103,10 +203,10 @@ class LoginNotifier extends Notifier<LoginState> {
     final result = await api.otp(contact: contact, otp: otp);
 
     result.fold(
-          (failure) {
+      (failure) {
         state = state.copyWith(isLoading: false, error: failure.message);
       },
-          (response) async {
+      (response) async {
         final prefs = await SharedPreferences.getInstance();
 
         final data = response.data;
@@ -139,10 +239,10 @@ class LoginNotifier extends Notifier<LoginState> {
           final items = limited
               .map(
                 (c) => {
-              "name": c.name,
-              "phone": "+91${c.phone}", // or use dialCode dynamic
-            },
-          )
+                  "name": c.name,
+                  "phone": "+91${c.phone}", // or use dialCode dynamic
+                },
+              )
               .toList();
 
           // ✅ Chunk to avoid huge payload (recommended)
@@ -156,8 +256,8 @@ class LoginNotifier extends Notifier<LoginState> {
             final res = await api.syncContacts(items: chunk);
 
             res.fold(
-                  (l) => AppLogger.log.e("❌ batch sync fail: ${l.message}"),
-                  (r) => AppLogger.log.i(
+              (l) => AppLogger.log.e("❌ batch sync fail: ${l.message}"),
+              (r) => AppLogger.log.i(
                 "✅ batch ok total=${r.data.total} inserted=${r.data.inserted} touched=${r.data.touched} skipped=${r.data.skipped}",
               ),
             );
@@ -172,7 +272,6 @@ class LoginNotifier extends Notifier<LoginState> {
     );
   }
 
-
   Future<void> syncContact({
     required String name,
     required String phone,
@@ -186,14 +285,14 @@ class LoginNotifier extends Notifier<LoginState> {
     final result = await api.syncContacts(items: items);
 
     result.fold(
-          (failure) {
+      (failure) {
         state = state.copyWith(
           isLoading: false,
           error: failure.message,
           contactResponse: null,
         );
       },
-          (response) {
+      (response) {
         state = state.copyWith(
           isLoading: false,
           contactResponse: response,
@@ -264,7 +363,6 @@ class LoginNotifier extends Notifier<LoginState> {
       state = LoginState(isLoading: false, error: e.toString());
     }
   }
-
 }
 
 /// --- PROVIDERS ---

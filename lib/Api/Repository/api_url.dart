@@ -2,10 +2,11 @@ class ApiUrl {
   // static const String base =
   //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
-   static const String base = "https://bknd.tringobiz.com/";
+  static const String base = "https://bknd.tringobiz.com/";
 
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
+  static const String requestLogin = "${base}api/v1/auth/request-login";
   static const String verifyOtp = "${base}api/v1/auth/verify-otp";
   static const String whatsAppVerify = "${base}api/v1/auth/check-whatsapp";
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
@@ -13,12 +14,16 @@ class ApiUrl {
   static const String shop = "${base}api/v1/shops";
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
   static const String version = "${base}api/v1/app/version";
-  static String imageUrl =
-      "https://next.fenizotechnologies.com/Adrox/api/image-save";
+  static const String imageUrl = "${base}api/media/image-save";
+  // "https://next.fenizotechnologies.com/Adrox/api/image-save";
   static const String plans = "${base}api/v1/subscriptions/plans";
   static const String currentPlans = "${base}api/v1/subscriptions/current";
   static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String contactInfo = "${base}api/v1/contacts/sync";
+  static const String shopNumberVerify =
+      "${base}api/v1/auth/phone-verification/request";
+  static const String shopNumberOtpVerify =
+      "${base}api/v1/auth/phone-verification/verify";
   static const String categoriesShop =
       "${base}api/v1/public/categories?type=shop";
 

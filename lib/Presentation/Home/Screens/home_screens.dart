@@ -812,9 +812,11 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CreateAppOffer(
-                                    shopId: mainShop?.id ?? '',
-                                  ),
+                                  builder: (context) =>
+                                      CommonBottomNavigation(initialIndex: 2),
+                                  //     CreateAppOffer(
+                                  //   shopId: mainShop?.id ?? '',
+                                  // ),
                                 ),
                               );
                             },
