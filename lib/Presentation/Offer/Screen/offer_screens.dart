@@ -727,13 +727,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  _infoTile(
+                                  _infoTile(onTap: (){},
                                     image: AppImages.rightArrow,
                                     title: 'Enquiries',
                                     value: offer.enquiriesCount.toString(),
                                   ),
                                   if (offer.expiresAt.isNotEmpty)
-                                    _infoTile(
+                                    _infoTile(onTap: (){},
                                       image: AppImages.editImage,
                                       title: 'Expires on',
                                       value: offer.expiresAt,
