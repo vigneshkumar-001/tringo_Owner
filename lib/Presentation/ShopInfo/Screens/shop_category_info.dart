@@ -8,7 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
+
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -1920,7 +1920,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const LocationPickerScreen(),
+                              builder: (_) => const GoogleLocationPickerScreen(),
                             ),
                           );
 
