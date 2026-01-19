@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_vendor/Core/Const/app_color.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -35,7 +36,6 @@ class GpsInputField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final VoidCallback onMapTap;
-  final VoidCallback onSearchTap; // ✅ NEW
   final String hintText;
 
   const GpsInputField({
@@ -43,7 +43,6 @@ class GpsInputField extends StatelessWidget {
     required this.controller,
     required this.isLoading,
     required this.onMapTap,
-    required this.onSearchTap, // ✅ NEW
     this.hintText = 'Enter lat,lng or search place',
   });
 
@@ -53,88 +52,43 @@ class GpsInputField extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColor.lightGray,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.transparent, width: 1.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Row(
         children: [
-          // ✅ LEFT: editable text field
           Expanded(
             child: TextFormField(
               controller: controller,
-              keyboardType: TextInputType.text,
               style: AppTextStyles.textWith700(fontSize: 16),
+              readOnly: true, // IMPORTANT
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: hintText,
                 hintStyle: AppTextStyles.mulish(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: AppColor.skyBlue,
                 ),
+                hintText: hintText,
               ),
             ),
           ),
-          //
-          // // ✅ SEARCH button (new)
-          // InkWell(
-          //   onTap: isLoading ? null : onSearchTap,
-          //   borderRadius: BorderRadius.circular(14),
-          //   child: const Padding(
-          //     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          //     child: Icon(Icons.search, size: 20, color: AppColor.resendOtp),
-          //   ),
-          // ),
-
-          // ✅ divider
-          Container(
-            width: 2,
-            height: 30,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.grey.shade200,
-                  Colors.grey.shade300,
-                  Colors.grey.shade200,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(1),
-            ),
-          ),
-
-          // ✅ RIGHT: map button
+          Container(width: 2, height: 30, color: Colors.grey.shade300),
           InkWell(
-            onTap: isLoading ? null : onSearchTap,
-            borderRadius: BorderRadius.circular(14),
+            onTap: isLoading ? null : onMapTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (isLoading)
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else ...[
-                    const Icon(
-                      Icons.search,
-                      size: 18,
+                  Icon(Icons.location_on, size: 18, color: AppColor.resendOtp),
+                  SizedBox(width: 6),
+                  Text(
+                    'Shop Location',
+                    style: AppTextStyles.mulish(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
                       color: AppColor.resendOtp,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Shop Location',
-                      style: AppTextStyles.mulish(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: AppColor.resendOtp,
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
@@ -1960,14 +1914,30 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       GpsInputField(
                         controller: _gpsController,
                         isLoading: _isFetchingGps,
-                        onSearchTap: () async {
-                          await _openGoogleSearchBottomSheet();
-                        },
                         onMapTap: () async {
-                          _openGoogleSearchBottomSheet();
-                          // setState(() => _isFetchingGps = true);
-                          // await _openGoogleMapsFromGpsField();
-                          // if (mounted) setState(() => _isFetchingGps = false);
+                          setState(() => _isFetchingGps = true);
+
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LocationPickerScreen(),
+                            ),
+                          );
+
+                          setState(() => _isFetchingGps = false);
+
+                          if (result != null) {
+                            final double lat = result['lat'];
+                            final double lng = result['lng'];
+                            final String area = result['area'];
+
+                            _gpsController.text =
+                                '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+
+                            debugPrint('LAT: $lat');
+                            debugPrint('LNG: $lng');
+                            debugPrint('AREA: $area');
+                          }
                         },
                       ),
 
