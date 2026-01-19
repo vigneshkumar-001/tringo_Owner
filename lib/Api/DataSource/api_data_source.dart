@@ -65,7 +65,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final response = await Request.sendRequest(
         url,
-        {"contact": "+91$phone", "purpose": "owner"},
+        {"contact": "+91$phone", "purpose": "owner", "simToken": simToken},
         'Post',
         false,
       );
