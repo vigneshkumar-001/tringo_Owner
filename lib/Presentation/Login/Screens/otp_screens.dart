@@ -105,6 +105,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       else if (next.loginResponse != null) {
         if (lastLoginPage == 'resendOtp') {
           AppSnackBar.success(context, 'OTP resent successfully!');
+
+          otp.clear(); // ✅ clear old OTP in field
+          verifyCode = ''; // ✅ reset local value
+          _startTimer(30);
         }
         lastLoginPage = null;
         notifier.resetState();
@@ -279,17 +283,31 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           child: Row(
                             children: [
                               InkWell(
-                                onTap: _canResend
+                                onTap: _canResend && !state.isResendingOtp
                                     ? () {
-                                        // mark as resend call
                                         lastLoginPage = 'resendOtp';
+
                                         notifier.loginUser(
                                           phoneNumber: widget.phoneNumber,
+                                          simToken: "", // ✅ VERY IMPORTANT
                                           page: 'resendOtp',
                                         );
-                                        _startTimer(30);
+
+                                        // ❌ DO NOT call _startTimer here
                                       }
                                     : null,
+
+                                // onTap: _canResend
+                                //     ? () {
+                                //         // mark as resend call
+                                //         lastLoginPage = 'resendOtp';
+                                //         notifier.loginUser(
+                                //           phoneNumber: widget.phoneNumber,
+                                //           page: 'resendOtp',
+                                //         );
+                                //         //_startTimer(30);
+                                //       }
+                                //     : null,
                                 child: Text(
                                   'Resend',
                                   style: AppTextStyles.mulish(
@@ -362,7 +380,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                 otp: enteredOtp,
                               );
                             },
-                            text: state.isLoading
+                            text: state.isVerifyingOtp
                                 ? const ThreeDotsLoader()
                                 : const Text('Verify Now'),
                           ),

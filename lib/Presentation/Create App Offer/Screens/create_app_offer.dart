@@ -282,8 +282,8 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
 
     // --- percentage ---
     final enteredP = int.tryParse(_percentageController.text.trim());
-    final finalP =
-    (enteredP ?? (existing?.discountPercentage.toInt() ?? 1)).clamp(1, 100);
+    final finalP = (enteredP ?? (existing?.discountPercentage.toInt() ?? 1))
+        .clamp(1, 100);
 
     // --- available range ---
     final extracted = _extractDateRange(_availableDateController.text);
@@ -291,18 +291,22 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     String availableTo = extracted["to"] ?? "";
 
     if (widget.isEdit) {
-      if (availableFrom.isEmpty) availableFrom = _fmtUiDate(existing?.availableFrom);
+      if (availableFrom.isEmpty)
+        availableFrom = _fmtUiDate(existing?.availableFrom);
       if (availableTo.isEmpty) availableTo = _fmtUiDate(existing?.availableTo);
     }
 
-    final apiAvailableFrom =
-    availableFrom.isEmpty ? "" : convertToApiFormat(availableFrom);
-    final apiAvailableTo =
-    availableTo.isEmpty ? "" : convertToApiFormat(availableTo);
+    final apiAvailableFrom = availableFrom.isEmpty
+        ? ""
+        : convertToApiFormat(availableFrom);
+    final apiAvailableTo = availableTo.isEmpty
+        ? ""
+        : convertToApiFormat(availableTo);
 
     // --- announcement ---
     String ann = _announcementDateController.text.trim();
-    if (widget.isEdit && ann.isEmpty) ann = _fmtUiDate(existing?.announcementAt);
+    if (widget.isEdit && ann.isEmpty)
+      ann = _fmtUiDate(existing?.announcementAt);
     final apiAnnouncement = ann.isEmpty ? "" : convertToApiFormat(ann);
 
     if (!widget.isEdit) {
@@ -323,7 +327,8 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
       }
 
       final bool isServiceFlow =
-          widget.isService ?? RegistrationProductSeivice.instance.isServiceBusiness;
+          widget.isService ??
+          RegistrationProductSeivice.instance.isServiceBusiness;
 
       context.pushNamed(
         AppRoutes.offerProducts,
@@ -343,7 +348,8 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
       }
 
       final bool isServiceFlow =
-          widget.isService ?? RegistrationProductSeivice.instance.isServiceBusiness;
+          widget.isService ??
+          RegistrationProductSeivice.instance.isServiceBusiness;
 
       // ✅ preselected ids (must match OfferProducts list ids)
       final preSelectedIds = isServiceFlow
@@ -384,7 +390,6 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
       );
     }
   }
-
 
   // Future<void> _onSubmit() async {
   //   if (!_formKey.currentState!.validate()) {

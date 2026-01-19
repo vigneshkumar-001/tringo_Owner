@@ -14,6 +14,8 @@ import '../model/whatsapp_response.dart';
 /// --- STATE ---
 class LoginState {
   final bool isLoading;
+  final bool isResendingOtp;
+  final bool isVerifyingOtp;
   final LoginResponse? loginResponse;
   final OtpLoginResponse? otpLoginResponse;
   final OtpResponse? otpResponse;
@@ -23,6 +25,8 @@ class LoginState {
 
   const LoginState({
     this.isLoading = false,
+    this.isResendingOtp = false,
+    this.isVerifyingOtp = false,
     this.loginResponse,
     this.otpLoginResponse,
     this.otpResponse,
@@ -35,6 +39,8 @@ class LoginState {
 
   LoginState copyWith({
     bool? isLoading,
+    bool? isResendingOtp,
+    bool? isVerifyingOtp,
     LoginResponse? loginResponse,
     OtpLoginResponse? otpLoginResponse,
     OtpResponse? otpResponse,
@@ -44,6 +50,8 @@ class LoginState {
   }) {
     return LoginState(
       isLoading: isLoading ?? this.isLoading,
+      isResendingOtp: isResendingOtp ?? this.isResendingOtp,
+      isVerifyingOtp: isVerifyingOtp ?? this.isVerifyingOtp,
       loginResponse: loginResponse ?? this.loginResponse,
       otpResponse: otpResponse ?? this.otpResponse,
       error: error,
@@ -70,20 +78,36 @@ class LoginNotifier extends Notifier<LoginState> {
     String? simToken,
     String? page,
   }) async {
-    state = const LoginState(isLoading: true);
+    final isResend = page == 'resendOtp';
+
+    state = state.copyWith(
+      isLoading: true,
+      isResendingOtp: isResend,
+      error: null,
+      loginResponse: null,
+    );
 
     final result = await api.mobileNumberLogin(
       phoneNumber,
-      simToken!,
+      simToken ?? "", // ✅ avoid simToken! crash
       page: page ?? '',
     );
 
     result.fold(
       (failure) {
-        state = LoginState(isLoading: false, error: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isResendingOtp: false,
+          error: failure.message,
+        );
       },
       (response) {
-        state = LoginState(isLoading: false, loginResponse: response);
+        state = state.copyWith(
+          isLoading: false,
+          isResendingOtp: false,
+          loginResponse: response,
+          error: null,
+        );
       },
     );
   }
@@ -92,8 +116,7 @@ class LoginNotifier extends Notifier<LoginState> {
     required String phoneNumber,
     String? simToken,
     String? page,
-  }) async
-  {
+  }) async {
     state = state.copyWith(
       isLoading: true,
       error: null,
@@ -199,13 +222,17 @@ class LoginNotifier extends Notifier<LoginState> {
   // }
 
   Future<void> verifyOtp({required String contact, required String otp}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, isVerifyingOtp: true, error: null);
 
     final result = await api.otp(contact: contact, otp: otp);
 
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, error: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isVerifyingOtp: false,
+          error: failure.message,
+        );
       },
       (response) async {
         final prefs = await SharedPreferences.getInstance();
@@ -217,7 +244,11 @@ class LoginNotifier extends Notifier<LoginState> {
         await prefs.setString('role', data?.role ?? '');
 
         // ✅ OTP success state first (UI can navigate)
-        state = state.copyWith(isLoading: false, otpResponse: response);
+        state = state.copyWith(
+          isLoading: false,
+          isVerifyingOtp: false,
+          otpResponse: response,
+        );
 
         final alreadySynced = prefs.getBool('contacts_synced') ?? false;
         if (alreadySynced) return;
