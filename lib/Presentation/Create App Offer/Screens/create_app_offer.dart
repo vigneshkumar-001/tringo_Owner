@@ -356,10 +356,18 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
           ? (existing?.services.map((e) => e.id).toList() ?? <String>[])
           : (existing?.products.map((e) => e.id).toList() ?? <String>[]);
 
+      final sid = (widget.shopId ?? '').trim();
+      if (sid.isEmpty) {
+        AppSnackBar.error(context, "Shop id missing");
+        return;
+      }
+
+
       final ok = await notifier.editAndUpdateOffer(
         context: context,
         offerId: offerId,
-        shopId: widget.shopId ?? "",
+        shopId: sid,
+        // shopId: widget.shopId ?? "",
         type: isServiceFlow ? "SERVICE" : "PRODUCT",
         productIds: preSelectedIds, // or your current selected list
         title: finalTitle,
