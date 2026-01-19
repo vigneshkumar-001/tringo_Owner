@@ -92,7 +92,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       // OTP verified
       else if (next.otpResponse != null) {
         AppSnackBar.success(context, 'OTP verified successfully!');
-        if (next.otpResponse?.data?.isNewOwner != true) {
+        if (next.otpResponse?.data?.isNewOwner == false) {
           context.goNamed(AppRoutes.homeScreen);
           await ref.read(selectedShopProvider.notifier).switchShop('');
         } else {
