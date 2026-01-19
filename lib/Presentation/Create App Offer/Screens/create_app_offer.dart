@@ -14,13 +14,22 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../Offer/Model/offer_model.dart';
 import '../Model/create_offers.dart';
 import 'offer_products.dart';
 
 class CreateAppOffer extends ConsumerStatefulWidget {
   final String? shopId;
   final bool? isService;
-  const CreateAppOffer({super.key, this.shopId, this.isService});
+  final bool isEdit; // ✅ new
+  final OfferItem? editOffer;
+  const CreateAppOffer({
+    super.key,
+    this.shopId,
+    this.isService,
+    this.isEdit = false,
+    this.editOffer,
+  });
 
   @override
   ConsumerState<CreateAppOffer> createState() => _CreateAppOfferState();
@@ -38,6 +47,40 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
   );
 
   int percentage = 1;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.isEdit && widget.editOffer != null) {
+      final o = widget.editOffer!;
+
+      _offerTitleController.text = o.title;
+      _offerDescriptionController.text = o.description;
+
+      // percentage
+      final p = (o.discountPercentage is num)
+          ? (o.discountPercentage.toInt())
+          : 1;
+      percentage = p.clamp(1, 100);
+      _percentageController.text = percentage.toString();
+
+      // available date range (UI format: dd-MM-yyyy to dd-MM-yyyy)
+      final from = _fmtUiDate(o.availableFrom);
+      final to = _fmtUiDate(o.availableTo);
+      if (from.isNotEmpty && to.isNotEmpty) {
+        _availableDateController.text = "$from to $to";
+      }
+
+      // announcement date (UI format dd-MM-yyyy)
+      _announcementDateController.text = _fmtUiDate(o.announcementAt);
+    }
+  }
+
+  String _fmtUiDate(DateTime? d) {
+    if (d == null) return '';
+    return DateFormat('dd-MM-yyyy').format(d);
+  }
 
   @override
   void dispose() {
@@ -82,116 +125,317 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     return "$year-$month-$day"; // 2025-12-12
   }
 
+  // Future<void> _onSubmit() async {
+  //   // ✅ only validate in create mode
+  //   if (!widget.isEdit) {
+  //     if (!_formKey.currentState!.validate()) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("Please fill all required fields")),
+  //       );
+  //       return;
+  //     }
+  //   }
+  //
+  //   final notifier = ref.read(offerNotifierProvider.notifier);
+  //
+  //   // ✅ existing offer (only for edit)
+  //   final existing = widget.editOffer;
+  //
+  //   // --- title/desc fallback in edit mode ---
+  //   final title = _offerTitleController.text.trim();
+  //   final desc = _offerDescriptionController.text.trim();
+  //
+  //   final finalTitle = widget.isEdit
+  //       ? (title.isNotEmpty ? title : (existing?.title ?? ""))
+  //       : title;
+  //
+  //   final finalDesc = widget.isEdit
+  //       ? (desc.isNotEmpty ? desc : (existing?.description ?? ""))
+  //       : desc;
+  //
+  //   // --- percentage fallback ---
+  //   final enteredP = int.tryParse(_percentageController.text.trim());
+  //   final finalP = (enteredP ?? (existing?.discountPercentage.toInt() ?? 1))
+  //       .clamp(1, 100);
+  //
+  //   // --- available range fallback ---
+  //   final extracted = _extractDateRange(_availableDateController.text);
+  //   String availableFrom = extracted["from"] ?? "";
+  //   String availableTo = extracted["to"] ?? "";
+  //
+  //   if (widget.isEdit) {
+  //     // if user didn't change range, use old values
+  //     if (availableFrom.isEmpty)
+  //       availableFrom = _fmtUiDate(existing?.availableFrom);
+  //     if (availableTo.isEmpty) availableTo = _fmtUiDate(existing?.availableTo);
+  //   }
+  //
+  //   final apiAvailableFrom = availableFrom.isEmpty
+  //       ? ""
+  //       : convertToApiFormat(availableFrom);
+  //   final apiAvailableTo = availableTo.isEmpty
+  //       ? ""
+  //       : convertToApiFormat(availableTo);
+  //
+  //   // --- announcement fallback ---
+  //   String ann = _announcementDateController.text.trim();
+  //   if (widget.isEdit && ann.isEmpty)
+  //     ann = _fmtUiDate(existing?.announcementAt);
+  //   final apiAnnouncement = ann.isEmpty ? "" : convertToApiFormat(ann);
+  //
+  //   if (!widget.isEdit) {
+  //     // ✅ CREATE
+  //     final created = await notifier.createOffer(
+  //       shopId: widget.shopId ?? "",
+  //       title: finalTitle,
+  //       description: finalDesc,
+  //       discountPercentage: finalP,
+  //       availableFrom: apiAvailableFrom,
+  //       availableTo: apiAvailableTo,
+  //       announcementAt: apiAnnouncement,
+  //     );
+  //
+  //     if (created == null) {
+  //       AppSnackBar.error(context, "Failed to create offer");
+  //       return;
+  //     }
+  //
+  //     final bool isServiceFlow =
+  //         widget.isService ??
+  //         RegistrationProductSeivice.instance.isServiceBusiness;
+  //
+  //     context.pushNamed(
+  //       AppRoutes.offerProducts,
+  //       extra: {
+  //         'isService': isServiceFlow,
+  //         'offerId': created.data?.id,
+  //         'shopId': created.data?.shop.id,
+  //         'type': created.data?.nextListType,
+  //       },
+  //     );
+  //   } else {
+  //     final offerId = existing?.id ?? "";
+  //     if (offerId.isEmpty) {
+  //       AppSnackBar.error(context, "Offer id missing");
+  //       return;
+  //     }
+  //
+  //     final bool isServiceFlow =
+  //         widget.isService ??
+  //         RegistrationProductSeivice.instance.isServiceBusiness;
+  //
+  //     final ids = isServiceFlow
+  //         ? (existing?.services.map((e) => e.id).toList() ?? <String>[])
+  //         : (existing?.products.map((e) => e.id).toList() ?? <String>[]);
+  //
+  //     final listType = isServiceFlow ? "SERVICE" : "PRODUCT";
+  //
+  //     final ok = await notifier.editAndUpdateOffer(
+  //       context: context,
+  //       offerId: offerId,
+  //       shopId: widget.shopId ?? "",
+  //       type: listType,
+  //       productIds: ids,
+  //       title: finalTitle,
+  //       description: finalDesc,
+  //       discountPercentage: finalP,
+  //       availableFrom: apiAvailableFrom,
+  //       availableTo: apiAvailableTo,
+  //       announcementAt: apiAnnouncement,
+  //     );
+  //
+  //     if (!ok) {
+  //       AppSnackBar.error(context, "Failed to update offer");
+  //       return;
+  //     }
+  //
+  //     Navigator.pop(context);
+  //   }
+  // }
+
   Future<void> _onSubmit() async {
-    if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all required fields")),
-      );
-      return;
+    if (!widget.isEdit) {
+      if (!_formKey.currentState!.validate()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please fill all required fields")),
+        );
+        return;
+      }
     }
-
-    final extracted = _extractDateRange(_availableDateController.text);
-    final announcementDate = convertToApiFormat(
-      _announcementDateController.text.trim(),
-    );
-    percentage =
-        int.tryParse(_percentageController.text.trim())?.clamp(1, 100) ?? 1;
-
-    final availableFrom = convertToApiFormat(extracted["from"]!);
-    final availableTo = convertToApiFormat(extracted["to"]!);
 
     final notifier = ref.read(offerNotifierProvider.notifier);
-    final bool isServiceFlow =
-        widget.isService ??
-        RegistrationProductSeivice.instance.isServiceBusiness;
-    final CreateOffers? offer = await notifier.createOffer(
-      shopId: widget.shopId ?? "",
-      title: _offerTitleController.text.trim(),
-      description: _offerDescriptionController.text.trim(),
-      discountPercentage: percentage,
-      availableFrom: availableFrom,
-      availableTo: availableTo,
-      announcementAt: announcementDate,
-    );
 
-    if (offer == null) {
-      AppSnackBar.error(context, "Failed to create offer");
-      return;
+    // ✅ declare once
+    final OfferItem? existing = widget.editOffer;
+
+    // --- title/desc fallback ---
+    final title = _offerTitleController.text.trim();
+    final desc = _offerDescriptionController.text.trim();
+
+    final finalTitle = widget.isEdit
+        ? (title.isNotEmpty ? title : (existing?.title ?? ""))
+        : title;
+
+    final finalDesc = widget.isEdit
+        ? (desc.isNotEmpty ? desc : (existing?.description ?? ""))
+        : desc;
+
+    // --- percentage ---
+    final enteredP = int.tryParse(_percentageController.text.trim());
+    final finalP =
+    (enteredP ?? (existing?.discountPercentage.toInt() ?? 1)).clamp(1, 100);
+
+    // --- available range ---
+    final extracted = _extractDateRange(_availableDateController.text);
+    String availableFrom = extracted["from"] ?? "";
+    String availableTo = extracted["to"] ?? "";
+
+    if (widget.isEdit) {
+      if (availableFrom.isEmpty) availableFrom = _fmtUiDate(existing?.availableFrom);
+      if (availableTo.isEmpty) availableTo = _fmtUiDate(existing?.availableTo);
     }
 
-    print("Offer ID = ${offer.data?.id}");
-    print("Shop ID  = ${offer.data?.shop.id}");
+    final apiAvailableFrom =
+    availableFrom.isEmpty ? "" : convertToApiFormat(availableFrom);
+    final apiAvailableTo =
+    availableTo.isEmpty ? "" : convertToApiFormat(availableTo);
 
-    context.pushNamed(
-      AppRoutes.offerProducts,
-      extra: {
-        'isService': isServiceFlow,
-        'offerId': offer.data?.id,
-        'shopId': offer.data?.shop.id,
-        'type': offer.data?.nextListType,
-      },
-    );
+    // --- announcement ---
+    String ann = _announcementDateController.text.trim();
+    if (widget.isEdit && ann.isEmpty) ann = _fmtUiDate(existing?.announcementAt);
+    final apiAnnouncement = ann.isEmpty ? "" : convertToApiFormat(ann);
+
+    if (!widget.isEdit) {
+      // ✅ CREATE
+      final created = await notifier.createOffer(
+        shopId: widget.shopId ?? "",
+        title: finalTitle,
+        description: finalDesc,
+        discountPercentage: finalP,
+        availableFrom: apiAvailableFrom,
+        availableTo: apiAvailableTo,
+        announcementAt: apiAnnouncement,
+      );
+
+      if (created == null) {
+        AppSnackBar.error(context, "Failed to create offer");
+        return;
+      }
+
+      final bool isServiceFlow =
+          widget.isService ?? RegistrationProductSeivice.instance.isServiceBusiness;
+
+      context.pushNamed(
+        AppRoutes.offerProducts,
+        extra: {
+          'isService': isServiceFlow,
+          'offerId': created.data?.id,
+          'shopId': created.data?.shop.id,
+          'type': created.data?.nextListType,
+        },
+      );
+    } else {
+      // ✅ UPDATE
+      final offerId = existing?.id ?? "";
+      if (offerId.isEmpty) {
+        AppSnackBar.error(context, "Offer id missing");
+        return;
+      }
+
+      final bool isServiceFlow =
+          widget.isService ?? RegistrationProductSeivice.instance.isServiceBusiness;
+
+      // ✅ preselected ids (must match OfferProducts list ids)
+      final preSelectedIds = isServiceFlow
+          ? (existing?.services.map((e) => e.id).toList() ?? <String>[])
+          : (existing?.products.map((e) => e.id).toList() ?? <String>[]);
+
+      final ok = await notifier.editAndUpdateOffer(
+        context: context,
+        offerId: offerId,
+        shopId: widget.shopId ?? "",
+        type: isServiceFlow ? "SERVICE" : "PRODUCT",
+        productIds: preSelectedIds, // or your current selected list
+        title: finalTitle,
+        description: finalDesc,
+        discountPercentage: finalP,
+        availableFrom: apiAvailableFrom,
+        availableTo: apiAvailableTo,
+        announcementAt: apiAnnouncement,
+      );
+
+      if (!ok) {
+        AppSnackBar.error(context, "Failed to update offer");
+        return;
+      }
+
+      // ✅ after update -> go to selection screen with default selections
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OfferProducts(
+            isService: isServiceFlow,
+            shopId: widget.shopId ?? '',
+            offerId: offerId,
+            type: isServiceFlow ? "SERVICE" : "PRODUCT",
+            preSelectedIds: preSelectedIds,
+          ),
+        ),
+      );
+    }
   }
 
-  /*  Future<void> _onSubmit() async {
-    if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all required fields")),
-      );
-      return;
-    }
 
-    // final date = _extractDateRange(_availableDateController.text);
-    final extracted = _extractDateRange(_availableDateController.text);
-    final announcementDate = convertToApiFormat(
-      _announcementDateController.text.trim(),
-    );
-    final availableFrom = convertToApiFormat(extracted["from"]!);
-    final availableTo = convertToApiFormat(extracted["to"]!);
-    // if (date["from"]!.isEmpty || date["to"]!.isEmpty) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text("Please select a valid date range")),
-    //   );
-    //   return;
-    // }
-
-    final notifier = ref.read(offerNotifierProvider.notifier);
-
-    final id = await notifier.createOffer(
-      shopId: widget.shopId ?? "",
-      title: _offerTitleController.text.trim(),
-      description: _offerDescriptionController.text.trim(),
-      discountPercentage: percentage,
-      availableFrom: availableFrom, // 11-12-2025
-      availableTo: availableTo, // 15-12-2025
-      announcementAt: announcementDate,
-    );
-
-    final offerState = ref.read(offerNotifierProvider);
-
-    if (offerState.error != null) {
-      AppSnackBar.error(context, offerState.error ?? '');
-      // ScaffoldMessenger.of(
-      //   context,
-      // ).showSnackBar(SnackBar(content: Text(offerState.error!)));
-      return;
-    }
-
-    // ScaffoldMessenger.of(
-    //   context,
-    // ).showSnackBar(SnackBar(content: Text("Offer created successfully")));
-    final bool isServiceFlow =
-        widget.isService ??
-        RegistrationProductSeivice.instance.isServiceBusiness;
-    AppLogger.log.i('IS Service : $isServiceFlow');
-    context.pushNamed(
-      AppRoutes.offerProducts,
-      extra: {
-        'isService': isServiceFlow,
-        'offerId': id,         // <-- PASS ID HERE
-      },
-    );
-  }*/
+  // Future<void> _onSubmit() async {
+  //   if (!_formKey.currentState!.validate()) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Please fill all required fields")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   final extracted = _extractDateRange(_availableDateController.text);
+  //   final announcementDate = convertToApiFormat(
+  //     _announcementDateController.text.trim(),
+  //   );
+  //   percentage =
+  //       int.tryParse(_percentageController.text.trim())?.clamp(1, 100) ?? 1;
+  //
+  //   final availableFrom = convertToApiFormat(extracted["from"]!);
+  //   final availableTo = convertToApiFormat(extracted["to"]!);
+  //
+  //   final notifier = ref.read(offerNotifierProvider.notifier);
+  //   final bool isServiceFlow =
+  //       widget.isService ??
+  //       RegistrationProductSeivice.instance.isServiceBusiness;
+  //   final CreateOffers? offer = await notifier.createOffer(
+  //     shopId: widget.shopId ?? "",
+  //     title: _offerTitleController.text.trim(),
+  //     description: _offerDescriptionController.text.trim(),
+  //     discountPercentage: percentage,
+  //     availableFrom: availableFrom,
+  //     availableTo: availableTo,
+  //     announcementAt: announcementDate,
+  //   );
+  //
+  //   if (offer == null) {
+  //     AppSnackBar.error(context, "Failed to create offer");
+  //     return;
+  //   }
+  //
+  //   print("Offer ID = ${offer.data?.id}");
+  //   print("Shop ID  = ${offer.data?.shop.id}");
+  //
+  //   context.pushNamed(
+  //     AppRoutes.offerProducts,
+  //     extra: {
+  //       'isService': isServiceFlow,
+  //       'offerId': offer.data?.id,
+  //       'shopId': offer.data?.shop.id,
+  //       'type': offer.data?.nextListType,
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -262,8 +506,11 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                       SizedBox(height: 10),
                       CommonContainer.fillingContainer(
                         controller: _offerTitleController,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Enter title" : null,
+                        validator: (v) {
+                          if (widget.isEdit)
+                            return null; // ✅ no validation in edit mode
+                          return v == null || v.isEmpty ? "Enter title" : null;
+                        },
                       ),
 
                       SizedBox(height: 25),
@@ -276,8 +523,11 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                       CommonContainer.fillingContainer(
                         controller: _offerDescriptionController,
                         maxLine: 4,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Enter description" : null,
+                        validator: (v) => widget.isEdit
+                            ? null
+                            : (v == null || v.isEmpty
+                                  ? "Enter description"
+                                  : null),
                       ),
 
                       SizedBox(height: 25),
@@ -456,8 +706,11 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                         context: context,
                         datePickMode: DatePickMode.range,
                         styledRangeText: true,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Select date range" : null,
+                        validator: (v) => widget.isEdit
+                            ? null
+                            : (v == null || v.isEmpty
+                                  ? "Select date range"
+                                  : null),
                       ),
 
                       SizedBox(height: 25),
@@ -485,9 +738,11 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                         imagePath: AppImages.dob,
                         imageWidth: 20,
                         imageHight: 25,
-                        validator: (v) => v == null || v.isEmpty
-                            ? "Select announcement date"
-                            : null,
+                        validator: (v) => widget.isEdit
+                            ? null
+                            : (v == null || v.isEmpty
+                                  ? "Select announcement date"
+                                  : null),
                       ),
                       SizedBox(height: 30),
 
@@ -497,7 +752,9 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
                         text: offerState.isLoading
                             ? ThreeDotsLoader()
                             : Text(
-                                "Next, Select Products",
+                                widget.isEdit
+                                    ? "Update Offer"
+                                    : "Next, Select Products",
                                 style: AppTextStyles.mulish(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,

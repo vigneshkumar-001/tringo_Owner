@@ -727,13 +727,34 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  _infoTile(onTap: (){},
+                                  _infoTile(
+                                    onTap: () {},
                                     image: AppImages.rightArrow,
                                     title: 'Enquiries',
                                     value: offer.enquiriesCount.toString(),
                                   ),
                                   if (offer.expiresAt.isNotEmpty)
-                                    _infoTile(onTap: (){},
+                                    _infoTile(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => CreateAppOffer(
+                                              shopId: mainShopId,
+                                              isService:
+                                                  (shopsRes
+                                                      ?.data
+                                                      .items[0]
+                                                      .shopKind
+                                                      .toUpperCase() ==
+                                                  'SERVICE'),
+                                              editOffer:
+                                                  offer, // ✅ pass full offer item
+                                              isEdit: true,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       image: AppImages.editImage,
                                       title: 'Expires on',
                                       value: offer.expiresAt,
