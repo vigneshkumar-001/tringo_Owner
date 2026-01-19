@@ -32,6 +32,7 @@ import '../../Presentation/AddProduct/Model/delete_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/image_upload_response.dart';
 import '../../Presentation/AddProduct/Service Info/Model/service_info_response.dart';
 import '../../Presentation/Create App Offer/Model/create_offers.dart';
+import '../../Presentation/Create App Offer/Model/edit_offers_response.dart';
 import '../../Presentation/Create App Offer/Model/update_offer_model.dart';
 import '../../Presentation/Login/model/contact_response.dart';
 import '../../Presentation/Login/model/login_new_response.dart';
@@ -2228,6 +2229,78 @@ class ApiDataSource extends BaseApiDataSource {
         return Left(ServerFailure(errorData['message']));
       }
       return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+    }
+  }
+
+  Future<Either<Failure, EditOffersResponse>> editAndUpdateOffer({
+    required List<String> productIds,
+    required String shopId,
+    required String offerId,
+    required String type, // PRODUCT / SERVICE (based on your logic)
+    required String title,
+    required String description,
+    required int discountPercentage,
+    required String availableFrom,
+    required String availableTo,
+    required String announcementAt,
+  }) async {
+    try {
+      final url = ApiUrl.editOffers(shopId: shopId, offerId: offerId);
+
+      final Map<String, dynamic> payload = {
+        "type": type,
+        "title": title,
+        "description": description,
+        "discountPercentage": discountPercentage,
+        "availableFrom": availableFrom,
+        "availableTo": availableTo,
+        "announcementAt": announcementAt,
+      };
+
+      if (type == "PRODUCT") {
+        payload["productIds"] = productIds;
+      } else if (type == "SERVICE") {
+        payload["serviceIds"] = productIds;
+      }
+
+      final response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is DioException) {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData['message'] != null) {
+          return Left(ServerFailure(errorData['message'].toString()));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+
+      final statusCode = response.statusCode ?? 0;
+      final data = response.data;
+
+      if (statusCode == 200 || statusCode == 201) {
+        if (data is Map && data['status'] == true) {
+          return Right(
+            EditOffersResponse.fromJson(data.cast<String, dynamic>()),
+          );
+        }
+        return Left(
+          ServerFailure(
+            (data is Map ? data['message'] : null)?.toString() ??
+                "Update failed",
+          ),
+        );
+      }
+
+      return Left(
+        ServerFailure(
+          (data is Map ? data['message'] : null)?.toString() ??
+              "Something went wrong ($statusCode)",
+        ),
+      );
+    } catch (e, st) {
+      AppLogger.log.e("editAndUpdateOffer error: $e\n$st");
+      return Left(ServerFailure(e.toString()));
     }
   }
 }
