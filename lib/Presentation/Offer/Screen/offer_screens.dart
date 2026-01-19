@@ -736,20 +736,25 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                   if (offer.expiresAt.isNotEmpty)
                                     _infoTile(
                                       onTap: () {
+                                        // ✅ use selected shop id (not always first shop)
+                                        final sid = _resolveShopId(
+                                          mainShopId: mainShopId,
+                                          shops: shops,
+                                        );
+
+                                        final bool isServiceFlow =
+                                            (shopsRes?.data.items[0].shopKind
+                                                .toString()
+                                                .toUpperCase() ==
+                                            'SERVICE');
+
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => CreateAppOffer(
-                                              shopId: mainShopId,
-                                              isService:
-                                                  (shopsRes
-                                                      ?.data
-                                                      .items[0]
-                                                      .shopKind
-                                                      .toUpperCase() ==
-                                                  'SERVICE'),
-                                              editOffer:
-                                                  offer, // ✅ pass full offer item
+                                            builder: (_) => CreateAppOffer(
+                                              shopId: sid, // ✅ FIXED SHOP ID
+                                              isService: isServiceFlow,
+                                              editOffer: offer,
                                               isEdit: true,
                                             ),
                                           ),
@@ -759,6 +764,32 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                       title: 'Expires on',
                                       value: offer.expiresAt,
                                     ),
+
+                                  // _infoTile(
+                                  //   onTap: () {
+                                  //     Navigator.push(
+                                  //       context,
+                                  //       MaterialPageRoute(
+                                  //         builder: (context) => CreateAppOffer(
+                                  //           shopId: mainShopId,
+                                  //           isService:
+                                  //               (shopsRes
+                                  //                   ?.data
+                                  //                   .items[0]
+                                  //                   .shopKind
+                                  //                   .toUpperCase() ==
+                                  //               'SERVICE'),
+                                  //           editOffer:
+                                  //               offer, // ✅ pass full offer item
+                                  //           isEdit: true,
+                                  //         ),
+                                  //       ),
+                                  //     );
+                                  //   },
+                                  //   image: AppImages.editImage,
+                                  //   title: 'Expires on',
+                                  //   value: offer.expiresAt,
+                                  // ),
                                   if ((offer.services.isNotEmpty) ||
                                       (offer.typesCount.services > 0))
                                     _infoTile(

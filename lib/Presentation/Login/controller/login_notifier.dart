@@ -5,6 +5,7 @@ import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
 import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/contacts/contacts_service.dart';
+import '../../AddProduct/Model/delete_response.dart';
 import '../model/contact_response.dart';
 import '../model/login_new_response.dart';
 import '../model/login_response.dart';
@@ -22,6 +23,7 @@ class LoginState {
   final String? error;
   final WhatsappResponse? whatsappResponse;
   final ContactResponse? contactResponse;
+  final DeleteResponse? deleteResponse;
 
   const LoginState({
     this.isLoading = false,
@@ -33,6 +35,7 @@ class LoginState {
     this.error,
     this.whatsappResponse,
     this.contactResponse,
+    this.deleteResponse,
   });
 
   factory LoginState.initial() => const LoginState();
@@ -47,6 +50,7 @@ class LoginState {
     String? error,
     WhatsappResponse? whatsappResponse,
     ContactResponse? contactResponse,
+    DeleteResponse? deleteResponse,
   }) {
     return LoginState(
       isLoading: isLoading ?? this.isLoading,
@@ -58,6 +62,7 @@ class LoginState {
       whatsappResponse: whatsappResponse ?? this.whatsappResponse,
       contactResponse: contactResponse ?? this.contactResponse,
       otpLoginResponse: otpLoginResponse ?? this.otpLoginResponse,
+      deleteResponse: deleteResponse ?? this.deleteResponse,
     );
   }
 }
@@ -394,6 +399,29 @@ class LoginNotifier extends Notifier<LoginState> {
     } catch (e) {
       state = LoginState(isLoading: false, error: e.toString());
     }
+  }
+
+  Future<void> deleteAccount() async {
+    state = state.copyWith(isLoading: true, error: null, deleteResponse: null);
+
+    final result = await api.deleteAccount();
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          deleteResponse: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          deleteResponse: response,
+        );
+      },
+    );
   }
 }
 
