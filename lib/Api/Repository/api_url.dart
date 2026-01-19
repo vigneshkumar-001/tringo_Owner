@@ -121,4 +121,8 @@ class ApiUrl {
   static String markEnquiry({required String enquiryId}) {
     return "${base}api/v1/dashboard/enquiries/$enquiryId/close";
   }
+
+  static String editOffers({required String shopId, required String offerId}) {
+    return "${base}api/v1/shops/$shopId/offers/app/$offerId";
+  }
 }
