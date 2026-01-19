@@ -4,10 +4,7 @@ class OfferModel {
   final bool status;
   final OfferSectionsData? data;
 
-  OfferModel({
-    required this.status,
-    this.data,
-  });
+  OfferModel({required this.status, this.data});
 
   factory OfferModel.fromJson(Map<String, dynamic> json) {
     return OfferModel(
@@ -18,10 +15,7 @@ class OfferModel {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'status': status,
-    'data': data?.toJson(),
-  };
+  Map<String, dynamic> toJson() => {'status': status, 'data': data?.toJson()};
 }
 
 class OfferSectionsData {
@@ -47,15 +41,15 @@ class OfferSectionsData {
       liveCount: _asInt(json['liveCount']),
       upcomingCount: _asInt(json['upcomingCount']),
       expiredCount: _asInt(json['expiredCount']),
-      upcomingSections: _asList(json['upcomingSections'])
-          .map((e) => OfferDaySection.fromJson(e))
-          .toList(),
-      liveSections: _asList(json['liveSections'])
-          .map((e) => OfferDaySection.fromJson(e))
-          .toList(),
-      expiredSections: _asList(json['expiredSections'])
-          .map((e) => OfferDaySection.fromJson(e))
-          .toList(),
+      upcomingSections: _asList(
+        json['upcomingSections'],
+      ).map((e) => OfferDaySection.fromJson(e)).toList(),
+      liveSections: _asList(
+        json['liveSections'],
+      ).map((e) => OfferDaySection.fromJson(e)).toList(),
+      expiredSections: _asList(
+        json['expiredSections'],
+      ).map((e) => OfferDaySection.fromJson(e)).toList(),
     );
   }
 
@@ -73,10 +67,7 @@ class OfferDaySection {
   final String dayLabel;
   final List<OfferItem> items;
 
-  OfferDaySection({
-    required this.dayLabel,
-    required this.items,
-  });
+  OfferDaySection({required this.dayLabel, required this.items});
 
   factory OfferDaySection.fromJson(Map<String, dynamic> json) {
     return OfferDaySection(
@@ -94,6 +85,13 @@ class OfferDaySection {
 class OfferItem {
   final String id;
   final String title;
+
+  // ✅ NEW
+  final String description;
+  final DateTime? availableFrom;
+  final DateTime? availableTo;
+  final DateTime? announcementAt;
+
   final num discountPercentage;
   final String offerBadgeLabel;
 
@@ -115,6 +113,10 @@ class OfferItem {
   OfferItem({
     required this.id,
     required this.title,
+    required this.description,
+    required this.availableFrom,
+    required this.availableTo,
+    required this.announcementAt,
     required this.discountPercentage,
     required this.offerBadgeLabel,
     required this.createdAt,
@@ -133,23 +135,38 @@ class OfferItem {
     return OfferItem(
       id: (json['id'] ?? '').toString(),
       title: (json['title'] ?? '').toString(),
+
+      // ✅ NEW
+      description: (json['description'] ?? '').toString(),
+      availableFrom: _tryParseDate(json['availableFrom']),
+      availableTo: _tryParseDate(json['availableTo']),
+      announcementAt: _tryParseDate(json['announcementAt']),
+
       discountPercentage: _asNum(json['discountPercentage']),
       offerBadgeLabel: (json['offerBadgeLabel'] ?? '').toString(),
+
       createdAt: _tryParseDate(json['createdAt']),
       createdTime: (json['createdTime'] ?? '').toString(),
       expiresAt: (json['expiresAt'] ?? '').toString(),
+
       statusEnum: (json['statusEnum'] ?? '').toString(),
       stateLabel: (json['stateLabel'] ?? '').toString(),
+
       enquiriesCount: _asInt(json['enquiriesCount']),
       typesCount: json['typesCount'] == null
           ? OfferTypesCount.empty()
-          : OfferTypesCount.fromJson(json['typesCount'] as Map<String, dynamic>),
-      products: _asList(json['products'])
-          .map((e) => OfferProduct.fromJson(e))
-          .toList(),
-      services: _asList(json['services'])
-          .map((e) => OfferService.fromJson(e))
-          .toList(),
+          : OfferTypesCount.fromJson(
+              json['typesCount'] as Map<String, dynamic>,
+            ),
+
+      products: _asList(
+        json['products'],
+      ).map((e) => OfferProduct.fromJson(e as Map<String, dynamic>)).toList(),
+
+      services: _asList(
+        json['services'],
+      ).map((e) => OfferService.fromJson(e as Map<String, dynamic>)).toList(),
+
       source: (json['source'] ?? '').toString(),
     );
   }
@@ -157,20 +174,113 @@ class OfferItem {
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
+
+    // ✅ NEW
+    'description': description,
+    'availableFrom': availableFrom?.toIso8601String(),
+    'availableTo': availableTo?.toIso8601String(),
+    'announcementAt': announcementAt?.toIso8601String(),
+
     'discountPercentage': discountPercentage,
     'offerBadgeLabel': offerBadgeLabel,
+
     'createdAt': createdAt?.toIso8601String(),
     'createdTime': createdTime,
     'expiresAt': expiresAt,
+
     'statusEnum': statusEnum,
     'stateLabel': stateLabel,
+
     'enquiriesCount': enquiriesCount,
     'typesCount': typesCount.toJson(),
+
     'products': products.map((e) => e.toJson()).toList(),
     'services': services.map((e) => e.toJson()).toList(),
+
     'source': source,
   };
 }
+
+// class OfferItem {
+//   final String id;
+//   final String title;
+//   final num discountPercentage;
+//   final String offerBadgeLabel;
+//
+//   final DateTime? createdAt;
+//   final String createdTime;
+//   final String expiresAt;
+//
+//   final String statusEnum;
+//   final String stateLabel;
+//
+//   final int enquiriesCount;
+//   final OfferTypesCount typesCount;
+//
+//   final List<OfferProduct> products;
+//   final List<OfferService> services;
+//
+//   final String source;
+//
+//   OfferItem({
+//     required this.id,
+//     required this.title,
+//     required this.discountPercentage,
+//     required this.offerBadgeLabel,
+//     required this.createdAt,
+//     required this.createdTime,
+//     required this.expiresAt,
+//     required this.statusEnum,
+//     required this.stateLabel,
+//     required this.enquiriesCount,
+//     required this.typesCount,
+//     required this.products,
+//     required this.services,
+//     required this.source,
+//   });
+//
+//   factory OfferItem.fromJson(Map<String, dynamic> json) {
+//     return OfferItem(
+//       id: (json['id'] ?? '').toString(),
+//       title: (json['title'] ?? '').toString(),
+//       discountPercentage: _asNum(json['discountPercentage']),
+//       offerBadgeLabel: (json['offerBadgeLabel'] ?? '').toString(),
+//       createdAt: _tryParseDate(json['createdAt']),
+//       createdTime: (json['createdTime'] ?? '').toString(),
+//       expiresAt: (json['expiresAt'] ?? '').toString(),
+//       statusEnum: (json['statusEnum'] ?? '').toString(),
+//       stateLabel: (json['stateLabel'] ?? '').toString(),
+//       enquiriesCount: _asInt(json['enquiriesCount']),
+//       typesCount: json['typesCount'] == null
+//           ? OfferTypesCount.empty()
+//           : OfferTypesCount.fromJson(json['typesCount'] as Map<String, dynamic>),
+//       products: _asList(json['products'])
+//           .map((e) => OfferProduct.fromJson(e))
+//           .toList(),
+//       services: _asList(json['services'])
+//           .map((e) => OfferService.fromJson(e))
+//           .toList(),
+//       source: (json['source'] ?? '').toString(),
+//     );
+//   }
+//
+//   Map<String, dynamic> toJson() => {
+//     'id': id,
+//     'title': title,
+//     'discountPercentage': discountPercentage,
+//     'offerBadgeLabel': offerBadgeLabel,
+//     'createdAt': createdAt?.toIso8601String(),
+//     'createdTime': createdTime,
+//     'expiresAt': expiresAt,
+//     'statusEnum': statusEnum,
+//     'stateLabel': stateLabel,
+//     'enquiriesCount': enquiriesCount,
+//     'typesCount': typesCount.toJson(),
+//     'products': products.map((e) => e.toJson()).toList(),
+//     'services': services.map((e) => e.toJson()).toList(),
+//     'source': source,
+//   };
+// }
 
 class OfferTypesCount {
   final int products;
@@ -183,7 +293,8 @@ class OfferTypesCount {
     required this.total,
   });
 
-  factory OfferTypesCount.empty() => OfferTypesCount(products: 0, services: 0, total: 0);
+  factory OfferTypesCount.empty() =>
+      OfferTypesCount(products: 0, services: 0, total: 0);
 
   factory OfferTypesCount.fromJson(Map<String, dynamic> json) {
     return OfferTypesCount(
@@ -319,8 +430,6 @@ DateTime? _tryParseDate(dynamic v) {
   final s = v.toString();
   return DateTime.tryParse(s);
 }
-
-
 
 // class OfferModel {
 //   final bool status;
