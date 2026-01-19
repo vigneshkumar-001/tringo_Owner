@@ -20,6 +20,7 @@ class OfferProducts extends ConsumerStatefulWidget {
   final String? shopId;
   final String? offerId;
   final String? type;
+  final List<String>? preSelectedIds;
 
   const OfferProducts({
     super.key,
@@ -27,6 +28,7 @@ class OfferProducts extends ConsumerStatefulWidget {
     this.shopId,
     this.offerId,
     this.type,
+    this.preSelectedIds,
   });
 
   @override
@@ -44,6 +46,10 @@ class _OfferProductsState extends ConsumerState<OfferProducts> {
   void initState() {
     super.initState();
     AppLogger.log.i('App Offer id = ${widget.offerId}');
+
+    if (widget.preSelectedIds != null) {
+      _selectedProductIds.addAll(widget.preSelectedIds!);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref

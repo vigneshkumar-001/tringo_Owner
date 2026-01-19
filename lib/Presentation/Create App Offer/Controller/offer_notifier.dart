@@ -8,6 +8,7 @@ import '../../../Api/DataSource/api_data_source.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../Offer/Model/offer_model.dart';
 import '../Model/create_offers.dart';
+import '../Model/edit_offers_response.dart';
 import '../Model/update_offer_model.dart';
 
 class createOfferState {
@@ -18,6 +19,7 @@ class createOfferState {
   final OfferProductsResponse? offerProducts;
   final UpdateOfferModel? updateOfferModel;
   final OfferModel? offerModel;
+  final EditOffersResponse? editOffersResponse;
 
   const createOfferState({
     this.isLoading = false,
@@ -27,6 +29,7 @@ class createOfferState {
     this.offerProducts,
     this.updateOfferModel,
     this.offerModel,
+    this.editOffersResponse,
   });
 
   factory createOfferState.initial() => const createOfferState();
@@ -39,6 +42,7 @@ class createOfferState {
     OfferProductsResponse? offerProducts,
     UpdateOfferModel? updateOfferModel,
     OfferModel? offerModel,
+    EditOffersResponse? editOffersResponse,
     bool clearError = false,
   }) {
     return createOfferState(
@@ -49,6 +53,7 @@ class createOfferState {
       offerProducts: offerProducts ?? this.offerProducts,
       updateOfferModel: updateOfferModel ?? this.updateOfferModel,
       offerModel: offerModel ?? this.offerModel,
+      editOffersResponse: editOffersResponse ?? this.editOffersResponse,
     );
   }
 }
@@ -177,6 +182,53 @@ class OfferNotifier extends Notifier<createOfferState> {
           error: null,
           offerModel: response,
         );
+      },
+    );
+  }
+
+  Future<bool> editAndUpdateOffer({
+    required List<String> productIds,
+    required String shopId,
+    required String offerId,
+    required String type,
+    required BuildContext context,
+    required String title,
+    required String description,
+    required int discountPercentage,
+    required String availableFrom,
+    required String availableTo,
+    required String announcementAt,
+  }) async {
+    state = state.copyWith(updateInsertLoading: true, clearError: true);
+
+    final result = await api.editAndUpdateOffer(
+      title: title,
+      announcementAt: announcementAt,
+      availableFrom: availableFrom,
+      availableTo: availableTo,
+      description: description,
+      discountPercentage: discountPercentage,
+      type: type,
+      shopId: shopId,
+      offerId: offerId,
+      productIds: productIds,
+    );
+
+    return result.fold(
+      (failure) {
+        AppSnackBar.error(context, failure.message);
+        state = state.copyWith(
+          updateInsertLoading: false,
+          error: failure.message,
+        );
+        return false;
+      },
+      (response) {
+        state = state.copyWith(
+          updateInsertLoading: false,
+          editOffersResponse: response,
+        );
+        return true;
       },
     );
   }
