@@ -667,6 +667,9 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                     itemCount: currentItems.length,
                     itemBuilder: (_, index) {
                       final offer = currentItems[index];
+                      final bool isAdminTemplate =
+                          (offer.source.trim().toUpperCase() ==
+                          'ADMIN_TEMPLATE');
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 20),
@@ -735,32 +738,42 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                                   ),
                                   if (offer.expiresAt.isNotEmpty)
                                     _infoTile(
-                                      onTap: () {
-                                        // ✅ use selected shop id (not always first shop)
-                                        final sid = _resolveShopId(
-                                          mainShopId: mainShopId,
-                                          shops: shops,
-                                        );
+                                      onTap: isAdminTemplate
+                                          ? null
+                                          : () {
+                                              final sid = _resolveShopId(
+                                                mainShopId: mainShopId,
+                                                shops: shops,
+                                              );
 
-                                        final bool isServiceFlow =
-                                            (shopsRes?.data.items[0].shopKind
-                                                .toString()
-                                                .toUpperCase() ==
-                                            'SERVICE');
+                                              final bool isServiceFlow =
+                                                  (shopsRes
+                                                      ?.data
+                                                      .items[0]
+                                                      .shopKind
+                                                      .toString()
+                                                      .toUpperCase() ==
+                                                  'SERVICE');
 
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => CreateAppOffer(
-                                              shopId: sid, // ✅ FIXED SHOP ID
-                                              isService: isServiceFlow,
-                                              editOffer: offer,
-                                              isEdit: true,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      image: AppImages.editImage,
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      CreateAppOffer(
+                                                        shopId: sid,
+                                                        isService:
+                                                            isServiceFlow,
+                                                        editOffer: offer,
+                                                        isEdit: true,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+
+                                      // ✅ disableனா icon காட்டவேண்டாம் (so user won’t think it’s clickable)
+                                      image: isAdminTemplate
+                                          ? null
+                                          : AppImages.editImage,
                                       title: 'Expires on',
                                       value: offer.expiresAt,
                                     ),
@@ -919,53 +932,111 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     required String value,
     String? image,
     VoidCallback? onTap,
+    bool enabled = true,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(right: 15),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTextStyles.mulish(
-                  fontSize: 12,
-                  color: AppColor.gray84,
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5,
+      child: Container(
+        margin: const EdgeInsets.only(right: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColor.white,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: AppColor.gray84,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: AppTextStyles.mulish(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: AppTextStyles.mulish(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            if (image != null) ...[
+              const SizedBox(width: 20),
+              InkWell(
+                onTap: enabled ? onTap : null,
+                child: Image.asset(
+                  image,
+                  color: AppColor.black,
+                  width: 18,
+                  height: 18,
+                  fit: BoxFit.contain,
                 ),
               ),
             ],
-          ),
-          if (image != null) ...[
-            const SizedBox(width: 20),
-            InkWell(
-              onTap: onTap,
-              child: Image.asset(
-                image,
-                color: AppColor.black,
-                width: 18,
-                height: 18,
-                fit: BoxFit.contain,
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
+
+
+  // Widget _infoTile({
+  //   required String title,
+  //   required String value,
+  //   String? image,
+  //   VoidCallback? onTap,
+  // }) {
+  //   return Container(
+  //     margin: const EdgeInsets.only(right: 15),
+  //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+  //     decoration: BoxDecoration(
+  //       color: AppColor.white,
+  //       borderRadius: BorderRadius.circular(15),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Text(
+  //               title,
+  //               style: AppTextStyles.mulish(
+  //                 fontSize: 12,
+  //                 color: AppColor.gray84,
+  //               ),
+  //             ),
+  //             const SizedBox(height: 2),
+  //             Text(
+  //               value,
+  //               style: AppTextStyles.mulish(
+  //                 fontSize: 18,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         if (image != null) ...[
+  //           const SizedBox(width: 20),
+  //           InkWell(
+  //             onTap: onTap,
+  //             child: Image.asset(
+  //               image,
+  //               color: AppColor.black,
+  //               width: 18,
+  //               height: 18,
+  //               fit: BoxFit.contain,
+  //             ),
+  //           ),
+  //         ],
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _productCard(OfferProduct p) {
     return Container(
