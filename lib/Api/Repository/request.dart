@@ -205,7 +205,8 @@ class Request {
       String? method,
       bool isTokenRequired, {
         Map<String, dynamic>? extraHeaders, // ✅ NEW
-      }) async {
+      }) async
+  {
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('token');
     final String? sessionToken = prefs.getString('sessionToken');
@@ -390,7 +391,8 @@ class Request {
     dynamic body,
     String? method,
     bool isTokenRequired,
-  ) async {
+  ) async
+  {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
