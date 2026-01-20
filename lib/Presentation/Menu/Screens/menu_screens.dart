@@ -70,13 +70,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
       message: '',
       fontSize: 14,
     ),
-    const NoDataScreen(
-      showBottomButton: false,
-      showTopBackArrow: false,
-      title: 'This feature is currently under development',
-      message: '',
-      fontSize: 14,
-    ),
+    const UnderProcessing(),
     const NoDataScreen(
       showBottomButton: false,
       showTopBackArrow: false,
@@ -395,6 +389,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                         return; // ✅ stop further navigation
                       }
 
+
+
                       // ✅ EXISTING subscription click
                       if (i == 4) {
                         final bool isFreemium = planData?.isFreemium == false;
@@ -419,6 +415,14 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                                   )
                                 : const SubscriptionScreen(),
                           ),
+                        );
+                        return;
+                      }
+
+                      if (i == 6 || i == 8) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const UnderProcessing()),
                         );
                         return;
                       }

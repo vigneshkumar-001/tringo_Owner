@@ -10,6 +10,7 @@ class UnderProcessing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 200),
         child: Column(
