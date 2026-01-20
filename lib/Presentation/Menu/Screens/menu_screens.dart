@@ -253,7 +253,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                                         child: SizedBox(
                                           height: 52,
                                           child: OutlinedButton(
-                                            onPressed: () => Navigator.pop(context, false),
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
                                             style: OutlinedButton.styleFrom(
                                               side: BorderSide(
                                                 color: Colors.grey.shade300,
@@ -284,7 +285,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                                         child: SizedBox(
                                           height: 52,
                                           child: ElevatedButton(
-                                            onPressed: () => Navigator.pop(context, true),
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor:
                                                   Colors.red.shade600,
