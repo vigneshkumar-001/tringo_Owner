@@ -2303,4 +2303,45 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  Future<Either<Failure, DeleteResponse>> deleteAccount() async {
+    try {
+      final url = ApiUrl.deleteAccount;
+
+      final response = await Request.sendRequest(
+        url,
+        {}, // no payload
+        'DELETE',
+        true,
+      );
+
+      // ✅ success
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.data['status'] == true) {
+          return Right(DeleteResponse.fromJson(response.data));
+        }
+        return Left(ServerFailure(response.data['message'] ?? "Delete failed"));
+      }
+
+      return Left(
+        ServerFailure(response.data['message'] ?? "Something went wrong"),
+      );
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown) {
+        return Left(ServerFailure("No internet connection. Please try again"));
+      }
+
+      if (errorData is Map && errorData['message'] != null) {
+        return Left(ServerFailure(errorData['message'].toString()));
+      }
+
+      return Left(ServerFailure("Request failed"));
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure("Unexpected error occurred"));
+    }
+  }
 }

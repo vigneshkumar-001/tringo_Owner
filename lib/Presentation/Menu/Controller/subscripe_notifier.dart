@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tringo_vendor/Presentation/Menu/Model/current_plan_response.dart';
 
 import '../../../../Api/DataSource/api_data_source.dart';
+import '../../AddProduct/Model/delete_response.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../Model/plan_list_response.dart';
 import '../Model/purchase_response.dart';
@@ -15,6 +16,7 @@ class SubscriptionState {
   final PlanListResponse? planListResponse;
   final PurchaseResponse? purchaseResponse;
   final CurrentPlanResponse? currentPlanResponse;
+  final DeleteResponse? deleteResponse;
 
   const SubscriptionState({
     this.isLoading = false,
@@ -23,6 +25,7 @@ class SubscriptionState {
     this.planListResponse,
     this.purchaseResponse,
     this.currentPlanResponse,
+    this.deleteResponse,
   });
 
   factory SubscriptionState.initial() => const SubscriptionState();
@@ -34,6 +37,7 @@ class SubscriptionState {
     PurchaseResponse? purchaseResponse,
     PlanListResponse? planListResponse,
     CurrentPlanResponse? currentPlanResponse,
+    DeleteResponse? deleteResponse,
     bool clearError = false,
   }) {
     return SubscriptionState(
@@ -43,6 +47,7 @@ class SubscriptionState {
       planListResponse: planListResponse ?? this.planListResponse,
       currentPlanResponse: currentPlanResponse ?? this.currentPlanResponse,
       purchaseResponse: purchaseResponse ?? this.purchaseResponse,
+      deleteResponse: deleteResponse ?? this.deleteResponse,
     );
   }
 }
@@ -130,6 +135,33 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
           isInsertLoading: false,
           error: null,
           purchaseResponse: response,
+        );
+      },
+    );
+  }
+
+  Future<void> deleteAccount() async {
+    state = state.copyWith(
+      isInsertLoading: true,
+      deleteResponse: null,
+      error: null,
+    );
+
+    final result = await api.deleteAccount();
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isInsertLoading: false,
+          error: failure.message,
+          deleteResponse: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isInsertLoading: false,
+          error: null,
+          deleteResponse: response,
         );
       },
     );
