@@ -21,6 +21,16 @@ class ApiUrl {
   static const String currentPlans = "${base}api/v1/subscriptions/current";
   static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String contactInfo = "${base}api/v1/contacts/sync";
+  static const String supportTicketsList = "${base}api/v1/support/tickets";
+
+  static String sendMessage({required String ticketId}) {
+    return "${base}api/v1/support/tickets/$ticketId/messages";
+  }
+
+  static String getChatMessages({required String id}) {
+    return "${base}api/v1/support/tickets/$id";
+  }
+
   static const String shopNumberVerify =
       "${base}api/v1/auth/phone-verification/request";
   static const String shopNumberOtpVerify =
