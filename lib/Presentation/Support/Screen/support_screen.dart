@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/Support/Screen/support_chat_screen.dart';
 
 import '../../../../../Core/Utility/app_loader.dart';
-import '../../../../../Core/Utility/date_time_converter.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../Model/support_list_response.dart';
@@ -43,12 +42,15 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(supportNotifier);
     final supportListResponse = state.supportListResponse;
+
+    // 1️⃣ Loading state
     if (state.isLoading && supportListResponse == null) {
       return Scaffold(
         body: Center(child: ThreeDotsLoader(dotColor: AppColor.black)),
       );
     }
 
+    // 2️⃣ Error state
     if (!state.isLoading && state.error != null) {
       return Scaffold(
         body: Center(
@@ -64,6 +66,49 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
         ),
       );
     }
+
+    // 3️⃣ Empty support list
+    if (supportListResponse?.data.isEmpty ?? true) {
+      return Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Centered No Data message
+              Expanded(
+                child: Center(
+                  child: NoDataScreen(
+                    onRefresh: () async {
+                      await ref
+                          .read(supportNotifier.notifier)
+                          .supportList(context: context);
+                    },
+                    showBottomButton: false, // We handle button manually
+                  ),
+                ),
+              ),
+
+              // Button at the bottom
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: CommonContainer.button(
+                  buttonColor: AppColor.darkBlue,
+                  imagePath: AppImages.rightStickArrow,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CreateSupport()),
+                    );
+                  },
+                  text: const Text('Create Ticket'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 4️⃣ Normal list
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
@@ -77,6 +122,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
               child: Column(
                 children: [
+                  // Header
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -97,12 +143,14 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                     ],
                   ),
                   SizedBox(height: 30),
+
+                  // Support List
                   ListView.builder(
                     shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: supportListResponse?.data.length ?? 0,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: supportListResponse!.data.length,
                     itemBuilder: (context, index) {
-                      final ticket = supportListResponse!.data[index];
+                      final ticket = supportListResponse.data[index];
 
                       // Map status to color and image
                       Color containerColor;
@@ -126,14 +174,13 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                         case SupportStatus.closed:
                           containerColor = AppColor.gray84.withOpacity(0.2);
                           imageTextColor = AppColor.gray84;
-                          imageAsset =
-                              AppImages.closeImage; // add your closed icon
+                          imageAsset = AppImages.closeImage;
                           statusText = 'Closed';
                           break;
                         case SupportStatus.OPEN:
                           containerColor = AppColor.resendOtp.withOpacity(0.2);
                           imageTextColor = AppColor.resendOtp;
-                          imageAsset = AppImages.timing; // add your closed icon
+                          imageAsset = AppImages.timing;
                           statusText = 'Opened';
                           break;
                         default:
@@ -173,12 +220,10 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => CreateSupport(),
-                        ),
+                        MaterialPageRoute(builder: (_) => CreateSupport()),
                       );
                     },
-                    text: Text('Create Ticket'),
+                    text: const Text('Create Ticket'),
                   ),
                 ],
               ),
