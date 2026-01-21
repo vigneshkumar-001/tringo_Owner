@@ -96,4 +96,8 @@ class AppImages {
   static String leftStickArrow = 'Assets/Images/LeftStickArrow.png';
   static String noDataGif = 'Assets/Images/NoDataImage.gif';
   static String downloadImage = 'Assets/Images/DownloadImage.png';
+  static String timing = 'Assets/Images/Timing.png';
+  static String greenTick = 'Assets/Images/greenTick.png';
+  static String orangeClock = 'Assets/Images/OrangeClock.png';
+  static String sendImage = 'Assets/Images/sendImage.png';
 }

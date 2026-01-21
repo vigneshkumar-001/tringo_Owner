@@ -292,6 +292,9 @@ class Service {
   final List<dynamic> features;
   final List<Media> media;
 
+  /// ✅ ADD THIS (derived field)
+  final String? imageUrl;
+
   Service({
     this.serviceId,
     this.createdAt,
@@ -311,9 +314,25 @@ class Service {
     this.status,
     required this.features,
     required this.media,
+    this.imageUrl, // 👈 new
   });
 
   factory Service.fromJson(Map<String, dynamic> json) {
+    final mediaList =
+        (json["media"] as List<dynamic>?)
+            ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
+            .toList() ??
+        [];
+
+    // ✅ pick first image safely
+    String? imageUrl;
+    if (mediaList.isNotEmpty) {
+      mediaList.sort(
+        (a, b) => (a.displayOrder ?? 999).compareTo(b.displayOrder ?? 999),
+      );
+      imageUrl = mediaList.first.url;
+    }
+
     return Service(
       serviceId: json["serviceId"] as String?,
       createdAt: json["createdAt"] as String?,
@@ -332,11 +351,8 @@ class Service {
       ratingCount: (json["ratingCount"] as num?)?.toInt(),
       status: json["status"] as String?,
       features: json["features"] ?? [],
-      media:
-          (json["media"] as List<dynamic>?)
-              ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
-              .toList() ??
-          [],
+      media: mediaList,
+      imageUrl: imageUrl, // ✅ here
     );
   }
 }
