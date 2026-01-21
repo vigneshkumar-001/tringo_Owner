@@ -217,11 +217,14 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                   CommonContainer.button(
                     buttonColor: AppColor.darkBlue,
                     imagePath: AppImages.rightStickArrow,
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => CreateSupport()),
+                        MaterialPageRoute(builder: (_) => const CreateSupport()),
                       );
+
+                      // 2️⃣ Refresh support list AFTER returning
+                      await ref.read(supportNotifier.notifier).supportList(context: context);
                     },
                     text: const Text('Create Ticket'),
                   ),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/Support/Screen/support_screen.dart';
@@ -54,22 +53,28 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
     setState(() => _picked = x);
   }
 
-  InputDecoration _fieldDeco() {
+  InputDecoration _fieldDeco({bool isError = false}) {
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF2F2F2),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: isError
+            ? const BorderSide(color: Colors.red, width: 1.5)
+            : BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: isError
+            ? const BorderSide(color: Colors.red, width: 1.5)
+            : BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: isError
+            ? const BorderSide(color: Colors.red, width: 1.5)
+            : BorderSide(color: Colors.blue, width: 1.5), // normal focus
       ),
     );
   }
@@ -119,6 +124,25 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
         );
       },
     );
+  }
+
+  String? _subjectError;
+
+  bool _validateForm() {
+    final subject = _subjectCtrl.text.trim();
+
+    if (subject.isEmpty) {
+      setState(() {
+        _subjectError = 'Please enter subject';
+      });
+      return false;
+    }
+
+    // Clear error if valid
+    setState(() {
+      _subjectError = null;
+    });
+    return true;
   }
 
   Future<void> _pickFromCamera() async {
@@ -173,6 +197,11 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                         fontWeight: FontWeight.w400,
                         color: AppColor.mildBlack,
                       ),
+                      // style: GoogleFont.Mulish(
+                      //   fontSize: 16,
+                      //   fontWeight: FontWeight.w400,
+                      //   color: AppColor.mildBlack,
+                      // ),
                     ),
                   ],
                 ),
@@ -186,8 +215,24 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                   controller: _subjectCtrl,
                   maxLines: 2,
                   textInputAction: TextInputAction.next,
-                  decoration: _fieldDeco(),
+                  decoration: _fieldDeco(isError: _subjectError != null),
+                  onChanged: (_) {
+                    if (_subjectError != null) {
+                      setState(() => _subjectError = null);
+                    }
+                  },
                 ),
+                if (_subjectError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5, left: 8),
+                    child: Text(
+                      _subjectError!,
+                      style: AppTextStyles.mulish(
+                        color: Colors.red,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 SizedBox(height: 25),
                 Text(
                   'Description',
@@ -218,7 +263,7 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeInOut,
                     width: double.infinity,
-                    height: _picked == null ? 70 : 200,
+                    height: _picked == null ? 70 : 200, // ✅ auto height change
                     decoration: BoxDecoration(
                       color: const Color(0xFFF2F2F2),
                       borderRadius: BorderRadius.circular(16),
@@ -227,7 +272,7 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                         ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset(AppImages.addImage, height: 20),
+                              Image.asset(AppImages.uploadImage, height: 20),
                               const SizedBox(width: 10),
                               Text(
                                 'Upload Image',
@@ -278,9 +323,9 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
 
                 CommonContainer.button(
                   buttonColor: AppColor.darkBlue,
-                  imagePath: state.isCreateLoading ? null : AppImages.rightStickArrow,
+                  imagePath: state.isLoading ? null : AppImages.rightStickArrow,
                   onTap: () async {
-                    // Prepare image file if picked
+                    if (!_validateForm()) return;
                     final File? imageFile =
                         (_picked != null && _picked!.path.isNotEmpty)
                         ? File(_picked!.path)
@@ -300,13 +345,8 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
 
                     if (err == null) {
                       AppLogger.log.i("Navigation to home called");
-                      // ✅ Navigate to home safely using GoRouter
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SupportScreen(),
-                        ),
-                      );
+
+                      Navigator.pop(context);
                     } else {
                       // Show error
                       AppSnackBar.error(context, err);
@@ -334,8 +374,7 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                   //     AppSnackBar.error(context, err); // ✅ current error
                   //   }
                   // },
-
-                  text: state.isCreateLoading
+                  text: state.isLoading
                       ? AppLoader.circularLoader()
                       : Text('Create Ticket'),
                 ),

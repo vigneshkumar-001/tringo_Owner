@@ -2,47 +2,43 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../Api/DataSource/api_data_source.dart';
+import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
+import 'package:tringo_vendor/Presentation/Support/Model/chat_message_response.dart';
+import 'package:tringo_vendor/Presentation/Support/Model/support_list_response.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../Login/controller/login_notifier.dart';
-import '../Model/chat_message_response.dart';
 import '../Model/create_support_response.dart';
 import '../Model/send_message_response.dart';
-import '../Model/support_list_response.dart';
 
 class SupportState {
   final bool isLoading;
-  final bool isCreateLoading;
   final bool isMsgSendingLoading;
 
   final String? error;
-
+  final int refreshKey; // ✅ new field
   final SupportListResponse? supportListResponse;
   final CreateSupportResponse? createSupportResponse;
   final ChatMessageResponse? chatMessageResponse;
   final SendMessageResponse? sendMessageResponse;
 
   const SupportState({
-    this.isLoading = true,
-    this.isCreateLoading = true,
+    this.isLoading = false,
     this.isMsgSendingLoading = true,
     this.error,
     this.supportListResponse,
     this.createSupportResponse,
     this.chatMessageResponse,
-    this.sendMessageResponse,
+    this.sendMessageResponse,   this.refreshKey = 0, // default
   });
 
   factory SupportState.initial() => const SupportState();
 
   SupportState copyWith({
     bool? isLoading,
-    bool? isCreateLoading,
     bool? isMsgSendingLoading,
 
     String? error,
-
+    int? refreshKey,
     SupportListResponse? supportListResponse,
     CreateSupportResponse? createSupportResponse,
     ChatMessageResponse? chatMessageResponse,
@@ -50,11 +46,10 @@ class SupportState {
   }) {
     return SupportState(
       isLoading: isLoading ?? this.isLoading,
-      isCreateLoading: isCreateLoading ?? this.isCreateLoading,
       isMsgSendingLoading: isMsgSendingLoading ?? this.isMsgSendingLoading,
 
       error: error,
-
+      refreshKey: refreshKey ?? this.refreshKey + 1, // ✅ increment
       supportListResponse: supportListResponse ?? this.supportListResponse,
       chatMessageResponse: chatMessageResponse ?? this.chatMessageResponse,
       sendMessageResponse: sendMessageResponse ?? this.sendMessageResponse,
@@ -121,7 +116,7 @@ class SupportNotifier extends Notifier<SupportState> {
     File? ownerImageFile,
     required BuildContext context,
   }) async {
-    state = state.copyWith(isCreateLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null);
 
     String customerImageUrl = '';
 
@@ -150,13 +145,13 @@ class SupportNotifier extends Notifier<SupportState> {
 
     result.fold(
       (failure) {
-        state = state.copyWith(isCreateLoading: false, error: failure.message);
+        state = state.copyWith(isLoading: false, error: failure.message);
         AppSnackBar.error(context, failure.message);
         return failure.message;
       },
       (response) {
         state = state.copyWith(
-          isCreateLoading: false,
+          isLoading: false,
           error: null,
           createSupportResponse: response,
         );
