@@ -125,135 +125,8 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     return "$year-$month-$day"; // 2025-12-12
   }
 
-  // Future<void> _onSubmit() async {
-  //   // ✅ only validate in create mode
-  //   if (!widget.isEdit) {
-  //     if (!_formKey.currentState!.validate()) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Please fill all required fields")),
-  //       );
-  //       return;
-  //     }
-  //   }
-  //
-  //   final notifier = ref.read(offerNotifierProvider.notifier);
-  //
-  //   // ✅ existing offer (only for edit)
-  //   final existing = widget.editOffer;
-  //
-  //   // --- title/desc fallback in edit mode ---
-  //   final title = _offerTitleController.text.trim();
-  //   final desc = _offerDescriptionController.text.trim();
-  //
-  //   final finalTitle = widget.isEdit
-  //       ? (title.isNotEmpty ? title : (existing?.title ?? ""))
-  //       : title;
-  //
-  //   final finalDesc = widget.isEdit
-  //       ? (desc.isNotEmpty ? desc : (existing?.description ?? ""))
-  //       : desc;
-  //
-  //   // --- percentage fallback ---
-  //   final enteredP = int.tryParse(_percentageController.text.trim());
-  //   final finalP = (enteredP ?? (existing?.discountPercentage.toInt() ?? 1))
-  //       .clamp(1, 100);
-  //
-  //   // --- available range fallback ---
-  //   final extracted = _extractDateRange(_availableDateController.text);
-  //   String availableFrom = extracted["from"] ?? "";
-  //   String availableTo = extracted["to"] ?? "";
-  //
-  //   if (widget.isEdit) {
-  //     // if user didn't change range, use old values
-  //     if (availableFrom.isEmpty)
-  //       availableFrom = _fmtUiDate(existing?.availableFrom);
-  //     if (availableTo.isEmpty) availableTo = _fmtUiDate(existing?.availableTo);
-  //   }
-  //
-  //   final apiAvailableFrom = availableFrom.isEmpty
-  //       ? ""
-  //       : convertToApiFormat(availableFrom);
-  //   final apiAvailableTo = availableTo.isEmpty
-  //       ? ""
-  //       : convertToApiFormat(availableTo);
-  //
-  //   // --- announcement fallback ---
-  //   String ann = _announcementDateController.text.trim();
-  //   if (widget.isEdit && ann.isEmpty)
-  //     ann = _fmtUiDate(existing?.announcementAt);
-  //   final apiAnnouncement = ann.isEmpty ? "" : convertToApiFormat(ann);
-  //
-  //   if (!widget.isEdit) {
-  //     // ✅ CREATE
-  //     final created = await notifier.createOffer(
-  //       shopId: widget.shopId ?? "",
-  //       title: finalTitle,
-  //       description: finalDesc,
-  //       discountPercentage: finalP,
-  //       availableFrom: apiAvailableFrom,
-  //       availableTo: apiAvailableTo,
-  //       announcementAt: apiAnnouncement,
-  //     );
-  //
-  //     if (created == null) {
-  //       AppSnackBar.error(context, "Failed to create offer");
-  //       return;
-  //     }
-  //
-  //     final bool isServiceFlow =
-  //         widget.isService ??
-  //         RegistrationProductSeivice.instance.isServiceBusiness;
-  //
-  //     context.pushNamed(
-  //       AppRoutes.offerProducts,
-  //       extra: {
-  //         'isService': isServiceFlow,
-  //         'offerId': created.data?.id,
-  //         'shopId': created.data?.shop.id,
-  //         'type': created.data?.nextListType,
-  //       },
-  //     );
-  //   } else {
-  //     final offerId = existing?.id ?? "";
-  //     if (offerId.isEmpty) {
-  //       AppSnackBar.error(context, "Offer id missing");
-  //       return;
-  //     }
-  //
-  //     final bool isServiceFlow =
-  //         widget.isService ??
-  //         RegistrationProductSeivice.instance.isServiceBusiness;
-  //
-  //     final ids = isServiceFlow
-  //         ? (existing?.services.map((e) => e.id).toList() ?? <String>[])
-  //         : (existing?.products.map((e) => e.id).toList() ?? <String>[]);
-  //
-  //     final listType = isServiceFlow ? "SERVICE" : "PRODUCT";
-  //
-  //     final ok = await notifier.editAndUpdateOffer(
-  //       context: context,
-  //       offerId: offerId,
-  //       shopId: widget.shopId ?? "",
-  //       type: listType,
-  //       productIds: ids,
-  //       title: finalTitle,
-  //       description: finalDesc,
-  //       discountPercentage: finalP,
-  //       availableFrom: apiAvailableFrom,
-  //       availableTo: apiAvailableTo,
-  //       announcementAt: apiAnnouncement,
-  //     );
-  //
-  //     if (!ok) {
-  //       AppSnackBar.error(context, "Failed to update offer");
-  //       return;
-  //     }
-  //
-  //     Navigator.pop(context);
-  //   }
-  // }
-
   Future<void> _onSubmit() async {
+    // -------- VALIDATION (create only) --------
     if (!widget.isEdit) {
       if (!_formKey.currentState!.validate()) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -264,36 +137,44 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
     }
 
     final notifier = ref.read(offerNotifierProvider.notifier);
+    final state = ref.read(offerNotifierProvider);
 
-    // ✅ declare once
     final OfferItem? existing = widget.editOffer;
 
-    // --- title/desc fallback ---
-    final title = _offerTitleController.text.trim();
-    final desc = _offerDescriptionController.text.trim();
+    // -------- TITLE / DESCRIPTION --------
+    final titleInput = _offerTitleController.text.trim();
+    final descInput = _offerDescriptionController.text.trim();
 
-    final finalTitle = widget.isEdit
-        ? (title.isNotEmpty ? title : (existing?.title ?? ""))
-        : title;
+    final String finalTitle = widget.isEdit
+        ? (titleInput.isNotEmpty ? titleInput : (existing?.title ?? ""))
+        : titleInput;
 
-    final finalDesc = widget.isEdit
-        ? (desc.isNotEmpty ? desc : (existing?.description ?? ""))
-        : desc;
+    final String finalDesc = widget.isEdit
+        ? (descInput.isNotEmpty ? descInput : (existing?.description ?? ""))
+        : descInput;
 
-    // --- percentage ---
-    final enteredP = int.tryParse(_percentageController.text.trim());
-    final finalP = (enteredP ?? (existing?.discountPercentage.toInt() ?? 1))
-        .clamp(1, 100);
+    // -------- DISCOUNT --------
+    final enteredPercentage = int.tryParse(_percentageController.text.trim());
 
-    // --- available range ---
+    final int finalPercentage =
+        (enteredPercentage ?? existing?.discountPercentage.toInt() ?? 1).clamp(
+          1,
+          100,
+        );
+
+    // -------- AVAILABLE DATE RANGE --------
     final extracted = _extractDateRange(_availableDateController.text);
+
     String availableFrom = extracted["from"] ?? "";
     String availableTo = extracted["to"] ?? "";
 
     if (widget.isEdit) {
-      if (availableFrom.isEmpty)
+      if (availableFrom.isEmpty) {
         availableFrom = _fmtUiDate(existing?.availableFrom);
-      if (availableTo.isEmpty) availableTo = _fmtUiDate(existing?.availableTo);
+      }
+      if (availableTo.isEmpty) {
+        availableTo = _fmtUiDate(existing?.availableTo);
+      }
     }
 
     final apiAvailableFrom = availableFrom.isEmpty
@@ -303,26 +184,37 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
         ? ""
         : convertToApiFormat(availableTo);
 
-    // --- announcement ---
-    String ann = _announcementDateController.text.trim();
-    if (widget.isEdit && ann.isEmpty)
-      ann = _fmtUiDate(existing?.announcementAt);
-    final apiAnnouncement = ann.isEmpty ? "" : convertToApiFormat(ann);
+    // -------- ANNOUNCEMENT DATE --------
+    String announcement = _announcementDateController.text.trim();
 
+    if (widget.isEdit && announcement.isEmpty) {
+      announcement = _fmtUiDate(existing?.announcementAt);
+    }
+
+    final apiAnnouncement = announcement.isEmpty
+        ? ""
+        : convertToApiFormat(announcement);
+
+    // ============================================================
+    // ======================= CREATE =============================
+    // ============================================================
     if (!widget.isEdit) {
-      // ✅ CREATE
       final created = await notifier.createOffer(
         shopId: widget.shopId ?? "",
         title: finalTitle,
         description: finalDesc,
-        discountPercentage: finalP,
+        discountPercentage: finalPercentage,
         availableFrom: apiAvailableFrom,
         availableTo: apiAvailableTo,
         announcementAt: apiAnnouncement,
       );
 
       if (created == null) {
-        AppSnackBar.error(context, "Failed to create offer");
+        final err = ref.read(offerNotifierProvider).error;
+        AppSnackBar.error(
+          context,
+          err?.isNotEmpty == true ? err! : "Something went wrong",
+        );
         return;
       }
 
@@ -339,116 +231,71 @@ class _CreateAppOfferState extends ConsumerState<CreateAppOffer> {
           'type': created.data?.nextListType,
         },
       );
-    } else {
-      // ✅ UPDATE
-      final offerId = existing?.id ?? "";
-      if (offerId.isEmpty) {
-        AppSnackBar.error(context, "Offer id missing");
-        return;
-      }
 
-      final bool isServiceFlow =
-          widget.isService ??
-          RegistrationProductSeivice.instance.isServiceBusiness;
-
-      // ✅ preselected ids (must match OfferProducts list ids)
-      final preSelectedIds = isServiceFlow
-          ? (existing?.services.map((e) => e.id).toList() ?? <String>[])
-          : (existing?.products.map((e) => e.id).toList() ?? <String>[]);
-
-      final sid = (widget.shopId ?? '').trim();
-      if (sid.isEmpty) {
-        AppSnackBar.error(context, "Shop id missing");
-        return;
-      }
-
-
-      final ok = await notifier.editAndUpdateOffer(
-        context: context,
-        offerId: offerId,
-        shopId: sid,
-        // shopId: widget.shopId ?? "",
-        type: isServiceFlow ? "SERVICE" : "PRODUCT",
-        productIds: preSelectedIds, // or your current selected list
-        title: finalTitle,
-        description: finalDesc,
-        discountPercentage: finalP,
-        availableFrom: apiAvailableFrom,
-        availableTo: apiAvailableTo,
-        announcementAt: apiAnnouncement,
-      );
-
-      if (!ok) {
-        AppSnackBar.error(context, "Failed to update offer");
-        return;
-      }
-
-      // ✅ after update -> go to selection screen with default selections
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OfferProducts(
-            isService: isServiceFlow,
-            shopId: widget.shopId ?? '',
-            offerId: offerId,
-            type: isServiceFlow ? "SERVICE" : "PRODUCT",
-            preSelectedIds: preSelectedIds,
-          ),
-        ),
-      );
+      return;
     }
-  }
 
-  // Future<void> _onSubmit() async {
-  //   if (!_formKey.currentState!.validate()) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Please fill all required fields")),
-  //     );
-  //     return;
-  //   }
-  //
-  //   final extracted = _extractDateRange(_availableDateController.text);
-  //   final announcementDate = convertToApiFormat(
-  //     _announcementDateController.text.trim(),
-  //   );
-  //   percentage =
-  //       int.tryParse(_percentageController.text.trim())?.clamp(1, 100) ?? 1;
-  //
-  //   final availableFrom = convertToApiFormat(extracted["from"]!);
-  //   final availableTo = convertToApiFormat(extracted["to"]!);
-  //
-  //   final notifier = ref.read(offerNotifierProvider.notifier);
-  //   final bool isServiceFlow =
-  //       widget.isService ??
-  //       RegistrationProductSeivice.instance.isServiceBusiness;
-  //   final CreateOffers? offer = await notifier.createOffer(
-  //     shopId: widget.shopId ?? "",
-  //     title: _offerTitleController.text.trim(),
-  //     description: _offerDescriptionController.text.trim(),
-  //     discountPercentage: percentage,
-  //     availableFrom: availableFrom,
-  //     availableTo: availableTo,
-  //     announcementAt: announcementDate,
-  //   );
-  //
-  //   if (offer == null) {
-  //     AppSnackBar.error(context, "Failed to create offer");
-  //     return;
-  //   }
-  //
-  //   print("Offer ID = ${offer.data?.id}");
-  //   print("Shop ID  = ${offer.data?.shop.id}");
-  //
-  //   context.pushNamed(
-  //     AppRoutes.offerProducts,
-  //     extra: {
-  //       'isService': isServiceFlow,
-  //       'offerId': offer.data?.id,
-  //       'shopId': offer.data?.shop.id,
-  //       'type': offer.data?.nextListType,
-  //     },
-  //   );
-  // }
+    // ============================================================
+    // ======================== UPDATE ============================
+    // ============================================================
+
+    final offerId = existing?.id ?? "";
+    if (offerId.isEmpty) {
+      AppSnackBar.error(context, "Offer id missing");
+      return;
+    }
+
+    final bool isServiceFlow =
+        widget.isService ??
+        RegistrationProductSeivice.instance.isServiceBusiness;
+
+    final List<String> preSelectedIds = isServiceFlow
+        ? (existing?.services.map((e) => e.id).toList() ?? <String>[])
+        : (existing?.products.map((e) => e.id).toList() ?? <String>[]);
+
+    final shopId = widget.shopId?.trim() ?? "";
+    if (shopId.isEmpty) {
+      AppSnackBar.error(context, "Shop id missing");
+      return;
+    }
+
+    final bool ok = await notifier.editAndUpdateOffer(
+      context: context, // you can remove later if you clean notifier
+      offerId: offerId,
+      shopId: shopId,
+      type: isServiceFlow ? "SERVICE" : "PRODUCT",
+      productIds: preSelectedIds,
+      title: finalTitle,
+      description: finalDesc,
+      discountPercentage: finalPercentage,
+      availableFrom: apiAvailableFrom,
+      availableTo: apiAvailableTo,
+      announcementAt: apiAnnouncement,
+    );
+
+    if (!ok) {
+      final err = ref.read(offerNotifierProvider).error;
+      AppSnackBar.error(
+        context,
+        err?.isNotEmpty == true ? err! : "Something went wrong",
+      );
+      return;
+    }
+
+    // -------- NAVIGATE AFTER UPDATE --------
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OfferProducts(
+          isService: isServiceFlow,
+          shopId: shopId,
+          offerId: offerId,
+          type: isServiceFlow ? "SERVICE" : "PRODUCT",
+          preSelectedIds: preSelectedIds,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
