@@ -560,7 +560,7 @@ class CommonContainer {
                       //     children: [
                       //       Text(
                       //         'Weight',
-                      //         style: GoogleFont.Mulish(
+                      //         style: AppTextStyles.mulish(
                       //           fontSize: 12,
                       //           color: AppColor.darkBlue,
                       //         ),
@@ -609,7 +609,7 @@ class CommonContainer {
                       //                   ),
                       //                   child: Text(
                       //                     filteredWeightOptions[i],
-                      //                     style: GoogleFont.Mulish(
+                      //                     style: AppTextStyles.mulish(
                       //                       fontSize: 12,
                       //                       fontWeight: FontWeight.w800,
                       //                       color: isSelected
@@ -4038,6 +4038,69 @@ class CommonContainer {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  static Widget supportBox({
+    required Color containerColor,
+    required String image,
+    required String imageText,
+    required Color imageTextColor,
+    required String mainText,
+    required String timingText,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: containerColor,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+              child: Column(
+                children: [
+                  Image.asset(image, height: 25.5),
+                  SizedBox(height: 5),
+                  Text(
+                    imageText,
+                    style: AppTextStyles.mulish(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: imageTextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  mainText,
+                  style: AppTextStyles.mulish(color: AppColor.black),
+                ),
+                SizedBox(height: 9),
+                Text(
+                  timingText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: AppColor.black.withOpacity(0.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

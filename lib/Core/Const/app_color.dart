@@ -53,4 +53,6 @@ class AppColor {
   static const darkCoffee = Color(0xff2F1D0B);
   static const lightApricot = Color(0xffFFECD0);
   static const slatePurple = Color(0xff615E83);
+  static const yellow = Color(0xffEF8C23);
+  static const midnightBlue = Color(0xff14212B);
 }

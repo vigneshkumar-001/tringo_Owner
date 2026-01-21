@@ -410,14 +410,15 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     prefs.remove('product_id');
                     prefs.remove('shop_id');
                     prefs.remove('service_id');
+
                     final selectedShop = _getSelectedShop(aboutState);
                     if (selectedShop == null) return;
 
-                    //  Decide service / product based on shopKind
+                    // Decide service / product flow
                     final bool isServiceFlow =
                         (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
 
-                    //  Extract from weeklyHours (or shopWeeklyHours as backup)
+                    // -------- OPEN / CLOSE TIME --------
                     String? openTimeText;
                     String? closeTimeText;
 
@@ -430,10 +431,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                         firstOpen = weekly.firstWhere(
                           (h) =>
                               h.closed != true &&
-                              (h.opensAt != null &&
-                                  h.opensAt!.trim().isNotEmpty) &&
-                              (h.closesAt != null &&
-                                  h.closesAt!.trim().isNotEmpty),
+                              (h.opensAt?.trim().isNotEmpty ?? false) &&
+                              (h.closesAt?.trim().isNotEmpty ?? false),
                         );
                       } catch (_) {
                         firstOpen = weekly.first;
@@ -443,41 +442,50 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       closeTimeText = firstOpen.closesAt?.trim();
                     }
 
+                    // -------- OWNER IMAGE (FIXED LOGIC) --------
                     String? ownerImageUrl;
 
-                    if (isServiceFlow && selectedShop.services.isNotEmpty) {
+                    // 1️⃣ PRIMARY: shopImages (correct backend source)
+                    if (selectedShop.shopImages.isNotEmpty) {
+                      ShopImage ownerImg;
+                      try {
+                        ownerImg = selectedShop.shopImages.firstWhere(
+                          (img) => (img.type ?? '').toUpperCase() == 'OWNER',
+                        );
+                      } catch (_) {
+                        ownerImg = selectedShop.shopImages.first;
+                      }
+                      ownerImageUrl = ownerImg.url;
+                    }
+
+                    // 2️⃣ FALLBACK: service media (only if shopImages failed)
+                    if (ownerImageUrl == null &&
+                        isServiceFlow &&
+                        selectedShop.services.isNotEmpty) {
                       final firstService = selectedShop.services.first;
 
                       if (firstService.media.isNotEmpty) {
-                        final images = [...firstService.media];
-
-                        images.sort(
-                          (a, b) => (a.displayOrder ?? 999).compareTo(
-                            b.displayOrder ?? 999,
-                          ),
-                        );
-
-                        // Prefer media where type contains OWNER
-                        final Media ownerMedia = images.firstWhere((m) {
-                          final t = (m.type ?? '').trim().toUpperCase();
-                          return t.contains('OWNER');
-                        }, orElse: () => images.first);
-
-                        ownerImageUrl = ownerMedia.url;
+                        final media = [...firstService.media]
+                          ..sort(
+                            (a, b) => (a.displayOrder ?? 999).compareTo(
+                              b.displayOrder ?? 999,
+                            ),
+                          );
+                        ownerImageUrl = media.first.url;
                       }
                     }
 
+                    // -------- NAVIGATION --------
                     final updated = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ShopCategoryInfo(
+                        builder: (_) => ShopCategoryInfo(
                           isEditMode: true,
                           pages: "AboutMeScreens",
                           shopId: selectedShop.shopId,
                           isService: isServiceFlow,
                           isIndividual: false,
 
-                          //  prefill values from Shop model
                           initialShopNameEnglish: selectedShop.shopEnglishName,
                           initialShopNameTamil: selectedShop.shopTamilName,
 
@@ -490,16 +498,17 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           initialAddressTamil: selectedShop.shopAddressTa,
 
                           initialGps:
-                              (selectedShop.shopGpsLatitude != null &&
-                                  selectedShop.shopGpsLongitude != null &&
-                                  selectedShop.shopGpsLatitude!.isNotEmpty &&
-                                  selectedShop.shopGpsLongitude!.isNotEmpty)
+                              (selectedShop.shopGpsLatitude?.isNotEmpty ==
+                                      true &&
+                                  selectedShop.shopGpsLongitude?.isNotEmpty ==
+                                      true)
                               ? "${selectedShop.shopGpsLatitude}, ${selectedShop.shopGpsLongitude}"
                               : "",
+
                           initialPrimaryMobile: selectedShop.shopPhone,
                           initialWhatsapp: selectedShop.shopWhatsapp,
                           initialEmail: selectedShop.shopContactEmail,
-                          // no separate name fields in model → use slug as display text for now
+
                           initialCategoryName: selectedShop.category ?? "",
                           initialCategorySlug: selectedShop.category,
                           initialSubCategoryName:
@@ -507,12 +516,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           initialSubCategorySlug: selectedShop.subCategory,
 
                           initialDoorDeliveryText:
-                              (selectedShop.shopDoorDelivery == true)
+                              selectedShop.shopDoorDelivery == true
                               ? 'Yes'
                               : 'No',
+
                           initialOpenTimeText: openTimeText,
                           initialCloseTimeText: closeTimeText,
-                          initialOwnerImageUrl: ownerImageUrl,
+                          initialOwnerImageUrl: ownerImageUrl, // ✅ FIXED
                         ),
                       ),
                     );
@@ -523,10 +533,132 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           .fetchAllShopDetails(
                             shopId: _currentShopId ?? selectedShop.shopId,
                           );
-
                       setState(() {});
                     }
                   },
+
+                  // onTap: () async {
+                  //   final prefs = await SharedPreferences.getInstance();
+                  //   prefs.remove('product_id');
+                  //   prefs.remove('shop_id');
+                  //   prefs.remove('service_id');
+                  //   final selectedShop = _getSelectedShop(aboutState);
+                  //   if (selectedShop == null) return;
+                  //
+                  //   //  Decide service / product based on shopKind
+                  //   final bool isServiceFlow =
+                  //       (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
+                  //
+                  //   //  Extract from weeklyHours (or shopWeeklyHours as backup)
+                  //   String? openTimeText;
+                  //   String? closeTimeText;
+                  //
+                  //   final List<ShopWeeklyHour> weekly =
+                  //       selectedShop.shopWeeklyHours;
+                  //
+                  //   if (weekly.isNotEmpty) {
+                  //     ShopWeeklyHour firstOpen;
+                  //     try {
+                  //       firstOpen = weekly.firstWhere(
+                  //         (h) =>
+                  //             h.closed != true &&
+                  //             (h.opensAt != null &&
+                  //                 h.opensAt!.trim().isNotEmpty) &&
+                  //             (h.closesAt != null &&
+                  //                 h.closesAt!.trim().isNotEmpty),
+                  //       );
+                  //     } catch (_) {
+                  //       firstOpen = weekly.first;
+                  //     }
+                  //
+                  //     openTimeText = firstOpen.opensAt?.trim();
+                  //     closeTimeText = firstOpen.closesAt?.trim();
+                  //   }
+                  //
+                  //   String? ownerImageUrl;
+                  //
+                  //   if (isServiceFlow && selectedShop.services.isNotEmpty) {
+                  //     final firstService = selectedShop.services.first;
+                  //
+                  //     if (firstService.media.isNotEmpty) {
+                  //       final images = [...firstService.media];
+                  //
+                  //       images.sort(
+                  //         (a, b) => (a.displayOrder ?? 999).compareTo(
+                  //           b.displayOrder ?? 999,
+                  //         ),
+                  //       );
+                  //
+                  //       // Prefer media where type contains OWNER
+                  //       final Media ownerMedia = images.firstWhere((m) {
+                  //         final t = (m.type ?? '').trim().toUpperCase();
+                  //         return t.contains('OWNER');
+                  //       }, orElse: () => images.first);
+                  //
+                  //       ownerImageUrl = ownerMedia.url;
+                  //     }
+                  //   }
+                  //
+                  //   final updated = await Navigator.push<bool>(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (context) => ShopCategoryInfo(
+                  //         isEditMode: true,
+                  //         pages: "AboutMeScreens",
+                  //         shopId: selectedShop.shopId,
+                  //         isService: isServiceFlow,
+                  //         isIndividual: false,
+                  //
+                  //         //  prefill values from Shop model
+                  //         initialShopNameEnglish: selectedShop.shopEnglishName,
+                  //         initialShopNameTamil: selectedShop.shopTamilName,
+                  //
+                  //         initialDescriptionEnglish:
+                  //             selectedShop.shopDescriptionEn,
+                  //         initialDescriptionTamil:
+                  //             selectedShop.shopDescriptionTa,
+                  //
+                  //         initialAddressEnglish: selectedShop.shopAddressEn,
+                  //         initialAddressTamil: selectedShop.shopAddressTa,
+                  //
+                  //         initialGps:
+                  //             (selectedShop.shopGpsLatitude != null &&
+                  //                 selectedShop.shopGpsLongitude != null &&
+                  //                 selectedShop.shopGpsLatitude!.isNotEmpty &&
+                  //                 selectedShop.shopGpsLongitude!.isNotEmpty)
+                  //             ? "${selectedShop.shopGpsLatitude}, ${selectedShop.shopGpsLongitude}"
+                  //             : "",
+                  //         initialPrimaryMobile: selectedShop.shopPhone,
+                  //         initialWhatsapp: selectedShop.shopWhatsapp,
+                  //         initialEmail: selectedShop.shopContactEmail,
+                  //         // no separate name fields in model → use slug as display text for now
+                  //         initialCategoryName: selectedShop.category ?? "",
+                  //         initialCategorySlug: selectedShop.category,
+                  //         initialSubCategoryName:
+                  //             selectedShop.subCategory ?? "",
+                  //         initialSubCategorySlug: selectedShop.subCategory,
+                  //
+                  //         initialDoorDeliveryText:
+                  //             (selectedShop.shopDoorDelivery == true)
+                  //             ? 'Yes'
+                  //             : 'No',
+                  //         initialOpenTimeText: openTimeText,
+                  //         initialCloseTimeText: closeTimeText,
+                  //         initialOwnerImageUrl: ownerImageUrl,
+                  //       ),
+                  //     ),
+                  //   );
+                  //
+                  //   if (updated == true && mounted) {
+                  //     await ref
+                  //         .read(aboutMeNotifierProvider.notifier)
+                  //         .fetchAllShopDetails(
+                  //           shopId: _currentShopId ?? selectedShop.shopId,
+                  //         );
+                  //
+                  //     setState(() {});
+                  //   }
+                  // },
                 ),
                 const SizedBox(width: 10),
                 CommonContainer.editShopContainer(
