@@ -2,16 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
 import 'package:tringo_vendor/Presentation/Support/Screen/support_screen.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_snackbar.dart';
-import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../Controller/support_notifier.dart';
 import 'support_chat_screen.dart';
@@ -206,7 +207,7 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                   title: 'Upload Photo',
                   image: AppImages.iImage,
                   infoMessage:
-                  'Please upload a clear photo of your shop signboard.',
+                      'Please upload a clear photo of your shop signboard.',
                 ),
                 SizedBox(height: 10),
 
@@ -217,59 +218,59 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeInOut,
                     width: double.infinity,
-                    height: _picked == null ? 70 : 200, // ✅ auto height change
+                    height: _picked == null ? 70 : 200,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF2F2F2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: (_picked == null)
                         ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(AppImages.addImage, height: 20),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Upload Image',
-                          style: AppTextStyles.mulish(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    )
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(AppImages.addImage, height: 20),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Upload Image',
+                                style: AppTextStyles.mulish(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          )
                         : Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.file(
-                            File(_picked!.path),
-                            width: double.infinity,
-                            height:
-                            double.infinity, // ✅ fill the container
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: InkWell(
-                            onTap: _removeImage,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.55),
-                                shape: BoxShape.circle,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.file(
+                                  File(_picked!.path),
+                                  width: double.infinity,
+                                  height:
+                                      double.infinity, // ✅ fill the container
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Colors.white,
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: InkWell(
+                                  onTap: _removeImage,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.55),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
 
@@ -277,33 +278,64 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
 
                 CommonContainer.button(
                   buttonColor: AppColor.darkBlue,
-                  imagePath: state.isLoading ? null : AppImages.rightStickArrow,
-
+                  imagePath: state.isCreateLoading ? null : AppImages.rightStickArrow,
                   onTap: () async {
+                    // Prepare image file if picked
                     final File? imageFile =
-                    (_picked != null && _picked!.path.isNotEmpty)
+                        (_picked != null && _picked!.path.isNotEmpty)
                         ? File(_picked!.path)
                         : null;
+
                     AppLogger.log.w(imageFile);
+
+                    // Call API to create support ticket
                     final err = await data.createSupportTicket(
                       subject: _subjectCtrl.text.trim(),
                       description: _descCtrl.text.trim(),
                       ownerImageFile: imageFile,
                       context: context,
                     );
+
                     if (!context.mounted) return;
 
                     if (err == null) {
-                      Navigator.pushAndRemoveUntil(
+                      AppLogger.log.i("Navigation to home called");
+                      // ✅ Navigate to home safely using GoRouter
+                      Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => SupportScreen()),
-                            (route) => false, // Remove all previous routes
+                        MaterialPageRoute(
+                          builder: (context) => SupportScreen(),
+                        ),
                       );
                     } else {
-                      AppSnackBar.error(context, err); // ✅ current error
+                      // Show error
+                      AppSnackBar.error(context, err);
                     }
                   },
-                  text: state.isLoading
+
+                  // onTap: () async {
+                  //   final File? imageFile =
+                  //       (_picked != null && _picked!.path.isNotEmpty)
+                  //       ? File(_picked!.path)
+                  //       : null;
+                  //   AppLogger.log.w(imageFile);
+                  //   final err = await data.createSupportTicket(
+                  //     subject: _subjectCtrl.text.trim(),
+                  //     description: _descCtrl.text.trim(),
+                  //     ownerImageFile: imageFile,
+                  //     context: context,
+                  //   );
+                  //   if (!context.mounted) return;
+                  //
+                  //   if (err == null) {
+                  //     context.go(AppRoutes.homePath);
+                  //
+                  //   } else {
+                  //     AppSnackBar.error(context, err); // ✅ current error
+                  //   }
+                  // },
+
+                  text: state.isCreateLoading
                       ? AppLoader.circularLoader()
                       : Text('Create Ticket'),
                 ),
