@@ -32,7 +32,9 @@ import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/qr_scanner_page.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
-import '../../Create Surprise Offers/create_surprise_offers.dart';
+import '../../Create Surprise Offers/Screens/create_surprise_offer.dart';
+import '../../Create Surprise Offers/Screens/create_surprise_offers.dart';
+import '../../Create Surprise Offers/Screens/surprise_offer_list.dart';
 import '../../Enquiry/Screens/enquiry_screens.dart';
 import '../../Menu/Screens/menu_screens.dart';
 import '../../Menu/Screens/subscription_screen.dart';
@@ -826,20 +828,20 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ),
                           CommonContainer.offerCardContainer(
                             onTap: () {
-                              // final isPremium =
-                              //     RegistrationProductSeivice.instance.isPremium;
+                              final isPremium =
+                                  RegistrationProductSeivice.instance.isPremium;
                               // Navigator.push(
                               //   context,
                               //   MaterialPageRoute(
                               //     builder: (_) => isPremium
-                              //         ? CreateSurpriseOffers()
+                              //         ? SurpriseOfferList()
                               //         : SubscriptionScreen(),
                               //   ),
                               // );
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => UnderProcessing(),
+                                  builder: (_) => CreateSurpriseOffer(),
                                 ),
                               );
                             },
@@ -1289,7 +1291,62 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     );
   }
 
-  /*  Widget build(BuildContext context) {
+  Widget _statBox(int index, String value, String label, String image) {
+    final bool isSelected = selectIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          color: AppColor.black,
+          border: Border.all(
+            color: isSelected ? AppColor.white : Colors.grey.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Image.asset(image, height: 23, color: AppColor.white),
+            SizedBox(width: 8),
+            Text(
+              '$value',
+              style: AppTextStyles.mulish(
+                color: Colors.white,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
+              ),
+            ),
+            SizedBox(width: 4),
+            Text(
+              '$label',
+              style: AppTextStyles.mulish(
+                color: Colors.white,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w400,
+              ),
+            ),
+            SizedBox(width: 8),
+            Container(
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.grey.shade900,
+              ),
+              child: Icon(Icons.arrow_forward, color: Colors.white, size: 15),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/*  Widget build(BuildContext context) {
     // final homeState = ref.watch(homeNotifierProvider);
     // final isPremium = RegistrationProductSeivice.instance.isPremium;
     // final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
@@ -1865,7 +1922,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => isPremium
-                                    ? CreateSurpriseOffers() // ✅ PREMIUM → create surprise offer
+                                    ? SurpriseOfferList() // ✅ PREMIUM → create surprise offer
                                     : SubscriptionScreen(), // ✅ NON-PREMIUM → ask to upgrade
                               ),
                             );
@@ -1882,7 +1939,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         //     Navigator.push(
                         //       context,
                         //       MaterialPageRoute(
-                        //         builder: (context) => CreateSurpriseOffers(),
+                        //         builder: (context) => SurpriseOfferList(),
                         //       ),
                         //     );
                         //   },
@@ -2764,58 +2821,3 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       ),
     );
   }*/
-
-  Widget _statBox(int index, String value, String label, String image) {
-    final bool isSelected = selectIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-          color: AppColor.black,
-          border: Border.all(
-            color: isSelected ? AppColor.white : Colors.grey.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Image.asset(image, height: 23, color: AppColor.white),
-            SizedBox(width: 8),
-            Text(
-              '$value',
-              style: AppTextStyles.mulish(
-                color: Colors.white,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
-              ),
-            ),
-            SizedBox(width: 4),
-            Text(
-              '$label',
-              style: AppTextStyles.mulish(
-                color: Colors.white,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w400,
-              ),
-            ),
-            SizedBox(width: 8),
-            Container(
-              padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.grey.shade900,
-              ),
-              child: Icon(Icons.arrow_forward, color: Colors.white, size: 15),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
