@@ -16,7 +16,7 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
-import '../../Create Surprise Offers/create_surprise_offers.dart';
+import '../../Create Surprise Offers/Screens/create_surprise_offers.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../Offer/Screen/offer_screens.dart';
@@ -41,6 +41,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     'Analytics',
     'Support',
     'Delete Account',
+    'QR Code',
     'Privacy Policy',
   ];
 
@@ -53,6 +54,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     AppImages.analytics,
     AppImages.support,
     AppImages.accountRelated,
+    AppImages.qrCodeLogo,
     AppImages.privacypolicy,
   ];
 
@@ -65,6 +67,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     const SubscriptionScreen(),
     const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 1),
     const SupportScreen(),
+    const UnderProcessing(),
     const UnderProcessing(),
     const NoDataScreen(
       showBottomButton: false,
@@ -198,7 +201,14 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                           );
                           break;
 
-                        case 8:
+                        case 8: // ✅ QR Code
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => screens[i]),
+                          );
+                          break;
+
+                        case 9: // ✅ Privacy Policy
                           Navigator.push(
                             context,
                             MaterialPageRoute(
