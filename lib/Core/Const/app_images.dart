@@ -100,4 +100,5 @@ class AppImages {
   static String greenTick = 'Assets/Images/greenTick.png';
   static String orangeClock = 'Assets/Images/OrangeClock.png';
   static String sendImage = 'Assets/Images/sendImage.png';
+  static String qrCodeLogo = 'Assets/Images/qr_code_Logo.png';
 }
