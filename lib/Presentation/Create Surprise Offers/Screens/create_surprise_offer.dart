@@ -448,14 +448,11 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                         onTap: _openBannerPickerSheet,
                         child: Container(
                           width: double.infinity,
-                          height: 120,
+                          height: 90,
                           decoration: BoxDecoration(
                             color: AppColor.leftArrow,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.grey.withOpacity(0.3),
-                              width: 1.2,
-                            ),
+                            borderRadius: BorderRadius.circular(16),
+
                           ),
                           child: _bannerImageFile != null
                               ? ClipRRect(
@@ -466,14 +463,10 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                     width: double.infinity,
                                   ),
                                 )
-                              : Column(
+                              : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.add_photo_alternate_outlined,
-                                      size: 28,
-                                      color: Colors.black54,
-                                    ),
+                               Image.asset(AppImages.addImage, width: 20),
                                     const SizedBox(height: 6),
                                     Text(
                                       "Add Image",
