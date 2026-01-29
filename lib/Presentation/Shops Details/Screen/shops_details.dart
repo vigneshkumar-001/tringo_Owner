@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
 import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
@@ -987,7 +988,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                     await ref
                         .read(selectedShopProvider.notifier)
                         .switchShop('');
-
+                    clearShopId();
                     // 2️⃣ Reset AFTER navigation
                     Future.microtask(() {
                       RegistrationSession.instance.reset();
@@ -1085,5 +1086,12 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
         // ),
       ),
     );
+  }
+
+  static Future<void> clearShopId() async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('shop_id');
+    await sp.remove('product_id');
+    await sp.remove('service_id');
   }
 }
