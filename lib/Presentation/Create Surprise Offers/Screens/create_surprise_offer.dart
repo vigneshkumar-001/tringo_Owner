@@ -1,21 +1,29 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Screens/surprise_offer_list.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../AddProduct/Controller/product_notifier.dart';
+import '../Controller/create_surprise_notifier.dart';
 
-class CreateSurpriseOffer extends StatefulWidget {
-  const CreateSurpriseOffer({super.key});
+class CreateSurpriseOffer extends ConsumerStatefulWidget {
+  final String shopId;
+  const CreateSurpriseOffer({super.key, required this.shopId});
 
   @override
-  State<CreateSurpriseOffer> createState() => _CreateSurpriseOfferState();
+  ConsumerState<CreateSurpriseOffer> createState() =>
+      _CreateSurpriseOfferState();
 }
 
-class _CreateSurpriseOfferState extends State<CreateSurpriseOffer> {
+class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // ✅ Controllers
@@ -39,6 +47,18 @@ class _CreateSurpriseOfferState extends State<CreateSurpriseOffer> {
     "KK Nagar Branch",
     "Villapuram Branch",
   ];
+  Map<String, String> _extractDateRange(String value) {
+    if (value.isEmpty) return {"from": "", "to": ""};
+
+    // UI format: "12-12-2025 to 15-12-2025"
+    final parts = value.split(" to ");
+
+    if (parts.length != 2) {
+      return {"from": "", "to": ""};
+    }
+
+    return {"from": parts[0].trim(), "to": parts[1].trim()};
+  }
 
   @override
   void dispose() {
@@ -49,8 +69,115 @@ class _CreateSurpriseOfferState extends State<CreateSurpriseOffer> {
     super.dispose();
   }
 
-  // ✅ Branch BottomSheet
+  String? _selectedBranchId;
+
   void _openBranchBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final state = ref.watch(createSurpriseNotifier);
+            final branches = state.storeListResponse?.data?.items ?? [];
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              height: MediaQuery.of(context).size.height * 0.6,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(22),
+                  topRight: Radius.circular(22),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 4,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    "Select Branch",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 14),
+
+                  /// 🔽 CONTENT AREA
+                  Expanded(
+                    child: Builder(
+                      builder: (_) {
+                        /// 🔄 Loading (CENTERED)
+                        if (state.isLoading) {
+                          return const Center(
+                            child: ThreeDotsLoader(dotColor: AppColor.black),
+                          );
+                        }
+
+                        /// ❌ Error (CENTERED)
+                        if (state.error != null) {
+                          return Center(
+                            child: Text(
+                              state.error!,
+                              style: const TextStyle(color: Colors.red),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }
+
+                        /// ⚠️ Empty (CENTERED)
+                        if (branches.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              "No branches found",
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }
+
+                        /// ✅ Success (LIST)
+                        return ListView.separated(
+                          itemCount: branches.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final branch = branches[index];
+
+                            return ListTile(
+                              title: Text(branch.label),
+                              subtitle: Text(
+                                "${branch.address}, ${branch.city}",
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  _branchController.text = branch.label;
+                                  _selectedBranchId = branch.id;
+                                });
+
+                                debugPrint("Selected Branch ID: ${branch.id}");
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /*  void _openBranchBottomSheet() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -117,7 +244,7 @@ class _CreateSurpriseOfferState extends State<CreateSurpriseOffer> {
         );
       },
     );
-  }
+  }*/
 
   // ✅ Image Picker function
   Future<void> _pickBannerImage(ImageSource source) async {
@@ -199,26 +326,30 @@ class _CreateSurpriseOfferState extends State<CreateSurpriseOffer> {
     );
   }
 
-  // ✅ Submit
-  void _onSubmit() {
-    if (!_formKey.currentState!.validate()) return;
+  String convertToApiFormat(String value) {
+    // value = "12-12-2025"
+    final parts = value.split("-");
+    if (parts.length != 3) return value;
 
-    // ✅ Banner validation optional (if required)
-    // if (_bannerImageFile == null) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text("Please add banner image")),
-    //   );
-    //   return;
-    // }
+    final day = parts[0];
+    final month = parts[1];
+    final year = parts[2];
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SurpriseOfferList()),
-    );
+    return "$year-$month-$day"; // 2025-12-12
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(createSurpriseNotifier.notifier).getBranchList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(createSurpriseNotifier);
+    AppLogger.log.w(widget.shopId);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -525,8 +656,70 @@ class _CreateSurpriseOfferState extends State<CreateSurpriseOffer> {
 
                       // ✅ Done Button
                       CommonContainer.button(
+                        isLoading: state.isLoading,
                         buttonColor: AppColor.black,
-                        onTap: _onSubmit,
+                        onTap: state.isLoading
+                            ? null
+                            : () async {
+                                if (!_formKey.currentState!.validate()) return;
+                                // -------- AVAILABLE DATE RANGE --------
+                                final extracted = _extractDateRange(
+                                  _availableDateController.text,
+                                );
+
+                                String availableFrom = extracted["from"] ?? "";
+                                String availableTo = extracted["to"] ?? "";
+                                final apiAvailableFrom = availableFrom.isEmpty
+                                    ? ""
+                                    : convertToApiFormat(availableFrom);
+                                final apiAvailableTo = availableTo.isEmpty
+                                    ? ""
+                                    : convertToApiFormat(availableTo);
+                                final File? ownerFile = _bannerImageFile == null
+                                    ? null
+                                    : File(_bannerImageFile!.path);
+                                if (_bannerImageFile == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Please add banner image"),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                AppLogger.log.w(apiAvailableTo);
+                                AppLogger.log.w(apiAvailableFrom);
+                                final sucess = await ref
+                                    .watch(createSurpriseNotifier.notifier)
+                                    .createSurpriseOffer(
+                                      branchId: _selectedBranchId.toString(),
+                                      ownerImageFile: ownerFile,
+                                      title: _offerTitleController.text.trim(),
+                                      description: _offerDescriptionController
+                                          .text
+                                          .trim(),
+                                      shopIdToUse: widget.shopId,
+                                      couponCount: Percentage,
+                                      availableFrom: apiAvailableFrom,
+                                      availableTo: apiAvailableTo,
+                                    );
+                                if (sucess) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SurpriseOfferList(),
+                                    ),
+                                  );
+                                } else {
+                                  final latestError = ref
+                                      .read(createSurpriseNotifier)
+                                      .error;
+                                  AppSnackBar.error(context, latestError ?? '');
+                                }
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(builder: (context) => SurpriseOfferList()),
+                                // );
+                              },
                         text: Text(
                           'Done',
                           style: AppTextStyles.mulish(
