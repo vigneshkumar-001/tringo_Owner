@@ -11,6 +11,8 @@ import 'package:tringo_vendor/Core/Const/app_logger.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
+import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Model/create_surprise_response.dart';
+import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Model/store_list_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
@@ -445,6 +447,8 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedShopId = prefs.getString('shop_id');
+      AppLogger.log.w(savedShopId);
+      AppLogger.log.w(apiShopId);
 
       // ✅ Priority: 1) SharedPrefs → 2) apiShopId
       String? finalShopId;
@@ -2348,6 +2352,7 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure("Unexpected error occurred"));
     }
   }
+
   Future<Either<Failure, SupportListResponse>> supportList() async {
     try {
       final String url = ApiUrl.supportTicketsList;
@@ -2458,14 +2463,14 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(ServerFailure(e.toString()));
     }
   }
+
   Future<Either<Failure, SendMessageResponse>> sendMessage({
     required String subject,
 
     required String imageUrl,
     required String ticketId,
     required dynamic attachments,
-  }) async
-  {
+  }) async {
     try {
       final String url = ApiUrl.sendMessage(ticketId: ticketId);
       final Map<String, dynamic> body = {
@@ -2507,5 +2512,90 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
+  Future<Either<Failure, StoreListResponse>> getBranchList({
+    String? apiShopId,
+  }) async {
+    try {
+      final url = ApiUrl.branchesList;
+      dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
 
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return Right(StoreListResponse.fromJson(response.data));
+          // if (response.data['status'] == true) {
+          //   return Right(ShopCategoryListResponse.fromJson(response.data));
+          // } else {
+          //   return Left(
+          //     ServerFailure(response.data['message'] ?? "Login failed"),
+          //   );
+          // }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      print(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, CreateSurpriseResponse>> createSurpriseOffer({
+    required String branchId,
+    required String bannerUrl,
+    required String shopIdToUse,
+    required String title,
+    required String description,
+    required int couponCount,
+    required String availableFrom,
+    required String availableTo,
+  }) async {
+    try {
+      final String url = ApiUrl.createSurpriseOffer(shopId: shopIdToUse);
+
+      final payload = {
+        "branchId": branchId,
+        "bannerUrl": bannerUrl,
+        "title": title,
+        "description": description,
+        "couponCount": couponCount,
+        "availableFrom": availableFrom,
+        "availableTo": availableTo,
+      };
+
+      final response = await Request.sendRequest(url, payload, 'Post', true);
+
+      if (response is! Response) {
+        return Left(ServerFailure("Invalid response from server"));
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+
+        if (data["status"] == true) {
+          return Right(CreateSurpriseResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? "Request failed"));
+        }
+      }
+
+      return Left(
+        ServerFailure(response.data['message'] ?? "Something went wrong"),
+      );
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

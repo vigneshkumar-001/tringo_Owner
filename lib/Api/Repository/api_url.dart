@@ -1,8 +1,9 @@
 class ApiUrl {
-  // static const String base =
-  //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
+  static const String base =
+      "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
-  static const String base = "https://bknd.tringobiz.com/";
+  // static const String base = "https://bknd.tringobiz.com/";
+    static const String baseUrlImage = "https://bknd.tringobiz.com/";
 
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
@@ -15,13 +16,14 @@ class ApiUrl {
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
   static const String version = "${base}api/v1/app/version";
   static const String deleteAccount = "${base}api/v1/auth/me";
-  static const String imageUrl = "${base}api/media/image-save";
+  static const String imageUrl = "${baseUrlImage}api/media/image-save";
   // "https://next.fenizotechnologies.com/Adrox/api/image-save";
   static const String plans = "${base}api/v1/subscriptions/plans";
   static const String currentPlans = "${base}api/v1/subscriptions/current";
   static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String contactInfo = "${base}api/v1/contacts/sync";
   static const String supportTicketsList = "${base}api/v1/support/tickets";
+  static const String branchesList = "${base}api/v1/shops/branches";
 
   static String sendMessage({required String ticketId}) {
     return "${base}api/v1/support/tickets/$ticketId/messages";
@@ -54,6 +56,10 @@ class ApiUrl {
     return "${base}api/v1/shops/$shopId/products";
   }
 
+  static String createSurpriseOffer({required String shopId}) {
+    return "${base}api/v1/shops/$shopId/offers/surprise";
+  }
+
   static String updateProducts({required String productId}) {
     return "${base}api/v1/products/$productId";
   }
@@ -65,6 +71,7 @@ class ApiUrl {
   static String productCategoryList({required String shopId}) {
     return "${base}api/v1/public/shops/$shopId/product-categories";
   }
+
 
   static String shopDetails({required String shopId}) {
     return "${base}api/v1/shops/$shopId";
