@@ -3,7 +3,7 @@ class ApiUrl {
       "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
   // static const String base = "https://bknd.tringobiz.com/";
-    static const String baseUrlImage = "https://bknd.tringobiz.com/";
+  static const String baseUrlImage = "https://bknd.tringobiz.com/";
 
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
@@ -71,7 +71,6 @@ class ApiUrl {
   static String productCategoryList({required String shopId}) {
     return "${base}api/v1/public/shops/$shopId/product-categories";
   }
-
 
   static String shopDetails({required String shopId}) {
     return "${base}api/v1/shops/$shopId";
@@ -142,5 +141,13 @@ class ApiUrl {
 
   static String editOffers({required String shopId, required String offerId}) {
     return "${base}api/v1/shops/$shopId/offers/app/$offerId";
+  }
+
+  static String surpriseOfferList({required String shopId}) {
+    return "${base}api/v1/shops/$shopId/offers/surprise/list?limitClaimers=4";
+  }
+
+  static String shopQrCode({required String shopId}) {
+    return "${base}api/v1/shops/$shopId/qr";
   }
 }

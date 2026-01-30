@@ -1,4 +1,10 @@
 // -----------------------------------------------------------------------------
+// FULL UPDATED MODEL (ShopDetailsResponse)
+// - Fixes: reviews parsing, createdAtRelative null issue, safe casting
+// - Matches your API response exactly
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
 // ROOT RESPONSE
 // -----------------------------------------------------------------------------
 class ShopDetailsResponse {
@@ -10,8 +16,8 @@ class ShopDetailsResponse {
   factory ShopDetailsResponse.fromJson(Map<String, dynamic> json) {
     return ShopDetailsResponse(
       status: json['status'] as bool? ?? false,
-      data: json['data'] != null
-          ? ShopData.fromJson(json['data'] as Map<String, dynamic>)
+      data: json['data'] is Map
+          ? ShopData.fromJson((json['data'] as Map).cast<String, dynamic>())
           : null,
     );
   }
@@ -22,6 +28,8 @@ class ShopDetailsResponse {
 // -----------------------------------------------------------------------------
 class ShopData {
   final String? shopId;
+  final String? businessProfileId;
+
   final String? shopEnglishName;
   final String? shopTamilName;
   final String? shopDescriptionEn;
@@ -49,13 +57,23 @@ class ShopData {
   final double? shopRating;
   final int? shopReviewCount;
 
+  final List<ShopWeeklyHour> shopWeeklyHours;
+  final String? opensAt;
+  final String? closesAt;
+  final String? ownershipType;
+
   final List<ShopImage> shopImages;
+  final String? shopOwnerImageUrl;
+
   final List<Product> products;
   final List<ServiceItem> services;
-  final List<dynamic> reviews;
+
+  // ✅ Reviews (typed, safe)
+  final List<ShopReviewItem> reviews;
 
   ShopData({
     this.shopId,
+    this.businessProfileId,
     this.shopEnglishName,
     this.shopTamilName,
     this.shopDescriptionEn,
@@ -78,35 +96,68 @@ class ShopData {
     this.shopIsTrusted,
     this.shopRating,
     this.shopReviewCount,
+    required this.shopWeeklyHours,
+    this.opensAt,
+    this.closesAt,
+    this.ownershipType,
     required this.shopImages,
+    this.shopOwnerImageUrl,
     required this.products,
     required this.services,
     required this.reviews,
   });
 
   factory ShopData.fromJson(Map<String, dynamic> json) {
+    // ---------- Reviews safe parse ----------
+    final rawReviews = json['reviews'];
+    final List<ShopReviewItem> parsedReviews = (rawReviews is List)
+        ? rawReviews.map((e) {
+            final m = (e is Map<String, dynamic>)
+                ? e
+                : (e is Map)
+                ? e.cast<String, dynamic>()
+                : <String, dynamic>{'comment': e.toString()};
+            return ShopReviewItem.fromJson(m);
+          }).toList()
+        : <ShopReviewItem>[];
+
+    // ---------- Weekly hours safe parse ----------
+    final rawHours = json['shopWeeklyHours'];
+    final List<ShopWeeklyHour> parsedHours = (rawHours is List)
+        ? rawHours.map((e) {
+            final m = (e is Map<String, dynamic>)
+                ? e
+                : (e is Map)
+                ? e.cast<String, dynamic>()
+                : <String, dynamic>{};
+            return ShopWeeklyHour.fromJson(m);
+          }).toList()
+        : <ShopWeeklyHour>[];
+
     return ShopData(
-      shopId: json['shopId'],
-      shopEnglishName: json['shopEnglishName'],
-      shopTamilName: json['shopTamilName'],
-      shopDescriptionEn: json['shopDescriptionEn'],
-      shopDescriptionTa: json['shopDescriptionTa'],
-      shopAddressEn: json['shopAddressEn'],
-      shopAddressTa: json['shopAddressTa'],
-      shopCity: json['shopCity'],
-      shopState: json['shopState'],
-      shopCountry: json['shopCountry'],
-      shopPostalCode: json['shopPostalCode'],
+      shopId: json['shopId']?.toString(),
+      businessProfileId: json['businessProfileId']?.toString(),
+
+      shopEnglishName: json['shopEnglishName']?.toString(),
+      shopTamilName: json['shopTamilName']?.toString(),
+      shopDescriptionEn: json['shopDescriptionEn']?.toString(),
+      shopDescriptionTa: json['shopDescriptionTa']?.toString(),
+      shopAddressEn: json['shopAddressEn']?.toString(),
+      shopAddressTa: json['shopAddressTa']?.toString(),
+      shopCity: json['shopCity']?.toString(),
+      shopState: json['shopState']?.toString(),
+      shopCountry: json['shopCountry']?.toString(),
+      shopPostalCode: json['shopPostalCode']?.toString(),
       shopGpsLatitude: json['shopGpsLatitude']?.toString(),
       shopGpsLongitude: json['shopGpsLongitude']?.toString(),
 
-      category: json['category'],
-      subCategory: json['subCategory'],
+      category: json['category']?.toString(),
+      subCategory: json['subCategory']?.toString(),
 
-      shopKind: json['shopKind'],
-      shopPhone: json['shopPhone'],
-      shopWhatsapp: json['shopWhatsapp'],
-      shopContactEmail: json['shopContactEmail'],
+      shopKind: json['shopKind']?.toString(),
+      shopPhone: json['shopPhone']?.toString(),
+      shopWhatsapp: json['shopWhatsapp']?.toString(),
+      shopContactEmail: json['shopContactEmail']?.toString(),
 
       shopDoorDelivery: json['shopDoorDelivery'] as bool? ?? false,
       shopIsTrusted: json['shopIsTrusted'] as bool? ?? false,
@@ -114,19 +165,107 @@ class ShopData {
       shopRating: (json['shopRating'] as num?)?.toDouble(),
       shopReviewCount: (json['shopReviewCount'] as num?)?.toInt() ?? 0,
 
-      shopImages: (json['shopImages'] as List<dynamic>? ?? [])
-          .map((e) => ShopImage.fromJson(e))
-          .toList(),
+      shopWeeklyHours: parsedHours,
+      opensAt: json['opensAt']?.toString(),
+      closesAt: json['closesAt']?.toString(),
+      ownershipType: json['ownershipType']?.toString(),
 
-      products: (json['products'] as List<dynamic>? ?? [])
-          .map((e) => Product.fromJson(e))
-          .toList(),
+      shopImages: (json['shopImages'] is List)
+          ? (json['shopImages'] as List)
+                .map(
+                  (e) => ShopImage.fromJson((e as Map).cast<String, dynamic>()),
+                )
+                .toList()
+          : <ShopImage>[],
+      shopOwnerImageUrl: json['shopOwnerImageUrl']?.toString(),
 
-      services: (json['services'] as List<dynamic>? ?? [])
-          .map((e) => ServiceItem.fromJson(e))
-          .toList(),
+      products: (json['products'] is List)
+          ? (json['products'] as List)
+                .map(
+                  (e) => Product.fromJson((e as Map).cast<String, dynamic>()),
+                )
+                .toList()
+          : <Product>[],
 
-      reviews: json['reviews'] ?? [],
+      services: (json['services'] is List)
+          ? (json['services'] as List)
+                .map(
+                  (e) =>
+                      ServiceItem.fromJson((e as Map).cast<String, dynamic>()),
+                )
+                .toList()
+          : <ServiceItem>[],
+
+      // ✅ final reviews
+      reviews: parsedReviews,
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// WEEKLY HOURS
+// -----------------------------------------------------------------------------
+class ShopWeeklyHour {
+  final String? day;
+  final String? opensAt;
+  final String? closesAt;
+  final bool? closed;
+
+  ShopWeeklyHour({this.day, this.opensAt, this.closesAt, this.closed});
+
+  factory ShopWeeklyHour.fromJson(Map<String, dynamic> json) {
+    return ShopWeeklyHour(
+      day: json['day']?.toString(),
+      opensAt: json['opensAt']?.toString(),
+      closesAt: json['closesAt']?.toString(),
+      closed: json['closed'] as bool? ?? false,
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// REVIEW MODEL (UPDATED FOR createdAtRelative)
+// -----------------------------------------------------------------------------
+class ShopReviewItem {
+  final String? id;
+  final double? rating; // "4.0" -> 4.0
+  final String? comment; // multiline
+  final String? createdAtRelative; // "1 Hour Ago"
+
+  const ShopReviewItem({
+    this.id,
+    this.rating,
+    this.comment,
+    this.createdAtRelative,
+  });
+
+  factory ShopReviewItem.fromJson(Map<String, dynamic> json) {
+    double? parseRating(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v.trim());
+      return null;
+    }
+
+    String? pick(Map<String, dynamic> j, List<String> keys) {
+      for (final k in keys) {
+        final v = j[k];
+        if (v != null && v.toString().trim().isNotEmpty) return v.toString();
+      }
+      return null;
+    }
+
+    return ShopReviewItem(
+      id: pick(json, ['id', '_id', 'reviewId']),
+      rating: parseRating(pick(json, ['rating', 'stars', 'rate'])),
+      comment: pick(json, ['comment', 'message', 'review', 'text']),
+      createdAtRelative: pick(json, [
+        'createdAtRelative',
+        'created_at_relative',
+        'createdAtHuman',
+        'createdAtText',
+        'timeAgo',
+      ]),
     );
   }
 }
@@ -144,9 +283,9 @@ class ShopImage {
 
   factory ShopImage.fromJson(Map<String, dynamic> json) {
     return ShopImage(
-      id: json['id'],
-      type: json['type'],
-      url: json['url'],
+      id: json['id']?.toString(),
+      type: json['type']?.toString(),
+      url: json['url']?.toString(),
       displayOrder: (json['displayOrder'] as num?)?.toInt(),
     );
   }
@@ -196,26 +335,30 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      productId: json['productId'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      category: json['category'],
-      subCategory: json['subCategory'],
-      englishName: json['englishName'],
-      tamilName: json['tamilName'],
+      productId: json['productId']?.toString(),
+      createdAt: json['createdAt']?.toString(),
+      updatedAt: json['updatedAt']?.toString(),
+      category: json['category']?.toString(),
+      subCategory: json['subCategory']?.toString(),
+      englishName: json['englishName']?.toString(),
+      tamilName: json['tamilName']?.toString(),
       price: (json['price'] as num?)?.toInt(),
       offerPrice: (json['offerPrice'] as num?)?.toInt(),
-      isFeatured: json['isFeatured'] ?? false,
-      offerLabel: json['offerLabel'],
-      offerValue: json['offerValue'],
-      description: json['description'],
-      doorDelivery: json['doorDelivery'] ?? false,
+      isFeatured: json['isFeatured'] as bool? ?? false,
+      offerLabel: json['offerLabel']?.toString(),
+      offerValue: json['offerValue']?.toString(),
+      description: json['description']?.toString(),
+      doorDelivery: json['doorDelivery'] as bool? ?? false,
       rating: (json['rating'] as num?)?.toInt(),
       ratingCount: (json['ratingCount'] as num?)?.toInt(),
-
-      media: (json['media'] as List<dynamic>? ?? [])
-          .map((e) => ProductMedia.fromJson(e))
-          .toList(),
+      media: (json['media'] is List)
+          ? (json['media'] as List)
+                .map(
+                  (e) =>
+                      ProductMedia.fromJson((e as Map).cast<String, dynamic>()),
+                )
+                .toList()
+          : <ProductMedia>[],
     );
   }
 }
@@ -232,8 +375,8 @@ class ProductMedia {
 
   factory ProductMedia.fromJson(Map<String, dynamic> json) {
     return ProductMedia(
-      id: json['id'],
-      url: json['url'],
+      id: json['id']?.toString(),
+      url: json['url']?.toString(),
       displayOrder: (json['displayOrder'] as num?)?.toInt(),
     );
   }
@@ -250,8 +393,10 @@ class ServiceItem {
   final String? subCategory;
   final String? englishName;
   final String? tamilName;
-  final double? startsAt;       // 👈 changed to double?
+
+  final double? startsAt;
   final double? offerPrice;
+
   final int? durationMinutes;
   final String? offerLabel;
   final String? offerValue;
@@ -286,30 +431,39 @@ class ServiceItem {
 
   factory ServiceItem.fromJson(Map<String, dynamic> json) {
     return ServiceItem(
-      serviceId: json['serviceId'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      category: json['category'],
-      subCategory: json['subCategory'],
-      englishName: json['englishName'],
-      tamilName: json['tamilName'],
+      serviceId: json['serviceId']?.toString(),
+      createdAt: json['createdAt']?.toString(),
+      updatedAt: json['updatedAt']?.toString(),
+      category: json['category']?.toString(),
+      subCategory: json['subCategory']?.toString(),
+      englishName: json['englishName']?.toString(),
+      tamilName: json['tamilName']?.toString(),
       startsAt: (json['startsAt'] as num?)?.toDouble(),
       offerPrice: (json['offerPrice'] as num?)?.toDouble(),
       durationMinutes: (json['durationMinutes'] as num?)?.toInt(),
-      offerLabel: json['offerLabel'],
-      offerValue: json['offerValue'],
-      description: json['description'],
+      offerLabel: json['offerLabel']?.toString(),
+      offerValue: json['offerValue']?.toString(),
+      description: json['description']?.toString(),
       rating: (json['rating'] as num?)?.toInt(),
       ratingCount: (json['ratingCount'] as num?)?.toInt(),
-      status: json['status'],
-
-      features: (json['features'] as List<dynamic>? ?? [])
-          .map((e) => ServiceFeature.fromJson(e))
-          .toList(),
-
-      media: (json['media'] as List<dynamic>? ?? [])
-          .map((e) => ServiceMedia.fromJson(e))
-          .toList(),
+      status: json['status']?.toString(),
+      features: (json['features'] is List)
+          ? (json['features'] as List)
+                .map(
+                  (e) => ServiceFeature.fromJson(
+                    (e as Map).cast<String, dynamic>(),
+                  ),
+                )
+                .toList()
+          : <ServiceFeature>[],
+      media: (json['media'] is List)
+          ? (json['media'] as List)
+                .map(
+                  (e) =>
+                      ServiceMedia.fromJson((e as Map).cast<String, dynamic>()),
+                )
+                .toList()
+          : <ServiceMedia>[],
     );
   }
 }
@@ -327,10 +481,10 @@ class ServiceFeature {
 
   factory ServiceFeature.fromJson(Map<String, dynamic> json) {
     return ServiceFeature(
-      id: json['id'],
-      label: json['label'],
-      value: json['value'],
-      language: json['language'],
+      id: json['id']?.toString(),
+      label: json['label']?.toString(),
+      value: json['value']?.toString(),
+      language: json['language']?.toString(),
     );
   }
 }
@@ -347,8 +501,8 @@ class ServiceMedia {
 
   factory ServiceMedia.fromJson(Map<String, dynamic> json) {
     return ServiceMedia(
-      id: json['id'],
-      url: json['url'],
+      id: json['id']?.toString(),
+      url: json['url']?.toString(),
       displayOrder: (json['displayOrder'] as num?)?.toInt(),
     );
   }

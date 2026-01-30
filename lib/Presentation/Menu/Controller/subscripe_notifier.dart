@@ -8,6 +8,7 @@ import '../../AddProduct/Model/delete_response.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../Model/plan_list_response.dart';
 import '../Model/purchase_response.dart';
+import '../Model/qr_action_response.dart';
 
 class SubscriptionState {
   final bool isLoading;
@@ -17,6 +18,7 @@ class SubscriptionState {
   final PurchaseResponse? purchaseResponse;
   final CurrentPlanResponse? currentPlanResponse;
   final DeleteResponse? deleteResponse;
+  final QrActionResponse? qrActionResponse;
 
   const SubscriptionState({
     this.isLoading = false,
@@ -26,6 +28,7 @@ class SubscriptionState {
     this.purchaseResponse,
     this.currentPlanResponse,
     this.deleteResponse,
+    this.qrActionResponse,
   });
 
   factory SubscriptionState.initial() => const SubscriptionState();
@@ -38,6 +41,7 @@ class SubscriptionState {
     PlanListResponse? planListResponse,
     CurrentPlanResponse? currentPlanResponse,
     DeleteResponse? deleteResponse,
+    QrActionResponse? qrActionResponse,
     bool clearError = false,
   }) {
     return SubscriptionState(
@@ -48,6 +52,7 @@ class SubscriptionState {
       currentPlanResponse: currentPlanResponse ?? this.currentPlanResponse,
       purchaseResponse: purchaseResponse ?? this.purchaseResponse,
       deleteResponse: deleteResponse ?? this.deleteResponse,
+      qrActionResponse: qrActionResponse ?? this.qrActionResponse,
     );
   }
 }
@@ -162,6 +167,33 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
           isInsertLoading: false,
           error: null,
           deleteResponse: response,
+        );
+      },
+    );
+  }
+
+  Future<void> shopQrCode({required String shopId}) async {
+    state = state.copyWith(
+      isInsertLoading: true,
+      error: null,
+      qrActionResponse: null,
+    );
+
+    final result = await api.shopQrCode(shopId: shopId);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isInsertLoading: false,
+          error: failure.message,
+          qrActionResponse: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isInsertLoading: false,
+          error: null,
+          qrActionResponse: response,
         );
       },
     );
