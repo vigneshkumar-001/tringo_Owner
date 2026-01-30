@@ -1377,7 +1377,11 @@ class CommonContainer {
             final DateTime firstDate = DateTime(1900);
 
             final DateTime lastDate = (singleType == DateSingleType.dob18Plus)
-                ? DateTime(now.year - 18, now.month, now.day) // ✅ DOB மட்டும் 18+
+                ? DateTime(
+                    now.year - 18,
+                    now.month,
+                    now.day,
+                  ) // ✅ DOB மட்டும் 18+
                 : DateTime(2100); // ✅ மற்ற fields normal
 
             final DateTime initialDate = () {
@@ -1396,7 +1400,8 @@ class CommonContainer {
                 } catch (_) {}
               }
 
-              if (singleType == DateSingleType.dob18Plus) return lastDate; // ✅ DOB default 18+
+              if (singleType == DateSingleType.dob18Plus)
+                return lastDate; // ✅ DOB default 18+
               return now; // ✅ normal default today
             }();
 
@@ -1420,13 +1425,12 @@ class CommonContainer {
 
             if (picked != null) {
               controller?.text =
-              '${picked.day.toString().padLeft(2, '0')}-'
+                  '${picked.day.toString().padLeft(2, '0')}-'
                   '${picked.month.toString().padLeft(2, '0')}-${picked.year}';
               state.didChange(controller?.text);
             }
             return;
           }
-
 
           // Single Date Picker
           // if (datePickMode == DatePickMode.single) {
@@ -4098,6 +4102,64 @@ class CommonContainer {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget analyticsRowBox({
+    required String image,
+    required String text,
+    bool isSelected = false,
+    VoidCallback? onTap,
+
+    FontWeight fontWeight = FontWeight.w500,
+    FontWeight selectedFontWeight = FontWeight.w800,
+    double fontSize = 11,
+    double selectedFontSize = 12,
+  }) {
+    final bg = isSelected ? AppColor.resendOtp : AppColor.dividerGrey;
+    final iconColor = isSelected ? Colors.white : AppColor.darkBlue;
+    final textColor = isSelected ? AppColor.resendOtp : AppColor.darkBlue;
+
+    final fw = isSelected ? selectedFontWeight : fontWeight;
+    final fs = isSelected ? selectedFontSize : fontSize;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: onTap,
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(15),
+
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.10),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.5),
+              child: Image.asset(image, height: 25, color: iconColor),
+            ),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            text,
+            style: AppTextStyles.mulish(
+              fontWeight: fw,
+              fontSize: fs,
+              color: textColor,
             ),
           ),
         ],

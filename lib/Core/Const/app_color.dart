@@ -55,4 +55,5 @@ class AppColor {
   static const slatePurple = Color(0xff615E83);
   static const yellow = Color(0xffEF8C23);
   static const midnightBlue = Color(0xff14212B);
+  static const dividerGrey = Color(0xffF3F3F3);
 }

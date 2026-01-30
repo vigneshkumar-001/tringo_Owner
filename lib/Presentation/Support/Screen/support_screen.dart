@@ -194,14 +194,17 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                         padding: const EdgeInsets.all(8.0),
                         child: CommonContainer.supportBox(
                           imageTextColor: imageTextColor,
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
                                     SupportChatScreen(id: ticket.id),
                               ),
                             );
+                            await ref
+                                .read(supportNotifier.notifier)
+                                .supportList(context: context);
                           },
                           containerColor: containerColor,
                           image: imageAsset,
@@ -220,11 +223,15 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                     onTap: () async {
                       await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CreateSupport()),
+                        MaterialPageRoute(
+                          builder: (_) => const CreateSupport(),
+                        ),
                       );
 
                       // 2️⃣ Refresh support list AFTER returning
-                      await ref.read(supportNotifier.notifier).supportList(context: context);
+                      await ref
+                          .read(supportNotifier.notifier)
+                          .supportList(context: context);
                     },
                     text: const Text('Create Ticket'),
                   ),
