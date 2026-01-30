@@ -423,27 +423,8 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
               // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _openQrScanner,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColor.leftArrow,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColor.shadowBlue,
-                              blurRadius: 5,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(AppImages.leftArrow, height: 15),
-                      ),
-                    ),
-                  ],
+                child: CommonContainer.topLeftArrow(
+                  onTap: () => Navigator.pop(context),
                 ),
               ),
 

@@ -16,6 +16,7 @@ import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart
 import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Controller/product_notifier.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
@@ -1694,27 +1695,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
                                   if (!mounted) return;
 
-                                  ScaffoldMessenger.of(
+                                  AppSnackBar.success(
                                     this.context,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        deleteMsg ??
-                                            'Service removed successfully',
-                                      ),
-                                    ),
+                                    deleteMsg ?? 'Service removed successfully',
                                   );
                                 } else {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(
+                                  AppSnackBar.error(
                                     this.context,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        productState.error ??
-                                            'Failed to remove service',
-                                      ),
-                                    ),
+                                    productState.error ??
+                                        'Failed to remove service',
                                   );
                                 }
                               },
@@ -1989,27 +1979,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   setState(() {});
 
                                   // IMPORTANT: use page context, NOT the row context
-                                  ScaffoldMessenger.of(
+                                  AppSnackBar.success(
                                     this.context,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        deleteMsg ??
-                                            'Product removed successfully',
-                                      ),
-                                    ),
+                                    deleteMsg ?? 'Product removed successfully',
                                   );
                                 } else {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(
+                                  AppSnackBar.error(
                                     this.context,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        productState.error ??
-                                            'Failed to remove product',
-                                      ),
-                                    ),
+                                    productState.error ??
+                                        'Failed to remove product',
                                   );
                                 }
                               },

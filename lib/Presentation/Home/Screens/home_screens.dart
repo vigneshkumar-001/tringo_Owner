@@ -43,6 +43,7 @@ import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../under_processing.dart';
 import '../Controller/shopContext_provider.dart';
+import 'home_screen_analytics.dart';
 
 class HomeScreens extends ConsumerStatefulWidget {
   const HomeScreens({super.key});
@@ -672,24 +673,36 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                         '320',
                                         'Reach',
                                         AppImages.search,
+                                        () {},
                                       ),
                                       _statBox(
                                         1,
                                         '31',
                                         'Enquiries',
                                         AppImages.msg,
+                                        () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  HomeScreenAnalytics(),
+                                            ),
+                                          );
+                                        },
                                       ),
                                       _statBox(
                                         2,
                                         '20',
                                         'Calls',
                                         AppImages.call,
+                                        () {},
                                       ),
                                       _statBox(
                                         3,
                                         '12',
                                         'Direction',
                                         AppImages.location,
+                                        () {},
                                       ),
                                     ],
                                   ),
@@ -830,21 +843,21 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                             onTap: () {
                               final isPremium =
                                   RegistrationProductSeivice.instance.isPremium;
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (_) => isPremium
-                              //         ? SurpriseOfferList()
-                              //         : SubscriptionScreen(),
-                              //   ),
-                              // );
-                              AppLogger.log.i(mainShop?.id);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => SurpriseOfferList(),
+                                  builder: (_) => isPremium
+                                      ? SurpriseOfferList()
+                                      : SubscriptionScreen(),
                                 ),
                               );
+                              AppLogger.log.i(mainShop?.id);
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (_) => SurpriseOfferList(),
+                              //   ),
+                              // );
                             },
                             arrowColor: AppColor.surpriseOfferArrow,
                             isSurpriseCard: true,
@@ -1292,15 +1305,25 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     );
   }
 
-  Widget _statBox(int index, String value, String label, String image) {
+  Widget _statBox(
+    int index,
+    String value,
+    String label,
+    String image,
+    VoidCallback? onTap,
+  ) {
     final bool isSelected = selectIndex == index;
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          selectIndex = index;
-        });
+        setState(() => selectIndex = index);
+        onTap?.call();
       },
+      // onTap: () {
+      //   setState(() {
+      //     selectIndex = index;
+      //   });
+      // },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
