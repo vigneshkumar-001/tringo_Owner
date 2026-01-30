@@ -839,20 +839,10 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               //   ),
                               // );
                               AppLogger.log.i(mainShop?.id);
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (_) => SurpriseOfferList(
-                              //
-                              //     ),
-                              //   ),
-                              // );
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => CreateSurpriseOffer(
-                                    shopId: mainShop?.id.toString() ?? '',
-                                  ),
+                                  builder: (_) => SurpriseOfferList(),
                                 ),
                               );
                             },

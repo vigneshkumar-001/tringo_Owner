@@ -380,12 +380,48 @@ class Media {
 // ───────────────────────── REVIEW ─────────────────────────
 
 class Review {
-  Review();
+  final String? id;
+  final double? rating;
+  final String? comment;
+  final String? createdAtRelative;
+
+  const Review({
+    this.id,
+    this.rating,
+    this.comment,
+    this.createdAtRelative,
+  });
 
   factory Review.fromJson(Map<String, dynamic> json) {
-    return Review();
+    double? parseRating(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v.trim());
+      return null;
+    }
+
+    String? parseTime(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      return s.isEmpty ? null : s;
+    }
+
+    return Review(
+      id: json["id"]?.toString(),
+      rating: parseRating(json["rating"]),
+      comment: json["comment"]?.toString(),
+      createdAtRelative: parseTime(json["createdAtRelative"]), // ✅ FIX
+    );
   }
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "rating": rating,
+    "comment": comment,
+    "createdAtRelative": createdAtRelative, // ✅ include (optional)
+  };
 }
+
 
 bool? _parseBool(dynamic value) {
   if (value == null) return null;
