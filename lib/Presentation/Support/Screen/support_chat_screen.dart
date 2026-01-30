@@ -34,9 +34,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       ref.read(supportNotifier.notifier).getChatMessage(id: widget.id);
     });
   }
+
   String formatTime(DateTime time) {
     return DateFormat.jm().format(time); // e.g., 4:13 PM
   }
+
   Future<void> _pickImage() async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -45,6 +47,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     if (!mounted || picked == null) return;
     setState(() => _pickedImage = picked);
   }
+
   Future<void> _sendMessage() async {
     final notifier = ref.read(supportNotifier.notifier);
 
@@ -67,7 +70,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
 
     // Clear input
     final text = _messageController.text.trim();
-    final File? imageFile = _pickedImage != null ? File(_pickedImage!.path) : null;
+    final File? imageFile = _pickedImage != null
+        ? File(_pickedImage!.path)
+        : null;
     _messageController.clear();
     setState(() => _pickedImage = null);
 
@@ -86,7 +91,8 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       // Mark as sent
       setState(() {
         final i = _localMessages.indexWhere((e) => e.id == tempId);
-        if (i != -1) _localMessages[i] = _localMessages[i].copyWith(isSending: false);
+        if (i != -1)
+          _localMessages[i] = _localMessages[i].copyWith(isSending: false);
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -94,11 +100,15 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       // Mark as failed
       setState(() {
         final i = _localMessages.indexWhere((e) => e.id == tempId);
-        if (i != -1) _localMessages[i] =
-            _localMessages[i].copyWith(isSending: false, isFailed: true);
+        if (i != -1)
+          _localMessages[i] = _localMessages[i].copyWith(
+            isSending: false,
+            isFailed: true,
+          );
       });
     }
   }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -123,7 +133,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.72,
+        ),
         decoration: BoxDecoration(
           color: isMine ? AppColor.textWhite : AppColor.midnightBlue,
           borderRadius: BorderRadius.circular(16),
@@ -134,19 +146,31 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
             if (localImagePath != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(File(localImagePath), width: 150, height: 150, fit: BoxFit.cover),
+                child: Image.file(
+                  File(localImagePath),
+                  width: 150,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
               ),
             if (imageUrl != null && imageUrl.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(imageUrl, width: 150, height: 150, fit: BoxFit.cover),
+                child: Image.network(
+                  imageUrl,
+                  width: 150,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
               ),
             if (text != null && text.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   text,
-                  style: AppTextStyles.mulish(color: isMine ? Colors.black : Colors.white),
+                  style: AppTextStyles.mulish(
+                    color: isMine ? Colors.black : Colors.white,
+                  ),
                 ),
               ),
             const SizedBox(height: 4),
@@ -171,6 +195,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       ),
     );
   }
+
   Widget _buildInputBar(SupportState state) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -185,7 +210,12 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(File(_pickedImage!.path), width: 180, height: 180, fit: BoxFit.cover),
+                    child: Image.file(
+                      File(_pickedImage!.path),
+                      width: 180,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Positioned(
                     top: 5,
@@ -195,7 +225,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                       child: CircleAvatar(
                         radius: 12,
                         backgroundColor: Colors.black.withOpacity(0.6),
-                        child: const Icon(Icons.close, size: 16, color: Colors.white),
+                        child: const Icon(
+                          Icons.close,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -216,7 +250,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                       borderRadius: BorderRadius.circular(15),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
-                        child: Image.asset(AppImages.addImage, width: 22, color: AppColor.darkBlue),
+                        child: Image.asset(
+                          AppImages.addImage,
+                          width: 22,
+                          color: AppColor.darkBlue,
+                        ),
                       ),
                     ),
                     border: OutlineInputBorder(
@@ -274,7 +312,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                 ),
                 Text(
                   'Support Chat',
-                  style: AppTextStyles.mulish(fontSize: 16, fontWeight: FontWeight.w400, color: AppColor.mildBlack),
+                  style: AppTextStyles.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: AppColor.mildBlack,
+                  ),
                 ),
               ],
             ),
@@ -287,14 +329,29 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(ticket?.status ?? 'OPEN',
-                          style: AppTextStyles.mulish(fontSize: 14, fontWeight: FontWeight.w600, color: AppColor.resendOtp)),
+                      Text(
+                        ticket?.status ?? 'OPEN',
+                        style: AppTextStyles.mulish(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColor.resendOtp,
+                        ),
+                      ),
                       const SizedBox(height: 9),
-                      Text(ticket?.subject ?? 'Loading subject...',
-                          maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTextStyles.mulish(color: AppColor.black)),
+                      Text(
+                        ticket?.subject ?? 'Loading subject...',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.mulish(color: AppColor.black),
+                      ),
                       const SizedBox(height: 9),
-                      Text('Created on ${ticket?.createdOn ?? ''}',
-                          style: AppTextStyles.mulish(fontSize: 12, color: AppColor.black.withOpacity(0.4))),
+                      Text(
+                        'Created on ${ticket?.createdOn ?? ''}',
+                        style: AppTextStyles.mulish(
+                          fontSize: 12,
+                          color: AppColor.black.withOpacity(0.4),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -302,12 +359,30 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                    decoration: BoxDecoration(color: AppColor.black, borderRadius: BorderRadius.circular(15)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColor.black,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                     child: Column(
                       children: [
-                        Text("Close", style: AppTextStyles.mulish(fontSize: 12, color: Colors.white)),
-                        Text("Ticket", style: AppTextStyles.mulish(fontSize: 12, color: Colors.white)),
+                        Text(
+                          "Close",
+                          style: AppTextStyles.mulish(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          "Ticket",
+                          style: AppTextStyles.mulish(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -319,6 +394,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(supportNotifier);
@@ -329,27 +405,35 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     if (state.chatMessageResponse != null) {
       for (var group in state.chatMessageResponse!.data.messageGroups) {
         for (var msg in group.messages) {
-          allMessages.add(_ChatItem(
-            isMine: msg.senderRole != "ADMIN",
-            text: msg.message,
-            imageUrl: msg.attachments.isNotEmpty ? msg.attachments.first.url : null,
-            localImagePath: null,
-            time: _parseTimeLabel(msg.timeLabel),
-          ));
+          allMessages.add(
+            _ChatItem(
+              isMine: msg.senderRole != "ADMIN",
+              text: msg.message,
+              imageUrl: msg.attachments.isNotEmpty
+                  ? msg.attachments.first.url
+                  : null,
+              localImagePath: null,
+              time: _parseTimeLabel(msg.timeLabel),
+            ),
+          );
         }
       }
     }
 
     // Add local messages
-    allMessages.addAll(_localMessages.map((m) => _ChatItem(
-      isMine: m.isMine,
-      text: m.message,
-      imageUrl: null,
-      localImagePath: m.localImagePath,
-      time: m.time,
-      isSending: m.isSending,
-      isFailed: m.isFailed,
-    )));
+    allMessages.addAll(
+      _localMessages.map(
+        (m) => _ChatItem(
+          isMine: m.isMine,
+          text: m.message,
+          imageUrl: null,
+          localImagePath: m.localImagePath,
+          time: m.time,
+          isSending: m.isSending,
+          isFailed: m.isFailed,
+        ),
+      ),
+    );
 
     // Sort messages by time ascending (oldest first)
     allMessages.sort((a, b) => a.time.compareTo(b.time));
@@ -365,7 +449,10 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   itemCount: allMessages.length,
                   itemBuilder: (context, index) {
                     final msg = allMessages[index];
@@ -399,7 +486,13 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       int minute = int.parse(hm[1]);
       if (parts[1].toLowerCase() == 'pm' && hour != 12) hour += 12;
       if (parts[1].toLowerCase() == 'am' && hour == 12) hour = 0;
-      return DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, hour, minute);
+      return DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+        hour,
+        minute,
+      );
     } catch (_) {
       return DateTime.now();
     }
@@ -459,4 +552,3 @@ class LocalChatMessage {
     );
   }
 }
-
