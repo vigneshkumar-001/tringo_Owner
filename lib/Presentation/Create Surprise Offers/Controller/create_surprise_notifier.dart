@@ -13,18 +13,21 @@ import '../../AboutMe/Model/service_edit_response.dart';
 import '../../AboutMe/Model/service_remove_response.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../ShopInfo/model/shop_category_list_response.dart';
+import '../Model/surprise_offer_list_response.dart';
 
 class CreateSurpriseState {
   final bool isLoading;
   final String? error;
   final StoreListResponse? storeListResponse;
   final CreateSurpriseResponse? createSurpriseResponse;
+  final SurpriseOfferListResponse? surpriseOfferListResponse;
 
   const CreateSurpriseState({
     this.isLoading = false,
     this.error,
     this.storeListResponse,
     this.createSurpriseResponse,
+    this.surpriseOfferListResponse,
   });
 
   factory CreateSurpriseState.initial() => const CreateSurpriseState();
@@ -50,21 +53,21 @@ class CreateSurpriseNotifier extends Notifier<CreateSurpriseState> {
     required String availableFrom,
     required String availableTo,
   }) async {
-    state = const CreateSurpriseState(isLoading: true,error : null);
+    state = const CreateSurpriseState(isLoading: true, error: null);
     String ownerImageUrl = '';
 
     // Upload owner image only if type is 'service' and file is provided
-    if (  ownerImageFile != null) {
+    if (ownerImageFile != null) {
       final uploadResult = await api.userProfileUpload(
         imageFile: ownerImageFile,
       );
 
       ownerImageUrl =
           uploadResult.fold<String?>(
-                (failure) => null,
-                (success) => success.message,
+            (failure) => null,
+            (success) => success.message,
           ) ??
-              '';
+          '';
     }
 
     final result = await api.createSurpriseOffer(
@@ -107,6 +110,30 @@ class CreateSurpriseNotifier extends Notifier<CreateSurpriseState> {
       (response) => state = CreateSurpriseState(
         isLoading: false,
         storeListResponse: response,
+      ),
+    );
+  }
+
+  Future<void> surpriseOfferList({String? shopId}) async {
+    state = const CreateSurpriseState(isLoading: true);
+
+    final sid = (shopId ?? '').trim();
+    if (sid.isEmpty) {
+      state = const CreateSurpriseState(
+        isLoading: false,
+        error: "Shop id missing",
+      );
+      return;
+    }
+
+    final result = await api.surpriseOfferList(shopId: sid);
+
+    result.fold(
+      (failure) =>
+          state = CreateSurpriseState(isLoading: false, error: failure.message),
+      (response) => state = CreateSurpriseState(
+        isLoading: false,
+        surpriseOfferListResponse: response,
       ),
     );
   }

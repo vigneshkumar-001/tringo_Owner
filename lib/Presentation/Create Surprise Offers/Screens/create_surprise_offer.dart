@@ -177,75 +177,6 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
     );
   }
 
-  /*  void _openBranchBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(22),
-              topRight: Radius.circular(22),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 4,
-                width: 50,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                "Select Branch",
-                style: AppTextStyles.mulish(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColor.mildBlack,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // ✅ list
-              ListView.separated(
-                shrinkWrap: true,
-                itemCount: _branches.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final b = _branches[index];
-                  return ListTile(
-                    title: Text(
-                      b,
-                      style: AppTextStyles.mulish(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.mildBlack,
-                      ),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        _branchController.text = b;
-                      });
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }*/
-
   // ✅ Image Picker function
   Future<void> _pickBannerImage(ImageSource source) async {
     try {
@@ -293,6 +224,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                 ),
               ),
               const SizedBox(height: 14),
+
               Text(
                 "Add Surprise Banner",
                 style: AppTextStyles.mulish(
@@ -311,6 +243,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                   _pickBannerImage(ImageSource.camera);
                 },
               ),
+
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text("Gallery"),
@@ -319,10 +252,53 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                   _pickBannerImage(ImageSource.gallery);
                 },
               ),
+
+              // ✅ Only show when image already selected
+              if (_bannerImageFile != null) ...[
+                CommonContainer.horizonalDivider(),
+
+                // // (Optional) View
+                // ListTile(
+                //   leading: const Icon(Icons.visibility),
+                //   title: const Text("View Image"),
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     _viewBannerImage(); // create this function below
+                //   },
+                // ),
+
+                // ✅ Remove
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text(
+                    "Remove Image",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _bannerImageFile = null);
+                  },
+                ),
+              ],
             ],
           ),
         );
       },
+    );
+  }
+
+  void _viewBannerImage() {
+    if (_bannerImageFile == null) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.file(_bannerImageFile!, fit: BoxFit.contain),
+        ),
+      ),
     );
   }
 
@@ -445,38 +421,49 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                       const SizedBox(height: 10),
 
                       InkWell(
-                        onTap: _openBannerPickerSheet,
+                        onTap: () {
+                          if (_bannerImageFile != null) {
+                            _openBannerPickerSheet(); // ✅ view/replace/remove
+                          } else {
+                            _openBannerPickerSheet(); // ✅ pick sheet
+                          }
+                        },
                         child: Container(
                           width: double.infinity,
-                          height: 90,
                           decoration: BoxDecoration(
                             color: AppColor.leftArrow,
                             borderRadius: BorderRadius.circular(16),
-
                           ),
                           child: _bannerImageFile != null
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(14),
                                   child: Image.file(
                                     _bannerImageFile!,
-                                    fit: BoxFit.cover,
                                     width: double.infinity,
+                                    fit: BoxFit
+                                        .fitWidth, // auto height by aspect ratio
                                   ),
                                 )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                               Image.asset(AppImages.addImage, width: 20),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      "Add Image",
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black54,
+                              : SizedBox(
+                                  height: 90,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        AppImages.addImage,
+                                        width: 20,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "Add Image",
+                                        style: AppTextStyles.mulish(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                         ),
                       ),

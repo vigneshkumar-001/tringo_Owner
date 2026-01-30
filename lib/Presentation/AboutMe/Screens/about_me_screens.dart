@@ -1271,6 +1271,106 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     }
   }
 
+  Widget _starRow(double rating) {
+    final full = rating.floor();
+    final hasHalf = (rating - full) >= 0.5;
+
+    List<Widget> stars = [];
+    for (int i = 0; i < 5; i++) {
+      bool filled = i < full;
+
+      // Half star asset இல்லனா, half ஐ 1 full மாதிரி காட்டுறோம் (simple)
+      if (!filled && hasHalf && i == full) filled = true;
+
+      stars.add(
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: Image.asset(
+            AppImages.starImage,
+            height: 12,
+            color: filled ? AppColor.green : AppColor.lightSilver,
+          ),
+        ),
+      );
+    }
+
+    return Row(children: stars);
+  }
+
+  Widget _reviewCard({
+    required double rating,
+    required String comment,
+    String title = 'Customer Review',
+    String timeLabel = '—',
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColor.scaffoldColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border(
+            bottom: BorderSide(color: AppColor.borderLightGrey, width: 8),
+            left: BorderSide(color: AppColor.borderLightGrey, width: 2),
+            right: BorderSide(color: AppColor.borderLightGrey, width: 2),
+            top: BorderSide(color: AppColor.borderLightGrey, width: 2),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.mulish(
+                        fontSize: 16,
+                        color: AppColor.darkBlue,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Image.asset(AppImages.dratImage, height: 8, width: 6),
+                  const SizedBox(width: 8),
+                  _starRow(rating),
+                  const SizedBox(width: 8),
+                  Text(
+                    rating.toStringAsFixed(1),
+                    style: AppTextStyles.mulish(
+                      fontWeight: FontWeight.bold,
+                      color: AppColor.green,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                comment.trim().isEmpty ? "—" : comment.trim(),
+                style: AppTextStyles.mulish(
+                  color: AppColor.gray84,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              CommonContainer.horizonalDivider(),
+              const SizedBox(height: 10),
+              Text(
+                timeLabel,
+                style: AppTextStyles.mulish(color: AppColor.darkGrey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   ///product or service edit
   Widget _buildShopDetails(AboutMeState aboutState) {
     final isPremium = RegistrationProductSeivice.instance.isPremium;
@@ -1279,6 +1379,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final services = selectedShop?.services ?? [];
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
+    final shopReviews = selectedShop?.reviews ?? [];
 
     String time = '-';
     String date = '-';
@@ -2061,10 +2162,132 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
               'Based on ${(selectedShop?.shopReviewCount ?? 0)} reviews',
               style: AppTextStyles.mulish(color: AppColor.gray84),
             ),
-            /*      const SizedBox(height: 17),
-            CommonContainer.reviewBox(),
             const SizedBox(height: 17),
-            CommonContainer.reviewBox(),*/
+
+            if (shopReviews.isEmpty) ...[
+              Text(
+                'No reviews yet.',
+                style: AppTextStyles.mulish(
+                  color: AppColor.gray84,
+                  fontSize: 14,
+                ),
+              ),
+            ] else ...[
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: shopReviews.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final r = shopReviews[index];
+
+                  // 🔹 Your API: rating is "4.0" (String)
+                  final rating =
+                      double.tryParse((r.rating ?? '0').toString()) ?? 0.0;
+                  final comment = (r.comment ?? '').toString().trim();
+
+                  final reviewTime =
+                      (r.createdAtRelative ?? '').trim().isNotEmpty
+                      ? (r.createdAtRelative ?? '').trim()
+                      : '_';
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: AppColor.scaffoldColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: AppColor.borderLightGrey,
+                          width: 8,
+                        ),
+                        left: BorderSide(
+                          color: AppColor.borderLightGrey,
+                          width: 2,
+                        ),
+                        right: BorderSide(
+                          color: AppColor.borderLightGrey,
+                          width: 2,
+                        ),
+                        top: BorderSide(
+                          color: AppColor.borderLightGrey,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 20,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Customer Review',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 16,
+                                  color: AppColor.darkBlue,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(width: 8),
+                              Image.asset(
+                                AppImages.dratImage,
+                                height: 8,
+                                width: 6,
+                              ),
+                              const SizedBox(width: 8),
+
+                              // ✅ Stars Row
+                              ...List.generate(5, (i) {
+                                final filled = rating >= (i + 1);
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: Image.asset(
+                                    AppImages.starImage,
+                                    height: 12,
+                                    color: filled
+                                        ? AppColor.green
+                                        : AppColor.lightSilver,
+                                  ),
+                                );
+                              }),
+
+                              const SizedBox(width: 8),
+                              Text(
+                                rating.toStringAsFixed(1),
+                                style: AppTextStyles.mulish(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            comment.isEmpty ? '-' : comment,
+                            style: AppTextStyles.mulish(color: AppColor.gray84),
+                          ),
+                          const SizedBox(height: 15),
+                          CommonContainer.horizonalDivider(),
+                          const SizedBox(height: 15),
+                          Text(
+                            reviewTime, // if API gives date later, map here
+                            style: AppTextStyles.mulish(
+                              color: AppColor.darkGrey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),
