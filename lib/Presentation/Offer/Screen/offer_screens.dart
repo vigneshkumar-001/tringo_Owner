@@ -242,6 +242,8 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final upcomingSections = offerData?.upcomingSections ?? <OfferDaySection>[];
     final expiredSections = offerData?.expiredSections ?? <OfferDaySection>[];
 
+    final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
+
     // ✅ Auto pick date on first load / tab change
     if (offerData != null) {
       if (!_autoPickedOnce) {
@@ -579,13 +581,22 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  CreateAppOffer(shopId: mainShopId),
-                            ),
-                          );
+                          if (isFreemium == false) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    CreateAppOffer(shopId: mainShopId),
+                              ),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SubscriptionScreen(),
+                              ),
+                            );
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -983,7 +994,6 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
       ),
     );
   }
-
 
   // Widget _infoTile({
   //   required String title,
