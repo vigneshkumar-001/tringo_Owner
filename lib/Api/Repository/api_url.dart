@@ -1,8 +1,8 @@
 class ApiUrl {
-  static const String base =
-      "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
+  // static const String base =
+  //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
-  // static const String base = "https://bknd.tringobiz.com/";
+  static const String base = "https://bknd.tringobiz.com/";
   static const String baseUrlImage = "https://bknd.tringobiz.com/";
 
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
@@ -148,6 +148,9 @@ class ApiUrl {
   }
 
   static String shopQrCode({required String shopId}) {
+    return "${base}api/v1/shops/$shopId/qr";
+  }
+  static String en({required String shopId}) {
     return "${base}api/v1/shops/$shopId/qr";
   }
 }
