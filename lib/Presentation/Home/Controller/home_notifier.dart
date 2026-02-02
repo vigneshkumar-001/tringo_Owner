@@ -8,6 +8,7 @@ import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../Login/controller/login_notifier.dart';
+import '../Model/enquiry_analytics_response.dart';
 
 class HomeState {
   final bool isLoading;
@@ -15,7 +16,9 @@ class HomeState {
   final EnquiryResponse? enquiryResponse;
   final ShopsResponse? shopsResponse;
   final MarkEnquiry? markEnquiry;
+  final EnquiryAnalyticsResponse? enquiryAnalyticsResponse;
   final String? selectedShopId; // ✅ ADD THIS
+
   const HomeState({
     this.isLoading = false,
     this.error,
@@ -23,6 +26,7 @@ class HomeState {
     this.shopsResponse,
     this.selectedShopId,
     this.markEnquiry,
+    this.enquiryAnalyticsResponse,
   });
 
   factory HomeState.initial() => const HomeState();
@@ -34,6 +38,7 @@ class HomeState {
     ShopsResponse? shopsResponse,
     String? selectedShopId,
     MarkEnquiry? markEnquiry,
+    EnquiryAnalyticsResponse? enquiryAnalyticsResponse,
   }) {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
@@ -43,6 +48,8 @@ class HomeState {
       shopsResponse: shopsResponse ?? this.shopsResponse,
       selectedShopId: selectedShopId ?? this.selectedShopId,
       markEnquiry: markEnquiry ?? this.markEnquiry,
+      enquiryAnalyticsResponse:
+          enquiryAnalyticsResponse ?? this.enquiryAnalyticsResponse,
     );
   }
 }
@@ -116,6 +123,29 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> markEnquiry({required String enquiryId}) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await api.markEnquiry(enquiryId: enquiryId);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          markEnquiry: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          markEnquiry: response,
+        );
+      },
+    );
+  }
+
+  Future<void> enquiryAnalytics({required String enquiryId}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await api.markEnquiry(enquiryId: enquiryId);
