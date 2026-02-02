@@ -57,6 +57,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   int selectedIndex = 0;
   bool isTexTiles = true;
   int selectIndex = -1;
+  bool _isFreemium = false;
 
   Future<void> _openQrScanner() async {
     var status = await Permission.camera.request();
@@ -130,7 +131,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       hasEnquiries = openItems.isNotEmpty || closedItems.isNotEmpty;
     }
 
-    final bool isFreemium = shopsRes?.data.subscription?.isFreemium ?? true;
+    final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
+
 
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
@@ -841,24 +843,50 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ),
                           CommonContainer.offerCardContainer(
                             onTap: () {
-                              final isPremium =
-                                  RegistrationProductSeivice.instance.isPremium;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => isPremium
-                                      ? SurpriseOfferList()
-                                      : SubscriptionScreen(),
-                                ),
-                              );
+                              // ✅ false => SurpriseOfferList, true => SubscriptionScreen
+                              if (isFreemium == false) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => SurpriseOfferList()),
+                                );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => SubscriptionScreen()),
+                                );
+                              }
+
                               AppLogger.log.i(mainShop?.id);
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (_) => SurpriseOfferList(),
-                              //   ),
-                              // );
                             },
+
+                            // onTap: () {
+                            //   if (_isFreemium == false) {
+                            //     Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (_) => SurpriseOfferList(),
+                            //       ),
+                            //     );
+                            //   } else {
+                            //     Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (_) => SubscriptionScreen(),
+                            //       ),
+                            //     );
+                            //   }
+                            //   // final isPremium =
+                            //   //     RegistrationProductSeivice.instance.isPremium;
+                            //   // Navigator.push(
+                            //   //   context,
+                            //   //   MaterialPageRoute(
+                            //   //     builder: (_) => isPremium
+                            //   //         ? SurpriseOfferList()
+                            //   //         : SubscriptionScreen(),
+                            //   //   ),
+                            //   // );
+                            //   AppLogger.log.i(mainShop?.id);
+                            // },
                             arrowColor: AppColor.surpriseOfferArrow,
                             isSurpriseCard: true,
                             tittle: 'Surprise',
