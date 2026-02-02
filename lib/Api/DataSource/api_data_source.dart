@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Api/Repository/api_url.dart';
 import 'package:tringo_vendor/Api/Repository/failure.dart';
@@ -2252,20 +2253,84 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final url = ApiUrl.shopQrCode(shopId: shopId);
 
+      final dynamic resp = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      // ✅ Safe logs (no type error)
+      if (resp is Response) {
+        AppLogger.log.i("shopQrCode => status=${resp.statusCode}");
+        AppLogger.log.i("shopQrCode => data=${resp.data}");
+        debugPrint("shopQrCode => status=${resp.statusCode}");
+        debugPrint("shopQrCode => data=${resp.data}");
+      } else {
+        AppLogger.log.i("shopQrCode => resp=${resp.toString()}");
+        debugPrint("shopQrCode => resp=${resp.toString()}");
+      }
+
+      // ✅ If not DioException, it should be a Dio Response
+      if (resp is! DioException) {
+        if (resp is Response) {
+          if (resp.statusCode == 200 || resp.statusCode == 201) {
+            final data = resp.data;
+
+            if (data is Map && data['status'] == true) {
+              return Right(
+                QrActionResponse.fromJson(data.cast<String, dynamic>()),
+              );
+            } else if (data is Map) {
+              return Left(
+                ServerFailure(
+                  (data['message'] ?? "Something went wrong").toString(),
+                ),
+              );
+            } else {
+              return Left(ServerFailure("Invalid API response"));
+            }
+          } else {
+            final data = resp.data;
+            if (data is Map) {
+              return Left(
+                ServerFailure(
+                  (data['message'] ?? "Something went wrong").toString(),
+                ),
+              );
+            }
+            return Left(ServerFailure("Something went wrong"));
+          }
+        }
+
+        return Left(ServerFailure("Invalid response type"));
+      }
+
+      // ✅ DioException
+      final errorData = resp.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message'].toString()));
+      }
+      return Left(ServerFailure(resp.message ?? "Unknown Dio error"));
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, PlanListResponse>> enquiriesAnalytic() async {
+    try {
+      final url = ApiUrl.plans;
+
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
       AppLogger.log.i(response);
 
       if (response is! DioException) {
-        // If status code is success
         if (response.statusCode == 200 || response.statusCode == 201) {
           if (response.data['status'] == true) {
-            return Right(QrActionResponse.fromJson(response.data));
+            return Right(PlanListResponse.fromJson(response.data));
           } else {
-            return Left(ServerFailure(response.data['message'] ?? ""));
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
