@@ -592,9 +592,9 @@ class ApiDataSource extends BaseApiDataSource {
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e,st) {
+    } catch (e, st) {
       AppLogger.log.e('$e $st');
-       
+
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -2510,42 +2510,42 @@ class ApiDataSource extends BaseApiDataSource {
 
       final response = await Request.sendRequest(url, payload, 'Post', true);
 
+      // 🔴 1. Network / Dio error
       if (response is DioException) {
-        final errorData = response.response?.data;
-        if (errorData is Map && errorData['message'] != null) {
-          return Left(ServerFailure(errorData['message'].toString()));
-        }
-        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
-      }
+        final data = response.response?.data;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final body = response.data;
-
-        if (body is Map<String, dynamic>) {
-          // ✅ status=false -> show API message
-          if (body['status'] != true) {
-            return Left(
-              ServerFailure((body['message'] ?? "Withdraw failed").toString()),
-            );
-          }
-
-          // ✅ parse withdraw response (NOT SendTcoinResponse)
-          final parsed = WithdrawRequestResponse.fromJson(body);
-
-          // ✅ if inner success=false
-          if (parsed.data.success != true) {
-            return Left(
-              ServerFailure((body['message'] ?? "Withdraw failed").toString()),
-            );
-          }
-
-          return Right(parsed);
+        if (data is Map && data['message'] != null) {
+          return Left(ServerFailure(data['message'].toString()));
         }
 
-        return Left(ServerFailure("Invalid response format"));
+        return Left(ServerFailure(response.message ?? 'Network error'));
       }
 
-      return Left(ServerFailure("HTTP ${response.statusCode}"));
+      // 🔴 2. Normal HTTP response (200 / 400 / 422 etc)
+      final body = response.data;
+
+      if (body is Map<String, dynamic>) {
+        // ❌ business failure → pass message AS-IS
+        if (body['status'] != true) {
+          return Left(
+            ServerFailure(body['message']?.toString() ?? 'UNKNOWN_ERROR'),
+          );
+        }
+
+        // ✅ success
+        final parsed = WithdrawRequestResponse.fromJson(body);
+
+        if (parsed.data.success != true) {
+          return Left(
+            ServerFailure(body['message']?.toString() ?? 'UNKNOWN_ERROR'),
+          );
+        }
+
+        return Right(parsed);
+      }
+
+      // 🔴 3. Unexpected response shape
+      return Left(ServerFailure('INVALID_RESPONSE'));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -2604,8 +2604,7 @@ class ApiDataSource extends BaseApiDataSource {
       final int mapTake = (tab == "MAP") ? take : 0;
       final int mapSkip = (tab == "MAP") ? skip : 0;
 
-      AppLogger.log.i(
-          '''
+      AppLogger.log.i('''
 📤 fetchEnquiryAnalyticsPaged
 shopId: $shopId
 tab: $tab
@@ -2614,8 +2613,7 @@ enquiryTake: $enquiryTake | enquirySkip: $enquirySkip
 callTake: $callTake | callSkip: $callSkip
 mapTake: $mapTake | mapSkip: $mapSkip
 dateRange: $start → $end
-'''
-      );
+''');
 
       final url = ApiUrl.fetchAnalyticsActivity(
         shopId: shopId,
@@ -2670,23 +2668,27 @@ dateRange: $start → $end
       if (statusCode == 200 || statusCode == 201) {
         if (data is Map) {
           if (data["status"] == true) {
-            return Right(EnquiryAnalyticsResponse.fromJson(
-              Map<String, dynamic>.from(data),
-            ));
+            return Right(
+              EnquiryAnalyticsResponse.fromJson(
+                Map<String, dynamic>.from(data),
+              ),
+            );
           }
 
-          return Left(ServerFailure(
-            data["message"]?.toString() ?? "API status=false",
-          ));
+          return Left(
+            ServerFailure(data["message"]?.toString() ?? "API status=false"),
+          );
         }
 
         return Left(ServerFailure("Invalid response format"));
       }
 
       if (data is Map) {
-        return Left(ServerFailure(
-          data["message"]?.toString() ?? "Non-success status code",
-        ));
+        return Left(
+          ServerFailure(
+            data["message"]?.toString() ?? "Non-success status code",
+          ),
+        );
       }
 
       return Left(ServerFailure("Unexpected error"));
@@ -2694,6 +2696,49 @@ dateRange: $start → $end
       AppLogger.log.e("🔥 Exception in fetchEnquiryAnalyticsPaged");
       AppLogger.log.e(e);
       AppLogger.log.e(s);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, MarkEnquiry>> markCallOrMapClose({
+    required String shopId,
+    required String interactionsId,
+  }) async {
+    try {
+      final url = ApiUrl.markCallOrMapClose(
+        shopId: shopId,
+        interactionsId: interactionsId,
+      );
+
+      dynamic response = await Request.sendRequest(url, {}, 'POST', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(MarkEnquiry.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
     }
   }

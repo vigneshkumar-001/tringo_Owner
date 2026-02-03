@@ -41,6 +41,7 @@ class CommonContainer {
       ],
     );
   }
+
   static walletSendBox({
     required String image,
     VoidCallback? onTap,
@@ -95,6 +96,7 @@ class CommonContainer {
       ],
     );
   }
+
   static walletHistoryBox({
     required Color containerColor,
     required String mainText,
@@ -159,7 +161,10 @@ class CommonContainer {
                 ),
                 Text(
                   endText,
-                  style: AppTextStyles.mulish(fontSize: 12, color: endTextColor),
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: endTextColor,
+                  ),
                 ),
               ],
             ),
@@ -168,6 +173,7 @@ class CommonContainer {
       ),
     );
   }
+
   static leftSideArrow({VoidCallback? onTap, Color = AppColor.white}) {
     return InkWell(
       borderRadius: BorderRadius.circular(30),
@@ -185,6 +191,7 @@ class CommonContainer {
       ),
     );
   }
+
   static Widget gradientContainer({
     required String text,
     String? locationImage,
@@ -2595,6 +2602,7 @@ class CommonContainer {
     GestureTapCallback? switchOnTap,
     bool isAdd = false,
     bool addAnotherShop = false,
+    bool showSwitch = true, // 🔑 NEW
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -2723,8 +2731,8 @@ class CommonContainer {
                             const SizedBox(width: 8),
 
                             //  SWITCH SHOP PILL
-                            addAnotherShop == true
-                                ? SizedBox.shrink()
+                            (addAnotherShop || !showSwitch)
+                                ? const SizedBox.shrink()
                                 : GestureDetector(
                                     onTap: switchOnTap,
                                     child: Container(
@@ -2748,7 +2756,10 @@ class CommonContainer {
                                             ),
                                           ),
                                           const SizedBox(width: 2),
-                                          Icon(Icons.swap_horiz, size: 12),
+                                          const Icon(
+                                            Icons.swap_horiz,
+                                            size: 12,
+                                          ),
                                         ],
                                       ),
                                     ),
