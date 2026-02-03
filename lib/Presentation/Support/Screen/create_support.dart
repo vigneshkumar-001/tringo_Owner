@@ -351,7 +351,6 @@ class _CreateSupportState extends ConsumerState<CreateSupport>
                         ),
                       );
                       notifier.supportList(context: context);
-
                     }
                   },
 

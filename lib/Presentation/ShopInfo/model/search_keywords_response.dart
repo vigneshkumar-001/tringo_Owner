@@ -145,8 +145,9 @@ class Shop {
     id: json['id'] as String,
     createdAt: _parseDateTime(json['createdAt'] as String),
     updatedAt: _parseDateTime(json['updatedAt'] as String),
-    businessProfile:
-    BusinessProfile.fromJson(json['businessProfile'] as Map<String, dynamic>),
+    businessProfile: BusinessProfile.fromJson(
+      json['businessProfile'] as Map<String, dynamic>,
+    ),
     category: json['category'] as String?,
     subCategory: json['subCategory'] as String?,
     shopKind: json['shopKind'] as String?,
@@ -169,9 +170,9 @@ class Shop {
     postalCode: json['postalCode'] as String?,
     serviceTags: json['serviceTags'] as String?,
     weeklyHours:
-    (json['weeklyHours'] as List<dynamic>?)
-        ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
-        .toList() ??
+        (json['weeklyHours'] as List<dynamic>?)
+            ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
+            .toList() ??
         const [],
     averageRating: _toDouble(json['averageRating']),
     reviewCount: _toInt(json['reviewCount']),
@@ -218,11 +219,11 @@ class BusinessProfile {
   final String businessType;
   final String ownershipType;
   final String govtRegisteredName;
-  final String preferredLanguage;
+  final String? preferredLanguage;
   final String gender;
-  final String dateOfBirth;
-  final String identityDocumentUrl;
-  final String ownerNameTamil;
+  final DateTime dateOfBirth;
+  final String? identityDocumentUrl;
+  final String? ownerNameTamil;
   final User user;
   final String onboardingStatus;
 
@@ -233,30 +234,31 @@ class BusinessProfile {
     required this.businessType,
     required this.ownershipType,
     required this.govtRegisteredName,
-    required this.preferredLanguage,
+    this.preferredLanguage,
     required this.gender,
     required this.dateOfBirth,
-    required this.identityDocumentUrl,
-    required this.ownerNameTamil,
+    this.identityDocumentUrl,
+    this.ownerNameTamil,
     required this.user,
     required this.onboardingStatus,
   });
 
-  factory BusinessProfile.fromJson(Map<String, dynamic> json) => BusinessProfile(
-    id: json['id'] as String,
-    createdAt: _parseDateTime(json['createdAt'] as String),
-    updatedAt: _parseDateTime(json['updatedAt'] as String),
-    businessType: json['businessType'] as String,
-    ownershipType: json['ownershipType'] as String,
-    govtRegisteredName: json['govtRegisteredName'] as String,
-    preferredLanguage: json['preferredLanguage'] as String,
-    gender: json['gender'] as String,
-    dateOfBirth: json['dateOfBirth'] as String,
-    identityDocumentUrl: json['identityDocumentUrl'] as String,
-    ownerNameTamil: json['ownerNameTamil'] as String,
-    user: User.fromJson(json['user'] as Map<String, dynamic>),
-    onboardingStatus: json['onboardingStatus'] as String,
-  );
+  factory BusinessProfile.fromJson(Map<String, dynamic> json) =>
+      BusinessProfile(
+        id: json['id'] as String,
+        createdAt: _parseDateTime(json['createdAt'] as String),
+        updatedAt: _parseDateTime(json['updatedAt'] as String),
+        businessType: json['businessType'] as String,
+        ownershipType: json['ownershipType'] as String,
+        govtRegisteredName: json['govtRegisteredName'] as String,
+        preferredLanguage: json['preferredLanguage'] as String?,
+        gender: json['gender'] as String,
+        dateOfBirth: DateTime.parse(json['dateOfBirth'] as String),
+        identityDocumentUrl: json['identityDocumentUrl'] as String?,
+        ownerNameTamil: json['ownerNameTamil'] as String?,
+        user: User.fromJson(json['user'] as Map<String, dynamic>),
+        onboardingStatus: json['onboardingStatus'] as String,
+      );
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -267,13 +269,14 @@ class BusinessProfile {
     'govtRegisteredName': govtRegisteredName,
     'preferredLanguage': preferredLanguage,
     'gender': gender,
-    'dateOfBirth': dateOfBirth,
+    'dateOfBirth': dateOfBirth.toIso8601String(),
     'identityDocumentUrl': identityDocumentUrl,
     'ownerNameTamil': ownerNameTamil,
     'user': user.toJson(),
     'onboardingStatus': onboardingStatus,
   };
 }
+
 class ShopWeeklyHour {
   final String? day;
   final String? opensAt;
@@ -300,6 +303,7 @@ class ShopWeeklyHour {
     };
   }
 }
+
 class User {
   final String id;
   final DateTime createdAt;
@@ -343,6 +347,7 @@ class User {
     'status': status,
   };
 }
+
 bool? _parseBool(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
