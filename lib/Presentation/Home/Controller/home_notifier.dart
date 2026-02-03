@@ -174,7 +174,7 @@ class HomeState {
   }) {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: error ?? this.error, // ✅ FIX
       enquiryResponse: enquiryResponse ?? this.enquiryResponse,
       shopsResponse: shopsResponse ?? this.shopsResponse,
       markEnquiry: markEnquiry ?? this.markEnquiry,
@@ -188,6 +188,7 @@ class HomeState {
       analyticsPages: analyticsPages ?? this.analyticsPages,
     );
   }
+
 }
 
 class HomeNotifier extends Notifier<HomeState> {
