@@ -430,6 +430,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                         },
                         child: Container(
                           width: double.infinity,
+
                           decoration: BoxDecoration(
                             color: AppColor.leftArrow,
                             borderRadius: BorderRadius.circular(16),
@@ -440,12 +441,14 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                   child: Image.file(
                                     _bannerImageFile!,
                                     width: double.infinity,
-                                    fit: BoxFit
-                                        .fitWidth, // auto height by aspect ratio
+                                    height: 150, // 👈 CONTROL HEIGHT HERE
+                                    fit: BoxFit.cover,
+                                    // fit: BoxFit
+                                    //     .fitWidth, // auto height by aspect ratio
                                   ),
                                 )
                               : SizedBox(
-                                  height: 90,
+                                  height: 50,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -467,7 +470,6 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                 ),
                         ),
                       ),
-
                       const SizedBox(height: 25),
 
                       // ✅ Title

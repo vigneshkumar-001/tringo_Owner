@@ -112,4 +112,5 @@ class AppImages {
   static String uID = 'Assets/Images/UID.png';
   static String smallScanQRBlack = 'Assets/Images/small Scan QR Black.png';
   static String uIDBlue = 'Assets/Images/UID blue.png';
+  static String walletImage = 'Assets/Images/WalletImage.png';
 }
