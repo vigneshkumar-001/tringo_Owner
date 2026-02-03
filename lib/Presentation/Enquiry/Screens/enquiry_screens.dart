@@ -495,10 +495,12 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                 ],
                               );
                             }
+                            final bool showSwitch = shops.length > 1;
                             final shop = shops[index];
                             return Row(
                               children: [
                                 CommonContainer.smallShopContainer(
+                                  showSwitch: showSwitch,
                                   onTap: () async {
                                     ref
                                         .read(selectedShopProvider.notifier)
