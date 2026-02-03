@@ -174,19 +174,21 @@ class HomeState {
   }) {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: error ?? this.error, // ✅ FIX
       enquiryResponse: enquiryResponse ?? this.enquiryResponse,
       shopsResponse: shopsResponse ?? this.shopsResponse,
       markEnquiry: markEnquiry ?? this.markEnquiry,
       enquiryAnalyticsResponse:
       enquiryAnalyticsResponse ?? this.enquiryAnalyticsResponse,
       selectedShopId: selectedShopId ?? this.selectedShopId,
-      selectedAnalyticsType: selectedAnalyticsType ?? this.selectedAnalyticsType,
+      selectedAnalyticsType:
+      selectedAnalyticsType ?? this.selectedAnalyticsType,
       selectedAnalyticsStatus:
       selectedAnalyticsStatus ?? this.selectedAnalyticsStatus,
       analyticsPages: analyticsPages ?? this.analyticsPages,
     );
   }
+
 }
 
 class HomeNotifier extends Notifier<HomeState> {
