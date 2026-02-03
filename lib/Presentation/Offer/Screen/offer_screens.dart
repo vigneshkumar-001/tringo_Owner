@@ -514,10 +514,11 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                         }
 
                         final shop = shops[index];
-
+                        final bool showSwitch = shops.length > 1;
                         return Row(
                           children: [
                             CommonContainer.smallShopContainer(
+                              showSwitch: showSwitch,
                               // ✅ FIXED: switch + reload offers
                               onTap: () async {
                                 await _switchShopAndReload(shop.id);

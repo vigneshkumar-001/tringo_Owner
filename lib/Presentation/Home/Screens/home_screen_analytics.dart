@@ -20,7 +20,14 @@ import '../Controller/shopContext_provider.dart';
 
 class HomeScreenAnalytics extends ConsumerStatefulWidget {
   final String shopId;
-  const HomeScreenAnalytics({super.key, required this.shopId});
+  final AnalyticsType initialType;
+  final int initialIndex;
+  const HomeScreenAnalytics({
+    super.key,
+    required this.shopId,
+    this.initialIndex = 0,
+    this.initialType = AnalyticsType.enquiries,
+  });
 
   @override
   ConsumerState<HomeScreenAnalytics> createState() =>
@@ -30,14 +37,13 @@ class HomeScreenAnalytics extends ConsumerStatefulWidget {
 class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  int selectedAnalytics = 0;
 
-  int selectedAnalytics = 0; // 0=enquiry,1=call,2=location
   int _selectedTab = 0;
 
   // ✅ Dynamic date range
   late String _start;
   late String _end;
-
   @override
   void initState() {
     super.initState();
@@ -49,18 +55,50 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
     _start = _ymd(firstDay);
     _end = _ymd(now);
 
+    // ✅ apply initial selection immediately
+    selectedAnalytics = widget.initialIndex;
+    _selectedTab = 0; // default Unanswered (open)
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // ✅ set initial type + status in provider
+      ref
+          .read(homeNotifierProvider.notifier)
+          .setAnalyticsType(widget.initialType);
+      ref
+          .read(homeNotifierProvider.notifier)
+          .setAnalyticsStatus(AnalyticsStatus.open);
+
+      // your other calls
       await _initialLoad();
 
-      // ✅ first analytics load (dynamic)
-      await ref.read(homeNotifierProvider.notifier).refreshAnalytics(
-        shopId: widget.shopId,
-        start: _start,
-        end: _end,
-        take: 10,
-      );
+      // ✅ refresh based on selected tab + type (uses _selectedTab take logic)
+      await _refreshCurrent();
     });
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _controller = AnimationController(vsync: this);
+  //
+  //   // ✅ set dynamic dates (current month start → today)
+  //   final now = DateTime.now();
+  //   final firstDay = DateTime(now.year, now.month, 1);
+  //   _start = _ymd(firstDay);
+  //   _end = _ymd(now);
+  //
+  //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //     await _initialLoad();
+  //
+  //     // ✅ first analytics load (dynamic)
+  //     await ref.read(homeNotifierProvider.notifier).refreshAnalytics(
+  //       shopId: widget.shopId,
+  //       start: _start,
+  //       end: _end,
+  //       take: 10,
+  //     );
+  //   });
+  // }
 
   @override
   void dispose() {
@@ -138,12 +176,14 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
   }
 
   Future<void> _refreshCurrent() async {
-    await ref.read(homeNotifierProvider.notifier).refreshAnalytics(
-      shopId: widget.shopId,
-      start: _start,
-      end: _end,
-      take: (_selectedTab == 0) ? 10 : 50,
-    );
+    await ref
+        .read(homeNotifierProvider.notifier)
+        .refreshAnalytics(
+          shopId: widget.shopId,
+          start: _start,
+          end: _end,
+          take: (_selectedTab == 0) ? 10 : 50,
+        );
   }
 
   @override
@@ -196,11 +236,13 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
             onNotification: (n) {
               // ✅ pagination from outer scroll
               if (n.metrics.pixels >= n.metrics.maxScrollExtent - 250) {
-                ref.read(homeNotifierProvider.notifier).loadMoreAnalytics(
-                  shopId: widget.shopId,
-                  start: _start,
-                  end: _end,
-                );
+                ref
+                    .read(homeNotifierProvider.notifier)
+                    .loadMoreAnalytics(
+                      shopId: widget.shopId,
+                      start: _start,
+                      end: _end,
+                    );
               }
               return false;
             },
@@ -254,8 +296,9 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                           SizedBox(
                             height: 120,
                             child: ListView.builder(
-                              padding:
-                              const EdgeInsets.symmetric(horizontal: 15),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
                               itemCount: shops.length + 1,
@@ -287,7 +330,7 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                                   .first
                                                   .shopKind
                                                   .toUpperCase() ==
-                                                  'SERVICE';
+                                              'SERVICE';
 
                                           context.push(
                                             AppRoutes.shopCategoryInfoPath,
@@ -312,15 +355,16 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                     ),
                                   );
                                 }
-
+                                final bool showSwitch = shops.length > 1;
                                 final shop = shops[index];
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 10),
                                   child: CommonContainer.smallShopContainer(
                                     shopImage: shop.primaryImageUrl ?? '',
                                     shopName: shop.englishName,
+                                    showSwitch: showSwitch,
                                     shopLocation:
-                                    '${shop.addressEn}, ${shop.city}',
+                                        '${shop.addressEn}, ${shop.city}',
                                     onTap: () {
                                       ref
                                           .read(selectedShopProvider.notifier)
@@ -372,8 +416,8 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                   ref
                                       .read(homeNotifierProvider.notifier)
                                       .setAnalyticsType(
-                                    AnalyticsType.enquiries,
-                                  );
+                                        AnalyticsType.enquiries,
+                                      );
                                   await _refreshCurrent();
                                 },
                               ),
@@ -400,8 +444,8 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                   ref
                                       .read(homeNotifierProvider.notifier)
                                       .setAnalyticsType(
-                                    AnalyticsType.locations,
-                                  );
+                                        AnalyticsType.locations,
+                                      );
                                   await _refreshCurrent();
                                 },
                               ),
@@ -440,8 +484,8 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                   ref
                                       .read(homeNotifierProvider.notifier)
                                       .setAnalyticsStatus(
-                                    AnalyticsStatus.closed,
-                                  );
+                                        AnalyticsStatus.closed,
+                                      );
                                   await _refreshCurrent();
                                 },
                               ),
@@ -494,8 +538,14 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                   ),
                                   ...section.items.map((item) {
                                     return Padding(
-                                      padding: const EdgeInsets.only(bottom: 12),
-                                      child: _AnalyticsItemCard(item: item),
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: _AnalyticsItemCard(
+                                        item: item,
+                                        selectedType:
+                                            type, // ✅ pass current selected type
+                                      ),
                                     );
                                   }).toList(),
                                 ],
@@ -559,12 +609,13 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
   }
 }
 
-class _AnalyticsItemCard extends StatelessWidget {
+class _AnalyticsItemCard extends ConsumerWidget {
   final CommonItem item;
-  const _AnalyticsItemCard({required this.item});
+  final AnalyticsType selectedType;
+  const _AnalyticsItemCard({required this.item, required this.selectedType});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ctx = (item.contextType ?? "").toUpperCase();
 
     // customer info
@@ -576,6 +627,7 @@ class _AnalyticsItemCard extends StatelessWidget {
     // shop info
     final shopName = item.shop?.name ?? "Shop";
     final shopImage = item.shop?.primaryImageUrl ?? "";
+    final name = item.shop?.name ?? "";
     final rating = (item.shop?.rating ?? 0).toString();
     final ratingCount = (item.shop?.ratingCount ?? 0).toString();
 
@@ -595,12 +647,14 @@ class _AnalyticsItemCard extends StatelessWidget {
     String imageUrl;
     String priceText = "";
     String mrpText = "";
+    String questionText = "";
 
     if (ctx == "SHOP") {
       title = shopName;
       imageUrl = shopImage;
       priceText = "";
       mrpText = "";
+      questionText = name;
     } else if (ctx == "PRODUCT") {
       title = productName;
       imageUrl = productImage.isNotEmpty ? productImage : shopImage;
@@ -624,7 +678,7 @@ class _AnalyticsItemCard extends StatelessWidget {
       child: Column(
         children: [
           CommonContainer.inquiryProductCard(
-            questionText: item.message ?? "",
+            questionText: '',
             productTitle: title,
             rating: rating,
             ratingCount: ratingCount,
@@ -634,13 +688,37 @@ class _AnalyticsItemCard extends StatelessWidget {
             avatarAsset: avatarAsset,
             customerName: customerName,
             timeText: timeText,
-            onChatTap: () {
+            onChatTap: () async {
               if (whatsapp.isEmpty) return;
+
               CallHelper.openWhatsapp(context: context, phone: whatsapp);
+
+              final id =
+                  item.id.toString() ??
+                  ""; // ✅ change if your id field is different
+              if (id.isEmpty) return;
+
+              await ref
+                  .read(homeNotifierProvider.notifier)
+                  .markAnalyticsItem(
+                    type: selectedType,
+                    id: id,
+                    shopId: item.shop?.id.toString() ?? '',
+                  );
             },
-            onCallTap: () {
+            onCallTap: () async {
               if (phone.isEmpty) return;
               CallHelper.openDialer(context: context, rawPhone: phone);
+              final id = item.id.toString() ?? "";
+              if (id.isEmpty) return;
+
+              await ref
+                  .read(homeNotifierProvider.notifier)
+                  .markAnalyticsItem(
+                    type: selectedType,
+                    id: id,
+                    shopId: item.shop?.id.toString() ?? '',
+                  );
             },
           ),
           const SizedBox(height: 20),
@@ -649,782 +727,3 @@ class _AnalyticsItemCard extends StatelessWidget {
     );
   }
 }
-
-
-// import 'package:cached_network_image/cached_network_image.dart';
-// import 'package:dotted_border/dotted_border.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:skeletonizer/skeletonizer.dart';
-// import 'package:tringo_vendor/Core/Const/app_color.dart';
-// import 'package:tringo_vendor/Core/Const/app_images.dart';
-// import 'package:tringo_vendor/Core/Utility/app_loader.dart';
-// import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-// import 'package:tringo_vendor/Presentation/Home/Model/enquiry_analytics_response.dart';
-//
-// import '../../../Core/Routes/app_go_routes.dart';
-// import '../../../Core/Utility/call_helper.dart';
-// import '../../../Core/Utility/common_Container.dart';
-// import '../../Create Surprise Offers/Controller/create_surprise_notifier.dart';
-// import '../../Menu/Screens/subscription_screen.dart';
-// import '../Controller/home_notifier.dart';
-// import '../Controller/shopContext_provider.dart';
-//
-// class HomeScreenAnalytics extends ConsumerStatefulWidget {
-//   final String shopId;
-//   const HomeScreenAnalytics({super.key, required this.shopId});
-//
-//   @override
-//   ConsumerState<HomeScreenAnalytics> createState() =>
-//       _HomeScreenAnalyticsState();
-// }
-//
-// class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
-//     with SingleTickerProviderStateMixin {
-//   late AnimationController _controller;
-//
-//   int selectedAnalytics = 0; // 0=enquiry,1=call,2=location
-//   int _selectedTab = 0;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _controller = AnimationController(vsync: this);
-//
-//     WidgetsBinding.instance.addPostFrameCallback((_) async {
-//       await _initialLoad();
-//
-//       // ✅ first analytics load
-//       await ref
-//           .read(homeNotifierProvider.notifier)
-//           .refreshAnalytics(
-//             shopId: widget.shopId,
-//             start: "2026-01-01",
-//             end: "2026-01-31",
-//             take: 10,
-//           );
-//     });
-//   }
-//
-//   @override
-//   void dispose() {
-//     _controller.dispose();
-//     super.dispose();
-//   }
-//
-//   Future<void> _initialLoad() async {
-//     // 1) fetch shops
-//     await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
-//
-//     if (!mounted) return;
-//
-//     // 2) call surprise list api
-//     await ref
-//         .read(createSurpriseNotifier.notifier)
-//         .surpriseOfferList(shopId: widget.shopId);
-//   }
-//
-//   // ✅ Professional empty state
-//   Widget _emptyState({
-//     required AnalyticsType type,
-//     required AnalyticsStatus status,
-//   }) {
-//     final typeText = switch (type) {
-//       AnalyticsType.enquiries => "Enquiries",
-//       AnalyticsType.calls => "Calls",
-//       AnalyticsType.locations => "Locations",
-//     };
-//
-//     final statusText = (status == AnalyticsStatus.open)
-//         ? "Unanswered"
-//         : "Answered";
-//
-//     final title = "No $statusText $typeText";
-//     final subtitle =
-//         "There are no $statusText ${typeText.toLowerCase()} "
-//         "for the selected date range.";
-//
-//     return Padding(
-//       padding: const EdgeInsets.only(top: 24, bottom: 40),
-//       child: Column(
-//         children: [
-//           Icon(Icons.inbox_outlined, size: 52, color: Colors.grey.shade400),
-//           const SizedBox(height: 10),
-//           Text(
-//             title,
-//             textAlign: TextAlign.center,
-//             style: AppTextStyles.mulish(
-//               fontSize: 14,
-//               fontWeight: FontWeight.w800,
-//               color: AppColor.darkBlue,
-//             ),
-//           ),
-//           const SizedBox(height: 6),
-//           Text(
-//             subtitle,
-//             textAlign: TextAlign.center,
-//             style: AppTextStyles.mulish(
-//               fontSize: 12,
-//               fontWeight: FontWeight.w600,
-//               color: AppColor.darkGrey,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Future<void> _refreshCurrent() async {
-//     await ref
-//         .read(homeNotifierProvider.notifier)
-//         .refreshAnalytics(
-//           shopId: widget.shopId,
-//           start: "2026-01-01",
-//           end: "2026-01-31",
-//           take: (_selectedTab == 0) ? 10 : 50,
-//         );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final homeState = ref.watch(homeNotifierProvider);
-//
-//     final type = homeState.selectedAnalyticsType;
-//     final key = (type == AnalyticsType.enquiries)
-//         ? "enquiries"
-//         : (type == AnalyticsType.calls)
-//         ? "calls"
-//         : "locations";
-//
-//     final page = homeState.analyticsPages[key] ?? const AnalyticsPageState();
-//
-//     final shopsRes = homeState.shopsResponse;
-//     final List<dynamic> shops =
-//         (shopsRes?.data.items as List?)?.toList() ?? <dynamic>[];
-//
-//     final bool isFreemium = shopsRes?.data.subscription?.isFreemium ?? true;
-//
-//     // counts
-//     final counts = homeState.enquiryAnalyticsResponse?.data.counts;
-//     int openCount = 0;
-//     int closedCount = 0;
-//
-//     if (counts != null) {
-//       switch (homeState.selectedAnalyticsType) {
-//         case AnalyticsType.enquiries:
-//           openCount = counts.enquiries.open;
-//           closedCount = counts.enquiries.closed;
-//           break;
-//         case AnalyticsType.calls:
-//           openCount = counts.calls.open;
-//           closedCount = counts.calls.closed;
-//           break;
-//         case AnalyticsType.locations:
-//           openCount = counts.locations.open;
-//           closedCount = counts.locations.closed;
-//           break;
-//       }
-//     }
-//
-//     return Skeletonizer(
-//       enabled: homeState.isLoading,
-//       enableSwitchAnimation: true,
-//       child: Scaffold(
-//         body: SafeArea(
-//           child: NotificationListener<ScrollNotification>(
-//             onNotification: (n) {
-//               // ✅ pagination from outer scroll
-//               if (n.metrics.pixels >= n.metrics.maxScrollExtent - 250) {
-//                 ref
-//                     .read(homeNotifierProvider.notifier)
-//                     .loadMoreAnalytics(
-//                       shopId: widget.shopId,
-//                       start: "2026-01-01",
-//                       end: "2026-01-31",
-//                     );
-//               }
-//               return false;
-//             },
-//             child: SingleChildScrollView(
-//               physics: const BouncingScrollPhysics(),
-//               child: Column(
-//                 children: [
-//                   // header
-//                   Container(
-//                     decoration: BoxDecoration(
-//                       gradient: LinearGradient(
-//                         colors: [AppColor.white, AppColor.lightGray],
-//                         begin: Alignment.topCenter,
-//                         end: Alignment.bottomCenter,
-//                       ),
-//                       borderRadius: const BorderRadius.only(
-//                         bottomRight: Radius.circular(20),
-//                         bottomLeft: Radius.circular(20),
-//                       ),
-//                     ),
-//                     child: Column(
-//                       children: [
-//                         Padding(
-//                           padding: const EdgeInsets.symmetric(
-//                             horizontal: 15,
-//                             vertical: 5,
-//                           ),
-//                           child: CommonContainer.topLeftArrow(
-//                             onTap: () => Navigator.pop(context),
-//                           ),
-//                         ),
-//                         const SizedBox(height: 30),
-//
-//                         // shops scroller
-//                         if (shops.isEmpty) ...[
-//                           CommonContainer.smallShopContainer(
-//                             addAnotherShop: true,
-//                             shopImage: '',
-//                             shopName: 'Add Another Shop',
-//                             shopLocation: 'Upgrade to add branch',
-//                             onTap: () {
-//                               Navigator.push(
-//                                 context,
-//                                 MaterialPageRoute(
-//                                   builder: (_) => SubscriptionScreen(),
-//                                 ),
-//                               );
-//                             },
-//                           ),
-//                         ] else ...[
-//                           SizedBox(
-//                             height: 120,
-//                             child: ListView.builder(
-//                               padding: const EdgeInsets.symmetric(
-//                                 horizontal: 15,
-//                               ),
-//                               scrollDirection: Axis.horizontal,
-//                               physics: const BouncingScrollPhysics(),
-//                               itemCount: shops.length + 1,
-//                               itemBuilder: (context, index) {
-//                                 if (index == shops.length) {
-//                                   return Padding(
-//                                     padding: const EdgeInsets.only(right: 10),
-//                                     child: CommonContainer.smallShopContainer(
-//                                       addAnotherShop: true,
-//                                       shopImage: '',
-//                                       shopName: 'Add Another Shop',
-//                                       shopLocation: isFreemium
-//                                           ? 'Upgrade to add branch'
-//                                           : 'Add a new branch',
-//                                       onTap: () {
-//                                         if (isFreemium) {
-//                                           Navigator.push(
-//                                             context,
-//                                             MaterialPageRoute(
-//                                               builder: (_) =>
-//                                                   SubscriptionScreen(),
-//                                             ),
-//                                           );
-//                                         } else {
-//                                           final bool isService =
-//                                               shopsRes
-//                                                   ?.data
-//                                                   .items
-//                                                   .first
-//                                                   .shopKind
-//                                                   .toUpperCase() ==
-//                                               'SERVICE';
-//
-//                                           context.push(
-//                                             AppRoutes.shopCategoryInfoPath,
-//                                             extra: {
-//                                               'isService': isService,
-//                                               'isIndividual': '',
-//                                               'initialShopNameEnglish': shopsRes
-//                                                   ?.data
-//                                                   .items
-//                                                   .first
-//                                                   .englishName,
-//                                               'initialShopNameTamil': shopsRes
-//                                                   ?.data
-//                                                   .items
-//                                                   .first
-//                                                   .tamilName,
-//                                               'isEditMode': true,
-//                                             },
-//                                           );
-//                                         }
-//                                       },
-//                                     ),
-//                                   );
-//                                 }
-//
-//                                 final shop = shops[index];
-//                                 return Padding(
-//                                   padding: const EdgeInsets.only(right: 10),
-//                                   child: CommonContainer.smallShopContainer(
-//                                     shopImage: shop.primaryImageUrl ?? '',
-//                                     shopName: shop.englishName,
-//                                     shopLocation:
-//                                         '${shop.addressEn}, ${shop.city}',
-//                                     onTap: () {
-//                                       ref
-//                                           .read(selectedShopProvider.notifier)
-//                                           .switchShop(shop.id);
-//                                     },
-//                                     switchOnTap: () {
-//                                       ref
-//                                           .read(selectedShopProvider.notifier)
-//                                           .switchShop(shop.id);
-//                                     },
-//                                   ),
-//                                 );
-//                               },
-//                             ),
-//                           ),
-//                           const SizedBox(height: 33),
-//                         ],
-//                       ],
-//                     ),
-//                   ),
-//
-//                   const SizedBox(height: 25),
-//
-//                   Padding(
-//                     padding: const EdgeInsets.symmetric(horizontal: 15),
-//                     child: Column(
-//                       children: [
-//                         Text(
-//                           'Analytics',
-//                           style: AppTextStyles.mulish(
-//                             fontWeight: FontWeight.w700,
-//                             fontSize: 20,
-//                             color: AppColor.darkBlue,
-//                           ),
-//                         ),
-//                         const SizedBox(height: 30),
-//
-//                         // type row
-//                         Padding(
-//                           padding: const EdgeInsets.symmetric(horizontal: 15.5),
-//                           child: Row(
-//                             children: [
-//                               CommonContainer.analyticsRowBox(
-//                                 image: AppImages.messageImage,
-//                                 text: 'Enquiry',
-//                                 isSelected: selectedAnalytics == 0,
-//                                 onTap: () async {
-//                                   setState(() => selectedAnalytics = 0);
-//                                   ref
-//                                       .read(homeNotifierProvider.notifier)
-//                                       .setAnalyticsType(
-//                                         AnalyticsType.enquiries,
-//                                       );
-//                                   await _refreshCurrent();
-//                                 },
-//                               ),
-//                               const SizedBox(width: 20),
-//                               CommonContainer.analyticsRowBox(
-//                                 image: AppImages.callImage,
-//                                 text: 'Call',
-//                                 isSelected: selectedAnalytics == 1,
-//                                 onTap: () async {
-//                                   setState(() => selectedAnalytics = 1);
-//                                   ref
-//                                       .read(homeNotifierProvider.notifier)
-//                                       .setAnalyticsType(AnalyticsType.calls);
-//                                   await _refreshCurrent();
-//                                 },
-//                               ),
-//                               const SizedBox(width: 20),
-//                               CommonContainer.analyticsRowBox(
-//                                 image: AppImages.locationImage,
-//                                 text: 'Location',
-//                                 isSelected: selectedAnalytics == 2,
-//                                 onTap: () async {
-//                                   setState(() => selectedAnalytics = 2);
-//                                   ref
-//                                       .read(homeNotifierProvider.notifier)
-//                                       .setAnalyticsType(
-//                                         AnalyticsType.locations,
-//                                       );
-//                                   await _refreshCurrent();
-//                                 },
-//                               ),
-//                             ],
-//                           ),
-//                         ),
-//
-//                         const SizedBox(height: 30),
-//
-//                         // status chips
-//                         SingleChildScrollView(
-//                           padding: const EdgeInsets.symmetric(horizontal: 15),
-//                           scrollDirection: Axis.horizontal,
-//                           physics: const BouncingScrollPhysics(),
-//                           child: Row(
-//                             children: [
-//                               _tabChip(
-//                                 title: '$openCount Unanswered',
-//                                 index: 0,
-//                                 selectedIndex: _selectedTab,
-//                                 onTap: () async {
-//                                   setState(() => _selectedTab = 0);
-//                                   ref
-//                                       .read(homeNotifierProvider.notifier)
-//                                       .setAnalyticsStatus(AnalyticsStatus.open);
-//                                   await _refreshCurrent();
-//                                 },
-//                               ),
-//                               const SizedBox(width: 10),
-//                               _tabChip(
-//                                 title: '$closedCount Answered',
-//                                 index: 1,
-//                                 selectedIndex: _selectedTab,
-//                                 onTap: () async {
-//                                   setState(() => _selectedTab = 1);
-//                                   ref
-//                                       .read(homeNotifierProvider.notifier)
-//                                       .setAnalyticsStatus(
-//                                         AnalyticsStatus.closed,
-//                                       );
-//                                   await _refreshCurrent();
-//                                 },
-//                               ),
-//                             ],
-//                           ),
-//                         ),
-//
-//                         const SizedBox(height: 30),
-//
-//                         // ✅ loader + empty + list
-//                         if (page.isLoading && page.sections.isEmpty) ...[
-//                           const Padding(
-//                             padding: EdgeInsets.only(top: 25, bottom: 40),
-//                             child: Center(
-//                               child: ThreeDotsLoader(
-//                                 dotColor: AppColor.darkBlue,
-//                               ),
-//                             ),
-//                           ),
-//                         ] else if (page.sections.isEmpty) ...[
-//                           _emptyState(
-//                             type: homeState.selectedAnalyticsType,
-//                             status: homeState.selectedAnalyticsStatus,
-//                           ),
-//                         ] else ...[
-//                           ListView.builder(
-//                             shrinkWrap: true,
-//                             physics: const NeverScrollableScrollPhysics(),
-//                             itemCount: page.sections.length,
-//                             itemBuilder: (context, index) {
-//                               final section = page.sections[index];
-//                               return Column(
-//                                 crossAxisAlignment: CrossAxisAlignment.start,
-//                                 children: [
-//                                   Padding(
-//                                     padding: const EdgeInsets.only(
-//                                       bottom: 10,
-//                                       top: 10,
-//                                     ),
-//                                     child: Center(
-//                                       child: Text(
-//                                         section.dayLabel,
-//                                         style: AppTextStyles.mulish(
-//                                           fontSize: 12,
-//                                           fontWeight: FontWeight.w700,
-//                                           color: AppColor.darkGrey,
-//                                         ),
-//                                       ),
-//                                     ),
-//                                   ),
-//                                   ...section.items.map((item) {
-//                                     return Padding(
-//                                       padding: const EdgeInsets.only(
-//                                         bottom: 12,
-//                                       ),
-//                                       child: _AnalyticsItemCard(item: item),
-//                                     );
-//                                   }).toList(),
-//                                 ],
-//                               );
-//                             },
-//                           ),
-//                           if (page.isLoadingMore) ...[
-//                             Padding(
-//                               padding: EdgeInsets.all(16),
-//                               child: Center(child: AppLoader.circularLoader()),
-//                             ),
-//                           ],
-//                           const SizedBox(height: 20),
-//                         ],
-//                       ],
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   Widget _tabChip({
-//     required String title,
-//     required int index,
-//     required int selectedIndex,
-//     required VoidCallback onTap,
-//   }) {
-//     final bool isSelected = selectedIndex == index;
-//
-//     return GestureDetector(
-//       onTap: onTap,
-//       child: AnimatedContainer(
-//         duration: const Duration(milliseconds: 180),
-//         curve: Curves.easeInOut,
-//         padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 10),
-//         decoration: BoxDecoration(
-//           borderRadius: BorderRadius.circular(20),
-//           border: Border.all(
-//             color: isSelected ? AppColor.darkBlue : AppColor.borderLightGrey,
-//             width: 1.5,
-//           ),
-//           color: AppColor.white,
-//         ),
-//         child: Text(
-//           title,
-//           maxLines: 1,
-//           overflow: TextOverflow.ellipsis,
-//           style: AppTextStyles.mulish(
-//             color: isSelected ? AppColor.darkBlue : AppColor.borderLightGrey,
-//             fontWeight: FontWeight.w800,
-//             fontSize: 12,
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-//
-// class _AnalyticsItemCard extends StatelessWidget {
-//   final CommonItem item;
-//   const _AnalyticsItemCard({required this.item});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final productName = item.product?.name ?? "No product";
-//     final customerName = item.customer?.name ?? "Customer";
-//     final timeText = item.timeLabel;
-//     final rating = item.shop?.rating.toString() ?? "0";
-//     final ratingCount = item.shop?.ratingCount.toString() ?? "0";
-//     final imageUrl = item.product?.imageUrl ?? item.shop?.primaryImageUrl ?? "";
-//     final avatarAsset =
-//         item.product?.imageUrl ?? item.customer?.avatarUrl ?? "";
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 15),
-//       child: Column(
-//         children: [
-//           CommonContainer.inquiryProductCard(
-//             questionText: '',
-//             productTitle: productName,
-//             rating: rating,
-//             ratingCount: ratingCount,
-//             priceText: 'offerPrice',
-//             mrpText: 'priceText',
-//             phoneImageAsset: imageUrl,
-//             avatarAsset: avatarAsset,
-//             customerName: customerName,
-//             timeText: timeText,
-//             onChatTap: () {
-//               CallHelper.openWhatsapp(context: context, phone: timeText);
-//               // ref
-//               //     .read(homeNotifierProvider.notifier)
-//               //     .markEnquiry(enquiryId: data.id);
-//               // ref.read(selectedShopProvider.notifier).switchShop('');
-//             },
-//             onCallTap: () {
-//               CallHelper.openDialer(context: context, rawPhone: 'phone');
-//               // ref
-//               //     .read(homeNotifierProvider.notifier)
-//               //     .markEnquiry(enquiryId: data.id);
-//               // ref.read(selectedShopProvider.notifier).switchShop('');
-//             },
-//           ),
-//           const SizedBox(height: 20),
-//         ],
-//       ),
-//     );
-//     // return Container(
-//     //   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-//     //   decoration: BoxDecoration(
-//     //     color: AppColor.floralWhite,
-//     //     borderRadius: BorderRadius.circular(20),
-//     //   ),
-//     //   child: Column(
-//     //     crossAxisAlignment: CrossAxisAlignment.start,
-//     //     children: [
-//     //       ClipRRect(
-//     //         borderRadius: BorderRadius.circular(24),
-//     //         child: Container(
-//     //           padding: const EdgeInsets.all(14),
-//     //           child: Row(
-//     //             children: [
-//     //               Expanded(
-//     //                 child: Column(
-//     //                   crossAxisAlignment: CrossAxisAlignment.start,
-//     //                   children: [
-//     //                     Text(
-//     //                       productName,
-//     //                       maxLines: 1,
-//     //                       overflow: TextOverflow.ellipsis,
-//     //                       style: AppTextStyles.mulish(fontSize: 12),
-//     //                     ),
-//     //                     const SizedBox(height: 8),
-//     //                     Container(
-//     //                       padding: const EdgeInsets.symmetric(
-//     //                         horizontal: 10,
-//     //                         vertical: 4,
-//     //                       ),
-//     //                       decoration: BoxDecoration(
-//     //                         color: const Color(0xFF31CC64),
-//     //                         borderRadius: BorderRadius.circular(20),
-//     //                       ),
-//     //                       child: Row(
-//     //                         mainAxisSize: MainAxisSize.min,
-//     //                         children: [
-//     //                           Text(
-//     //                             rating,
-//     //                             style: AppTextStyles.mulish(
-//     //                               fontSize: 12,
-//     //                               color: AppColor.white,
-//     //                               fontWeight: FontWeight.bold,
-//     //                             ),
-//     //                           ),
-//     //                           const Icon(
-//     //                             Icons.star,
-//     //                             size: 14,
-//     //                             color: Colors.white,
-//     //                           ),
-//     //                           const SizedBox(width: 4),
-//     //                           Text(
-//     //                             ratingCount,
-//     //                             style: AppTextStyles.mulish(
-//     //                               fontSize: 12,
-//     //                               color: AppColor.white,
-//     //                             ),
-//     //                           ),
-//     //                         ],
-//     //                       ),
-//     //                     ),
-//     //                   ],
-//     //                 ),
-//     //               ),
-//     //               const SizedBox(width: 12),
-//     //               ClipRRect(
-//     //                 borderRadius: BorderRadius.circular(15),
-//     //                 child: CachedNetworkImage(
-//     //                   imageUrl: imageUrl,
-//     //                   width: 100,
-//     //                   height: 100,
-//     //                   fit: BoxFit.cover,
-//     //                   placeholder: (_, __) => Container(
-//     //                     width: 100,
-//     //                     height: 100,
-//     //                     color: Colors.grey.shade200,
-//     //                   ),
-//     //                   errorWidget: (_, __, ___) => const Icon(
-//     //                     Icons.broken_image,
-//     //                     size: 40,
-//     //                     color: Colors.grey,
-//     //                   ),
-//     //                 ),
-//     //               ),
-//     //             ],
-//     //           ),
-//     //         ),
-//     //       ),
-//     //       const SizedBox(height: 12),
-//     //       Row(
-//     //         children: [
-//     //           Expanded(
-//     //             child: DottedBorder(
-//     //               color: Colors.grey.shade300,
-//     //               strokeWidth: 1.2,
-//     //               dashPattern: const [4, 3],
-//     //               borderType: BorderType.RRect,
-//     //               radius: const Radius.circular(30),
-//     //               padding: const EdgeInsets.symmetric(
-//     //                 horizontal: 12,
-//     //                 vertical: 8,
-//     //               ),
-//     //               child: Row(
-//     //                 children: [
-//     //                   Expanded(
-//     //                     child: Text(
-//     //                       customerName,
-//     //                       overflow: TextOverflow.ellipsis,
-//     //                       style: AppTextStyles.mulish(
-//     //                         fontSize: 12,
-//     //                         color: AppColor.black,
-//     //                         fontWeight: FontWeight.bold,
-//     //                       ),
-//     //                     ),
-//     //                   ),
-//     //                   const SizedBox(width: 10),
-//     //                   Text(
-//     //                     timeText,
-//     //                     style: AppTextStyles.mulish(
-//     //                       fontSize: 12,
-//     //                       color: AppColor.darkGrey,
-//     //                     ),
-//     //                   ),
-//     //                 ],
-//     //               ),
-//     //             ),
-//     //           ),
-//     //           const SizedBox(width: 8),
-//     //           GestureDetector(
-//     //             onTap: () {
-//     //
-//     //             },
-//     //             child: Container(
-//     //               padding: const EdgeInsets.symmetric(
-//     //                 horizontal: 15,
-//     //                 vertical: 7,
-//     //               ),
-//     //               decoration: BoxDecoration(
-//     //                 color: AppColor.skyBlue,
-//     //                 borderRadius: BorderRadius.circular(20),
-//     //               ),
-//     //               child: Image.asset(
-//     //                 AppImages.callImage,
-//     //                 color: AppColor.white,
-//     //                 height: 18,
-//     //               ),
-//     //             ),
-//     //           ),
-//     //           const SizedBox(width: 8),
-//     //           GestureDetector(
-//     //             onTap: () {},
-//     //             child: Container(
-//     //               padding: const EdgeInsets.symmetric(
-//     //                 horizontal: 15,
-//     //                 vertical: 7,
-//     //               ),
-//     //               decoration: BoxDecoration(
-//     //                 color: AppColor.green,
-//     //                 borderRadius: BorderRadius.circular(20),
-//     //               ),
-//     //               child: Image.asset(
-//     //                 AppImages.whatsappImage,
-//     //                 color: AppColor.white,
-//     //                 height: 20,
-//     //               ),
-//     //             ),
-//     //           ),
-//     //         ],
-//     //       ),
-//     //     ],
-//     //   ),
-//     // );
-//   }
-// }
-//
