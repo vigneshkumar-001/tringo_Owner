@@ -60,7 +60,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     AppImages.accountRelated,
     AppImages.qrCodeLogo,
     AppImages.privacypolicy,
-    AppImages.privacypolicy,
+    AppImages.walletImage,
   ];
 
   final List<Widget> screens = [

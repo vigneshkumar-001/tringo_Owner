@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tringo_vendor/Core/Const/app_images.dart';
@@ -18,6 +19,7 @@ import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../AddProduct/Screens/product_search_keyword.dart';
 import '../../Home/Controller/shopContext_provider.dart';
+import '../../Menu/Controller/subscripe_notifier.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
@@ -120,6 +122,18 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopDetailsNotifierProvider);
+    final planState = ref.watch(subscriptionNotifier);
+    final planData = planState.currentPlanResponse?.data;
+
+    String time = '-';
+    String date = '-';
+    final String? startsAt = planData?.period.startsAt;
+    if (startsAt != null && startsAt.isNotEmpty) {
+      final DateTime dt = DateTime.parse(startsAt).toLocal();
+      time = DateFormat('h.mm.a').format(dt);
+      date = DateFormat('dd MMM yyyy').format(dt);
+    }
+
     if (state.isLoading) {
       return Skeletonizer(
         enabled: true,
@@ -192,8 +206,10 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
     const String shopDisplayName = '';
 
     final productSession = RegistrationProductSeivice.instance;
-    final bool isPremium = productSession.isPremium;
+    // final bool isPremium = productSession.isPremium;
     final bool isNonPremium = productSession.isNonPremium;
+
+    final bool isPremium = planData != null;
 
     final bool isCompany =
         RegistrationSession.instance.businessType == BusinessType.company;
@@ -655,7 +671,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 },
                               ),
 
-                              SizedBox(height: 10),
+                              // SizedBox(height: 10),
                               // InkWell(
                               //   onTap: () {
                               //     Navigator.push(
@@ -802,7 +818,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                               //     );
                               //   },
                               // ),
-                              SizedBox(height: 10),
+
                               // InkWell(
                               //   onTap: () {
                               //     Navigator.push(
@@ -879,26 +895,33 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                         //     ),
                         //   ),
                         // ),
-                        SizedBox(height: 40),
-                        if (isNonPremium)
-                          CommonContainer.attractCustomerCard(
-                            title: 'Attract More Customers',
-                            description:
-                                'Unlock premium to attract more customers',
-                            onTap: () {
-                              // From details we don’t want Skip again – only real subscribe
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const SubscriptionScreen(showSkip: false),
-                                ),
-                              );
-                            },
-                          ),
+                        SizedBox(height: 20),
+                        (planData?.isFreemium == false)
+                            ? CommonContainer.paidCustomerCard(
+                                title:
+                                    '${planData?.plan.durationLabel} Premium Activated',
+                                description: '$time @ $date',
+                                onTap: () {},
+                              )
+                            : CommonContainer.attractCustomerCard(
+                                title: 'Attract More Customers',
+                                description:
+                                    'Unlock premium to attract more customers',
+                                onTap: () {
+                                  // From details we don’t want Skip again – only real subscribe
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SubscriptionScreen(
+                                            showSkip: false,
+                                          ),
+                                    ),
+                                  );
+                                },
+                              ),
 
                         const SizedBox(height: 40),
-                        const SizedBox(height: 18),
 
                         Row(
                           children: [

@@ -698,7 +698,15 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  HomeScreenAnalytics(shopId: shopsRes?.data.homeChart?.shopId.toString()?? '',),
+                                                  HomeScreenAnalytics(
+                                                    shopId:
+                                                        shopsRes
+                                                            ?.data
+                                                            .homeChart
+                                                            ?.shopId
+                                                            .toString() ??
+                                                        '',
+                                                  ),
                                             ),
                                           );
                                         },

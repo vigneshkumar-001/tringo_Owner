@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tringo_vendor/Core/Utility/app_loader.dart';
 import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
+import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
+import 'package:tringo_vendor/Presentation/Home/Screens/home_screens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tringo_vendor/Core/Const/app_color.dart';
@@ -424,7 +426,13 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: CommonContainer.topLeftArrow(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CommonBottomNavigation(initialIndex: 0,)),
+                    );
+                  },
+                  // onTap: () => Navigator.pop(context),
                 ),
               ),
 
@@ -632,13 +640,13 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Center(
-                  child: TextButton(
-                    onPressed: () => _initialLoad(forceShopId: null),
-                    child: const Text('Load'),
-                  ),
-                ),
+                // const SizedBox(height: 12),
+                // Center(
+                //   child: TextButton(
+                //     onPressed: () => _initialLoad(forceShopId: null),
+                //     child: const Text('Load'),
+                //   ),
+                // ),
                 const SizedBox(height: 30),
               ] else if (sections.isEmpty) ...[
                 const SizedBox(height: 30),
