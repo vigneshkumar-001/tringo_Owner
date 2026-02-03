@@ -101,4 +101,15 @@ class AppImages {
   static String orangeClock = 'Assets/Images/OrangeClock.png';
   static String sendImage = 'Assets/Images/sendImage.png';
   static String qrCodeLogo = 'Assets/Images/qr_code_Logo.png';
+  static String wallet = 'Assets/Images/Wallet.png';
+  static String walletBCImage = 'Assets/Images/WalletBCImage.png';
+  static String sendArrow = 'Assets/Images/Send Arrow.png';
+  static String receiveArrow = 'Assets/Images/Receive Arrow.png';
+  static String smallScanQR = 'Assets/Images/small Scan QR.png';
+  static String withdraw = 'Assets/Images/Withdraw.png';
+  static String referFriends = 'Assets/Images/Refer Friends.png';
+  static String earnByReview = 'Assets/Images/Earn by Review.png';
+  static String uID = 'Assets/Images/UID.png';
+  static String smallScanQRBlack = 'Assets/Images/small Scan QR Black.png';
+  static String uIDBlue = 'Assets/Images/UID blue.png';
 }

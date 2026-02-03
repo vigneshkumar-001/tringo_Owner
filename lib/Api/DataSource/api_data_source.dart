@@ -14,6 +14,7 @@ import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dar
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
 import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Model/create_surprise_response.dart';
 import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Model/store_list_response.dart';
+import 'package:tringo_vendor/Presentation/Home/Model/enquiry_analytics_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
 import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
@@ -26,6 +27,11 @@ import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_res
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_response.dart';
 import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
+import 'package:tringo_vendor/Presentation/Wallet/Model/send_tcoin_response.dart';
+import 'package:tringo_vendor/Presentation/Wallet/Model/uid_name_response.dart';
+import 'package:tringo_vendor/Presentation/Wallet/Model/wallet_history_response.dart';
+import 'package:tringo_vendor/Presentation/Wallet/Model/wallet_qr_response.dart';
+import 'package:tringo_vendor/Presentation/Wallet/Model/withdraw_request_response.dart';
 
 import '../../Core/Session/registration_product_seivice.dart';
 import '../../Core/Utility/app_prefs.dart';
@@ -54,6 +60,30 @@ import '../../Presentation/Support/Model/chat_message_response.dart';
 import '../../Presentation/Support/Model/create_support_response.dart';
 import '../../Presentation/Support/Model/send_message_response.dart';
 import '../../Presentation/Support/Model/support_list_response.dart';
+
+enum AnalyticsType { enquiries, calls, locations }
+
+String _tabFromType(AnalyticsType t) {
+  switch (t) {
+    case AnalyticsType.enquiries:
+      return "ENQUIRY";
+    case AnalyticsType.calls:
+      return "CALL";
+    case AnalyticsType.locations:
+      return "MAP";
+  }
+}
+
+String _keyFromType(AnalyticsType t) {
+  switch (t) {
+    case AnalyticsType.enquiries:
+      return "enquiries";
+    case AnalyticsType.calls:
+      return "calls";
+    case AnalyticsType.locations:
+      return "locations";
+  }
+}
 
 abstract class BaseApiDataSource {
   Future<Either<Failure, LoginResponse>> mobileNumberLogin(
@@ -562,8 +592,9 @@ class ApiDataSource extends BaseApiDataSource {
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e) {
-      AppLogger.log.e(e);
+    } catch (e,st) {
+      AppLogger.log.e('$e $st');
+       
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -2344,6 +2375,325 @@ class ApiDataSource extends BaseApiDataSource {
       }
     } catch (e) {
       AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, WalletHistoryResponse>> walletHistory({
+    required String type,
+  }) async {
+    try {
+      final String url = ApiUrl.walletHistory(type: type);
+
+      final response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response?.statusCode == 200 || response?.statusCode == 201) {
+          if (response?.data['status'] == true) {
+            return Right(WalletHistoryResponse.fromJson(response?.data));
+          } else {
+            return Left(ServerFailure(response?.data['message'] ?? ""));
+          }
+        } else {
+          return Left(
+            ServerFailure(response?.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(errorData['message'] ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e.toString());
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, UidNameResponse>> uIDPersonName({
+    required String uid,
+  }) async {
+    try {
+      final String url = ApiUrl.uIDPersonName;
+
+      final payload = {"uid": uid};
+
+      final response = await Request.sendRequest(url, payload, 'Post', true);
+
+      AppLogger.log.i(response);
+
+      if (response is DioException) {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData['message'] != null) {
+          return Left(ServerFailure(errorData['message'].toString()));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+
+        if (data is Map && data['status'] == true) {
+          return Right(UidNameResponse.fromJson(data.cast<String, dynamic>()));
+        }
+
+        return Left(
+          ServerFailure(
+            (data is Map && data['message'] != null)
+                ? data['message'].toString()
+                : "Failed to fetch user",
+          ),
+        );
+      }
+
+      return Left(ServerFailure("HTTP ${response.statusCode}"));
+    } catch (e) {
+      AppLogger.log.e(e.toString());
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, SendTcoinResponse>> uIDSendApi({
+    required String toUid,
+    required String tCoin,
+  }) async {
+    try {
+      final String url = ApiUrl.uIDSendApi; // ✅ /v1/wallet/transfer
+
+      final payload = {
+        "toUid": toUid.trim(),
+        "tcoin": num.tryParse(tCoin.trim()) ?? 0,
+      };
+
+      final response = await Request.sendRequest(url, payload, 'POST', true);
+
+      if (response is DioException) {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message'].toString()));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+
+      final statusCode = response.statusCode ?? 0;
+      final data = response.data;
+
+      if (statusCode == 200 || statusCode == 201) {
+        if (data is Map && data['status'] == true) {
+          return Right(
+            SendTcoinResponse.fromJson(data.cast<String, dynamic>()),
+          );
+        }
+        final msg = (data is Map ? data['message'] : null) ?? "Send failed";
+        return Left(ServerFailure(msg.toString()));
+      }
+
+      final msg =
+          (data is Map ? data['message'] : null) ?? "Something went wrong";
+      return Left(ServerFailure(msg.toString()));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, WithdrawRequestResponse>> uIDWithRawApi({
+    required String upiId,
+    required String tcoin,
+  }) async {
+    try {
+      final String url = ApiUrl.uIDWithRawApi;
+      final payload = {"upiId": upiId, "tcoin": tcoin};
+
+      final response = await Request.sendRequest(url, payload, 'Post', true);
+
+      if (response is DioException) {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData['message'] != null) {
+          return Left(ServerFailure(errorData['message'].toString()));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final body = response.data;
+
+        if (body is Map<String, dynamic>) {
+          // ✅ status=false -> show API message
+          if (body['status'] != true) {
+            return Left(
+              ServerFailure((body['message'] ?? "Withdraw failed").toString()),
+            );
+          }
+
+          // ✅ parse withdraw response (NOT SendTcoinResponse)
+          final parsed = WithdrawRequestResponse.fromJson(body);
+
+          // ✅ if inner success=false
+          if (parsed.data.success != true) {
+            return Left(
+              ServerFailure((body['message'] ?? "Withdraw failed").toString()),
+            );
+          }
+
+          return Right(parsed);
+        }
+
+        return Left(ServerFailure("Invalid response format"));
+      }
+
+      return Left(ServerFailure("HTTP ${response.statusCode}"));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, WalletQrResponse>> walletQrCode() async {
+    try {
+      final url = ApiUrl.walletQrCode;
+
+      final response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      final data = response?.data;
+
+      if (response?.statusCode == 200 || response?.statusCode == 201) {
+        if (data['status'] == true) {
+          return Right(WalletQrResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? "Login failed"));
+        }
+      } else {
+        return Left(ServerFailure(data['message'] ?? "Something went wrong"));
+      }
+    } on DioException catch (dioError) {
+      final errorData = dioError.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(dioError.message ?? "Unknown Dio error"));
+    } catch (e, st) {
+      print('${e}\n${st}');
+      AppLogger.log.e('${e}\n${st}');
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, EnquiryAnalyticsResponse>> fetchEnquiryAnalyticsPaged({
+    required String shopId,
+    required String tab, // "ENQUIRY" | "CALL" | "MAP"
+    required String enquiryStatus,
+    required String callStatus,
+    required String mapStatus,
+    required int take,
+    required int skip,
+    required String start,
+    required String end,
+  }) async {
+    try {
+      final int enquiryTake = (tab == "ENQUIRY") ? take : 0;
+      final int enquirySkip = (tab == "ENQUIRY") ? skip : 0;
+
+      final int callTake = (tab == "CALL") ? take : 0;
+      final int callSkip = (tab == "CALL") ? skip : 0;
+
+      final int mapTake = (tab == "MAP") ? take : 0;
+      final int mapSkip = (tab == "MAP") ? skip : 0;
+
+      AppLogger.log.i(
+          '''
+📤 fetchEnquiryAnalyticsPaged
+shopId: $shopId
+tab: $tab
+take: $take | skip: $skip
+enquiryTake: $enquiryTake | enquirySkip: $enquirySkip
+callTake: $callTake | callSkip: $callSkip
+mapTake: $mapTake | mapSkip: $mapSkip
+dateRange: $start → $end
+'''
+      );
+
+      final url = ApiUrl.fetchAnalyticsActivity(
+        shopId: shopId,
+        tab: tab,
+        enquiryStatus: enquiryStatus,
+        callStatus: callStatus,
+        mapStatus: mapStatus,
+        enquiryTake: enquiryTake,
+        enquirySkip: enquirySkip,
+        callTake: callTake,
+        callSkip: callSkip,
+        mapTake: mapTake,
+        mapSkip: mapSkip,
+        start: start,
+        end: end,
+      );
+
+      AppLogger.log.i("🌐 URL => $url");
+
+      final dynamic res = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i("📥 Raw response type => ${res.runtimeType}");
+
+      if (res == null) {
+        AppLogger.log.e("❌ Response is NULL");
+        return Left(ServerFailure("No response from server"));
+      }
+
+      if (res is DioException) {
+        AppLogger.log.e("❌ DioException");
+        AppLogger.log.e("message => ${res.message}");
+        AppLogger.log.e("status => ${res.response?.statusCode}");
+        AppLogger.log.e("data => ${res.response?.data}");
+
+        final errData = res.response?.data;
+        if (errData is Map) {
+          final msg = errData["message"]?.toString();
+          if (msg != null && msg.isNotEmpty) {
+            return Left(ServerFailure(msg));
+          }
+        }
+
+        return Left(ServerFailure(res.message ?? "Request failed"));
+      }
+
+      final int statusCode = res.statusCode ?? 0;
+      final dynamic data = res.data;
+
+      AppLogger.log.i("✅ statusCode => $statusCode");
+      AppLogger.log.i("📦 response data => $data");
+
+      if (statusCode == 200 || statusCode == 201) {
+        if (data is Map) {
+          if (data["status"] == true) {
+            return Right(EnquiryAnalyticsResponse.fromJson(
+              Map<String, dynamic>.from(data),
+            ));
+          }
+
+          return Left(ServerFailure(
+            data["message"]?.toString() ?? "API status=false",
+          ));
+        }
+
+        return Left(ServerFailure("Invalid response format"));
+      }
+
+      if (data is Map) {
+        return Left(ServerFailure(
+          data["message"]?.toString() ?? "Non-success status code",
+        ));
+      }
+
+      return Left(ServerFailure("Unexpected error"));
+    } catch (e, s) {
+      AppLogger.log.e("🔥 Exception in fetchEnquiryAnalyticsPaged");
+      AppLogger.log.e(e);
+      AppLogger.log.e(s);
       return Left(ServerFailure(e.toString()));
     }
   }

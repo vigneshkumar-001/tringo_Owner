@@ -2,6 +2,7 @@ import 'dart:ui';
 
 class AppColor {
   static const scaffoldColor = Color(0xFFFFFFFF);
+  static const positiveGreen = Color(0xff25AD52);
   static const white = Color(0xFFFFFFFF);
   static const white3 = Color(0xffF1F1F1);
   static const mediumGray = Color(0xff777777);
@@ -10,6 +11,7 @@ class AppColor {
   static const ghostWhite = Color(0xffF5F7F9);
   static const emeraldGreen = Color(0xff219F4B);
   static const darkGrey = Color(0xffA1A1A1);
+
   static const brightGray = Color(0xffEDF1F4);
   static const softWhiteGray = Color(0xffF6F6F6);
   static const borderLightGrey = Color(0xffD0D0D0);
@@ -56,4 +58,14 @@ class AppColor {
   static const yellow = Color(0xffEF8C23);
   static const midnightBlue = Color(0xff14212B);
   static const dividerGrey = Color(0xffF3F3F3);
+  static const pinkSurface = Color(0xffF9F0F0);
+  static const lightBlueGray = Color(0xffF0F5F9);
+  static const lightGreenBg = Color(0xffF0F9F3);
+  static const lightMint = Color(0xffE9F9F3);
+  static const veryLightMintGreen = Color(0xffE8FFF6);
+  static const brandBlue = Color(0xff00488D);
+  static const accentCyan = Color(0xff42FDFC);
+  static const successGreen = Color(0xff5FD29A);
+  static const surfaceBlue = Color(0xffEFF9FE);
+  static const linkBlue = Color(0xff0594CE);
 }

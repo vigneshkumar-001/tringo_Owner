@@ -94,7 +94,7 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
   }
 
   Future<void> getCurrentPlan() async {
-    state = state.copyWith(isLoading: true, currentPlanResponse: null);
+    state = state.copyWith(isLoading: false, currentPlanResponse: null);
 
     final result = await api.getCurrentPlan();
 

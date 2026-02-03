@@ -41,7 +41,150 @@ class CommonContainer {
       ],
     );
   }
+  static walletSendBox({
+    required String image,
+    VoidCallback? onTap,
+    required String text,
+    double imageHeight = 27,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 50,
+            width: 50,
+            decoration: BoxDecoration(
+              color: AppColor.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: AppColor.white, width: 1.5),
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(11.5),
+                  child: Image.asset(image, height: imageHeight),
+                ),
+                // Inner shadow layer
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.black.withOpacity(0.02),
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.01),
+                        ],
+                        stops: [0, 1, 1],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          text,
+          style: AppTextStyles.mulish(fontSize: 11, color: AppColor.darkBlue),
+        ),
+      ],
+    );
+  }
+  static walletHistoryBox({
+    required Color containerColor,
+    required String mainText,
+    String? upiText,
+    required String timeText,
+    required String numberText,
+    required String endText,
+    required Color numberTextColor,
+    required Color endTextColor,
+    bool upiTexts = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: containerColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  mainText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 16,
+                    color: AppColor.darkBlue,
+                  ),
+                ),
 
+                if (upiTexts)
+                  Text(
+                    upiText ?? '',
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.skyBlue,
+                    ),
+                  ),
+                SizedBox(height: 4),
+                Text(
+                  timeText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: AppColor.gray84,
+                  ),
+                ),
+              ],
+            ),
+            Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  numberText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: numberTextColor,
+                  ),
+                ),
+                Text(
+                  endText,
+                  style: AppTextStyles.mulish(fontSize: 12, color: endTextColor),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  static leftSideArrow({VoidCallback? onTap, Color = AppColor.white}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color,
+          border: Border.all(color: AppColor.border),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(11.5),
+          child: Image.asset(AppImages.leftArrow, height: 13),
+        ),
+      ),
+    );
+  }
   static Widget gradientContainer({
     required String text,
     String? locationImage,

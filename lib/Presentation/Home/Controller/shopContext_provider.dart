@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
 import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
 
 import '../../AboutMe/controller/about_me_notifier.dart';
 
@@ -33,6 +34,8 @@ class SelectedShopNotifier extends StateNotifier<String?> {
           .fetchAllShopDetails(shopId: shopId),
       ref.read(offerNotifierProvider.notifier)
           .offerScreenEnquiry(shopId: shopId),
+      ref.read(subscriptionNotifier.notifier)
+          .getCurrentPlan(),
     ]);
   }
 }
