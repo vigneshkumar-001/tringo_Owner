@@ -122,23 +122,27 @@ class ApiUrl {
     required int mapTake,
     required int mapSkip,
     required String start, // "YYYY-MM-DD"
-    required String end,   // "YYYY-MM-DD"
+    required String end, // "YYYY-MM-DD"
   }) {
-    final uri = Uri.parse("${base}api/v1/shops/$shopId/profile/analytics/activity")
-        .replace(queryParameters: {
-      "tab": tab,
-      "enquiryStatus": enquiryStatus,
-      "callStatus": callStatus,
-      "mapStatus": mapStatus,
-      "enquiryTake": enquiryTake.toString(),
-      "enquirySkip": enquirySkip.toString(),
-      "callTake": callTake.toString(),
-      "callSkip": callSkip.toString(),
-      "mapTake": mapTake.toString(),
-      "mapSkip": mapSkip.toString(),
-      "start": start,
-      "end": end,
-    });
+    final uri =
+        Uri.parse(
+          "${base}api/v1/shops/$shopId/profile/analytics/activity",
+        ).replace(
+          queryParameters: {
+            "tab": tab,
+            "enquiryStatus": enquiryStatus,
+            "callStatus": callStatus,
+            "mapStatus": mapStatus,
+            "enquiryTake": enquiryTake.toString(),
+            "enquirySkip": enquirySkip.toString(),
+            "callTake": callTake.toString(),
+            "callSkip": callSkip.toString(),
+            "mapTake": mapTake.toString(),
+            "mapSkip": mapSkip.toString(),
+            "start": start,
+            "end": end,
+          },
+        );
 
     return uri.toString();
   }
@@ -173,6 +177,13 @@ class ApiUrl {
     return "${base}api/v1/dashboard/enquiries/$enquiryId/close";
   }
 
+  static String markCallOrMapClose({
+    required String shopId,
+    required String interactionsId,
+  }) {
+    return "${base}api/v1/shops/$shopId/profile/analytics/interactions/$interactionsId/close";
+  }
+
   static String editOffers({required String shopId, required String offerId}) {
     return "${base}api/v1/shops/$shopId/offers/app/$offerId";
   }
@@ -184,12 +195,15 @@ class ApiUrl {
   static String shopQrCode({required String shopId}) {
     return "${base}api/v1/shops/$shopId/qr";
   }
+
   static String en({required String shopId}) {
     return "${base}api/v1/shops/$shopId/qr";
   }
+
   static String walletHistory({required String type}) {
     return "${base}api/v1/wallet/history?type=$type";
   }
+
   static const String uIDPersonName = "${base}api/v1/wallet/resolve-uid";
   static const String uIDSendApi = "${base}api/v1/wallet/transfer";
   static const String uIDWithRawApi = "${base}api/v1/wallet/withdraw-request";

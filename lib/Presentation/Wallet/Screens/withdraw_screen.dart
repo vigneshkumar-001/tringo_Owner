@@ -85,7 +85,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen>
     if (wr != null && wr.status == true && wr.data.success == true) {
       AppSnackBar.success(
         context,
-        "Withdraw request raised ✅\nRequestId: ${wr.data.requestId}",
+        "Withdraw request raised \nRequestId: ${wr.data.requestId}",
       );
       _amountController.clear();
     } else {

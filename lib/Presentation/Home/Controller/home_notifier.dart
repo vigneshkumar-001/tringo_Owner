@@ -58,9 +58,9 @@ int _itemsCount(List<CommonSection> sections) {
 
 /// Merge sections by dayKey (append items)
 List<CommonSection> mergeSectionsByDay(
-    List<CommonSection> oldS,
-    List<CommonSection> newS,
-    ) {
+  List<CommonSection> oldS,
+  List<CommonSection> newS,
+) {
   final map = <String, CommonSection>{};
 
   for (final s in oldS) {
@@ -179,11 +179,12 @@ class HomeState {
       shopsResponse: shopsResponse ?? this.shopsResponse,
       markEnquiry: markEnquiry ?? this.markEnquiry,
       enquiryAnalyticsResponse:
-      enquiryAnalyticsResponse ?? this.enquiryAnalyticsResponse,
+          enquiryAnalyticsResponse ?? this.enquiryAnalyticsResponse,
       selectedShopId: selectedShopId ?? this.selectedShopId,
-      selectedAnalyticsType: selectedAnalyticsType ?? this.selectedAnalyticsType,
+      selectedAnalyticsType:
+          selectedAnalyticsType ?? this.selectedAnalyticsType,
       selectedAnalyticsStatus:
-      selectedAnalyticsStatus ?? this.selectedAnalyticsStatus,
+          selectedAnalyticsStatus ?? this.selectedAnalyticsStatus,
       analyticsPages: analyticsPages ?? this.analyticsPages,
     );
   }
@@ -212,12 +213,12 @@ class HomeNotifier extends Notifier<HomeState> {
     final result = await api.getAllEnquiry(shopId: shopId);
 
     result.fold(
-          (failure) => state = state.copyWith(
+      (failure) => state = state.copyWith(
         isLoading: false,
         error: failure.message,
         enquiryResponse: null,
       ),
-          (response) => state = state.copyWith(
+      (response) => state = state.copyWith(
         isLoading: false,
         error: null,
         enquiryResponse: response,
@@ -231,14 +232,17 @@ class HomeNotifier extends Notifier<HomeState> {
     final result = await api.getAllShops(shopId: shopId);
 
     result.fold(
-          (failure) => state = state.copyWith(
+      (failure) => state = state.copyWith(
         isLoading: false,
         error: failure.message,
         shopsResponse: null,
       ),
-          (response) async {
+      (response) async {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isFreemium', response.data.subscription?.isFreemium ?? false);
+        await prefs.setBool(
+          'isFreemium',
+          response.data.subscription?.isFreemium ?? false,
+        );
 
         state = state.copyWith(
           isLoading: false,
@@ -255,12 +259,12 @@ class HomeNotifier extends Notifier<HomeState> {
     final result = await api.markEnquiry(enquiryId: enquiryId);
 
     result.fold(
-          (failure) => state = state.copyWith(
+      (failure) => state = state.copyWith(
         isLoading: false,
         error: failure.message,
         markEnquiry: null,
       ),
-          (response) => state = state.copyWith(
+      (response) => state = state.copyWith(
         isLoading: false,
         error: null,
         markEnquiry: response,
@@ -268,6 +272,30 @@ class HomeNotifier extends Notifier<HomeState> {
     );
   }
 
+  Future<void> markCallOrLocation({
+    required String id,
+    required String shopId,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await api.markCallOrMapClose(
+      interactionsId: id,
+      shopId: shopId,
+    );
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        isLoading: false,
+        error: failure.message,
+        markEnquiry: null,
+      ),
+      (response) => state = state.copyWith(
+        isLoading: false,
+        error: null,
+        markEnquiry: response,
+      ),
+    );
+  }
   // ------------------- Analytics Methods -------------------
 
   void setAnalyticsType(AnalyticsType type) {
@@ -284,7 +312,10 @@ class HomeNotifier extends Notifier<HomeState> {
   /// ✅ helper: pick open/closed list based on selectedAnalyticsStatus
   CommonList _pickListForStatus(StatusLists? statusLists) {
     if (statusLists == null) {
-      return CommonList(paging: Paging(take: 0, skip: 0, total: 0), sections: const []);
+      return CommonList(
+        paging: Paging(take: 0, skip: 0, total: 0),
+        sections: const [],
+      );
     }
     return (state.selectedAnalyticsStatus == AnalyticsStatus.open)
         ? statusLists.open
@@ -325,16 +356,22 @@ class HomeNotifier extends Notifier<HomeState> {
     );
 
     result.fold(
-          (failure) {
-        final pages2 = Map<String, AnalyticsPageState>.from(state.analyticsPages);
+      (failure) {
+        final pages2 = Map<String, AnalyticsPageState>.from(
+          state.analyticsPages,
+        );
         pages2[key] = _pageOf(key).copyWith(isLoading: false);
         state = state.copyWith(analyticsPages: pages2, error: failure.message);
       },
-          (resp) {
+      (resp) {
         final statusLists = resp.data.lists.items[key]; // ✅ StatusLists
-        final list = _pickListForStatus(statusLists);   // ✅ CommonList(open/closed)
+        final list = _pickListForStatus(
+          statusLists,
+        ); // ✅ CommonList(open/closed)
 
-        final pages2 = Map<String, AnalyticsPageState>.from(state.analyticsPages);
+        final pages2 = Map<String, AnalyticsPageState>.from(
+          state.analyticsPages,
+        );
         pages2[key] = AnalyticsPageState(
           sections: list.sections,
           take: take,
@@ -385,19 +422,23 @@ class HomeNotifier extends Notifier<HomeState> {
     );
 
     result.fold(
-          (failure) {
-        final pages2 = Map<String, AnalyticsPageState>.from(state.analyticsPages);
+      (failure) {
+        final pages2 = Map<String, AnalyticsPageState>.from(
+          state.analyticsPages,
+        );
         pages2[key] = _pageOf(key).copyWith(isLoadingMore: false);
         state = state.copyWith(analyticsPages: pages2, error: failure.message);
       },
-          (resp) {
+      (resp) {
         final statusLists = resp.data.lists.items[key];
         final list = _pickListForStatus(statusLists);
 
         final incoming = list.sections;
         final merged = mergeSectionsByDay(current.sections, incoming);
 
-        final pages2 = Map<String, AnalyticsPageState>.from(state.analyticsPages);
+        final pages2 = Map<String, AnalyticsPageState>.from(
+          state.analyticsPages,
+        );
         pages2[key] = current.copyWith(
           sections: merged,
           total: list.paging.total,
@@ -412,12 +453,32 @@ class HomeNotifier extends Notifier<HomeState> {
       },
     );
   }
+
+  // in home_notifier.dart
+  Future<void> markAnalyticsItem({
+    required AnalyticsType type,
+    required String id,
+    required String shopId,
+  }) async {
+    switch (type) {
+      case AnalyticsType.enquiries:
+        await markEnquiry(enquiryId: id); // API-1
+        break;
+
+      case AnalyticsType.calls:
+      case AnalyticsType.locations:
+        await markCallOrLocation(
+          id: id,
+          shopId: shopId,
+        ); // API-2 (your second API)
+        break;
+    }
+  }
 }
 
 final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(
   HomeNotifier.new,
 );
-
 
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
