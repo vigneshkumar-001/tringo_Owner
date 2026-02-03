@@ -12,6 +12,7 @@ import '../Model/send_message_response.dart';
 
 class SupportState {
   final bool isLoading;
+  final bool isCreateTicketLoading;
   final bool isMsgSendingLoading;
 
   final String? error;
@@ -24,6 +25,7 @@ class SupportState {
   const SupportState({
     this.isLoading = false,
     this.isMsgSendingLoading = true,
+    this.isCreateTicketLoading = false,
     this.error,
     this.supportListResponse,
     this.createSupportResponse,
@@ -36,6 +38,7 @@ class SupportState {
   SupportState copyWith({
     bool? isLoading,
     bool? isMsgSendingLoading,
+    bool? isCreateTicketLoading,
 
     String? error,
     int? refreshKey,
@@ -46,6 +49,7 @@ class SupportState {
   }) {
     return SupportState(
       isLoading: isLoading ?? this.isLoading,
+      isCreateTicketLoading: isCreateTicketLoading ?? this.isCreateTicketLoading,
       isMsgSendingLoading: isMsgSendingLoading ?? this.isMsgSendingLoading,
 
       error: error,
@@ -115,7 +119,7 @@ class SupportNotifier extends Notifier<SupportState> {
     File? ownerImageFile,
     required BuildContext context,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isCreateTicketLoading: true, error: null);
 
     String customerImageUrl = '';
 
@@ -142,13 +146,13 @@ class SupportNotifier extends Notifier<SupportState> {
     // ✅ IMPORTANT: capture fold value and return it
     final String? ticketId = result.fold(
           (failure) {
-        state = state.copyWith(isLoading: false, error: failure.message);
+        state = state.copyWith(isCreateTicketLoading: false, error: failure.message);
         AppSnackBar.error(context, failure.message);
         return null; // return ticketId as null on failure
       },
           (response) {
         state = state.copyWith(
-          isLoading: false,
+          isCreateTicketLoading: false,
           error: null,
           createSupportResponse: response,
         );

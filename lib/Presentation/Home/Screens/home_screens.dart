@@ -133,7 +133,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
     final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
 
-
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
       return Scaffold(
@@ -672,14 +671,26 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                     children: [
                                       _statBox(
                                         0,
-                                        '320',
+                                        shopsRes
+                                                ?.data
+                                                .homeChart
+                                                ?.totals
+                                                .profileViews
+                                                .toString() ??
+                                            '',
                                         'Reach',
                                         AppImages.search,
                                         () {},
                                       ),
                                       _statBox(
                                         1,
-                                        '31',
+                                        shopsRes
+                                                ?.data
+                                                .homeChart
+                                                ?.totals
+                                                .enquiries
+                                                .toString() ??
+                                            '',
                                         'Enquiries',
                                         AppImages.msg,
                                         () {
@@ -687,21 +698,29 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  HomeScreenAnalytics(),
+                                                  HomeScreenAnalytics(shopId: shopsRes?.data.homeChart?.shopId.toString()?? '',),
                                             ),
                                           );
                                         },
                                       ),
                                       _statBox(
                                         2,
-                                        '20',
+                                        shopsRes?.data.homeChart?.totals.calls
+                                                .toString() ??
+                                            '',
                                         'Calls',
                                         AppImages.call,
                                         () {},
                                       ),
                                       _statBox(
                                         3,
-                                        '12',
+                                        shopsRes
+                                                ?.data
+                                                .homeChart
+                                                ?.totals
+                                                .mapClicks
+                                                .toString() ??
+                                            '',
                                         'Direction',
                                         AppImages.location,
                                         () {},
@@ -847,12 +866,16 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               if (isFreemium == false) {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => SurpriseOfferList()),
+                                  MaterialPageRoute(
+                                    builder: (_) => SurpriseOfferList(),
+                                  ),
                                 );
                               } else {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => SubscriptionScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) => SubscriptionScreen(),
+                                  ),
                                 );
                               }
 

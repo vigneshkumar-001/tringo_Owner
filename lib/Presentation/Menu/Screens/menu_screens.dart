@@ -11,6 +11,7 @@ import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.da
 import 'package:tringo_vendor/Presentation/Menu/Screens/qr_code_screen.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_history.dart';
 import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
+import 'package:tringo_vendor/Presentation/Wallet/Screens/wallet_screens.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
@@ -45,6 +46,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     'Delete Account',
     'QR Code',
     'Privacy Policy',
+    'Wallet',
   ];
 
   final List<String> images = [
@@ -57,6 +59,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     AppImages.support,
     AppImages.accountRelated,
     AppImages.qrCodeLogo,
+    AppImages.privacypolicy,
     AppImages.privacypolicy,
   ];
 
@@ -78,6 +81,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
       message: '',
       fontSize: 14,
     ),
+    const WalletScreens(),
   ];
 
   @override

@@ -1,127 +1,254 @@
-class EnquiryAnalyticsResponse {
-  final bool status;
-  final EnquiryAnalyticsData data;
+// enquiry_analytics_response.dart
+// ✅ UPDATED for NEW JSON:
+// lists -> enquiries/calls/locations -> open/closed -> { paging, sections }
+// ✅ product + service SAME JSON structure
 
-  const EnquiryAnalyticsResponse({
-    required this.status,
-    required this.data,
-  });
+// ------------------ Helpers ------------------
 
-  factory EnquiryAnalyticsResponse.fromJson(Map<String, dynamic> json) {
-    return EnquiryAnalyticsResponse(
-      status: json['status'] == true,
-      data: EnquiryAnalyticsData.fromJson(
-        (json['data'] ?? {}) as Map<String, dynamic>,
-      ),
-    );
+String _asString(dynamic v, [String fallback = ""]) {
+  if (v == null) return fallback;
+  return v.toString();
+}
+
+int _asInt(dynamic v, [int fallback = 0]) {
+  if (v == null) return fallback;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  final s = v.toString().trim();
+  final n = int.tryParse(s);
+  if (n != null) return n;
+  final d = double.tryParse(s);
+  if (d != null) return d.toInt();
+  return fallback;
+}
+
+num _asNum(dynamic v, [num fallback = 0]) {
+  if (v == null) return fallback;
+  if (v is num) return v;
+  final s = v.toString().trim();
+  final i = int.tryParse(s);
+  if (i != null) return i;
+  final d = double.tryParse(s);
+  if (d != null) return d;
+  return fallback;
+}
+
+// ------------------ Enums ------------------
+
+enum EnquiryStatus { open, closed, unknown }
+
+EnquiryStatus enquiryStatusFromString(String? v) {
+  switch ((v ?? "").toUpperCase()) {
+    case "OPEN":
+      return EnquiryStatus.open;
+    case "CLOSED":
+      return EnquiryStatus.closed;
+    default:
+      return EnquiryStatus.unknown;
   }
 }
 
-class EnquiryAnalyticsData {
-  final DateRange range;
-  final EnquiryCounts counts;
-  final EnquiryLists lists;
+String enquiryStatusToString(EnquiryStatus v) {
+  switch (v) {
+    case EnquiryStatus.open:
+      return "OPEN";
+    case EnquiryStatus.closed:
+      return "CLOSED";
+    case EnquiryStatus.unknown:
+      return "UNKNOWN";
+  }
+}
 
-  const EnquiryAnalyticsData({
+// ------------------ Root ------------------
+
+class EnquiryAnalyticsResponse {
+  final bool status;
+  final DashboardData data;
+
+  EnquiryAnalyticsResponse({required this.status, required this.data});
+
+  factory EnquiryAnalyticsResponse.fromJson(Map<String, dynamic> json) =>
+      EnquiryAnalyticsResponse(
+        status: json["status"] == true,
+        data: DashboardData.fromJson(
+          (json["data"] as Map<String, dynamic>?) ?? const {},
+        ),
+      );
+
+  Map<String, dynamic> toJson() => {
+    "status": status,
+    "data": data.toJson(),
+  };
+}
+
+class DashboardData {
+  final DateRange range;
+  final Counts counts;
+  final Lists lists;
+
+  DashboardData({
     required this.range,
     required this.counts,
     required this.lists,
   });
 
-  factory EnquiryAnalyticsData.fromJson(Map<String, dynamic> json) {
-    return EnquiryAnalyticsData(
-      range: DateRange.fromJson((json['range'] ?? {}) as Map<String, dynamic>),
-      counts:
-      EnquiryCounts.fromJson((json['counts'] ?? {}) as Map<String, dynamic>),
-      lists: EnquiryLists.fromJson((json['lists'] ?? {}) as Map<String, dynamic>),
-    );
-  }
+  factory DashboardData.fromJson(Map<String, dynamic> json) => DashboardData(
+    range: DateRange.fromJson(
+      (json["range"] as Map<String, dynamic>?) ?? const {},
+    ),
+    counts: Counts.fromJson(
+      (json["counts"] as Map<String, dynamic>?) ?? const {},
+    ),
+    lists: Lists.fromJson(
+      (json["lists"] as Map<String, dynamic>?) ?? const {},
+    ),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "range": range.toJson(),
+    "counts": counts.toJson(),
+    "lists": lists.toJson(),
+  };
 }
 
 class DateRange {
-  final String start; // "2026-01-01"
-  final String end; // "2026-01-31"
+  final String start;
+  final String end;
 
-  const DateRange({required this.start, required this.end});
+  DateRange({required this.start, required this.end});
 
-  factory DateRange.fromJson(Map<String, dynamic> json) {
-    return DateRange(
-      start: (json['start'] ?? '').toString(),
-      end: (json['end'] ?? '').toString(),
-    );
-  }
+  factory DateRange.fromJson(Map<String, dynamic> json) => DateRange(
+    start: _asString(json["start"]),
+    end: _asString(json["end"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "start": start,
+    "end": end,
+  };
 }
 
-class EnquiryCounts {
-  final EnquiryCountSummary enquiries;
+// ------------------ Counts ------------------
 
-  const EnquiryCounts({required this.enquiries});
+class Counts {
+  final CountBucket enquiries;
+  final CountBucket calls;
+  final CountBucket locations;
 
-  factory EnquiryCounts.fromJson(Map<String, dynamic> json) {
-    return EnquiryCounts(
-      enquiries: EnquiryCountSummary.fromJson(
-        (json['enquiries'] ?? {}) as Map<String, dynamic>,
-      ),
-    );
-  }
+  Counts({
+    required this.enquiries,
+    required this.calls,
+    required this.locations,
+  });
+
+  factory Counts.fromJson(Map<String, dynamic> json) => Counts(
+    enquiries: CountBucket.fromJson(
+      (json["enquiries"] as Map<String, dynamic>?) ?? const {},
+    ),
+    calls: CountBucket.fromJson(
+      (json["calls"] as Map<String, dynamic>?) ?? const {},
+    ),
+    locations: CountBucket.fromJson(
+      (json["locations"] as Map<String, dynamic>?) ?? const {},
+    ),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "enquiries": enquiries.toJson(),
+    "calls": calls.toJson(),
+    "locations": locations.toJson(),
+  };
 }
 
-class EnquiryCountSummary {
+class CountBucket {
   final int open;
   final int closed;
   final int total;
 
-  const EnquiryCountSummary({
-    required this.open,
-    required this.closed,
-    required this.total,
-  });
+  CountBucket({required this.open, required this.closed, required this.total});
 
-  factory EnquiryCountSummary.fromJson(Map<String, dynamic> json) {
-    int _i(dynamic v) => v is int ? v : int.tryParse((v ?? '0').toString()) ?? 0;
+  factory CountBucket.fromJson(Map<String, dynamic> json) => CountBucket(
+    open: _asInt(json["open"]),
+    closed: _asInt(json["closed"]),
+    total: _asInt(json["total"]),
+  );
 
-    return EnquiryCountSummary(
-      open: _i(json['open']),
-      closed: _i(json['closed']),
-      total: _i(json['total']),
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "open": open,
+    "closed": closed,
+    "total": total,
+  };
 }
 
-class EnquiryLists {
-  final EnquiryList enquiries;
+// ------------------ Lists ------------------
+/// ✅ lists -> enquiries/calls/locations -> StatusLists(open/closed)
+class Lists {
+  final Map<String, StatusLists> items;
 
-  const EnquiryLists({required this.enquiries});
+  Lists({required this.items});
 
-  factory EnquiryLists.fromJson(Map<String, dynamic> json) {
-    return EnquiryLists(
-      enquiries: EnquiryList.fromJson(
-        (json['enquiries'] ?? {}) as Map<String, dynamic>,
-      ),
-    );
+  factory Lists.fromJson(Map<String, dynamic> json) {
+    final map = <String, StatusLists>{};
+
+    json.forEach((key, value) {
+      if (value is Map<String, dynamic>) {
+        map[key] = StatusLists.fromJson(value);
+      }
+    });
+
+    return Lists(items: map);
   }
+
+  Map<String, dynamic> toJson() =>
+      items.map((key, value) => MapEntry(key, value.toJson()));
+
+  StatusLists? get enquiries => items["enquiries"];
+  StatusLists? get calls => items["calls"];
+  StatusLists? get locations => items["locations"];
 }
 
-class EnquiryList {
+class StatusLists {
+  final CommonList open;
+  final CommonList closed;
+
+  StatusLists({required this.open, required this.closed});
+
+  factory StatusLists.fromJson(Map<String, dynamic> json) => StatusLists(
+    open: CommonList.fromJson(
+      (json["open"] as Map<String, dynamic>?) ?? const {},
+    ),
+    closed: CommonList.fromJson(
+      (json["closed"] as Map<String, dynamic>?) ?? const {},
+    ),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "open": open.toJson(),
+    "closed": closed.toJson(),
+  };
+}
+
+class CommonList {
   final Paging paging;
-  final List<EnquirySection> sections;
-  final String status; // "OPEN"
+  final List<CommonSection> sections;
 
-  const EnquiryList({
-    required this.paging,
-    required this.sections,
-    required this.status,
-  });
+  CommonList({required this.paging, required this.sections});
 
-  factory EnquiryList.fromJson(Map<String, dynamic> json) {
-    return EnquiryList(
-      paging: Paging.fromJson((json['paging'] ?? {}) as Map<String, dynamic>),
-      sections: (json['sections'] as List? ?? const [])
-          .map((e) => EnquirySection.fromJson((e as Map).cast<String, dynamic>()))
-          .toList(),
-      status: (json['status'] ?? '').toString(),
-    );
-  }
+  factory CommonList.fromJson(Map<String, dynamic> json) => CommonList(
+    paging: Paging.fromJson(
+      (json["paging"] as Map<String, dynamic>?) ?? const {},
+    ),
+    sections: ((json["sections"] as List<dynamic>?) ?? const [])
+        .map((e) => CommonSection.fromJson(
+      (e as Map<String, dynamic>?) ?? const {},
+    ))
+        .toList(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "paging": paging.toJson(),
+    "sections": sections.map((e) => e.toJson()).toList(),
+  };
 }
 
 class Paging {
@@ -129,100 +256,143 @@ class Paging {
   final int skip;
   final int total;
 
-  const Paging({required this.take, required this.skip, required this.total});
+  Paging({required this.take, required this.skip, required this.total});
 
-  factory Paging.fromJson(Map<String, dynamic> json) {
-    int _i(dynamic v) => v is int ? v : int.tryParse((v ?? '0').toString()) ?? 0;
+  factory Paging.fromJson(Map<String, dynamic> json) => Paging(
+    take: _asInt(json["take"]),
+    skip: _asInt(json["skip"]),
+    total: _asInt(json["total"]),
+  );
 
-    return Paging(
-      take: _i(json['take']),
-      skip: _i(json['skip']),
-      total: _i(json['total']),
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "take": take,
+    "skip": skip,
+    "total": total,
+  };
 }
 
-class EnquirySection {
-  final String dayKey; // "TODAY"
-  final String dayLabel; // "Today"
-  final List<EnquiryItem> items;
+class CommonSection {
+  final String dayKey; // "TODAY" or "YYYY-MM-DD"
+  final String dayLabel; // "Today" or "13 Jan 2026"
+  final List<CommonItem> items;
 
-  const EnquirySection({
+  CommonSection({
     required this.dayKey,
     required this.dayLabel,
     required this.items,
   });
 
-  factory EnquirySection.fromJson(Map<String, dynamic> json) {
-    return EnquirySection(
-      dayKey: (json['dayKey'] ?? '').toString(),
-      dayLabel: (json['dayLabel'] ?? '').toString(),
-      items: (json['items'] as List? ?? const [])
-          .map((e) => EnquiryItem.fromJson((e as Map).cast<String, dynamic>()))
-          .toList(),
-    );
-  }
+  factory CommonSection.fromJson(Map<String, dynamic> json) => CommonSection(
+    dayKey: _asString(json["dayKey"]),
+    dayLabel: _asString(json["dayLabel"]),
+    items: ((json["items"] as List<dynamic>?) ?? const [])
+        .map((e) => CommonItem.fromJson(
+      (e as Map<String, dynamic>?) ?? const {},
+    ))
+        .toList(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "dayKey": dayKey,
+    "dayLabel": dayLabel,
+    "items": items.map((e) => e.toJson()).toList(),
+  };
 }
 
-class EnquiryItem {
+// ------------------ Item ------------------
+
+class CommonItem {
   final String id;
-  final String status; // "OPEN"
+  final String kind; // "ENQUIRY" / "CALL" / "MAP"
+  final EnquiryStatus status; // OPEN/CLOSED -> enum
   final String message;
-  final String timeLabel; // "1:13pm"
-  final String dateLabel; // "30 Jan 2026"
-  final DateTime? createdAt;
+  final String timeLabel;
+  final String dateLabel;
+  final String createdAt;
 
-  final EnquiryShop shop;
-  final dynamic product; // null now (replace with Product model later if needed)
-  final dynamic service; // null now (replace with Service model later if needed)
-  final EnquiryCustomer customer;
+  final String? closedAt;
+  final String? contextType; // SHOP / PRODUCT / SERVICE
+  final String? productId;
+  final String? serviceId;
 
-  const EnquiryItem({
+  final Customer? customer;
+  final Shop? shop;
+  final Product? product;
+  final Service? service;
+
+  CommonItem({
     required this.id,
+    required this.kind,
     required this.status,
     required this.message,
     required this.timeLabel,
     required this.dateLabel,
     required this.createdAt,
+    required this.closedAt,
+    required this.contextType,
+    required this.productId,
+    required this.serviceId,
+    required this.customer,
     required this.shop,
     required this.product,
     required this.service,
-    required this.customer,
   });
 
-  factory EnquiryItem.fromJson(Map<String, dynamic> json) {
-    DateTime? _dt(dynamic v) {
-      if (v == null) return null;
-      final s = v.toString().trim();
-      if (s.isEmpty) return null;
-      return DateTime.tryParse(s)?.toLocal();
-    }
+  factory CommonItem.fromJson(Map<String, dynamic> json) => CommonItem(
+    id: _asString(json["id"]),
+    kind: _asString(json["kind"]),
+    status: enquiryStatusFromString(json["status"] as String?),
+    message: _asString(json["message"]),
+    timeLabel: _asString(json["timeLabel"]),
+    dateLabel: _asString(json["dateLabel"]),
+    createdAt: _asString(json["createdAt"]),
+    closedAt: json["closedAt"]?.toString(),
+    contextType: json["contextType"]?.toString(),
+    productId: json["productId"]?.toString(),
+    serviceId: json["serviceId"]?.toString(),
+    customer: (json["customer"] is Map<String, dynamic>)
+        ? Customer.fromJson(json["customer"] as Map<String, dynamic>)
+        : null,
+    shop: (json["shop"] is Map<String, dynamic>)
+        ? Shop.fromJson(json["shop"] as Map<String, dynamic>)
+        : null,
+    product: (json["product"] is Map<String, dynamic>)
+        ? Product.fromJson(json["product"] as Map<String, dynamic>)
+        : null,
+    service: (json["service"] is Map<String, dynamic>)
+        ? Service.fromJson(json["service"] as Map<String, dynamic>)
+        : null,
+  );
 
-    return EnquiryItem(
-      id: (json['id'] ?? '').toString(),
-      status: (json['status'] ?? '').toString(),
-      message: (json['message'] ?? '').toString(),
-      timeLabel: (json['timeLabel'] ?? '').toString(),
-      dateLabel: (json['dateLabel'] ?? '').toString(),
-      createdAt: _dt(json['createdAt']),
-      shop: EnquiryShop.fromJson((json['shop'] ?? {}) as Map<String, dynamic>),
-      product: json['product'], // null currently
-      service: json['service'], // null currently
-      customer: EnquiryCustomer.fromJson(
-        (json['customer'] ?? {}) as Map<String, dynamic>,
-      ),
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "kind": kind,
+    "status": enquiryStatusToString(status),
+    "message": message,
+    "timeLabel": timeLabel,
+    "dateLabel": dateLabel,
+    "createdAt": createdAt,
+    "closedAt": closedAt,
+    "contextType": contextType,
+    "productId": productId,
+    "serviceId": serviceId,
+    "customer": customer?.toJson(),
+    "shop": shop?.toJson(),
+    "product": product?.toJson(),
+    "service": service?.toJson(),
+  };
 }
 
-class EnquiryShop {
+// ------------------ Shop ------------------
+
+class Shop {
   final String id;
   final String name;
-  final String? primaryImageUrl;
-  final double rating;
+  final String primaryImageUrl;
+  final num rating;
   final int ratingCount;
 
-  const EnquiryShop({
+  Shop({
     required this.id,
     required this.name,
     required this.primaryImageUrl,
@@ -230,39 +400,131 @@ class EnquiryShop {
     required this.ratingCount,
   });
 
-  factory EnquiryShop.fromJson(Map<String, dynamic> json) {
-    double _d(dynamic v) => v is num ? v.toDouble() : double.tryParse((v ?? '0').toString()) ?? 0.0;
-    int _i(dynamic v) => v is int ? v : int.tryParse((v ?? '0').toString()) ?? 0;
+  factory Shop.fromJson(Map<String, dynamic> json) => Shop(
+    id: _asString(json["id"]),
+    name: _asString(json["name"]),
+    primaryImageUrl: _asString(json["primaryImageUrl"]),
+    rating: _asNum(json["rating"]),
+    ratingCount: _asInt(json["ratingCount"]),
+  );
 
-    return EnquiryShop(
-      id: (json['id'] ?? '').toString(),
-      name: (json['name'] ?? '').toString(),
-      primaryImageUrl: json['primaryImageUrl']?.toString(),
-      rating: _d(json['rating']),
-      ratingCount: _i(json['ratingCount']),
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+    "primaryImageUrl": primaryImageUrl,
+    "rating": rating,
+    "ratingCount": ratingCount,
+  };
 }
 
-class EnquiryCustomer {
+// ------------------ Product & Service (Same Structure) ------------------
+
+class Product {
+  final String id;
   final String name;
-  final String? avatarUrl;
+  final String primaryImageUrl;
+  final String price; // API gives "500000.00" (string) sometimes
+  final num offerPrice; // API gives number sometimes
+  final num rating;
+  final int ratingCount;
+
+  Product({
+    required this.id,
+    required this.name,
+    required this.primaryImageUrl,
+    required this.price,
+    required this.offerPrice,
+    required this.rating,
+    required this.ratingCount,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) => Product(
+    id: _asString(json["id"]),
+    name: _asString(json["name"]),
+    primaryImageUrl: _asString(json["primaryImageUrl"]),
+    price: _asString(json["price"]),
+    offerPrice: _asNum(json["offerPrice"]),
+    rating: _asNum(json["rating"]),
+    ratingCount: _asInt(json["ratingCount"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+    "primaryImageUrl": primaryImageUrl,
+    "price": price,
+    "offerPrice": offerPrice,
+    "rating": rating,
+    "ratingCount": ratingCount,
+  };
+}
+
+class Service {
+  final String id;
+  final String name;
+  final String primaryImageUrl;
+  final String price;
+  final num offerPrice;
+  final num rating;
+  final int ratingCount;
+
+  Service({
+    required this.id,
+    required this.name,
+    required this.primaryImageUrl,
+    required this.price,
+    required this.offerPrice,
+    required this.rating,
+    required this.ratingCount,
+  });
+
+  factory Service.fromJson(Map<String, dynamic> json) => Service(
+    id: _asString(json["id"]),
+    name: _asString(json["name"]),
+    primaryImageUrl: _asString(json["primaryImageUrl"]),
+    price: _asString(json["price"]),
+    offerPrice: _asNum(json["offerPrice"]),
+    rating: _asNum(json["rating"]),
+    ratingCount: _asInt(json["ratingCount"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+    "primaryImageUrl": primaryImageUrl,
+    "price": price,
+    "offerPrice": offerPrice,
+    "rating": rating,
+    "ratingCount": ratingCount,
+  };
+}
+
+// ------------------ Customer ------------------
+
+class Customer {
+  final String name;
+  final String avatarUrl;
   final String phone;
   final String whatsappNumber;
 
-  const EnquiryCustomer({
+  Customer({
     required this.name,
     required this.avatarUrl,
     required this.phone,
     required this.whatsappNumber,
   });
 
-  factory EnquiryCustomer.fromJson(Map<String, dynamic> json) {
-    return EnquiryCustomer(
-      name: (json['name'] ?? '').toString(),
-      avatarUrl: json['avatarUrl']?.toString(),
-      phone: (json['phone'] ?? '').toString(),
-      whatsappNumber: (json['whatsappNumber'] ?? '').toString(),
-    );
-  }
+  factory Customer.fromJson(Map<String, dynamic> json) => Customer(
+    name: _asString(json["name"]),
+    avatarUrl: _asString(json["avatarUrl"]),
+    phone: _asString(json["phone"]),
+    whatsappNumber: _asString(json["whatsappNumber"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "name": name,
+    "avatarUrl": avatarUrl,
+    "phone": phone,
+    "whatsappNumber": whatsappNumber,
+  };
 }
