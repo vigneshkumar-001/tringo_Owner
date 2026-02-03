@@ -88,6 +88,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToSelected(selectedIndex);
+      ref.read(subscriptionNotifier.notifier).getCurrentPlan();
     });
 
     _loadPrefs(); // ✅ call async function

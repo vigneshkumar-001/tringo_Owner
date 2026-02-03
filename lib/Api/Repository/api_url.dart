@@ -24,7 +24,7 @@ class ApiUrl {
   static const String contactInfo = "${base}api/v1/contacts/sync";
   static const String supportTicketsList = "${base}api/v1/support/tickets";
   static const String branchesList = "${base}api/v1/shops/branches";
-
+  static const String walletQrCode = "${base}api/v1/wallet/my-qr";
   static String sendMessage({required String ticketId}) {
     return "${base}api/v1/support/tickets/$ticketId/messages";
   }
@@ -109,6 +109,40 @@ class ApiUrl {
     return "${base}api/v1/dashboard/shops?shopId=$shopId";
   }
 
+  static String fetchAnalyticsActivity({
+    required String shopId,
+    required String tab, // "ENQUIRY" | "CALL" | "MAP"
+    required String enquiryStatus, // "OPEN" | "CLOSED"
+    required String callStatus,
+    required String mapStatus,
+    required int enquiryTake,
+    required int enquirySkip,
+    required int callTake,
+    required int callSkip,
+    required int mapTake,
+    required int mapSkip,
+    required String start, // "YYYY-MM-DD"
+    required String end,   // "YYYY-MM-DD"
+  }) {
+    final uri = Uri.parse("${base}api/v1/shops/$shopId/profile/analytics/activity")
+        .replace(queryParameters: {
+      "tab": tab,
+      "enquiryStatus": enquiryStatus,
+      "callStatus": callStatus,
+      "mapStatus": mapStatus,
+      "enquiryTake": enquiryTake.toString(),
+      "enquirySkip": enquirySkip.toString(),
+      "callTake": callTake.toString(),
+      "callSkip": callSkip.toString(),
+      "mapTake": mapTake.toString(),
+      "mapSkip": mapSkip.toString(),
+      "start": start,
+      "end": end,
+    });
+
+    return uri.toString();
+  }
+
   static String enguiriesDownload({required String sessionToken}) {
     return "${base}api/v1/dashboard/enquiries/export?format=pdf&sessionToken=$sessionToken";
   }
@@ -153,4 +187,10 @@ class ApiUrl {
   static String en({required String shopId}) {
     return "${base}api/v1/shops/$shopId/qr";
   }
+  static String walletHistory({required String type}) {
+    return "${base}api/v1/wallet/history?type=$type";
+  }
+  static const String uIDPersonName = "${base}api/v1/wallet/resolve-uid";
+  static const String uIDSendApi = "${base}api/v1/wallet/transfer";
+  static const String uIDWithRawApi = "${base}api/v1/wallet/withdraw-request";
 }
