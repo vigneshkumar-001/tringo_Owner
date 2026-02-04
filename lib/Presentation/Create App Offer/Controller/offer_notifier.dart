@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
-import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
+import 'package:tringo_owner/Presentation/Create%20App%20Offer/Model/offer_products.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../Login/controller/login_notifier.dart';

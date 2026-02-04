@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Presentation/AddProduct/Screens/product_search_keyword.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Presentation/AddProduct/Screens/product_search_keyword.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';

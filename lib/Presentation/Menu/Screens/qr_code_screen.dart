@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 
-import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
-import 'package:tringo_vendor/Presentation/Home/Controller/shopContext_provider.dart';
-import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
+import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 
 class QrCodeScreen extends ConsumerStatefulWidget {
   final String? shopId;
@@ -328,15 +328,15 @@ class _QrCodeScreenState extends ConsumerState<QrCodeScreen> {
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:url_launcher/url_launcher.dart';
 //
-// import 'package:tringo_vendor/Core/Const/app_color.dart';
-// import 'package:tringo_vendor/Core/Const/app_images.dart';
-// import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-// import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-// import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
+// import 'package:tringo_owner/Core/Const/app_color.dart';
+// import 'package:tringo_owner/Core/Const/app_images.dart';
+// import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+// import 'package:tringo_owner/Core/Utility/common_Container.dart';
+// import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 //
-// import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
-// import 'package:tringo_vendor/Presentation/Home/Controller/shopContext_provider.dart';
-// import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+// import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+// import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
+// import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 //
 // class QrCodeScreen extends ConsumerStatefulWidget {
 //   final String? shopId;

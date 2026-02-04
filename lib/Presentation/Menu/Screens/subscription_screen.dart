@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/payment_success_screen.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/payment_success_screen.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 
 class Request {
   // static Future<dynamic> sendRequest(
@@ -556,7 +556,7 @@ class Request {
 //
 // import 'package:dio/dio.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:tringo_vendor/Core/Const/app_logger.dart';
+// import 'package:tringo_owner/Core/Const/app_logger.dart';
 //
 // class Request {
 //   static Future<dynamic> sendRequest(

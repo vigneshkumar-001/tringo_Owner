@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_number/mobile_number.dart';
 import 'package:mobile_number/sim_card.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 
 import '../../Core/Const/app_color.dart';
 import '../../Core/Const/app_images.dart';
@@ -526,7 +526,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_number/mobile_number.dart';
 import 'package:mobile_number/sim_card.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 
 import '../../Core/Const/app_color.dart';
 import '../../Core/Const/app_images.dart';

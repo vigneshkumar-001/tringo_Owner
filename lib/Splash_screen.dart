@@ -7,8 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
@@ -51,7 +51,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      PermissionService.requestOverlayAndContacts();
+      // ✅ 1) MUST request Phone/CallLog/Contacts first
+      final ok = await PermissionService.requestCorePermissionsWithDialog(
+        context,
+      );
+      if (!ok) return;
+      // final nativeOk = await CallerIdRoleHelper.debugPhonePerm();
+      // debugPrint("✅ NATIVE READ_PHONE_STATE => $nativeOk");
+      // ✅ 2) Overlay permission (optional here)
+      final req = await CallerIdRoleHelper.requestReadPhoneState();
+      final now = await CallerIdRoleHelper.debugPhonePerm();
+      print("PHONE req=$req now=$now");
+
+      await PermissionService.requestOverlayIfNeeded();
+
+      // ✅ 3) Continue your flow
+
       await _initializeSplash();
     });
   }
@@ -373,8 +388,8 @@ enum _BatterySheetAction { openSettings }
 // import 'package:go_router/go_router.dart';
 // import 'package:google_fonts/google_fonts.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:tringo_vendor/Core/Const/app_logger.dart';
-// import 'package:tringo_vendor/Core/Utility/common_Container.dart';
+// import 'package:tringo_owner/Core/Const/app_logger.dart';
+// import 'package:tringo_owner/Core/Utility/common_Container.dart';
 // import 'package:url_launcher/url_launcher.dart';
 // import 'Core/Const/app_color.dart';
 // import 'Core/Const/app_images.dart';

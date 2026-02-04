@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({super.key});

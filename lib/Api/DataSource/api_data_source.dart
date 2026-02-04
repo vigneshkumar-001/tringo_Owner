@@ -5,38 +5,38 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_vendor/Api/Repository/api_url.dart';
-import 'package:tringo_vendor/Api/Repository/failure.dart';
-import 'package:tringo_vendor/Api/Repository/request.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Presentation/AboutMe/Model/follower_response.dart';
-import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
-import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
-import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
-import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Model/create_surprise_response.dart';
-import 'package:tringo_vendor/Presentation/Create%20Surprise%20Offers/Model/store_list_response.dart';
-import 'package:tringo_vendor/Presentation/Home/Model/enquiry_analytics_response.dart';
-import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
-import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
-import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
-import 'package:tringo_vendor/Presentation/Login/model/app_version_response.dart';
-import 'package:tringo_vendor/Presentation/Login/model/login_response.dart';
-import 'package:tringo_vendor/Presentation/Login/model/otp_response.dart';
-import 'package:tringo_vendor/Presentation/Menu/Model/current_plan_response.dart';
-import 'package:tringo_vendor/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/model/search_keywords_response.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_response.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_info_photos_response.dart';
-import 'package:tringo_vendor/Presentation/Shops%20Details/model/shop_details_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/send_tcoin_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/uid_name_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/wallet_history_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/wallet_qr_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/withdraw_request_response.dart';
+import 'package:tringo_owner/Api/Repository/api_url.dart';
+import 'package:tringo_owner/Api/Repository/failure.dart';
+import 'package:tringo_owner/Api/Repository/request.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Presentation/AboutMe/Model/shop_root_response.dart';
+import 'package:tringo_owner/Presentation/AddProduct/Model/product_response.dart';
+import 'package:tringo_owner/Presentation/Create%20App%20Offer/Model/offer_products.dart';
+import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Model/create_surprise_response.dart';
+import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Model/store_list_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/enquiry_analytics_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/enquiry_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/mark_enquiry.dart';
+import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
+import 'package:tringo_owner/Presentation/Login/model/app_version_response.dart';
+import 'package:tringo_owner/Presentation/Login/model/login_response.dart';
+import 'package:tringo_owner/Presentation/Login/model/otp_response.dart';
+import 'package:tringo_owner/Presentation/Menu/Model/current_plan_response.dart';
+import 'package:tringo_owner/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_info_photos_response.dart';
+import 'package:tringo_owner/Presentation/Shops%20Details/model/shop_details_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/send_tcoin_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/uid_name_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/wallet_history_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/wallet_qr_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/withdraw_request_response.dart';
 
 import '../../Core/Session/registration_product_seivice.dart';
 import '../../Core/Utility/app_prefs.dart';
+import '../../Presentation/AboutMe/Model/follower_response.dart';
 import '../../Presentation/AboutMe/Model/service_edit_response.dart';
 import '../../Presentation/AboutMe/Model/service_remove_response.dart';
 import '../../Presentation/AddProduct/Model/delete_response.dart';
@@ -62,6 +62,7 @@ import '../../Presentation/Support/Model/chat_message_response.dart';
 import '../../Presentation/Support/Model/create_support_response.dart';
 import '../../Presentation/Support/Model/send_message_response.dart';
 import '../../Presentation/Support/Model/support_list_response.dart';
+import '../Repository/api_url.dart';
 
 enum AnalyticsType { enquiries, calls, locations }
 
@@ -97,10 +98,10 @@ abstract class BaseApiDataSource {
 class ApiDataSource extends BaseApiDataSource {
   @override
   Future<Either<Failure, LoginResponse>> mobileNumberLogin(
-    String phone,
-    String simToken, {
-    String page = "",
-  }) async {
+      String phone,
+      String simToken, {
+        String page = "",
+      }) async {
     try {
       final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
 
@@ -143,10 +144,10 @@ class ApiDataSource extends BaseApiDataSource {
   }
 
   Future<Either<Failure, OtpLoginResponse>> mobileNewNumberLogin(
-    String phone,
-    String simToken, {
-    String page = "",
-  }) async {
+      String phone,
+      String simToken, {
+        String page = "",
+      }) async {
     try {
       // final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
       final url = ApiUrl.requestLogin;
@@ -928,7 +929,7 @@ class ApiDataSource extends BaseApiDataSource {
       final savedServiceId = prefs.getString('service_id');
 
       final serviceIdToUse =
-          (apiServiceId != null && apiServiceId.trim().isNotEmpty)
+      (apiServiceId != null && apiServiceId.trim().isNotEmpty)
           ? apiServiceId
           : (savedServiceId ?? '');
       AppLogger.log.i('Service id - $apiServiceId');
@@ -1021,7 +1022,7 @@ class ApiDataSource extends BaseApiDataSource {
       late final Map<String, dynamic> responseData;
       if (response.data is String) {
         responseData =
-            jsonDecode(response.data as String) as Map<String, dynamic>;
+        jsonDecode(response.data as String) as Map<String, dynamic>;
       } else if (response.data is Map<String, dynamic>) {
         responseData = response.data as Map<String, dynamic>;
       } else {
