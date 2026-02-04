@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 import '../../Presentation/Login/controller/login_notifier.dart';
 import '../contacts/contacts_service.dart';
 

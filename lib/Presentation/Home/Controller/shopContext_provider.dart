@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
-import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
-import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 
 import '../../AboutMe/controller/about_me_notifier.dart';
 

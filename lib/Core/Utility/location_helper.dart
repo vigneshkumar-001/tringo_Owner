@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 
 class LocationHelper {
   static final String _apiKey = 'AIzaSyBjUSlWYV4spl2CeZ3ym32HqGROHwEACxk';
@@ -120,7 +120,7 @@ class LocationHelper {
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
 //
-// import 'package:tringo_vendor/Core/Const/app_logger.dart';
+// import 'package:tringo_owner/Core/Const/app_logger.dart';
 //
 // class LocationHelper {
 //   static final String _apiKey = 'AIzaSyBjUSlWYV4spl2CeZ3ym32HqGROHwEACxk';

@@ -1,5 +1,5 @@
 
-import 'package:tringo_vendor/Core/Session/registration_session.dart';
+import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 enum BusinessCategory { sellingProduct, services }
 

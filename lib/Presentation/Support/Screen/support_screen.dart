@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Presentation/Support/Screen/support_chat_screen.dart';
+import 'package:tringo_owner/Presentation/Support/Screen/support_chat_screen.dart';
 
 import '../../../../../Core/Utility/app_loader.dart';
 import '../../../Core/Const/app_color.dart';

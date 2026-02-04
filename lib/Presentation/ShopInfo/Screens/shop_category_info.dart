@@ -10,14 +10,14 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/Controller/shop_notifier.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Controller/shop_notifier.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';

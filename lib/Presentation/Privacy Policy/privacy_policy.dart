@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 
 import '../../Core/Const/app_color.dart';
 import '../../Core/Const/app_images.dart';
