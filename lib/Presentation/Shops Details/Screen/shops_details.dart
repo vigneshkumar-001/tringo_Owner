@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
-import 'package:tringo_vendor/Core/Utility/app_loader.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Presentation/Shops%20Details/controller/shop_details_notifier.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
+import 'package:tringo_owner/Core/Utility/app_loader.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Presentation/Shops%20Details/controller/shop_details_notifier.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Const/app_color.dart';
@@ -24,7 +24,7 @@ import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 
-import 'package:tringo_vendor/Core/Session/registration_session.dart';
+import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 import '../model/shop_details_response.dart';
 

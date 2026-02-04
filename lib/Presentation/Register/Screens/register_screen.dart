@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Presentation/Register/Screens/owner_info_screens.dart';
 
-import 'package:tringo_vendor/Core/Session/registration_session.dart';
+import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';

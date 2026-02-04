@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
 
 // 👇 add this to read premium/non-premium
-import 'package:tringo_vendor/Core/Session/registration_session.dart';
+import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 // Your screens
-import 'package:tringo_vendor/Presentation/Home/Screens/home_screens.dart';
-import 'package:tringo_vendor/Presentation/Enquiry/Screens/enquiry_screens.dart';
-import 'package:tringo_vendor/Presentation/AboutMe/Screens/about_me_screens.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/menu_screens.dart';
+import 'package:tringo_owner/Presentation/Home/Screens/home_screens.dart';
+import 'package:tringo_owner/Presentation/Enquiry/Screens/enquiry_screens.dart';
+import 'package:tringo_owner/Presentation/AboutMe/Screens/about_me_screens.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/menu_screens.dart';
 
 import '../../Presentation/Offer/Screen/offer_screens.dart';
 import '../../Presentation/Offer/Screen/premium_offers.dart';

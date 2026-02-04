@@ -1,4 +1,5 @@
-package com.feni.tringo.tringo_app
+package com.fenizo.tringo_owner.tringo_owner
+
 
 import android.app.Activity
 import android.app.role.RoleManager

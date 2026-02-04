@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/referral_history_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/review_create_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/review_history_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/send_tcoin_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/uid_name_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/wallet_history_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/wallet_qr_response.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Model/withdraw_request_response.dart';
+import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/referral_history_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/review_create_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/review_history_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/send_tcoin_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/uid_name_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/wallet_history_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/wallet_qr_response.dart';
+import 'package:tringo_owner/Presentation/Wallet/Model/withdraw_request_response.dart';
 
 import '../../Login/controller/login_notifier.dart';
 

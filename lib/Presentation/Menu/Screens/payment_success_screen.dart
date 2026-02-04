@@ -1,8 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:tringo_vendor/Presentation/Home/Screens/home_screens.dart';
-import 'package:tringo_vendor/Presentation/Shops%20Details/Screen/shops_details.dart';
+import 'package:tringo_owner/Presentation/Home/Screens/home_screens.dart';
+import 'package:tringo_owner/Presentation/Shops%20Details/Screen/shops_details.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';

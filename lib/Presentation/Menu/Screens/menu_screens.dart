@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/qr_code_screen.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_history.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
-import 'package:tringo_vendor/Presentation/Wallet/Screens/wallet_screens.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/qr_code_screen.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/subscription_history.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart';
+import 'package:tringo_owner/Presentation/Wallet/Screens/wallet_screens.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
@@ -23,6 +23,7 @@ import '../../Home/Controller/shopContext_provider.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../Offer/Screen/offer_screens.dart';
+import '../../Privacy Policy/Screens/privacy_policy.dart';
 import '../../Support/Screen/support_screen.dart';
 import '../../under_processing.dart';
 
@@ -74,13 +75,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     const SupportScreen(),
     const UnderProcessing(),
     const UnderProcessing(),
-    const NoDataScreen(
-      showBottomButton: false,
-      showTopBackArrow: false,
-      title: 'This feature is currently under development',
-      message: '',
-      fontSize: 14,
-    ),
+    const PrivacyPolicy(),
     const WalletScreens(),
   ];
 
@@ -225,7 +220,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const UnderProcessing(),
+                              builder: (_) =>
+                                  const PrivacyPolicy(showAcceptReject: false),
                             ),
                           );
                           break;

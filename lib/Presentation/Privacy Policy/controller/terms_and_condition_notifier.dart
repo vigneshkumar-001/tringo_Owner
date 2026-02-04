@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
-import 'package:tringo_vendor/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
+import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
+import 'package:tringo_owner/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
 
 import '../../Login/controller/login_notifier.dart';
 import '../model/terms_and_condition_model.dart' hide TermsAndConditionResponse;
@@ -32,7 +32,7 @@ class TermsAndConditionState {
       error: error,
 
       termsAndConditionResponse:
-          termsAndConditionResponse ?? this.termsAndConditionResponse,
+      termsAndConditionResponse ?? this.termsAndConditionResponse,
     );
   }
 }
@@ -52,14 +52,14 @@ class TermsAndConditionNotifier extends Notifier<TermsAndConditionState> {
     final result = await api.fetchTermsAndCondition();
 
     result.fold(
-      (failure) {
+          (failure) {
         state = state.copyWith(
           isLoading: false,
           error: failure.message,
           // homeResponse stays as it was (probably null on first load)
         );
       },
-      (response) async {
+          (response) async {
         state = state.copyWith(
           isLoading: false,
           error: null,
@@ -71,6 +71,6 @@ class TermsAndConditionNotifier extends Notifier<TermsAndConditionState> {
 }
 
 final termsAndConditionNotifierProvider =
-    NotifierProvider<TermsAndConditionNotifier, TermsAndConditionState>(
-      TermsAndConditionNotifier.new,
-    );
+NotifierProvider<TermsAndConditionNotifier, TermsAndConditionState>(
+  TermsAndConditionNotifier.new,
+);
