@@ -22,6 +22,7 @@ import 'package:tringo_owner/Presentation/Login/model/app_version_response.dart'
 import 'package:tringo_owner/Presentation/Login/model/login_response.dart';
 import 'package:tringo_owner/Presentation/Login/model/otp_response.dart';
 import 'package:tringo_owner/Presentation/Menu/Model/current_plan_response.dart';
+import 'package:tringo_owner/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_response.dart';
@@ -35,6 +36,7 @@ import 'package:tringo_owner/Presentation/Wallet/Model/withdraw_request_response
 
 import '../../Core/Session/registration_product_seivice.dart';
 import '../../Core/Utility/app_prefs.dart';
+import '../../Presentation/AboutMe/Model/follower_response.dart';
 import '../../Presentation/AboutMe/Model/service_edit_response.dart';
 import '../../Presentation/AboutMe/Model/service_remove_response.dart';
 import '../../Presentation/AddProduct/Model/delete_response.dart';
@@ -96,10 +98,10 @@ abstract class BaseApiDataSource {
 class ApiDataSource extends BaseApiDataSource {
   @override
   Future<Either<Failure, LoginResponse>> mobileNumberLogin(
-    String phone,
-    String simToken, {
-    String page = "",
-  }) async {
+      String phone,
+      String simToken, {
+        String page = "",
+      }) async {
     try {
       final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
 
@@ -142,10 +144,10 @@ class ApiDataSource extends BaseApiDataSource {
   }
 
   Future<Either<Failure, OtpLoginResponse>> mobileNewNumberLogin(
-    String phone,
-    String simToken, {
-    String page = "",
-  }) async {
+      String phone,
+      String simToken, {
+        String page = "",
+      }) async {
     try {
       // final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
       final url = ApiUrl.requestLogin;
@@ -927,7 +929,7 @@ class ApiDataSource extends BaseApiDataSource {
       final savedServiceId = prefs.getString('service_id');
 
       final serviceIdToUse =
-          (apiServiceId != null && apiServiceId.trim().isNotEmpty)
+      (apiServiceId != null && apiServiceId.trim().isNotEmpty)
           ? apiServiceId
           : (savedServiceId ?? '');
       AppLogger.log.i('Service id - $apiServiceId');
@@ -1020,7 +1022,7 @@ class ApiDataSource extends BaseApiDataSource {
       late final Map<String, dynamic> responseData;
       if (response.data is String) {
         responseData =
-            jsonDecode(response.data as String) as Map<String, dynamic>;
+        jsonDecode(response.data as String) as Map<String, dynamic>;
       } else if (response.data is Map<String, dynamic>) {
         responseData = response.data as Map<String, dynamic>;
       } else {
@@ -2740,6 +2742,79 @@ dateRange: $start → $end
       }
     } catch (e) {
       AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+  Future<Either<Failure, FollowersResponse>> getFollowerList({
+    required String shopId,
+    int take = 10,
+    int skip = 0,
+    String range = "ALL",
+  }) async {
+    try {
+      final url = ApiUrl.getFollowerList(
+        shopId: shopId,
+        take: take,
+        skip: skip,
+        range: range,
+      );
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(FollowersResponse.fromJson(response.data));
+          } else {
+            return Left(ServerFailure(response.data['message'] ?? "Failed"));
+          }
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? "Something went wrong"));
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e,st) {
+      AppLogger.log.e(e);
+      AppLogger.log.e(st);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, TermsAndConditionResponse>>
+  fetchTermsAndCondition() async {
+    try {
+      final url = ApiUrl.privacyPolicy;
+
+      final response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      final data = response?.data;
+
+      if (response?.statusCode == 200 || response?.statusCode == 201) {
+        if (data['status'] == true) {
+          return Right(TermsAndConditionResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? "Login failed"));
+        }
+      } else {
+        return Left(ServerFailure(data['message'] ?? "Something went wrong"));
+      }
+    } on DioException catch (dioError) {
+      final errorData = dioError.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(dioError.message ?? "Unknown Dio error"));
+    } catch (e) {
+      print(e);
       return Left(ServerFailure(e.toString()));
     }
   }

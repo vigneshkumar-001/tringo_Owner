@@ -15,7 +15,7 @@ import '../../Presentation/Create App Offer/Screens/offer_products.dart';
 import '../../Presentation/Home/Screens/home_screens.dart';
 import '../../Presentation/Menu/Screens/subscription_screen.dart';
 import '../../Presentation/Mobile Nomber Verify/mobile_number_verify.dart';
-import '../../Presentation/Privacy Policy/privacy_policy.dart';
+import '../../Presentation/Privacy Policy/Screens/privacy_policy.dart';
 import '../../Presentation/Shops Details/Screen/shops_details.dart';
 import '../../Splash_screen.dart';
 import '../Session/registration_product_seivice.dart';

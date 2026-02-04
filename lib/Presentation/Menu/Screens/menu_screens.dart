@@ -23,6 +23,7 @@ import '../../Home/Controller/shopContext_provider.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../Offer/Screen/offer_screens.dart';
+import '../../Privacy Policy/Screens/privacy_policy.dart';
 import '../../Support/Screen/support_screen.dart';
 import '../../under_processing.dart';
 
@@ -74,13 +75,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     const SupportScreen(),
     const UnderProcessing(),
     const UnderProcessing(),
-    const NoDataScreen(
-      showBottomButton: false,
-      showTopBackArrow: false,
-      title: 'This feature is currently under development',
-      message: '',
-      fontSize: 14,
-    ),
+    const PrivacyPolicy(),
     const WalletScreens(),
   ];
 
@@ -225,7 +220,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const UnderProcessing(),
+                              builder: (_) =>
+                                  const PrivacyPolicy(showAcceptReject: false),
                             ),
                           );
                           break;
