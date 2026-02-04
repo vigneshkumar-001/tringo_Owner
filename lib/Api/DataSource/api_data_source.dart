@@ -9,6 +9,7 @@ import 'package:tringo_vendor/Api/Repository/api_url.dart';
 import 'package:tringo_vendor/Api/Repository/failure.dart';
 import 'package:tringo_vendor/Api/Repository/request.dart';
 import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_vendor/Presentation/AboutMe/Model/follower_response.dart';
 import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
 import 'package:tringo_vendor/Presentation/AddProduct/Model/product_response.dart';
 import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Model/offer_products.dart';
@@ -22,6 +23,7 @@ import 'package:tringo_vendor/Presentation/Login/model/app_version_response.dart
 import 'package:tringo_vendor/Presentation/Login/model/login_response.dart';
 import 'package:tringo_vendor/Presentation/Login/model/otp_response.dart';
 import 'package:tringo_vendor/Presentation/Menu/Model/current_plan_response.dart';
+import 'package:tringo_vendor/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_vendor/Presentation/ShopInfo/model/shop_category_response.dart';
@@ -2739,6 +2741,79 @@ dateRange: $start → $end
       }
     } catch (e) {
       AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+  Future<Either<Failure, FollowersResponse>> getFollowerList({
+    required String shopId,
+    int take = 10,
+    int skip = 0,
+    String range = "ALL",
+  }) async {
+    try {
+      final url = ApiUrl.getFollowerList(
+        shopId: shopId,
+        take: take,
+        skip: skip,
+        range: range,
+      );
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(FollowersResponse.fromJson(response.data));
+          } else {
+            return Left(ServerFailure(response.data['message'] ?? "Failed"));
+          }
+        } else {
+          return Left(ServerFailure(response.data['message'] ?? "Something went wrong"));
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e,st) {
+      AppLogger.log.e(e);
+      AppLogger.log.e(st);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, TermsAndConditionResponse>>
+  fetchTermsAndCondition() async {
+    try {
+      final url = ApiUrl.privacyPolicy;
+
+      final response = await Request.sendGetRequest(url, {}, 'GET', true);
+
+      AppLogger.log.i(response);
+
+      final data = response?.data;
+
+      if (response?.statusCode == 200 || response?.statusCode == 201) {
+        if (data['status'] == true) {
+          return Right(TermsAndConditionResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? "Login failed"));
+        }
+      } else {
+        return Left(ServerFailure(data['message'] ?? "Something went wrong"));
+      }
+    } on DioException catch (dioError) {
+      final errorData = dioError.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(dioError.message ?? "Unknown Dio error"));
+    } catch (e) {
+      print(e);
       return Left(ServerFailure(e.toString()));
     }
   }
