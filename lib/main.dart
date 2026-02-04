@@ -163,12 +163,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tringo_vendor/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
+import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'Presentation/UserContact_Details/screen/call_logs_screen.dart';

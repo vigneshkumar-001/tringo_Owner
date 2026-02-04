@@ -1,7 +1,7 @@
 // home_notifier.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../Login/controller/login_notifier.dart';
@@ -483,11 +483,11 @@ final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(
 
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:tringo_vendor/Core/Const/app_logger.dart';
-// import 'package:tringo_vendor/Presentation/AboutMe/Model/shop_root_response.dart';
-// import 'package:tringo_vendor/Presentation/Home/Model/enquiry_response.dart';
-// import 'package:tringo_vendor/Presentation/Home/Model/mark_enquiry.dart';
-// import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
+// import 'package:tringo_owner/Core/Const/app_logger.dart';
+// import 'package:tringo_owner/Presentation/AboutMe/Model/shop_root_response.dart';
+// import 'package:tringo_owner/Presentation/Home/Model/enquiry_response.dart';
+// import 'package:tringo_owner/Presentation/Home/Model/mark_enquiry.dart';
+// import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
 //
 // import '../../../Api/DataSource/api_data_source.dart';
 // import '../../Login/controller/login_notifier.dart';

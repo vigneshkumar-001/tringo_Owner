@@ -20,22 +20,22 @@ import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Const/app_logger.dart';
-import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-import 'package:tringo_vendor/Core/Widgets/qr_scanner_page.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Widgets/qr_scanner_page.dart';
 
-import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
-import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/menu_screens.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
+import 'package:tringo_owner/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
+import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/menu_screens.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart';
 
-import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Screens/create_app_offer.dart';
-import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
-import 'package:tringo_vendor/Presentation/Home/Controller/shopContext_provider.dart';
+import 'package:tringo_owner/Presentation/Create%20App%20Offer/Screens/create_app_offer.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
 
 import '../Model/offer_model.dart';
 
@@ -1246,10 +1246,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
 // import 'package:intl/intl.dart';
 // import 'package:permission_handler/permission_handler.dart';
 // import 'package:skeletonizer/skeletonizer.dart';
-// import 'package:tringo_vendor/Core/Const/app_logger.dart';
-// import 'package:tringo_vendor/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
-// import 'package:tringo_vendor/Presentation/Home/Model/shops_response.dart';
-// import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
+// import 'package:tringo_owner/Core/Const/app_logger.dart';
+// import 'package:tringo_owner/Presentation/Create%20App%20Offer/Controller/offer_notifier.dart';
+// import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
+// import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 //
 // import '../../../Core/Const/app_color.dart';
 // import '../../../Core/Const/app_images.dart';

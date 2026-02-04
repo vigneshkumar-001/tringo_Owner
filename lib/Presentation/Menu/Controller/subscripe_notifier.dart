@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Presentation/Menu/Model/current_plan_response.dart';
+import 'package:tringo_owner/Presentation/Menu/Model/current_plan_response.dart';
 
 import '../../../../Api/DataSource/api_data_source.dart';
 import '../../AddProduct/Model/delete_response.dart';

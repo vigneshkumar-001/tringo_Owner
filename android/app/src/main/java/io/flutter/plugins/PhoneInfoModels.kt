@@ -1,4 +1,4 @@
-package com.feni.tringo.tringo_app
+package io.flutter.plugins
 
 import com.google.gson.annotations.SerializedName
 

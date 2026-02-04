@@ -1,4 +1,5 @@
-package com.feni.tringo.tringo_app
+package com.fenizo.tringo_owner.tringo_owner
+
 
 import android.util.Log
 import com.google.gson.GsonBuilder
@@ -11,8 +12,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    //    private const val BASE_URL = "https://bknd.tringobiz.com/"
-    private const val BASE_URL = "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/"
+        private const val BASE_URL = "https://bknd.tringobiz.com/"
+//    private const val BASE_URL = "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/"
     private const val TAG = "TRINGO_HTTP"
 
     /**

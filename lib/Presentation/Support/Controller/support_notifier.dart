@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tringo_vendor/Api/DataSource/api_data_source.dart';
-import 'package:tringo_vendor/Presentation/Support/Model/chat_message_response.dart';
-import 'package:tringo_vendor/Presentation/Support/Model/support_list_response.dart';
+import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
+import 'package:tringo_owner/Presentation/Support/Model/chat_message_response.dart';
+import 'package:tringo_owner/Presentation/Support/Model/support_list_response.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../Model/create_support_response.dart';

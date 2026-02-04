@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tringo_vendor/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
 
 class AppLoader {
   static Widget circularLoader({Color color = AppColor.white}) {

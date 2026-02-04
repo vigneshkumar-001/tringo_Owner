@@ -4,23 +4,23 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tringo_vendor/Core/Utility/app_loader.dart';
-import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
-import 'package:tringo_vendor/Core/Widgets/bottom_navigation_bar.dart';
-import 'package:tringo_vendor/Presentation/Home/Screens/home_screens.dart';
+import 'package:tringo_owner/Core/Utility/app_loader.dart';
+import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
+import 'package:tringo_owner/Core/Widgets/bottom_navigation_bar.dart';
+import 'package:tringo_owner/Presentation/Home/Screens/home_screens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:tringo_vendor/Core/Const/app_color.dart';
-import 'package:tringo_vendor/Core/Const/app_images.dart';
-import 'package:tringo_vendor/Core/Routes/app_go_routes.dart';
-import 'package:tringo_vendor/Core/Utility/app_textstyles.dart';
-import 'package:tringo_vendor/Core/Utility/common_Container.dart';
-import 'package:tringo_vendor/Core/Widgets/qr_scanner_page.dart';
+import 'package:tringo_owner/Core/Const/app_color.dart';
+import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
+import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Widgets/qr_scanner_page.dart';
 
-import 'package:tringo_vendor/Presentation/Menu/Controller/subscripe_notifier.dart';
-import 'package:tringo_vendor/Presentation/Menu/Screens/subscription_screen.dart';
-import 'package:tringo_vendor/Presentation/Home/Controller/home_notifier.dart';
-import 'package:tringo_vendor/Presentation/Home/Controller/shopContext_provider.dart';
+import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
 
 import '../Controller/create_surprise_notifier.dart';
 import '../Model/surprise_offer_list_response.dart';

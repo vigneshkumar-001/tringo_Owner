@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tringo_vendor/Core/Utility/app_snackbar.dart';
+import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 

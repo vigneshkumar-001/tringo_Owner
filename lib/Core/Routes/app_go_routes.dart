@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tringo_vendor/Presentation/Login/Screens/login_screens.dart';
-import 'package:tringo_vendor/Presentation/Login/Screens/otp_screens.dart';
-import 'package:tringo_vendor/Presentation/Register/Screens/register_screen.dart';
-import 'package:tringo_vendor/Presentation/Register/Screens/owner_info_screens.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/Screens/search_keyword.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_category_info.dart';
-import 'package:tringo_vendor/Presentation/ShopInfo/Screens/shop_photo_info.dart';
-import 'package:tringo_vendor/main.dart';
+import 'package:tringo_owner/Presentation/Login/Screens/login_screens.dart';
+import 'package:tringo_owner/Presentation/Login/Screens/otp_screens.dart';
+import 'package:tringo_owner/Presentation/Register/Screens/register_screen.dart';
+import 'package:tringo_owner/Presentation/Register/Screens/owner_info_screens.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Screens/search_keyword.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Screens/shop_category_info.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+import 'package:tringo_owner/main.dart';
 
 import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
