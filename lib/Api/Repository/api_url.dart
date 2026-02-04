@@ -4,7 +4,8 @@ class ApiUrl {
 
   static const String base = "https://bknd.tringobiz.com/";
   static const String baseUrlImage = "https://bknd.tringobiz.com/";
-
+  static const String privacyPolicy =
+      "${base}api/v1/public/pages/privacy-policy";
   static const String base1 = "https://vk6shsk1-3000.inc1.devtunnels.ms/";
   static const String register = "${base}api/v1/auth/request-otp";
   static const String requestLogin = "${base}api/v1/auth/request-login";
@@ -95,6 +96,16 @@ class ApiUrl {
 
   static String getAllShop({required String shopId}) {
     return "${base}api/v1/shops?mine=true&selectedShopId=$shopId";
+  }
+
+  static String getFollowerList({
+    required String shopId,
+    int take = 10,
+    int skip = 0,
+    String range = "ALL", // WEEK | MONTH | ALL (whatever your API supports)
+  }) {
+    return "${base}api/v1/shops/$shopId/profile/followers"
+        "?take=$take&skip=$skip&range=$range";
   }
 
   static String deleteService({required String serviceId}) {
