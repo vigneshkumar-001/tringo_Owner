@@ -1,25 +1,31 @@
-class DeleteResponsee {
+class AccountDeleteResponse {
   final bool status;
   final int code;
-  final DeleteData data;
+  final String? message;
+  final DeleteData data; // ✅ ADD THIS
 
-  DeleteResponsee({
+  AccountDeleteResponse({
     required this.status,
     required this.code,
-    required this.data,
+    required this.data, // ✅ ADD THIS
+    this.message,
   });
 
-  factory DeleteResponsee.fromJson(Map<String, dynamic> json) {
-    return DeleteResponsee(
-      status: json['status'] ?? false,
-      code: json['code'] ?? 0,
-      data: DeleteData.fromJson(json['data'] ?? {}),
+  factory AccountDeleteResponse.fromJson(Map<String, dynamic> json) {
+    return AccountDeleteResponse(
+      status: json['status'] == true,
+      code: (json['code'] is int)
+          ? json['code']
+          : int.tryParse('${json['code']}') ?? 0,
+      message: json['message']?.toString(),
+      data: DeleteData.fromJson((json['data'] as Map?)?.cast<String, dynamic>() ?? {}),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'status': status,
     'code': code,
+    'message': message,
     'data': data.toJson(),
   };
 }
@@ -30,7 +36,7 @@ class DeleteData {
   DeleteData({required this.deleted});
 
   factory DeleteData.fromJson(Map<String, dynamic> json) {
-    return DeleteData(deleted: json['deleted'] ?? false);
+    return DeleteData(deleted: json['deleted'] == true);
   }
 
   Map<String, dynamic> toJson() => {'deleted': deleted};

@@ -49,6 +49,7 @@ import '../../Presentation/Create Surprise Offers/Model/surprise_offer_list_resp
 import '../../Presentation/Login/model/contact_response.dart';
 import '../../Presentation/Login/model/login_new_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
+import '../../Presentation/Menu/Model/delete_response.dart';
 import '../../Presentation/Menu/Model/plan_list_response.dart';
 import '../../Presentation/Menu/Model/purchase_response.dart';
 import '../../Presentation/Menu/Model/qr_action_response.dart';
@@ -98,10 +99,10 @@ abstract class BaseApiDataSource {
 class ApiDataSource extends BaseApiDataSource {
   @override
   Future<Either<Failure, LoginResponse>> mobileNumberLogin(
-      String phone,
-      String simToken, {
-        String page = "",
-      }) async {
+    String phone,
+    String simToken, {
+    String page = "",
+  }) async {
     try {
       final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
 
@@ -144,10 +145,10 @@ class ApiDataSource extends BaseApiDataSource {
   }
 
   Future<Either<Failure, OtpLoginResponse>> mobileNewNumberLogin(
-      String phone,
-      String simToken, {
-        String page = "",
-      }) async {
+    String phone,
+    String simToken, {
+    String page = "",
+  }) async {
     try {
       // final url = page == "resendOtp" ? ApiUrl.resendOtp : ApiUrl.register;
       final url = ApiUrl.requestLogin;
@@ -929,7 +930,7 @@ class ApiDataSource extends BaseApiDataSource {
       final savedServiceId = prefs.getString('service_id');
 
       final serviceIdToUse =
-      (apiServiceId != null && apiServiceId.trim().isNotEmpty)
+          (apiServiceId != null && apiServiceId.trim().isNotEmpty)
           ? apiServiceId
           : (savedServiceId ?? '');
       AppLogger.log.i('Service id - $apiServiceId');
@@ -1022,7 +1023,7 @@ class ApiDataSource extends BaseApiDataSource {
       late final Map<String, dynamic> responseData;
       if (response.data is String) {
         responseData =
-        jsonDecode(response.data as String) as Map<String, dynamic>;
+            jsonDecode(response.data as String) as Map<String, dynamic>;
       } else if (response.data is Map<String, dynamic>) {
         responseData = response.data as Map<String, dynamic>;
       } else {
@@ -1957,7 +1958,7 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, DeleteResponse>> deleteAccount() async {
+  Future<Either<Failure, AccountDeleteResponse>> deleteAccount() async {
     try {
       final url = ApiUrl.deleteAccount;
 
@@ -1968,10 +1969,9 @@ class ApiDataSource extends BaseApiDataSource {
         true,
       );
 
-      // ✅ success
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.data['status'] == true) {
-          return Right(DeleteResponse.fromJson(response.data));
+          return Right(AccountDeleteResponse.fromJson(response.data));
         }
         return Left(ServerFailure(response.data['message'] ?? "Delete failed"));
       }
@@ -2289,21 +2289,33 @@ class ApiDataSource extends BaseApiDataSource {
 
       final dynamic resp = await Request.sendGetRequest(url, {}, 'GET', true);
 
-      // ✅ Safe logs (no type error)
+      // ✅ VERY IMPORTANT: null guard
+      if (resp == null) {
+        return Left(
+          ServerFailure("No response from server. Please try again."),
+        );
+      }
+
+      // ✅ Safe logs (no crash)
       if (resp is Response) {
-        AppLogger.log.i("shopQrCode => status=${resp.statusCode}");
-        AppLogger.log.i("shopQrCode => data=${resp.data}");
         debugPrint("shopQrCode => status=${resp.statusCode}");
         debugPrint("shopQrCode => data=${resp.data}");
+        AppLogger.log.i("shopQrCode => status=${resp.statusCode}");
+        AppLogger.log.i("shopQrCode => data=${resp.data}");
+      } else if (resp is DioException) {
+        debugPrint("shopQrCode => dioError=${resp.message}");
+        AppLogger.log.i("shopQrCode => dioError=${resp.message}");
       } else {
-        AppLogger.log.i("shopQrCode => resp=${resp.toString()}");
         debugPrint("shopQrCode => resp=${resp.toString()}");
+        AppLogger.log.i("shopQrCode => resp=${resp.toString()}");
       }
 
       // ✅ If not DioException, it should be a Dio Response
       if (resp is! DioException) {
         if (resp is Response) {
-          if (resp.statusCode == 200 || resp.statusCode == 201) {
+          final status = resp.statusCode ?? 0;
+
+          if (status == 200 || status == 201) {
             final data = resp.data;
 
             if (data is Map && data['status'] == true) {
@@ -2340,12 +2352,80 @@ class ApiDataSource extends BaseApiDataSource {
       if (errorData is Map && errorData.containsKey('message')) {
         return Left(ServerFailure(errorData['message'].toString()));
       }
+
       return Left(ServerFailure(resp.message ?? "Unknown Dio error"));
     } catch (e) {
       AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  // Future<Either<Failure, QrActionResponse>> shopQrCode({
+  //   required String shopId,
+  // })
+  // async {
+  //   try {
+  //     final url = ApiUrl.shopQrCode(shopId: shopId);
+  //
+  //     final dynamic resp = await Request.sendGetRequest(url, {}, 'GET', true);
+  //
+  //     // ✅ Safe logs (no type error)
+  //     if (resp is Response) {
+  //       AppLogger.log.i("shopQrCode => status=${resp.statusCode}");
+  //       AppLogger.log.i("shopQrCode => data=${resp.data}");
+  //       debugPrint("shopQrCode => status=${resp.statusCode}");
+  //       debugPrint("shopQrCode => data=${resp.data}");
+  //     } else {
+  //       AppLogger.log.i("shopQrCode => resp=${resp.toString()}");
+  //       debugPrint("shopQrCode => resp=${resp.toString()}");
+  //     }
+  //
+  //     // ✅ If not DioException, it should be a Dio Response
+  //     if (resp is! DioException) {
+  //       if (resp is Response) {
+  //         if (resp.statusCode == 200 || resp.statusCode == 201) {
+  //           final data = resp.data;
+  //
+  //           if (data is Map && data['status'] == true) {
+  //             return Right(
+  //               QrActionResponse.fromJson(data.cast<String, dynamic>()),
+  //             );
+  //           } else if (data is Map) {
+  //             return Left(
+  //               ServerFailure(
+  //                 (data['message'] ?? "Something went wrong").toString(),
+  //               ),
+  //             );
+  //           } else {
+  //             return Left(ServerFailure("Invalid API response"));
+  //           }
+  //         } else {
+  //           final data = resp.data;
+  //           if (data is Map) {
+  //             return Left(
+  //               ServerFailure(
+  //                 (data['message'] ?? "Something went wrong").toString(),
+  //               ),
+  //             );
+  //           }
+  //           return Left(ServerFailure("Something went wrong"));
+  //         }
+  //       }
+  //
+  //       return Left(ServerFailure("Invalid response type"));
+  //     }
+  //
+  //     // ✅ DioException
+  //     final errorData = resp.response?.data;
+  //     if (errorData is Map && errorData.containsKey('message')) {
+  //       return Left(ServerFailure(errorData['message'].toString()));
+  //     }
+  //     return Left(ServerFailure(resp.message ?? "Unknown Dio error"));
+  //   } catch (e) {
+  //     AppLogger.log.e(e);
+  //     return Left(ServerFailure(e.toString()));
+  //   }
+  // }
 
   Future<Either<Failure, PlanListResponse>> enquiriesAnalytic() async {
     try {
@@ -2745,6 +2825,7 @@ dateRange: $start → $end
       return Left(ServerFailure(e.toString()));
     }
   }
+
   Future<Either<Failure, FollowersResponse>> getFollowerList({
     required String shopId,
     int take = 10,
@@ -2771,7 +2852,9 @@ dateRange: $start → $end
             return Left(ServerFailure(response.data['message'] ?? "Failed"));
           }
         } else {
-          return Left(ServerFailure(response.data['message'] ?? "Something went wrong"));
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
         }
       } else {
         final errorData = response.response?.data;
@@ -2780,7 +2863,7 @@ dateRange: $start → $end
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e,st) {
+    } catch (e, st) {
       AppLogger.log.e(e);
       AppLogger.log.e(st);
       return Left(ServerFailure(e.toString()));
