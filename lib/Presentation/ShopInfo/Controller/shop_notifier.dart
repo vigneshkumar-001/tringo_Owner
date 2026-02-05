@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/category_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_response.dart';
@@ -16,11 +17,13 @@ import '../model/shop_number_verify_response.dart';
 class ShopCategoryState {
   final bool isLoading;
   final bool isSendingOtp;
+  final bool isKeyWordsLoading;
   final bool isVerifyingOtp;
   final String? imageUrl;
   final String? error;
   final ShopCategoryResponse? shopCategoryResponse;
   final ShopCategoryListResponse? shopCategoryListResponse;
+  final CategoryKeywordsResponse? categoryKeywordsResponse;
   final ShopInfoPhotosResponse? shopPhotoResponse;
   final ShopCategoryApiResponse? shopCategoryApiResponse;
   final ShopNumberVerifyResponse? shopNumberVerifyResponse;
@@ -30,6 +33,8 @@ class ShopCategoryState {
     this.isLoading = false,
     this.isSendingOtp = false,
     this.isVerifyingOtp = false,
+    this.isKeyWordsLoading = false,
+    this.categoryKeywordsResponse,
     this.error,
     this.shopCategoryResponse,
     this.shopPhotoResponse,
@@ -46,6 +51,8 @@ class ShopCategoryState {
     bool? isLoading,
     bool? isSendingOtp,
     bool? isVerifyingOtp,
+    CategoryKeywordsResponse? categoryKeywordsResponse,
+    bool? isKeyWordsLoading,
     String? error,
     ShopNumberVerifyResponse? shopNumberVerifyResponse,
     ShopNumberOtpResponse? shopNumberOtpResponse,
@@ -53,6 +60,9 @@ class ShopCategoryState {
   }) {
     return ShopCategoryState(
       isLoading: isLoading ?? this.isLoading,
+      isKeyWordsLoading: isKeyWordsLoading ?? this.isKeyWordsLoading,
+      categoryKeywordsResponse:
+      categoryKeywordsResponse ?? this.categoryKeywordsResponse,
       isSendingOtp: isSendingOtp ?? this.isSendingOtp,
       isVerifyingOtp: isVerifyingOtp ?? this.isVerifyingOtp,
       error: clearError ? null : (error ?? this.error),
@@ -77,6 +87,30 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
   @override
   ShopCategoryState build() => ShopCategoryState.initial();
+
+
+  Future<void> fetchKeyWords({
+    required String type,
+    required String query,
+  }) async {
+    state = const ShopCategoryState(isKeyWordsLoading: true);
+
+    final result = await apiDataSource.getKeyWords(query: query, type: type);
+
+    result.fold(
+          (failure) =>
+      state = ShopCategoryState(
+        isKeyWordsLoading: false,
+        error: failure.message,
+      ),
+          (response) =>
+      state = ShopCategoryState(
+        isKeyWordsLoading: false,
+        categoryKeywordsResponse: response,
+      ),
+    );
+  }
+
 
   Future<ShopCategoryResponse?> shopCategoryInfo({
     required String category,

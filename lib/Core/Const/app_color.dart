@@ -2,10 +2,13 @@ import 'dart:ui';
 
 class AppColor {
   static const scaffoldColor = Color(0xFFFFFFFF);
+  static const lowGery1 = Color(0xffF2F2F2);
   static const positiveGreen = Color(0xff25AD52);
   static const white = Color(0xFFFFFFFF);
   static const white3 = Color(0xffF1F1F1);
+  static const borderGray = Color(0xffD0D0D0);
   static const mediumGray = Color(0xff777777);
+  static const whiteSmoke = Color(0xffF5F5F5);
   static const textWhite = Color(0xffF4FAFF);
   static const silverGray = Color(0xffC8C8C8);
   static const ghostWhite = Color(0xffF5F7F9);

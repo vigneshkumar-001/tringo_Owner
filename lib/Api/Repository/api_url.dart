@@ -30,6 +30,10 @@ class ApiUrl {
     return "${base}api/v1/support/tickets/$ticketId/messages";
   }
 
+  static String getKeyWords({required String type, required String query}) {
+    return "${base}api/v1/public/keywords?type=$type&q=$query";
+  }
+
   static String getChatMessages({required String id}) {
     return "${base}api/v1/support/tickets/$id";
   }
@@ -219,7 +223,7 @@ class ApiUrl {
   static const String uIDSendApi = "${base}api/v1/wallet/transfer";
   static const String uIDWithRawApi = "${base}api/v1/wallet/withdraw-request";
 
-/*
+  /*
   static const String privacyPolicy =
       "${base}api/v1/public/pages/privacy-policy";
 
@@ -233,5 +237,4 @@ class ApiUrl {
         "?take=$take&skip=$skip&range=$range";
   }
 */
-
 }

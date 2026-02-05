@@ -23,6 +23,7 @@ import 'package:tringo_owner/Presentation/Login/model/login_response.dart';
 import 'package:tringo_owner/Presentation/Login/model/otp_response.dart';
 import 'package:tringo_owner/Presentation/Menu/Model/current_plan_response.dart';
 import 'package:tringo_owner/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/category_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_response.dart';
@@ -2355,6 +2356,8 @@ class ApiDataSource extends BaseApiDataSource {
 
       return Left(ServerFailure(resp.message ?? "Unknown Dio error"));
     } catch (e) {
+
+      print(e);
       AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
     }
@@ -2896,6 +2899,43 @@ dateRange: $start → $end
         return Left(ServerFailure(errorData['message']));
       }
       return Left(ServerFailure(dioError.message ?? "Unknown Dio error"));
+    } catch (e) {
+      print(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+  Future<Either<Failure, CategoryKeywordsResponse>> getKeyWords({required String type, required String query}) async {
+    try {
+      String url = ApiUrl.getKeyWords(type: type, query: query);
+
+      dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return Right(CategoryKeywordsResponse.fromJson(response.data));
+          // if (response.data['status'] == true) {
+          //   return Right(ShopCategoryListResponse.fromJson(response.data));
+          // } else {
+          //   return Left(
+          //     ServerFailure(response.data['message'] ?? "Login failed"),
+          //   );
+          // }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
     } catch (e) {
       print(e);
       return Left(ServerFailure(e.toString()));
