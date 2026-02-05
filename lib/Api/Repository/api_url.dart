@@ -218,4 +218,20 @@ class ApiUrl {
   static const String uIDPersonName = "${base}api/v1/wallet/resolve-uid";
   static const String uIDSendApi = "${base}api/v1/wallet/transfer";
   static const String uIDWithRawApi = "${base}api/v1/wallet/withdraw-request";
+
+/*
+  static const String privacyPolicy =
+      "${base}api/v1/public/pages/privacy-policy";
+
+  static String getFollowerList({
+    required String shopId,
+    int take = 10,
+    int skip = 0,
+    String range = "ALL", // WEEK | MONTH | ALL (whatever your API supports)
+  }) {
+    return "${base}api/v1/shops/$shopId/profile/followers"
+        "?take=$take&skip=$skip&range=$range";
+  }
+*/
+
 }
