@@ -914,8 +914,6 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
               ),
             ),
           ),
-
-
         ],
       ),
     );
