@@ -122,8 +122,11 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopDetailsNotifierProvider);
+
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
+
+    final bool isPremiumActive = (planData?.isFreemium == false);
 
     String time = '-';
     String date = '-';
@@ -217,7 +220,7 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
         RegistrationSession.instance.businessType == BusinessType.individual;
     final isService = RegistrationProductSeivice.instance.isServiceBusiness;
     //  Only premium company can add branches
-    final bool showAddBranch = isPremium && isCompany;
+    final bool showAddBranch = isPremiumActive && isCompany;
 
     return Skeletonizer(
       enabled: state.isLoading,
@@ -896,10 +899,10 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                         //   ),
                         // ),
                         SizedBox(height: 20),
-                        (planData?.isFreemium == false)
+                        (isPremiumActive)
                             ? CommonContainer.paidCustomerCard(
                                 title:
-                                    '${planData?.plan.durationLabel} Premium Activated',
+                                    '${planData?.plan.durationLabel ?? ''} Premium Activated',
                                 description: '$time @ $date',
                                 onTap: () {},
                               )
@@ -908,7 +911,6 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 description:
                                     'Unlock premium to attract more customers',
                                 onTap: () {
-                                  // From details we don’t want Skip again – only real subscribe
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -921,6 +923,30 @@ class _ShopsDetailsState extends ConsumerState<ShopsDetails> {
                                 },
                               ),
 
+                        // (planData?.isFreemium == false)
+                        //     ? CommonContainer.paidCustomerCard(
+                        //         title:
+                        //             '${planData?.plan.durationLabel} Premium Activated',
+                        //         description: '$time @ $date',
+                        //         onTap: () {},
+                        //       )
+                        //     : CommonContainer.attractCustomerCard(
+                        //         title: 'Attract More Customers',
+                        //         description:
+                        //             'Unlock premium to attract more customers',
+                        //         onTap: () {
+                        //           // From details we don’t want Skip again – only real subscribe
+                        //           Navigator.push(
+                        //             context,
+                        //             MaterialPageRoute(
+                        //               builder: (context) =>
+                        //                   const SubscriptionScreen(
+                        //                     showSkip: false,
+                        //                   ),
+                        //             ),
+                        //           );
+                        //         },
+                        //       ),
                         const SizedBox(height: 40),
 
                         Row(

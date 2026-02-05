@@ -300,8 +300,9 @@ class _QrCodeScreenState extends ConsumerState<QrCodeScreen> {
                 const SizedBox(height: 18),
 
                 CommonContainer.button(
-                  onTap:
-                  (downloadUrl.isNotEmpty) ? () => _downloadPdf(downloadUrl) : null,
+                  onTap: (downloadUrl.isNotEmpty)
+                      ? () => _downloadPdf(downloadUrl)
+                      : null,
                   text: Text(
                     "Download QR Code",
                     style: AppTextStyles.mulish(

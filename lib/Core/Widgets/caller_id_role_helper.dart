@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-
 final callerIdAskedProvider = StateProvider<bool>((ref) => false);
 
 const MethodChannel _native = MethodChannel('sim_info');
@@ -91,7 +90,9 @@ class CallerIdRoleHelper {
   static Future<bool> openBatteryUnrestrictedSettings() async {
     if (!Platform.isAndroid) return true;
     try {
-      final ok = await _native.invokeMethod<bool>('openBatteryUnrestrictedSettings');
+      final ok = await _native.invokeMethod<bool>(
+        'openBatteryUnrestrictedSettings',
+      );
       return ok ?? true;
     } catch (_) {
       return false;
@@ -101,7 +102,9 @@ class CallerIdRoleHelper {
   static Future<bool> isIgnoringBatteryOptimizations() async {
     if (!Platform.isAndroid) return true;
     try {
-      final ok = await _native.invokeMethod<bool>('isIgnoringBatteryOptimizations');
+      final ok = await _native.invokeMethod<bool>(
+        'isIgnoringBatteryOptimizations',
+      );
       return ok ?? false;
     } catch (_) {
       return false;
