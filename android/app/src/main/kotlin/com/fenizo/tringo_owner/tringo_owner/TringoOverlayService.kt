@@ -501,7 +501,7 @@ class TringoOverlayService : Service() {
         headerPerson?.visibility = View.VISIBLE
         personTv?.text = if (contactName.isNotBlank()) contactName else phone
         metaPersonTv?.text = ""
-        businessTv?.text = "Loading..."
+        businessTv?.text = ""
         metaBizTv?.text = ""
 
         fun applyAdsVisibilityNow() {

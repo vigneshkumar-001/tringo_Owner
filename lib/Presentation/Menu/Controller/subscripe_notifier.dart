@@ -6,6 +6,7 @@ import 'package:tringo_owner/Presentation/Menu/Model/current_plan_response.dart'
 import '../../../../Api/DataSource/api_data_source.dart';
 import '../../AddProduct/Model/delete_response.dart';
 import '../../Login/controller/login_notifier.dart';
+import '../Model/delete_response.dart';
 import '../Model/plan_list_response.dart';
 import '../Model/purchase_response.dart';
 import '../Model/qr_action_response.dart';
@@ -17,7 +18,7 @@ class SubscriptionState {
   final PlanListResponse? planListResponse;
   final PurchaseResponse? purchaseResponse;
   final CurrentPlanResponse? currentPlanResponse;
-  final DeleteResponse? deleteResponse;
+  final AccountDeleteResponse? accountDeleteResponse;
   final QrActionResponse? qrActionResponse;
 
   const SubscriptionState({
@@ -27,7 +28,7 @@ class SubscriptionState {
     this.planListResponse,
     this.purchaseResponse,
     this.currentPlanResponse,
-    this.deleteResponse,
+    this.accountDeleteResponse,
     this.qrActionResponse,
   });
 
@@ -40,7 +41,7 @@ class SubscriptionState {
     PurchaseResponse? purchaseResponse,
     PlanListResponse? planListResponse,
     CurrentPlanResponse? currentPlanResponse,
-    DeleteResponse? deleteResponse,
+    AccountDeleteResponse? accountDeleteResponse,
     QrActionResponse? qrActionResponse,
     bool clearError = false,
   }) {
@@ -51,7 +52,7 @@ class SubscriptionState {
       planListResponse: planListResponse ?? this.planListResponse,
       currentPlanResponse: currentPlanResponse ?? this.currentPlanResponse,
       purchaseResponse: purchaseResponse ?? this.purchaseResponse,
-      deleteResponse: deleteResponse ?? this.deleteResponse,
+      accountDeleteResponse: accountDeleteResponse ?? this.accountDeleteResponse,
       qrActionResponse: qrActionResponse ?? this.qrActionResponse,
     );
   }
@@ -145,29 +146,33 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
     );
   }
 
-  Future<void> deleteAccount() async {
+  Future<bool> deleteAccount() async {
     state = state.copyWith(
       isInsertLoading: true,
-      deleteResponse: null,
-      error: null,
+      accountDeleteResponse: null,
+      clearError: true,
     );
 
     final result = await api.deleteAccount();
 
-    result.fold(
+    return result.fold(
       (failure) {
         state = state.copyWith(
           isInsertLoading: false,
           error: failure.message,
-          deleteResponse: null,
+          accountDeleteResponse: null,
         );
+        return false;
       },
       (response) {
         state = state.copyWith(
           isInsertLoading: false,
           error: null,
-          deleteResponse: response,
+          accountDeleteResponse: response,
         );
+
+        // ✅ treat both status and deleted flag
+        return response.status == true && response.data.deleted == true;
       },
     );
   }
@@ -175,21 +180,21 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
   Future<void> shopQrCode({required String shopId}) async {
     state = state.copyWith(
       isInsertLoading: true,
-      error: null,
-      qrActionResponse: null,
+      clearError: true,          // ✅ important
+      qrActionResponse: null,     // ✅ clear old QR
     );
 
     final result = await api.shopQrCode(shopId: shopId);
 
     result.fold(
-      (failure) {
+          (failure) {
         state = state.copyWith(
           isInsertLoading: false,
           error: failure.message,
           qrActionResponse: null,
         );
       },
-      (response) {
+          (response) {
         state = state.copyWith(
           isInsertLoading: false,
           error: null,
@@ -200,6 +205,32 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
   }
 
 
+  // Future<void> shopQrCode({required String shopId}) async {
+  //   state = state.copyWith(
+  //     isInsertLoading: true,
+  //     error: null,
+  //     qrActionResponse: null,
+  //   );
+  //
+  //   final result = await api.shopQrCode(shopId: shopId);
+  //
+  //   result.fold(
+  //     (failure) {
+  //       state = state.copyWith(
+  //         isInsertLoading: false,
+  //         error: failure.message,
+  //         qrActionResponse: null,
+  //       );
+  //     },
+  //     (response) {
+  //       state = state.copyWith(
+  //         isInsertLoading: false,
+  //         error: null,
+  //         qrActionResponse: response,
+  //       );
+  //     },
+  //   );
+  // }
 
   void resetState() {
     state = SubscriptionState.initial();
