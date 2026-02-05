@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="#66000000">
 
-    <!-- Outside tap close -->
     <View
         android:id="@+id/outsideCloseLayer"
         android:layout_width="match_parent"
@@ -47,23 +46,29 @@
                 android:background="@drawable/bg_circle_soft" />
         </RelativeLayout>
 
-        <!-- BUSINESS HEADER -->
+        <!-- =========================
+             HEADER: BUSINESS (Shop)
+        ========================== -->
         <LinearLayout
             android:id="@+id/headerBusiness"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:orientation="horizontal"
+            android:baselineAligned="false"
             android:visibility="gone">
 
+            <!-- ✅ Image should reach bottom (match right column height) -->
             <ImageView
                 android:id="@+id/logoImageBusiness"
-                android:layout_width="88dp"
-                android:layout_height="88dp"
+                android:layout_width="92dp"
+                android:layout_height="match_parent"
+                android:minHeight="92dp"
                 android:scaleType="centerCrop"
                 android:background="@drawable/bg_image_rounded"
                 android:clipToOutline="true" />
 
+            <!-- Right column -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -73,12 +78,13 @@
 
                 <TextView
                     android:id="@+id/businessNameText"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Shop Name"
                     android:textColor="#FFFFFF"
                     android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:maxLines="1" />
 
                 <TextView
                     android:id="@+id/metaText"
@@ -89,22 +95,71 @@
                     android:textColor="#D9F1FF"
                     android:textSize="13sp"
                     android:maxLines="2" />
+
+                <!-- ✅ Call / Chat row (RIGHT SIDE போல) -->
+                <LinearLayout
+                    android:id="@+id/actionRowBusiness"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:gravity="end">
+
+                    <TextView
+                        android:id="@+id/callBtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="42dp"
+                        android:minWidth="120dp"
+                        android:gravity="center_vertical|center_horizontal"
+                        android:text="Call"
+                        android:textColor="#0C2A3A"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_btn_light"
+                        android:drawableStart="@drawable/ic_call_png"
+                        android:drawablePadding="8dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp" />
+
+                    <View
+                        android:layout_width="10dp"
+                        android:layout_height="1dp" />
+
+                    <TextView
+                        android:id="@+id/chatBtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="42dp"
+                        android:minWidth="120dp"
+                        android:gravity="center_vertical|center_horizontal"
+                        android:text="Chat"
+                        android:textColor="#EAF7FF"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_btn_dark"
+                        android:drawableStart="@drawable/ic_whatsapp_png"
+                        android:drawablePadding="8dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp" />
+                </LinearLayout>
+
             </LinearLayout>
         </LinearLayout>
 
-        <!-- PERSON HEADER -->
+        <!-- =========================
+             HEADER: PERSON
+        ========================== -->
         <LinearLayout
             android:id="@+id/headerPerson"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:orientation="horizontal"
+            android:baselineAligned="false"
             android:visibility="gone">
 
             <ImageView
                 android:id="@+id/logoImagePerson"
-                android:layout_width="88dp"
-                android:layout_height="88dp"
+                android:layout_width="92dp"
+                android:layout_height="match_parent"
+                android:minHeight="92dp"
                 android:scaleType="centerCrop"
                 android:background="@drawable/bg_image_rounded"
                 android:clipToOutline="true" />
@@ -118,12 +173,13 @@
 
                 <TextView
                     android:id="@+id/personNameText"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Person Name"
                     android:textColor="#FFFFFF"
                     android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:maxLines="1" />
 
                 <TextView
                     android:id="@+id/personMetaText"
@@ -134,41 +190,21 @@
                     android:textColor="#D9F1FF"
                     android:textSize="13sp"
                     android:maxLines="2" />
+
+                <!-- ✅ Same row for person also -->
+                <LinearLayout
+                    android:id="@+id/actionRowPerson"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:gravity="end">
+
+                    <!-- same ids (callBtn/chatBtn) are already used in business -->
+                    <!-- so here we keep NO buttons (person uses same buttons in business) -->
+                </LinearLayout>
+
             </LinearLayout>
-        </LinearLayout>
-
-        <!-- Call / Chat Row (common for both) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/callBtn"
-                android:layout_width="0dp"
-                android:layout_height="42dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Call"
-                android:textColor="#0C2A3A"
-                android:textStyle="bold"
-                android:background="@drawable/bg_btn_light" />
-
-            <View
-                android:layout_width="10dp"
-                android:layout_height="1dp" />
-
-            <TextView
-                android:id="@+id/chatBtn"
-                android:layout_width="0dp"
-                android:layout_height="42dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Chat"
-                android:textColor="#EAF7FF"
-                android:textStyle="bold"
-                android:background="@drawable/bg_btn_dark" />
         </LinearLayout>
 
         <!-- Divider -->
@@ -216,7 +252,7 @@
 <!--    android:layout_height="match_parent"-->
 <!--    android:background="#66000000">-->
 
-<!--    &lt;!&ndash; Outside tap close layer &ndash;&gt;-->
+<!--    &lt;!&ndash; Outside tap close &ndash;&gt;-->
 <!--    <View-->
 <!--        android:id="@+id/outsideCloseLayer"-->
 <!--        android:layout_width="match_parent"-->
@@ -228,7 +264,7 @@
 <!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="wrap_content"-->
 <!--        android:layout_margin="16dp"-->
-<!--        android:layout_gravity="top"-->
+<!--        android:layout_gravity="center"-->
 <!--        android:orientation="vertical"-->
 <!--        android:background="@drawable/bg_overlay_card"-->
 <!--        android:padding="14dp">-->
@@ -258,9 +294,7 @@
 <!--                android:background="@drawable/bg_circle_soft" />-->
 <!--        </RelativeLayout>-->
 
-<!--        &lt;!&ndash; =========================-->
-<!--             HEADER: BUSINESS (Shop)-->
-<!--        ========================== &ndash;&gt;-->
+<!--        &lt;!&ndash; BUSINESS HEADER &ndash;&gt;-->
 <!--        <LinearLayout-->
 <!--            android:id="@+id/headerBusiness"-->
 <!--            android:layout_width="match_parent"-->
@@ -302,46 +336,10 @@
 <!--                    android:textColor="#D9F1FF"-->
 <!--                    android:textSize="13sp"-->
 <!--                    android:maxLines="2" />-->
-
-<!--                &lt;!&ndash; ✅ Action buttons (Call/Chat) &ndash;&gt;-->
-<!--                <LinearLayout-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginTop="10dp"-->
-<!--                    android:orientation="horizontal">-->
-
-<!--                    <TextView-->
-<!--                        android:id="@+id/callBtn"-->
-<!--                        android:layout_width="0dp"-->
-<!--                        android:layout_height="42dp"-->
-<!--                        android:layout_weight="1"-->
-<!--                        android:gravity="center"-->
-<!--                        android:text="Call"-->
-<!--                        android:textColor="#0C2A3A"-->
-<!--                        android:textStyle="bold"-->
-<!--                        android:background="@drawable/bg_btn_light" />-->
-
-<!--                    <View-->
-<!--                        android:layout_width="10dp"-->
-<!--                        android:layout_height="1dp" />-->
-
-<!--                    <TextView-->
-<!--                        android:id="@+id/chatBtn"-->
-<!--                        android:layout_width="0dp"-->
-<!--                        android:layout_height="42dp"-->
-<!--                        android:layout_weight="1"-->
-<!--                        android:gravity="center"-->
-<!--                        android:text="Chat"-->
-<!--                        android:textColor="#EAF7FF"-->
-<!--                        android:textStyle="bold"-->
-<!--                        android:background="@drawable/bg_btn_dark" />-->
-<!--                </LinearLayout>-->
 <!--            </LinearLayout>-->
 <!--        </LinearLayout>-->
 
-<!--        &lt;!&ndash; =========================-->
-<!--             HEADER: PERSON-->
-<!--        ========================== &ndash;&gt;-->
+<!--        &lt;!&ndash; PERSON HEADER &ndash;&gt;-->
 <!--        <LinearLayout-->
 <!--            android:id="@+id/headerPerson"-->
 <!--            android:layout_width="match_parent"-->
@@ -366,30 +364,68 @@
 <!--                android:orientation="vertical">-->
 
 <!--                <TextView-->
+<!--                    android:id="@+id/personNameText"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="Person Name"-->
+<!--                    android:textColor="#FFFFFF"-->
+<!--                    android:textSize="22sp"-->
+<!--                    android:textStyle="bold" />-->
+
+<!--                &lt;!&ndash; ✅ Person meta (Kotlin also updated to use this) &ndash;&gt;-->
+<!--                <TextView-->
 <!--                    android:id="@+id/personMetaText"-->
 <!--                    android:layout_width="match_parent"-->
 <!--                    android:layout_height="wrap_content"-->
 <!--                    android:layout_marginTop="6dp"-->
-<!--                    android:text="Loading..."-->
+<!--                    android:text=""-->
 <!--                    android:textColor="#D9F1FF"-->
 <!--                    android:textSize="13sp"-->
 <!--                    android:maxLines="2" />-->
-
-<!--                <TextView-->
-<!--                    android:id="@+id/ratingChip"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginTop="8dp"-->
-<!--                    android:paddingStart="10dp"-->
-<!--                    android:paddingEnd="10dp"-->
-<!--                    android:paddingTop="6dp"-->
-<!--                    android:paddingBottom="6dp"-->
-<!--                    android:text="4.5 ★  16"-->
-<!--                    android:textColor="#0C2A3A"-->
-<!--                    android:textStyle="bold"-->
-<!--                    android:background="@drawable/bg_chip_light"-->
-<!--                    android:visibility="gone" />-->
 <!--            </LinearLayout>-->
+<!--        </LinearLayout>-->
+
+<!--        &lt;!&ndash; ✅ Call / Chat Row (ALWAYS visible for any number) &ndash;&gt;-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/actionRow"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="12dp"-->
+<!--            android:orientation="horizontal">-->
+
+<!--            <TextView-->
+<!--                android:id="@+id/callBtn"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="42dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:gravity="center"-->
+<!--                android:text="Call"-->
+<!--                android:textColor="#0C2A3A"-->
+<!--                android:textStyle="bold"-->
+<!--                android:background="@drawable/bg_btn_light"-->
+<!--                android:drawableStart="@drawable/ic_call_png"-->
+<!--                android:drawablePadding="8dp"-->
+<!--                android:paddingStart="14dp"-->
+<!--                android:paddingEnd="14dp" />-->
+
+<!--            <View-->
+<!--                android:layout_width="10dp"-->
+<!--                android:layout_height="1dp" />-->
+
+<!--            <TextView-->
+<!--                android:id="@+id/chatBtn"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="42dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:gravity="center"-->
+<!--                android:text="Chat"-->
+<!--                android:textColor="#EAF7FF"-->
+<!--                android:textStyle="bold"-->
+<!--                android:background="@drawable/bg_btn_dark"-->
+<!--                android:drawableStart="@drawable/ic_whatsapp_png"-->
+<!--                android:drawablePadding="8dp"-->
+<!--                android:paddingStart="14dp"-->
+<!--                android:paddingEnd="14dp" />-->
 <!--        </LinearLayout>-->
 
 <!--        &lt;!&ndash; Divider &ndash;&gt;-->
@@ -428,3 +464,4 @@
 
 <!--    </LinearLayout>-->
 <!--</FrameLayout>-->
+

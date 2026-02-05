@@ -138,11 +138,11 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     await ref
         .read(aboutMeNotifierProvider.notifier)
         .fetchAllFollowerList(
-      shopId: shopId,
-      range: _rangeFromFollowersChip(followersSelectedIndex),
-      take: 20,
-      skip: 0,
-    );
+          shopId: shopId,
+          range: _rangeFromFollowersChip(followersSelectedIndex),
+          take: 20,
+          skip: 0,
+        );
   }
 
   Shop? _getSelectedShop(AboutMeState aboutState) {
@@ -153,7 +153,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     if (_currentShopId == null) return shops.first;
 
     return shops.firstWhere(
-          (s) => s.shopId == _currentShopId,
+      (s) => s.shopId == _currentShopId,
       orElse: () => shops.first,
     );
   }
@@ -239,18 +239,18 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       subtitle: subtitle.isEmpty
                           ? null
                           : Text(
-                        subtitle,
-                        style: AppTextStyles.mulish(
-                          fontSize: 12,
-                          color: AppColor.gray84,
-                        ),
-                      ),
+                              subtitle,
+                              style: AppTextStyles.mulish(
+                                fontSize: 12,
+                                color: AppColor.gray84,
+                              ),
+                            ),
                       trailing: isSelected
                           ? Icon(
-                        Icons.check,
-                        color: AppColor.resendOtp,
-                        size: 20,
-                      )
+                              Icons.check,
+                              color: AppColor.resendOtp,
+                              size: 20,
+                            )
                           : null,
                       onTap: () => Navigator.pop(ctx, shop),
                     );
@@ -425,7 +425,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   onTap: () {
                     final bool isService =
                         selectedShop?.shopKind.toString().toUpperCase() ==
-                            'SERVICE';
+                        'SERVICE';
 
                     if (_isFreemium == false) {
                       context.push(
@@ -434,7 +434,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           'isService': isService,
                           'isIndividual': '',
                           'initialShopNameEnglish':
-                          selectedShop?.shopEnglishName,
+                              selectedShop?.shopEnglishName,
                           'initialShopNameTamil': selectedShop?.shopTamilName,
                           'isEditMode': true,
                         },
@@ -447,11 +447,467 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     }
                   },
                 ),
+                SizedBox(width: 10),
+                CommonContainer.editShopContainer(
+                  text: 'Edit Shop Details',
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    prefs.remove('product_id');
+                    prefs.remove('shop_id');
+                    prefs.remove('service_id');
+
+                    final selectedShop = _getSelectedShop(aboutState);
+                    if (selectedShop == null) return;
+
+                    // Decide service / product flow
+                    final bool isServiceFlow =
+                        (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
+
+                    // -------- OPEN / CLOSE TIME --------
+                    String? openTimeText;
+                    String? closeTimeText;
+
+                    final List<ShopWeeklyHour> weekly =
+                        selectedShop.shopWeeklyHours;
+
+                    if (weekly.isNotEmpty) {
+                      ShopWeeklyHour firstOpen;
+                      try {
+                        firstOpen = weekly.firstWhere(
+                          (h) =>
+                              h.closed != true &&
+                              (h.opensAt?.trim().isNotEmpty ?? false) &&
+                              (h.closesAt?.trim().isNotEmpty ?? false),
+                        );
+                      } catch (_) {
+                        firstOpen = weekly.first;
+                      }
+
+                      openTimeText = firstOpen.opensAt?.trim();
+                      closeTimeText = firstOpen.closesAt?.trim();
+                    }
+
+                    // -------- OWNER IMAGE (FIXED LOGIC) --------
+                    String? ownerImageUrl;
+
+                    // 1️⃣ PRIMARY: shopImages (correct backend source)
+                    if (selectedShop.shopImages.isNotEmpty) {
+                      ShopImage ownerImg;
+                      try {
+                        ownerImg = selectedShop.shopImages.firstWhere(
+                          (img) => (img.type ?? '').toUpperCase() == 'OWNER',
+                        );
+                      } catch (_) {
+                        ownerImg = selectedShop.shopImages.first;
+                      }
+                      ownerImageUrl = ownerImg.url;
+                    }
+
+                    // 2️⃣ FALLBACK: service media (only if shopImages failed)
+                    if (ownerImageUrl == null &&
+                        isServiceFlow &&
+                        selectedShop.services.isNotEmpty) {
+                      final firstService = selectedShop.services.first;
+
+                      if (firstService.media.isNotEmpty) {
+                        final media = [...firstService.media]
+                          ..sort(
+                            (a, b) => (a.displayOrder ?? 999).compareTo(
+                              b.displayOrder ?? 999,
+                            ),
+                          );
+                        ownerImageUrl = media.first.url;
+                      }
+                    }
+
+                    // -------- NAVIGATION --------
+                    final updated = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShopCategoryInfo(
+                          isEditMode: true,
+                          pages: "AboutMeScreens",
+                          shopId: selectedShop.shopId,
+                          isService: isServiceFlow,
+                          isIndividual: false,
+
+                          initialShopNameEnglish: selectedShop.shopEnglishName,
+                          initialShopNameTamil: selectedShop.shopTamilName,
+
+                          initialDescriptionEnglish:
+                              selectedShop.shopDescriptionEn,
+                          initialDescriptionTamil:
+                              selectedShop.shopDescriptionTa,
+
+                          initialAddressEnglish: selectedShop.shopAddressEn,
+                          initialAddressTamil: selectedShop.shopAddressTa,
+
+                          initialGps:
+                              (selectedShop.shopGpsLatitude?.isNotEmpty ==
+                                      true &&
+                                  selectedShop.shopGpsLongitude?.isNotEmpty ==
+                                      true)
+                              ? "${selectedShop.shopGpsLatitude}, ${selectedShop.shopGpsLongitude}"
+                              : "",
+
+                          initialPrimaryMobile: selectedShop.shopPhone,
+                          initialWhatsapp: selectedShop.shopWhatsapp,
+                          initialEmail: selectedShop.shopContactEmail,
+
+                          initialCategoryName: selectedShop.category ?? "",
+                          initialCategorySlug: selectedShop.category,
+                          initialSubCategoryName:
+                              selectedShop.subCategory ?? "",
+                          initialSubCategorySlug: selectedShop.subCategory,
+
+                          initialDoorDeliveryText:
+                              selectedShop.shopDoorDelivery == true
+                              ? 'Yes'
+                              : 'No',
+
+                          initialOpenTimeText: openTimeText,
+                          initialCloseTimeText: closeTimeText,
+                          initialOwnerImageUrl: ownerImageUrl, // ✅ FIXED
+                        ),
+                      ),
+                    );
+
+                    if (updated == true && mounted) {
+                      await ref
+                          .read(aboutMeNotifierProvider.notifier)
+                          .fetchAllShopDetails(
+                            shopId: _currentShopId ?? selectedShop.shopId,
+                          );
+                      setState(() {});
+                    }
+                  },
+
+                  // onTap: () async {
+                  //   final prefs = await SharedPreferences.getInstance();
+                  //   prefs.remove('product_id');
+                  //   prefs.remove('shop_id');
+                  //   prefs.remove('service_id');
+                  //   final selectedShop = _getSelectedShop(aboutState);
+                  //   if (selectedShop == null) return;
+                  //
+                  //   //  Decide service / product based on shopKind
+                  //   final bool isServiceFlow =
+                  //       (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
+                  //
+                  //   //  Extract from weeklyHours (or shopWeeklyHours as backup)
+                  //   String? openTimeText;
+                  //   String? closeTimeText;
+                  //
+                  //   final List<ShopWeeklyHour> weekly =
+                  //       selectedShop.shopWeeklyHours;
+                  //
+                  //   if (weekly.isNotEmpty) {
+                  //     ShopWeeklyHour firstOpen;
+                  //     try {
+                  //       firstOpen = weekly.firstWhere(
+                  //         (h) =>
+                  //             h.closed != true &&
+                  //             (h.opensAt != null &&
+                  //                 h.opensAt!.trim().isNotEmpty) &&
+                  //             (h.closesAt != null &&
+                  //                 h.closesAt!.trim().isNotEmpty),
+                  //       );
+                  //     } catch (_) {
+                  //       firstOpen = weekly.first;
+                  //     }
+                  //
+                  //     openTimeText = firstOpen.opensAt?.trim();
+                  //     closeTimeText = firstOpen.closesAt?.trim();
+                  //   }
+                  //
+                  //   String? ownerImageUrl;
+                  //
+                  //   if (isServiceFlow && selectedShop.services.isNotEmpty) {
+                  //     final firstService = selectedShop.services.first;
+                  //
+                  //     if (firstService.media.isNotEmpty) {
+                  //       final images = [...firstService.media];
+                  //
+                  //       images.sort(
+                  //         (a, b) => (a.displayOrder ?? 999).compareTo(
+                  //           b.displayOrder ?? 999,
+                  //         ),
+                  //       );
+                  //
+                  //       // Prefer media where type contains OWNER
+                  //       final Media ownerMedia = images.firstWhere((m) {
+                  //         final t = (m.type ?? '').trim().toUpperCase();
+                  //         return t.contains('OWNER');
+                  //       }, orElse: () => images.first);
+                  //
+                  //       ownerImageUrl = ownerMedia.url;
+                  //     }
+                  //   }
+                  //
+                  //   final updated = await Navigator.push<bool>(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (context) => ShopCategoryInfo(
+                  //         isEditMode: true,
+                  //         pages: "AboutMeScreens",
+                  //         shopId: selectedShop.shopId,
+                  //         isService: isServiceFlow,
+                  //         isIndividual: false,
+                  //
+                  //         //  prefill values from Shop model
+                  //         initialShopNameEnglish: selectedShop.shopEnglishName,
+                  //         initialShopNameTamil: selectedShop.shopTamilName,
+                  //
+                  //         initialDescriptionEnglish:
+                  //             selectedShop.shopDescriptionEn,
+                  //         initialDescriptionTamil:
+                  //             selectedShop.shopDescriptionTa,
+                  //
+                  //         initialAddressEnglish: selectedShop.shopAddressEn,
+                  //         initialAddressTamil: selectedShop.shopAddressTa,
+                  //
+                  //         initialGps:
+                  //             (selectedShop.shopGpsLatitude != null &&
+                  //                 selectedShop.shopGpsLongitude != null &&
+                  //                 selectedShop.shopGpsLatitude!.isNotEmpty &&
+                  //                 selectedShop.shopGpsLongitude!.isNotEmpty)
+                  //             ? "${selectedShop.shopGpsLatitude}, ${selectedShop.shopGpsLongitude}"
+                  //             : "",
+                  //         initialPrimaryMobile: selectedShop.shopPhone,
+                  //         initialWhatsapp: selectedShop.shopWhatsapp,
+                  //         initialEmail: selectedShop.shopContactEmail,
+                  //         // no separate name fields in model → use slug as display text for now
+                  //         initialCategoryName: selectedShop.category ?? "",
+                  //         initialCategorySlug: selectedShop.category,
+                  //         initialSubCategoryName:
+                  //             selectedShop.subCategory ?? "",
+                  //         initialSubCategorySlug: selectedShop.subCategory,
+                  //
+                  //         initialDoorDeliveryText:
+                  //             (selectedShop.shopDoorDelivery == true)
+                  //             ? 'Yes'
+                  //             : 'No',
+                  //         initialOpenTimeText: openTimeText,
+                  //         initialCloseTimeText: closeTimeText,
+                  //         initialOwnerImageUrl: ownerImageUrl,
+                  //       ),
+                  //     ),
+                  //   );
+                  //
+                  //   if (updated == true && mounted) {
+                  //     await ref
+                  //         .read(aboutMeNotifierProvider.notifier)
+                  //         .fetchAllShopDetails(
+                  //           shopId: _currentShopId ?? selectedShop.shopId,
+                  //         );
+                  //
+                  //     setState(() {});
+                  //   }
+                  // },
+                ),
                 const SizedBox(width: 10),
-                // keep your other buttons as you already have...
+                CommonContainer.editShopContainer(
+                  text: 'Edit Shop Photos',
+                  onTap: () async {
+                    final selectedShop = _getSelectedShop(aboutState);
+                    if (selectedShop == null) return;
+
+                    // 1️⃣ Get existing images from shop.shopImages (sorted by displayOrder)
+                    final images = List.from(selectedShop.shopImages ?? [])
+                      ..sort(
+                        (a, b) => (a.displayOrder ?? 0).compareTo(
+                          b.displayOrder ?? 0,
+                        ),
+                      );
+
+                    // 2️⃣ Map first 4 images → our 4 slots in ShopPhotoInfo
+                    final initialImageUrls = List<String?>.filled(4, null);
+                    for (int i = 0; i < images.length && i < 4; i++) {
+                      final url = images[i].url;
+                      if (url != null && url.trim().isNotEmpty) {
+                        initialImageUrls[i] = url.trim();
+                      }
+                    }
+
+                    // 3️⃣ Navigate to ShopPhotoInfo with existing URLs
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ShopPhotoInfo(
+                          pages: "AboutMeScreens",
+                          shopId: selectedShop.shopId,
+                          initialImageUrls: initialImageUrls,
+                        ),
+                      ),
+                    );
+
+                    // 4️⃣ If you want, refresh data after coming back
+                    if (!mounted) return;
+                    await ref
+                        .read(aboutMeNotifierProvider.notifier)
+                        .fetchAllShopDetails(
+                          shopId: _currentShopId ?? selectedShop.shopId,
+                        );
+                    setState(() {});
+                  },
+                ),
+
+                // CommonContainer.editShopContainer(
+                //   text: 'Edit Shop Photos',
+                //   onTap: () async {
+                //     final selectedShop = _getSelectedShop(aboutState);
+                //     if (selectedShop == null) return;
+                //
+                //     final updatedPhotos = await Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => ShopPhotoInfo(
+                //           pages: "AboutMeScreens",
+                //           shopId: selectedShop.shopId,
+                //         ),
+                //       ),
+                //     );
+                //
+                //     if (updatedPhotos != null) {
+                //       setState(() {});
+                //     }
+                //   },
+                // ),
+                const SizedBox(width: 10),
+                CommonContainer.editShopContainer(
+                  text: 'Edit Shop Location In Map',
+                  onTap: () async {
+                    final selectedShop = _getSelectedShop(aboutState);
+                    if (selectedShop == null) return;
+
+                    //  Decide service / product based on shopKind
+                    final bool isServiceFlow =
+                        (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
+
+                    String? openTimeText;
+                    String? closeTimeText;
+
+                    final List<ShopWeeklyHour> weekly =
+                        selectedShop.shopWeeklyHours;
+
+                    if (weekly.isNotEmpty) {
+                      // Take first non-closed day with valid times, else just first item
+                      ShopWeeklyHour firstOpen;
+                      try {
+                        firstOpen = weekly.firstWhere(
+                          (h) =>
+                              h.closed != true &&
+                              (h.opensAt != null &&
+                                  h.opensAt!.trim().isNotEmpty) &&
+                              (h.closesAt != null &&
+                                  h.closesAt!.trim().isNotEmpty),
+                        );
+                      } catch (_) {
+                        firstOpen = weekly.first;
+                      }
+
+                      openTimeText = firstOpen.opensAt?.trim();
+                      closeTimeText = firstOpen.closesAt?.trim();
+                    }
+
+                    String? ownerImageUrl;
+                    if (isServiceFlow && (selectedShop.shopImages.isNotEmpty)) {
+                      ShopImage? ownerImg;
+                      try {
+                        ownerImg = selectedShop.shopImages.firstWhere(
+                          (img) => (img.type?.toUpperCase() == 'OWNER'),
+                        );
+                      } catch (_) {
+                        // fallback: first image
+                        ownerImg = selectedShop.shopImages.first;
+                      }
+                      ownerImageUrl = ownerImg?.url;
+                    }
+
+                    final updated = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ShopCategoryInfo(
+                          isEditMode: true,
+                          pages: "AboutMeScreens",
+                          shopId: selectedShop.shopId,
+                          isService: isServiceFlow, // keep as per your flow
+                          isIndividual: false,
+
+                          //  prefill values from Shop model
+                          initialShopNameEnglish: selectedShop.shopEnglishName,
+                          initialShopNameTamil: selectedShop.shopTamilName,
+
+                          initialDescriptionEnglish:
+                              selectedShop.shopDescriptionEn,
+                          initialDescriptionTamil:
+                              selectedShop.shopDescriptionTa,
+
+                          initialAddressEnglish: selectedShop.shopAddressEn,
+                          initialAddressTamil: selectedShop.shopAddressTa,
+
+                          initialGps:
+                              (selectedShop.shopGpsLatitude != null &&
+                                  selectedShop.shopGpsLongitude != null &&
+                                  selectedShop.shopGpsLatitude!.isNotEmpty &&
+                                  selectedShop.shopGpsLongitude!.isNotEmpty)
+                              ? "${selectedShop.shopGpsLatitude}, ${selectedShop.shopGpsLongitude}"
+                              : "",
+
+                          initialPrimaryMobile: selectedShop.shopPhone,
+                          initialWhatsapp: selectedShop.shopWhatsapp,
+                          initialEmail: selectedShop.shopContactEmail,
+
+                          // no separate name fields in model → use slug as display text for now
+                          initialCategoryName: selectedShop.category ?? "",
+                          initialCategorySlug: selectedShop.category,
+                          initialSubCategoryName:
+                              selectedShop.subCategory ?? "",
+                          initialSubCategorySlug: selectedShop.subCategory,
+
+                          initialDoorDeliveryText:
+                              (selectedShop.shopDoorDelivery == true)
+                              ? 'Yes'
+                              : 'No',
+
+                          initialOpenTimeText: openTimeText,
+                          initialCloseTimeText: closeTimeText,
+                          initialOwnerImageUrl: ownerImageUrl,
+                        ),
+                      ),
+                    );
+
+                    if (updated == true && mounted) {
+                      await ref
+                          .read(aboutMeNotifierProvider.notifier)
+                          .fetchAllShopDetails(
+                            shopId: _currentShopId ?? selectedShop.shopId,
+                          );
+
+                      setState(() {});
+                    }
+                  },
+                  // onTap: () async {
+                  //   final updatedData = await Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (context) => const ShopCategoryInfo(
+                  //         pages: "AboutMeScreens",
+                  //         isService: true,
+                  //         isIndividual: false,
+                  //       ),
+                  //     ),
+                  //   );
+                  //
+                  //   if (updatedData != null) {
+                  //     setState(() {});
+                  //   }
+                  // },
+                ),
               ],
             ),
           ),
+          SizedBox(height: 20),
         ],
       ),
     );
@@ -559,45 +1015,45 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                         borderRadius: BorderRadius.circular(20),
                         child: hasValidUrl
                             ? CachedNetworkImage(
-                          imageUrl: url,
-                          height: 150,
-                          width: 310,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
-                            height: 150,
-                            width: 310,
-                            color: AppColor.leftArrow,
-                            alignment: Alignment.center,
-                            child: const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          ),
-                          errorWidget: (_, __, ___) => Container(
-                            height: 150,
-                            width: 310,
-                            color: AppColor.leftArrow,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              color: AppColor.gray84,
-                            ),
-                          ),
-                        )
+                                imageUrl: url,
+                                height: 150,
+                                width: 310,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(
+                                  height: 150,
+                                  width: 310,
+                                  color: AppColor.leftArrow,
+                                  alignment: Alignment.center,
+                                  child: const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  height: 150,
+                                  width: 310,
+                                  color: AppColor.leftArrow,
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    color: AppColor.gray84,
+                                  ),
+                                ),
+                              )
                             : Container(
-                          height: 150,
-                          width: 310,
-                          color: AppColor.leftArrow,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.image_not_supported_outlined,
-                            color: AppColor.gray84,
-                            size: 32,
-                          ),
-                        ),
+                                height: 150,
+                                width: 310,
+                                color: AppColor.leftArrow,
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: AppColor.gray84,
+                                  size: 32,
+                                ),
+                              ),
                       ),
 
                       if (index == 0)
@@ -753,8 +1209,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 setState(() => selectedIndex = index);
 
                                 WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                    ) {
+                                  _,
+                                ) {
                                   if (mounted) _scrollToSelected(index);
                                 });
 
@@ -776,9 +1232,9 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   borderRadius: BorderRadius.circular(20),
                                   border: isSelected
                                       ? Border.all(
-                                    color: AppColor.black,
-                                    width: 2,
-                                  )
+                                          color: AppColor.black,
+                                          width: 2,
+                                        )
                                       : null,
                                 ),
                                 padding: const EdgeInsets.symmetric(
@@ -899,30 +1355,30 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             if (!isPremium)
               planData?.isFreemium == false
                   ? CommonContainer.paidCustomerCard(
-                title:
-                '${planData?.plan.durationLabel} Premium Activated',
-                description: '${time} @ ${date}',
-                onTap: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => SubscriptionScreen(),
-                  //   ),
-                  // );
-                },
-              )
+                      title:
+                          '${planData?.plan.durationLabel} Premium Activated',
+                      description: '${time} @ ${date}',
+                      onTap: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => SubscriptionScreen(),
+                        //   ),
+                        // );
+                      },
+                    )
                   : CommonContainer.attractCustomerCard(
-                title: 'Attract More Customers',
-                description: 'Unlock premium to attract more customers',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SubscriptionScreen(),
+                      title: 'Attract More Customers',
+                      description: 'Unlock premium to attract more customers',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubscriptionScreen(),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             SizedBox(height: isPremium ? 20 : 40),
             Row(
               children: [
@@ -953,7 +1409,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 ),
               )
             else if (hasServices)
-            // ----------------- SERVICES LIST -----------------
+              // ----------------- SERVICES LIST -----------------
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1004,7 +1460,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                             child: GestureDetector(
                               onTap: () async {
                                 final prefs =
-                                await SharedPreferences.getInstance();
+                                    await SharedPreferences.getInstance();
                                 // prefs.remove('product_id');
                                 prefs.remove('shop_id');
                                 prefs.remove('service_id');
@@ -1014,7 +1470,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 if (selectedShop == null) return;
 
                                 final title =
-                                (s.englishName ?? s.tamilName ?? '').trim();
+                                    (s.englishName ?? s.tamilName ?? '').trim();
                                 final englishName = title.isEmpty
                                     ? 'Unnamed Product'
                                     : title;
@@ -1045,10 +1501,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   await ref
                                       .read(aboutMeNotifierProvider.notifier)
                                       .fetchAllShopDetails(
-                                    shopId:
-                                    _currentShopId ??
-                                        selectedShop.shopId,
-                                  );
+                                        shopId:
+                                            _currentShopId ??
+                                            selectedShop.shopId,
+                                      );
                                   setState(() {});
                                 }
                               },
@@ -1123,14 +1579,14 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 if (!mounted) return;
 
                                 setState(
-                                      () => _deletingServiceId = s.serviceId,
+                                  () => _deletingServiceId = s.serviceId,
                                 );
 
                                 final success = await ref
                                     .read(productNotifierProvider.notifier)
                                     .deleteServiceAction(
-                                  serviceId: s.serviceId,
-                                );
+                                      serviceId: s.serviceId,
+                                    );
 
                                 if (!mounted) return;
 
@@ -1149,7 +1605,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   );
                                   if (currentShop != null) {
                                     currentShop.services.removeWhere(
-                                          (srv) => srv.serviceId == s.serviceId,
+                                      (srv) => srv.serviceId == s.serviceId,
                                     );
                                   }
 
@@ -1157,10 +1613,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   await ref
                                       .read(aboutMeNotifierProvider.notifier)
                                       .fetchAllShopDetails(
-                                    shopId:
-                                    _currentShopId ??
-                                        currentShop?.shopId,
-                                  );
+                                        shopId:
+                                            _currentShopId ??
+                                            currentShop?.shopId,
+                                      );
 
                                   if (!mounted) return;
 
@@ -1189,28 +1645,28 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 child: Center(
                                   child: (_deletingServiceId == s.serviceId)
                                       ? ThreeDotsLoader(
-                                    dotColor: AppColor.black,
-                                  )
+                                          dotColor: AppColor.black,
+                                        )
                                       : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        AppImages.closeImage,
-                                        color: AppColor.black,
-                                        height: 16,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        'Remove',
-                                        style: AppTextStyles.mulish(
-                                          color: AppColor.black,
-                                          fontWeight: FontWeight.bold,
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              AppImages.closeImage,
+                                              color: AppColor.black,
+                                              height: 16,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              'Remove',
+                                              style: AppTextStyles.mulish(
+                                                color: AppColor.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                             ),
@@ -1283,7 +1739,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 if (selectedShop == null) return;
 
                                 final title =
-                                (p.englishName ?? p.tamilName ?? '').trim();
+                                    (p.englishName ?? p.tamilName ?? '').trim();
                                 final englishName = title.isEmpty
                                     ? 'Unnamed Product'
                                     : title;
@@ -1317,7 +1773,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                           initialOfferValue: offerValue,
                                           initialCategorySlug: p.categorySlug,
                                           initialSubCategorySlug:
-                                          p.subCategorySlug,
+                                              p.subCategorySlug,
                                         ),
                                   ),
                                 );
@@ -1325,10 +1781,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   await ref
                                       .read(aboutMeNotifierProvider.notifier)
                                       .fetchAllShopDetails(
-                                    shopId:
-                                    _currentShopId ??
-                                        selectedShop.shopId,
-                                  );
+                                        shopId:
+                                            _currentShopId ??
+                                            selectedShop.shopId,
+                                      );
                                   setState(() {});
                                 }
                               },
@@ -1404,14 +1860,14 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 if (!mounted) return;
 
                                 setState(
-                                      () => _deletingProductId = p.productId,
+                                  () => _deletingProductId = p.productId,
                                 );
 
                                 final success = await ref
                                     .read(productNotifierProvider.notifier)
                                     .deleteProductAction(
-                                  productId: p.productId,
-                                );
+                                      productId: p.productId,
+                                    );
 
                                 if (!mounted) return;
 
@@ -1430,7 +1886,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   );
                                   if (currentShop != null) {
                                     currentShop.products.removeWhere(
-                                          (prod) => prod.productId == p.productId,
+                                      (prod) => prod.productId == p.productId,
                                     );
                                   }
 
@@ -1438,10 +1894,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                   await ref
                                       .read(aboutMeNotifierProvider.notifier)
                                       .fetchAllShopDetails(
-                                    shopId:
-                                    _currentShopId ??
-                                        currentShop?.shopId,
-                                  );
+                                        shopId:
+                                            _currentShopId ??
+                                            currentShop?.shopId,
+                                      );
 
                                   if (!mounted) return;
 
@@ -1473,28 +1929,28 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 child: Center(
                                   child: (_deletingProductId == p.productId)
                                       ? ThreeDotsLoader(
-                                    dotColor: AppColor.black,
-                                  )
+                                          dotColor: AppColor.black,
+                                        )
                                       : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        AppImages.closeImage,
-                                        color: AppColor.black,
-                                        height: 16,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        'Remove',
-                                        style: AppTextStyles.mulish(
-                                          color: AppColor.black,
-                                          fontWeight: FontWeight.bold,
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              AppImages.closeImage,
+                                              color: AppColor.black,
+                                              height: 16,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              'Remove',
+                                              style: AppTextStyles.mulish(
+                                                color: AppColor.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                             ),
@@ -1534,8 +1990,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   await ref
                       .read(aboutMeNotifierProvider.notifier)
                       .fetchAllShopDetails(
-                    shopId: _currentShopId ?? selectedShop.shopId,
-                  );
+                        shopId: _currentShopId ?? selectedShop.shopId,
+                      );
                   setState(() {});
                 }
               },
@@ -1635,7 +2091,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final comment = (r.comment ?? '').toString().trim();
 
                   final reviewTime =
-                  (r.createdAtRelative ?? '').trim().isNotEmpty
+                      (r.createdAtRelative ?? '').trim().isNotEmpty
                       ? (r.createdAtRelative ?? '').trim()
                       : '_';
 
@@ -2222,89 +2678,89 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 ),
                 child: aboutState.followersLoading
                     ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: ThreeDotsLoader(dotColor: AppColor.darkBlue),
-                  ),
-                )
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: ThreeDotsLoader(dotColor: AppColor.darkBlue),
+                        ),
+                      )
                     : followers.isEmpty
                     ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text(
-                      'No followers found',
-                      style: AppTextStyles.mulish(
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.gray84,
-                      ),
-                    ),
-                  ),
-                )
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: Text(
+                            'No followers found',
+                            style: AppTextStyles.mulish(
+                              fontWeight: FontWeight.w700,
+                              color: AppColor.gray84,
+                            ),
+                          ),
+                        ),
+                      )
                     : ListView.builder(
-                  itemCount: followers.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  itemBuilder: (context, index) {
-                    final f = followers[index];
+                        itemCount: followers.length,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        itemBuilder: (context, index) {
+                          final f = followers[index];
 
-                    final blurred = !canViewProfiles;
-                    // (f.isBlurred == true) || !canViewProfiles;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 6,
-                      ),
-                      child: GestureDetector(
-                        onTap: canViewProfiles == true
-                            ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  SubscriptionScreen(),
+                          final blurred = !canViewProfiles;
+                          // (f.isBlurred == true) || !canViewProfiles;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
                             ),
-                          );
-                        }
-                            : null,
-                        child: Row(
-                          children: [
-                            _FollowerAvatar(
-                              imageUrl: f.avatarUrl,
-                              isBlurred: blurred,
-                            ),
-                            const SizedBox(width: 15),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            child: GestureDetector(
+                              onTap: canViewProfiles == true
+                                  ? () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              SubscriptionScreen(),
+                                        ),
+                                      );
+                                    }
+                                  : null,
+                              child: Row(
                                 children: [
-                                  Text(
-                                    f.followerName,
-                                    style: AppTextStyles.mulish(
-                                      color: AppColor.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                                  _FollowerAvatar(
+                                    imageUrl: f.avatarUrl,
+                                    isBlurred: blurred,
                                   ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    f.joinedLabel,
-                                    style: AppTextStyles.mulish(
-                                      color: AppColor.darkGrey,
-                                      fontSize: 13,
+                                  const SizedBox(width: 15),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          f.followerName,
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.black,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          f.joinedLabel,
+                                          style: AppTextStyles.mulish(
+                                            color: AppColor.darkGrey,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -2391,12 +2847,12 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     );
   }
 
-// ----------------------------
-// KEEP YOUR EXISTING METHODS BELOW:
-// _buildShopDetails(...)
-// buildAnalyticsSection(...)
-// _analyticsCard(...)
-// ----------------------------
+  // ----------------------------
+  // KEEP YOUR EXISTING METHODS BELOW:
+  // _buildShopDetails(...)
+  // buildAnalyticsSection(...)
+  // _analyticsCard(...)
+  // ----------------------------
 }
 
 class _FollowerAvatar extends StatelessWidget {
@@ -2421,13 +2877,13 @@ class _FollowerAvatar extends StatelessWidget {
               children: [
                 hasUrl
                     ? CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) =>
-                      Image.asset(AppImages.person, fit: BoxFit.cover),
-                  errorWidget: (_, __, ___) =>
-                      Image.asset(AppImages.person, fit: BoxFit.cover),
-                )
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            Image.asset(AppImages.person, fit: BoxFit.cover),
+                        errorWidget: (_, __, ___) =>
+                            Image.asset(AppImages.person, fit: BoxFit.cover),
+                      )
                     : Image.asset(AppImages.person, fit: BoxFit.cover),
                 if (isBlurred)
                   Positioned.fill(
@@ -2520,7 +2976,7 @@ class _FullScreenGalleryPageState extends State<FullScreenGalleryPage> {
                   imageUrl: url,
                   fit: BoxFit.contain,
                   placeholder: (_, __) =>
-                  const Center(child: CircularProgressIndicator()),
+                      const Center(child: CircularProgressIndicator()),
                   errorWidget: (_, __, ___) => const Icon(
                     Icons.broken_image,
                     color: Colors.white,
@@ -2535,4 +2991,3 @@ class _FullScreenGalleryPageState extends State<FullScreenGalleryPage> {
     );
   }
 }
-

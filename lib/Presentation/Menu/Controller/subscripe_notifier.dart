@@ -199,6 +199,8 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
     );
   }
 
+
+
   void resetState() {
     state = SubscriptionState.initial();
   }
