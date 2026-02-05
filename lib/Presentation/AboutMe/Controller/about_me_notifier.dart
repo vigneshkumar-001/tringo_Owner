@@ -64,15 +64,13 @@ class AboutMeNotifier extends Notifier<AboutMeState> {
     final result = await api.getAllShopDetails(shopId: shopId ?? '');
 
     result.fold(
-          (failure) => state = state.copyWith(
+      (failure) => state = state.copyWith(
         isLoading: false,
         error: failure.message,
         shopRootResponse: null,
       ),
-          (response) => state = state.copyWith(
-        isLoading: false,
-        shopRootResponse: response,
-      ),
+      (response) =>
+          state = state.copyWith(isLoading: false, shopRootResponse: response),
     );
   }
 
@@ -93,12 +91,12 @@ class AboutMeNotifier extends Notifier<AboutMeState> {
     );
 
     result.fold(
-          (failure) => state = state.copyWith(
+      (failure) => state = state.copyWith(
         followersLoading: false,
         error: failure.message,
         followersResponse: null,
       ),
-          (response) => state = state.copyWith(
+      (response) => state = state.copyWith(
         followersLoading: false,
         followersResponse: response,
       ),
@@ -106,6 +104,6 @@ class AboutMeNotifier extends Notifier<AboutMeState> {
   }
 }
 
-final aboutMeNotifierProvider =
-NotifierProvider<AboutMeNotifier, AboutMeState>(AboutMeNotifier.new);
-
+final aboutMeNotifierProvider = NotifierProvider<AboutMeNotifier, AboutMeState>(
+  AboutMeNotifier.new,
+);
