@@ -1,16 +1,16 @@
-class DeleteResponse {
+class DeleteResponsee {
   final bool status;
   final int code;
   final DeleteData data;
 
-  DeleteResponse({
+  DeleteResponsee({
     required this.status,
     required this.code,
     required this.data,
   });
 
-  factory DeleteResponse.fromJson(Map<String, dynamic> json) {
-    return DeleteResponse(
+  factory DeleteResponsee.fromJson(Map<String, dynamic> json) {
+    return DeleteResponsee(
       status: json['status'] ?? false,
       code: json['code'] ?? 0,
       data: DeleteData.fromJson(json['data'] ?? {}),

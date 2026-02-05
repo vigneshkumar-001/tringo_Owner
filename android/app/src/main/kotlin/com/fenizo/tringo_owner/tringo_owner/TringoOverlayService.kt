@@ -27,6 +27,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
@@ -71,7 +72,6 @@ class TringoOverlayService : Service() {
 
     private var incomingAutoHideJob: Job? = null
 
-    // ✅ debounce
     private var lastOverlayShownAt: Long = 0L
     private val OVERLAY_DEBOUNCE_MS = 900L
 
@@ -80,9 +80,7 @@ class TringoOverlayService : Service() {
     private val INCOMING_SHOW_MS = 10_000L
     private val POST_CALL_SHOW_MS = 15_000L
 
-    // ==========================================================
-    // ✅ CACHE (API only once)
-    // ==========================================================
+    // CACHE
     private val CACHE_VALID_MS = 90_000L
     private var cachePhone: String? = null
     private var cacheAt: Long = 0L
@@ -172,7 +170,6 @@ class TringoOverlayService : Service() {
 
         Log.d(TAG, "onStartCommand phone=$pendingPhone showOnlyAfterEnd=$showOnlyAfterEnd launchedByReceiver=$launchedByReceiver")
 
-        // ✅ NEVER allow UNKNOWN / empty
         val prefs = getSharedPreferences(PREF, MODE_PRIVATE)
         if (pendingPhone.isBlank() || pendingPhone.equals("UNKNOWN", true)) {
             val last = prefs.getString(KEY_LAST_NUMBER, "") ?: ""
@@ -184,7 +181,6 @@ class TringoOverlayService : Service() {
             }
         }
 
-        // ✅ store final phone
         prefs.edit().putString(KEY_LAST_NUMBER, pendingPhone).apply()
 
         startForegroundDataSyncSafe()
@@ -207,9 +203,6 @@ class TringoOverlayService : Service() {
         return START_STICKY
     }
 
-    // ==========================================================
-    // Foreground
-    // ==========================================================
     private fun startForegroundDataSyncSafe() {
         val channelId = "tringo_overlay_service"
         try {
@@ -239,9 +232,6 @@ class TringoOverlayService : Service() {
         }
     }
 
-    // ==========================================================
-    // Prefs
-    // ==========================================================
     private fun markUserClosedDuringCall(phone: String) {
         try {
             getSharedPreferences(PREF, MODE_PRIVATE).edit()
@@ -261,9 +251,6 @@ class TringoOverlayService : Service() {
         } catch (_: Exception) {}
     }
 
-    // ==========================================================
-    // Call watch
-    // ==========================================================
     private fun hasReadPhoneState(): Boolean {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) ==
                 PackageManager.PERMISSION_GRANTED
@@ -402,9 +389,6 @@ class TringoOverlayService : Service() {
         }
     }
 
-    // ==========================================================
-    // Overlay show (debounced)
-    // ==========================================================
     private fun safeShowOverlay(phone: String, contactName: String, preferCache: Boolean) {
         val now = System.currentTimeMillis()
         if (now - lastOverlayShownAt < OVERLAY_DEBOUNCE_MS) return
@@ -412,9 +396,21 @@ class TringoOverlayService : Service() {
         showOverlay(phone, contactName, preferCache)
     }
 
-    // ==========================================================
-    // Overlay UI (NO overlay_simple, only tringo_overlay)
-    // ==========================================================
+    // ✅ Icon size helper (change dp here anytime)
+    private fun setLeftIconSize(tv: TextView?, drawableRes: Int, dp: Int, tintColor: Int? = null) {
+        if (tv == null) return
+        val d = ContextCompat.getDrawable(this, drawableRes) ?: return
+        val px = (dp * resources.displayMetrics.density).toInt()
+        d.setBounds(0, 0, px, px)
+
+        if (tintColor != null) {
+            val wrap = DrawableCompat.wrap(d)
+            DrawableCompat.setTint(wrap, tintColor)
+        }
+        tv.setCompoundDrawables(d, null, null, null)
+        tv.compoundDrawablePadding = (8 * resources.displayMetrics.density).toInt()
+    }
+
     private fun showOverlay(phone: String, contactName: String, preferCache: Boolean) {
         removeOverlay()
 
@@ -434,7 +430,8 @@ class TringoOverlayService : Service() {
 
         val businessTv = v.findViewById<TextView?>(R.id.businessNameText)
         val personTv = v.findViewById<TextView?>(R.id.personNameText)
-        val metaTv = v.findViewById<TextView?>(R.id.metaText)
+        val metaBizTv = v.findViewById<TextView?>(R.id.metaText)
+        val metaPersonTv = v.findViewById<TextView?>(R.id.personMetaText)
         val smallTop = v.findViewById<TextView?>(R.id.smallTopText)
 
         val logoBiz = v.findViewById<ImageView?>(R.id.logoImageBusiness)
@@ -444,8 +441,12 @@ class TringoOverlayService : Service() {
         val adsTitleTv = v.findViewById<TextView?>(R.id.adsTitle)
         val recycler = v.findViewById<RecyclerView?>(R.id.adsRecycler)
 
-        val callBtn = v.findViewById<View?>(R.id.callBtn)
-        val chatBtn = v.findViewById<View?>(R.id.chatBtn)
+        val callBtn = v.findViewById<TextView?>(R.id.callBtn)
+        val chatBtn = v.findViewById<TextView?>(R.id.chatBtn)
+
+        // ✅ icon size 18dp (change to 16/14 if needed)
+        setLeftIconSize(callBtn, R.drawable.ic_call_png, 18)
+        setLeftIconSize(chatBtn, R.drawable.ic_whatsapp_png, 18)
 
         recycler?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         adsAdapter = OverlayAdsAdapter()
@@ -482,9 +483,7 @@ class TringoOverlayService : Service() {
                 WindowManager.LayoutParams.TYPE_PHONE,
             flags,
             PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-        }
+        ).apply { gravity = Gravity.TOP or Gravity.START }
 
         try {
             windowManager?.addView(v, params)
@@ -497,16 +496,17 @@ class TringoOverlayService : Service() {
         centerCardExactly(rootFull, rootCard)
         attachFreeDragAnywhere(rootFull, rootCard, recycler)
 
+        // Initial state (person fallback)
         headerBusiness?.visibility = View.GONE
         headerPerson?.visibility = View.VISIBLE
         personTv?.text = if (contactName.isNotBlank()) contactName else phone
+        metaPersonTv?.text = ""
         businessTv?.text = "Loading..."
-        metaTv?.text = ""
+        metaBizTv?.text = ""
 
         fun applyAdsVisibilityNow() {
             val allowAds = postCallPopupMode
             val hasAds = cacheAdsCards.isNotEmpty()
-
             if (allowAds && hasAds) {
                 divider?.visibility = View.VISIBLE
                 adsTitleTv?.text = cacheAdsTitle
@@ -525,20 +525,21 @@ class TringoOverlayService : Service() {
 
         val apiPhone = normalizePhoneForApi(phone)
 
-        // ✅ 1) cache apply
         if (preferCache && isCacheValidFor(apiPhone)) {
-            applyCacheToUi(headerBusiness, headerPerson, businessTv, personTv, metaTv, logoBiz, logoPerson)
+            applyCacheToUi(
+                headerBusiness, headerPerson,
+                businessTv, personTv,
+                metaBizTv, metaPersonTv,
+                logoBiz, logoPerson
+            )
             adsAdapter?.submitList(cacheAdsCards)
             applyAdsVisibilityNow()
             return
         }
 
-        // ✅ 2) API call
         serviceScope.launch {
             try {
                 val res = withContext(Dispatchers.IO) { ApiClient.api.phoneInfo(apiPhone) }
-
-                // ✅ FIX: res is PhoneInfoResponse, so use res.data (NOT res["data"])
                 val dataAny = res.data ?: emptyMap()
 
                 val typeStr = str(dataAny["type"])
@@ -562,7 +563,6 @@ class TringoOverlayService : Service() {
                     addr.takeIf { it.isNotBlank() }
                 ).joinToString(" • ")
 
-                // Ads
                 val adsAny = map(dataAny["advertisements"])
                 val adsTitle = str(adsAny["title"]).trim().ifBlank { "Advertisements" }
                 val listAny = list(adsAny["items"])
@@ -591,7 +591,12 @@ class TringoOverlayService : Service() {
                     adsCards = cards
                 )
 
-                applyCacheToUi(headerBusiness, headerPerson, businessTv, personTv, metaTv, logoBiz, logoPerson)
+                applyCacheToUi(
+                    headerBusiness, headerPerson,
+                    businessTv, personTv,
+                    metaBizTv, metaPersonTv,
+                    logoBiz, logoPerson
+                )
                 adsAdapter?.submitList(cacheAdsCards)
                 applyAdsVisibilityNow()
 
@@ -603,14 +608,15 @@ class TringoOverlayService : Service() {
 
     private fun applyCacheToUi(
         headerBusiness: View?, headerPerson: View?,
-        businessTv: TextView?, personTv: TextView?, metaTv: TextView?,
+        businessTv: TextView?, personTv: TextView?,
+        metaBizTv: TextView?, metaPersonTv: TextView?,
         logoBiz: ImageView?, logoPerson: ImageView?
     ) {
         if (cacheIsShop) {
             headerBusiness?.visibility = View.VISIBLE
             headerPerson?.visibility = View.GONE
             businessTv?.text = cacheTitle
-            metaTv?.text = cacheSubtitleLine
+            metaBizTv?.text = cacheSubtitleLine
             logoBiz?.load(cacheImageUrl) {
                 crossfade(true)
                 placeholder(android.R.drawable.ic_menu_gallery)
@@ -620,7 +626,7 @@ class TringoOverlayService : Service() {
             headerBusiness?.visibility = View.GONE
             headerPerson?.visibility = View.VISIBLE
             personTv?.text = cacheTitle
-            metaTv?.text = cacheSubtitleLine
+            metaPersonTv?.text = cacheSubtitleLine
             logoPerson?.load(cacheImageUrl) {
                 crossfade(true)
                 placeholder(android.R.drawable.ic_menu_gallery)
