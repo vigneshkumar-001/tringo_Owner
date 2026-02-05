@@ -219,6 +219,7 @@ class ApiUrl {
   static const String uIDSendApi = "${base}api/v1/wallet/transfer";
   static const String uIDWithRawApi = "${base}api/v1/wallet/withdraw-request";
 
+/*
   static const String privacyPolicy =
       "${base}api/v1/public/pages/privacy-policy";
 
@@ -231,5 +232,6 @@ class ApiUrl {
     return "${base}api/v1/shops/$shopId/profile/followers"
         "?take=$take&skip=$skip&range=$range";
   }
+*/
 
 }
