@@ -226,19 +226,21 @@ class HomeNotifier extends Notifier<HomeState> {
       ),
     );
   }
-
-  Future<void> fetchShops({required String shopId}) async {
+  Future<ShopsResponse?> fetchShops({required String shopId}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await api.getAllShops(shopId: shopId);
 
-    result.fold(
-      (failure) => state = state.copyWith(
-        isLoading: false,
-        error: failure.message,
-        shopsResponse: null,
-      ),
-      (response) async {
+    return result.fold(
+          (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          shopsResponse: null,
+        );
+        return null; // ❌ failed
+      },
+          (response) async {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(
           'isFreemium',
@@ -250,9 +252,38 @@ class HomeNotifier extends Notifier<HomeState> {
           error: null,
           shopsResponse: response,
         );
+
+        return response; // ✅ return full data
       },
     );
   }
+
+  // Future<void> fetchShops({required String shopId}) async {
+  //   state = state.copyWith(isLoading: true, error: null);
+  //
+  //   final result = await api.getAllShops(shopId: shopId);
+  //
+  //   result.fold(
+  //     (failure) => state = state.copyWith(
+  //       isLoading: false,
+  //       error: failure.message,
+  //       shopsResponse: null,
+  //     ),
+  //     (response) async {
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setBool(
+  //         'isFreemium',
+  //         response.data.subscription?.isFreemium ?? false,
+  //       );
+  //
+  //       state = state.copyWith(
+  //         isLoading: false,
+  //         error: null,
+  //         shopsResponse: response,
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> markEnquiry({required String enquiryId}) async {
     state = state.copyWith(isLoading: true, error: null);

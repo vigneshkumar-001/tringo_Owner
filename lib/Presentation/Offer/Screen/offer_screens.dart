@@ -66,7 +66,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final existingShops =
           ref.read(homeNotifierProvider).shopsResponse?.data.items ?? [];
-      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
+      // await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
       if (existingShops.isNotEmpty) {
         final shopId = existingShops.first.id;
         _calledOnce = true;
