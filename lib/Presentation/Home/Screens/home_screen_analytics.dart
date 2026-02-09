@@ -9,6 +9,7 @@ import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Utility/app_loader.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Presentation/Home/Model/enquiry_analytics_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/call_helper.dart';
@@ -69,7 +70,7 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
           .setAnalyticsStatus(AnalyticsStatus.open);
 
       // your other calls
-      await _initialLoad();
+      // await _initialLoad();
 
       // ✅ refresh based on selected tab + type (uses _selectedTab take logic)
       await _refreshCurrent();
@@ -113,10 +114,15 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
     return "$y-$m-$day";
   }
 
+  late ShopsResponse? shopsRes;
+  String? shopIdVar;
   Future<void> _initialLoad() async {
     // 1) fetch shops
-    await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
+    shopsRes = await ref
+        .read(homeNotifierProvider.notifier)
+        .fetchShops(shopId: '');
 
+    shopIdVar = shopsRes?.data.items[0].id; // adjust to your model
     if (!mounted) return;
 
     // 2) call surprise list api
@@ -180,6 +186,7 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
         .read(homeNotifierProvider.notifier)
         .refreshAnalytics(
           shopId: widget.shopId,
+          /* shopId: shopIdVar ?? '',*/
           start: _start,
           end: _end,
           take: (_selectedTab == 0) ? 10 : 50,
@@ -365,15 +372,33 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                     showSwitch: showSwitch,
                                     shopLocation:
                                         '${shop.addressEn}, ${shop.city}',
-                                    onTap: () {
+                                    onTap: () async {
                                       ref
                                           .read(selectedShopProvider.notifier)
                                           .switchShop(shop.id);
+                                      await ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .refreshAnalytics(
+                                            /*   shopId: widget.shopId,*/
+                                            shopId: shop.id ?? '',
+                                            start: _start,
+                                            end: _end,
+                                            take: (_selectedTab == 0) ? 10 : 50,
+                                          );
                                     },
-                                    switchOnTap: () {
+                                    switchOnTap: () async {
                                       ref
                                           .read(selectedShopProvider.notifier)
                                           .switchShop(shop.id);
+                                      await ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .refreshAnalytics(
+                                        /*   shopId: widget.shopId,*/
+                                        shopId: shop.id ?? '',
+                                        start: _start,
+                                        end: _end,
+                                        take: (_selectedTab == 0) ? 10 : 50,
+                                      );
                                     },
                                   ),
                                 );

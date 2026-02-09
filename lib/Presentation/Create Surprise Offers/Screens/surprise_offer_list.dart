@@ -54,7 +54,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
 
   Future<void> _initialLoad({String? forceShopId}) async {
     // 1) fetch shops
-    await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
+    // await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
 
     final homeState = ref.read(homeNotifierProvider);
     final shopsRes = homeState.shopsResponse;
@@ -429,7 +429,10 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CommonBottomNavigation(initialIndex: 0,)),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            CommonBottomNavigation(initialIndex: 0),
+                      ),
                     );
                   },
                   // onTap: () => Navigator.pop(context),
