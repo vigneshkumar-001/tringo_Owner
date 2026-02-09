@@ -7,6 +7,7 @@ import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Screens/surprise_offer_list.dart';
 import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 import 'package:tringo_owner/Presentation/Menu/Model/delete_response.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/qr_code_screen.dart';
@@ -69,7 +70,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     const CommonBottomNavigation(initialIndex: 1),
     const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 0),
     const CommonBottomNavigation(initialIndex: 2),
-    const UnderProcessing(),
+    // const UnderProcessing(),
+    SurpriseOfferList(),
 
     const SubscriptionScreen(),
     const CommonBottomNavigation(initialIndex: 3, initialAboutMeTab: 1),
