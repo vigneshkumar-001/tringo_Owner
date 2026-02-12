@@ -328,7 +328,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
             onRefresh: () async {
               await ref
                   .read(homeNotifierProvider.notifier)
-                  .fetchShops(shopId: '');
+                  .fetchShops(shopId: '', filter: '');
               await ref
                   .read(homeNotifierProvider.notifier)
                   .fetchAllEnquiry(shopId: '');

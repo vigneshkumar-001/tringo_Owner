@@ -188,7 +188,6 @@ class HomeState {
       analyticsPages: analyticsPages ?? this.analyticsPages,
     );
   }
-
 }
 
 class HomeNotifier extends Notifier<HomeState> {
@@ -226,13 +225,17 @@ class HomeNotifier extends Notifier<HomeState> {
       ),
     );
   }
-  Future<ShopsResponse?> fetchShops({required String shopId}) async {
+
+  Future<ShopsResponse?> fetchShops({
+    required String shopId,
+    required String filter,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await api.getAllShops(shopId: shopId);
+    final result = await api.getAllShops(shopId: shopId, filter: filter);
 
     return result.fold(
-          (failure) {
+      (failure) {
         state = state.copyWith(
           isLoading: false,
           error: failure.message,
@@ -240,7 +243,7 @@ class HomeNotifier extends Notifier<HomeState> {
         );
         return null; // ❌ failed
       },
-          (response) async {
+      (response) async {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(
           'isFreemium',

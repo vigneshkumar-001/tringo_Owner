@@ -3,202 +3,9 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Session/session_manager.dart';
 
 class Request {
-  // static Future<dynamic> sendRequest(
-  //   String url,
-  //   Map<String, dynamic> body,
-  //   String? method,
-  //   bool isTokenRequired,
-  // ) async
-  // {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final String? token = prefs.getString('token');
-  //   final String? sessionToken = prefs.getString('sessionToken');
-  //   final String? userId = prefs.getString('userId'); // (currently unused)
-  //
-  //   final dio = Dio(
-  //     BaseOptions(
-  //       connectTimeout: const Duration(seconds: 20),
-  //       receiveTimeout: const Duration(seconds: 20),
-  //     ),
-  //   );
-  //
-  //   dio.interceptors.add(
-  //     InterceptorsWrapper(
-  //       onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-  //         return handler.next(options);
-  //       },
-  //       onResponse:
-  //           (Response<dynamic> response, ResponseInterceptorHandler handler) {
-  //             AppLogger.log.i(body);
-  //             AppLogger.log.i(
-  //               "sendRequest \n"
-  //               " API: $url \n"
-  //               " Token : $token \n"
-  //               " RESPONSE: ${response.toString()}",
-  //             );
-  //             return handler.next(response);
-  //           },
-  //       onError: (DioException error, ErrorInterceptorHandler handler) async {
-  //         final status = error.response?.statusCode;
-  //
-  //         if (status == 402) {
-  //           // app update new versionq
-  //           return handler.reject(error);
-  //         } else if (status == 406 || status == 401) {
-  //           // unauthorized, etc.
-  //           return handler.reject(error);
-  //         } else if (status == 429) {
-  //           // too many attempts
-  //           return handler.reject(error);
-  //         } else if (status == 409) {
-  //           // conflict
-  //           return handler.reject(error);
-  //         }
-  //         return handler.next(error);
-  //       },
-  //     ),
-  //   );
-  //
-  //   try {
-  //     final headers = <String, dynamic>{
-  //       "Content-Type": "application/json",
-  //       if (token != null && isTokenRequired) "Authorization": "Bearer $token",
-  //       if (sessionToken != null && isTokenRequired)
-  //         "x-session-token": sessionToken,
-  //     };
-  //
-  //     final httpMethod = (method ?? 'POST').toUpperCase();
-  //
-  //     AppLogger.log.i(
-  //       "REQUEST \n"
-  //       " METHOD: $httpMethod \n"
-  //       " API   : $url \n"
-  //       " BODY  : $body \n"
-  //       " HEADERS: $headers",
-  //     );
-  //
-  //     late Response response;
-  //
-  //     switch (httpMethod) {
-  //       case 'GET':
-  //         response = await dio
-  //             .get(
-  //               url,
-  //               queryParameters: body.isEmpty ? null : body,
-  //               options: Options(
-  //                 headers: headers,
-  //                 validateStatus: (status) => status != null && status < 503,
-  //               ),
-  //             )
-  //             .timeout(
-  //               const Duration(seconds: 10),
-  //               onTimeout: () {
-  //                 throw TimeoutException("Request timed out after 10 seconds");
-  //               },
-  //             );
-  //         break;
-  //
-  //       case 'PUT':
-  //         response = await dio
-  //             .put(
-  //               url,
-  //               data: body,
-  //               options: Options(
-  //                 headers: headers,
-  //                 validateStatus: (status) => status != null && status < 503,
-  //               ),
-  //             )
-  //             .timeout(
-  //               const Duration(seconds: 10),
-  //               onTimeout: () {
-  //                 throw TimeoutException("Request timed out after 10 seconds");
-  //               },
-  //             );
-  //         break;
-  //
-  //       case 'PATCH':
-  //         response = await dio
-  //             .patch(
-  //               url,
-  //               data: body,
-  //               options: Options(
-  //                 headers: headers,
-  //                 validateStatus: (status) => status != null && status < 503,
-  //               ),
-  //             )
-  //             .timeout(
-  //               const Duration(seconds: 10),
-  //               onTimeout: () {
-  //                 throw TimeoutException("Request timed out after 10 seconds");
-  //               },
-  //             );
-  //         break;
-  //
-  //       ///  DELETE SUPPORT (THIS IS WHAT YOU NEEDED)
-  //       case 'DELETE':
-  //         response = await dio
-  //             .delete(
-  //               url,
-  //               data: body.isEmpty ? null : body,
-  //               options: Options(
-  //                 headers: headers,
-  //                 validateStatus: (status) => status != null && status < 503,
-  //               ),
-  //             )
-  //             .timeout(
-  //               const Duration(seconds: 10),
-  //               onTimeout: () {
-  //                 throw TimeoutException("Request timed out after 10 seconds");
-  //               },
-  //             );
-  //         break;
-  //
-  //       /// Default → POST (for your existing usages)
-  //       case 'POST':
-  //       default:
-  //         response = await dio
-  //             .post(
-  //               url,
-  //               data: body,
-  //               options: Options(
-  //                 headers: headers,
-  //                 validateStatus: (status) => status != null && status < 503,
-  //               ),
-  //             )
-  //             .timeout(
-  //               const Duration(seconds: 10),
-  //               onTimeout: () {
-  //                 throw TimeoutException("Request timed out after 10 seconds");
-  //               },
-  //             );
-  //         break;
-  //     }
-  //
-  //     AppLogger.log.i(
-  //       "RESPONSE \n"
-  //       " API: $url \n"
-  //       " Token : $token \n"
-  //       " session Token : $sessionToken \n"
-  //       " Headers : $headers \n"
-  //       " RESPONSE: ${response.toString()}",
-  //     );
-  //
-  //     AppLogger.log.i("$body");
-  //
-  //     return response;
-  //   } on DioException catch (e) {
-  //     // THROW the DioException, do not return it
-  //     throw e;
-  //   } catch (e) {
-  //     // Throw clean exception
-  //     throw Exception(e.toString());
-  //   }
-  // }
-
-  // ⬇ keep your existing formData and sendGetRequest as-is or update similarly if you want
-
   static Future<dynamic> sendRequest(
     String url,
     Map<String, dynamic> body,
@@ -420,12 +227,28 @@ class Request {
           );
           handler.next(response);
         },
-        onError: (error, handler) {
-          AppLogger.log.e(
-            "ERROR ← ${error.requestOptions.uri}\nTYPE → ${error.type}\nMESSAGE → ${error.message}",
-          );
-          handler.next(error);
+        onError: (DioException error, ErrorInterceptorHandler handler) async {
+          final status = error.response?.statusCode;
+
+          final data = error.response?.data;
+          final msg = (data is Map && data['message'] != null)
+              ? data['message'].toString().toLowerCase()
+              : '';
+
+          final isInvalidSession = msg.contains("invalid session token");
+
+          if (status == 401 || status == 406 || isInvalidSession) {
+            await SessionManager.forceLogout();
+          }
+
+          return handler.next(error);
         },
+        // onError: (error, handler) {
+        //   AppLogger.log.e(
+        //     "ERROR ← ${error.requestOptions.uri}\nTYPE → ${error.type}\nMESSAGE → ${error.message}",
+        //   );
+        //   handler.next(error);
+        // },
       ),
     );
 
