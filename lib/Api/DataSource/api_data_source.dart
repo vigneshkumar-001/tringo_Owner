@@ -9,6 +9,7 @@ import 'package:tringo_owner/Api/Repository/api_url.dart';
 import 'package:tringo_owner/Api/Repository/failure.dart';
 import 'package:tringo_owner/Api/Repository/request.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Presentation/AboutMe/Model/shop_analytics_response.dart';
 import 'package:tringo_owner/Presentation/AboutMe/Model/shop_root_response.dart';
 import 'package:tringo_owner/Presentation/AddProduct/Model/product_response.dart';
 import 'package:tringo_owner/Presentation/Create%20App%20Offer/Model/offer_products.dart';
@@ -1339,9 +1340,10 @@ class ApiDataSource extends BaseApiDataSource {
 
   Future<Either<Failure, ShopsResponse>> getAllShops({
     required String shopId,
+    required String filter
   }) async {
     try {
-      final url = ApiUrl.getAllShopsDetails(shopId: shopId);
+      final url = ApiUrl.getAllShopsDetails(shopId: shopId, filter: filter);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -2356,7 +2358,6 @@ class ApiDataSource extends BaseApiDataSource {
 
       return Left(ServerFailure(resp.message ?? "Unknown Dio error"));
     } catch (e) {
-
       print(e);
       AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
@@ -2904,7 +2905,11 @@ dateRange: $start → $end
       return Left(ServerFailure(e.toString()));
     }
   }
-  Future<Either<Failure, CategoryKeywordsResponse>> getKeyWords({required String type, required String query}) async {
+
+  Future<Either<Failure, CategoryKeywordsResponse>> getKeyWords({
+    required String type,
+    required String query,
+  }) async {
     try {
       String url = ApiUrl.getKeyWords(type: type, query: query);
 
@@ -2938,6 +2943,58 @@ dateRange: $start → $end
       }
     } catch (e) {
       print(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ShopAnalyticsResponse>> fetchAnalytics({
+    required String shopId,
+    required String filter,
+    required String months,
+  }) async {
+    try {
+      final url = ApiUrl.getShopAnalytics(
+        shopId: shopId,
+        filter: filter,
+        months: months,
+      );
+
+      dynamic response = await Request.sendRequest(url, {}, 'Get', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        final statusCode = response.statusCode ?? 0;
+
+        if (statusCode == 200 || statusCode == 201) {
+          final data = response.data;
+
+          if (data is Map && data['status'] == true) {
+            return Right(ShopAnalyticsResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(data['message'] ?? "Offer creation failed"),
+            );
+          }
+        } else {
+          final data = response.data;
+          return Left(
+            ServerFailure(
+              (data is Map ? data['message'] : null) ??
+                  "Something went wrong (${response.statusCode})",
+            ),
+          );
+        }
+      } else {
+        // DioException case
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e, st) {
+      AppLogger.log.e(" error: $e\n$st");
       return Left(ServerFailure(e.toString()));
     }
   }

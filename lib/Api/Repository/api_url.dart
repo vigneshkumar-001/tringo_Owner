@@ -120,8 +120,8 @@ class ApiUrl {
     return "${base}api/v1/dashboard/enquiries?page=1&limit=20&shopId=$shopId";
   }
 
-  static String getAllShopsDetails({required String shopId}) {
-    return "${base}api/v1/dashboard/shops?shopId=$shopId";
+  static String getAllShopsDetails({required String shopId, required String filter}) {
+    return "${base}api/v1/dashboard/shops?shopId=$shopId&filter=$filter";
   }
 
   static String fetchAnalyticsActivity({
@@ -169,7 +169,9 @@ class ApiUrl {
   static String createAppOffer({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers/app";
   }
-
+  static String getShopAnalytics({required String shopId,required String filter,required String months}) {
+    return "${base}api/v1/shops/$shopId/profile/about-me-analytics?month=$months&filter=$filter";
+  }
   static String productListShowForOffer({
     required String shopId,
     required String type,

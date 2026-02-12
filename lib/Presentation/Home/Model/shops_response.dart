@@ -124,12 +124,14 @@ class Shop {
 
 class HomeChart {
   final String shopId;
+  final String filter; // DAY/WEEK/MONTH/YEAR
   final ChartRange range;
-  final ChartTotals totals;
-  final List<ChartSeries> series;
+  final HomeTotals totals;
+  final List<HomeSeriesPoint> series;
 
   const HomeChart({
     required this.shopId,
+    required this.filter,
     required this.range,
     required this.totals,
     required this.series,
@@ -138,20 +140,19 @@ class HomeChart {
   factory HomeChart.fromJson(Map<String, dynamic> json) {
     return HomeChart(
       shopId: (json['shopId'] ?? '').toString(),
+      filter: (json['filter'] ?? '').toString(),
       range: ChartRange.fromJson((json['range'] ?? {}) as Map<String, dynamic>),
-      totals: ChartTotals.fromJson(
-        (json['totals'] ?? {}) as Map<String, dynamic>,
-      ),
+      totals: HomeTotals.fromJson((json['totals'] ?? {}) as Map<String, dynamic>),
       series: (json['series'] as List? ?? const [])
-          .map((e) => ChartSeries.fromJson((e as Map).cast<String, dynamic>()))
+          .map((e) => HomeSeriesPoint.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
     );
   }
 }
 
 class ChartRange {
-  final String start; // "2026-01-23"
-  final String end; // "2026-01-30"
+  final String start;
+  final String end;
 
   const ChartRange({required this.start, required this.end});
 
@@ -162,6 +163,56 @@ class ChartRange {
     );
   }
 }
+
+class HomeTotals {
+  final int reach;
+  final int enquiries;
+  final int calls;
+  final int directions;
+
+  const HomeTotals({
+    required this.reach,
+    required this.enquiries,
+    required this.calls,
+    required this.directions,
+  });
+
+  factory HomeTotals.fromJson(Map<String, dynamic> json) {
+    int _i(dynamic v) => v is int ? v : int.tryParse((v ?? '0').toString()) ?? 0;
+
+    return HomeTotals(
+      reach: _i(json['reach']),
+      enquiries: _i(json['enquiries']),
+      calls: _i(json['calls']),
+      directions: _i(json['directions']),
+    );
+  }
+}
+
+class HomeSeriesPoint {
+  final String key;   // "2026-02-06"
+  final String label; // "06"
+  final int value;
+
+  const HomeSeriesPoint({
+    required this.key,
+    required this.label,
+    required this.value,
+  });
+
+  factory HomeSeriesPoint.fromJson(Map<String, dynamic> json) {
+    int _i(dynamic v) => v is int ? v : int.tryParse((v ?? '0').toString()) ?? 0;
+
+    return HomeSeriesPoint(
+      key: (json['key'] ?? '').toString(),
+      label: (json['label'] ?? '').toString(),
+      value: _i(json['value']),
+    );
+  }
+}
+
+
+
 
 class ChartTotals {
   final int profileViews;
@@ -245,108 +296,3 @@ class ChartSeries {
     );
   }
 }
-
-// class ShopsResponse {
-//   final bool status;
-//   final ShopsData data;
-//
-//   ShopsResponse({required this.status, required this.data});
-//
-//   factory ShopsResponse.fromJson(Map<String, dynamic> json) {
-//     return ShopsResponse(
-//       status: json['status'] ?? false,
-//       data: ShopsData.fromJson(json['data'] ?? {}),
-//     );
-//   }
-// }
-//
-// class ShopsData {
-//   final bool isNewOwner;
-//   final List<Shop> items;
-//   final Subscription subscription;
-//   final bool canCreateMoreShops;
-//   final int remainingShops;
-//
-//   ShopsData({
-//     required this.isNewOwner,
-//     required this.items,
-//     required this.subscription,
-//     required this.canCreateMoreShops,
-//     required this.remainingShops,
-//   });
-//
-//   factory ShopsData.fromJson(Map<String, dynamic> json) {
-//     return ShopsData(
-//       isNewOwner: json['isNewOwner'] == true,
-//       items: (json['items'] as List<dynamic>? ?? [])
-//           .map((e) => Shop.fromJson(e as Map<String, dynamic>))
-//           .toList(),
-//       subscription: Subscription.fromJson(
-//         json['subscription'] as Map<String, dynamic>? ?? {},
-//       ),
-//       canCreateMoreShops: json['canCreateMoreShops'] == true,
-//       remainingShops: json['remainingShops'] ?? 0,
-//     );
-//   }
-// }
-//
-// class Subscription {
-//   final bool isFreemium;
-//   final int maxShopsAllowed;
-//   final String planType;
-//
-//   Subscription({
-//     required this.isFreemium,
-//     required this.maxShopsAllowed,
-//     required this.planType,
-//   });
-//
-//   factory Subscription.fromJson(Map<String, dynamic> json) {
-//     return Subscription(
-//       isFreemium: json['isFreemium'] == true,
-//       maxShopsAllowed: json['maxShopsAllowed'] ?? 0,
-//       planType: json['planType'] ?? '',
-//     );
-//   }
-// }
-//
-// class Shop {
-//   final String id;
-//   final String englishName;
-//   final String tamilName;
-//   final String city;
-//   final String shopKind;
-//   final String category;
-//   final String subCategory;
-//   final String addressEn;
-//   final String addressTa;
-//   final String? primaryImageUrl;
-//
-//   Shop({
-//     required this.id,
-//     required this.englishName,
-//     required this.tamilName,
-//     required this.city,
-//     required this.shopKind,
-//     required this.category,
-//     required this.subCategory,
-//     required this.addressEn,
-//     required this.addressTa,
-//     this.primaryImageUrl,
-//   });
-//
-//   factory Shop.fromJson(Map<String, dynamic> json) {
-//     return Shop(
-//       id: json['id'] ?? '',
-//       englishName: json['englishName'] ?? '',
-//       tamilName: json['tamilName'] ?? '',
-//       city: json['city'] ?? '',
-//       shopKind: json['shopKind'] ?? '',
-//       category: json['category'] ?? '',
-//       subCategory: json['subCategory'] ?? '',
-//       addressEn: json['addressEn'] ?? '',
-//       addressTa: json['addressTa'] ?? '',
-//       primaryImageUrl: json['primaryImageUrl'],
-//     );
-//   }
-// }

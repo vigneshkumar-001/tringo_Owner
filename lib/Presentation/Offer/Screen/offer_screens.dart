@@ -364,7 +364,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
             onRefresh: () async {
               await ref
                   .read(homeNotifierProvider.notifier)
-                  .fetchShops(shopId: '');
+                  .fetchShops(shopId: '',filter: '');
               await ref
                   .read(offerNotifierProvider.notifier)
                   .offerScreenEnquiry(shopId: '');

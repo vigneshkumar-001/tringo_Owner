@@ -120,7 +120,7 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
     // 1) fetch shops
     shopsRes = await ref
         .read(homeNotifierProvider.notifier)
-        .fetchShops(shopId: '');
+        .fetchShops(shopId: '', filter: '');
 
     shopIdVar = shopsRes?.data.items[0].id; // adjust to your model
     if (!mounted) return;

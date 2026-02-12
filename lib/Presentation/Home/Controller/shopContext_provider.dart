@@ -27,7 +27,7 @@ class SelectedShopNotifier extends StateNotifier<String?> {
     // 🔥 FIRE ALL DEPENDENT APIS HERE
     await Future.wait([
       ref.read(homeNotifierProvider.notifier)
-          .fetchShops(shopId: shopId),
+          .fetchShops(shopId: shopId,filter: ''),
       ref.read(homeNotifierProvider.notifier)
           .fetchAllEnquiry(shopId: shopId),
       ref.read(aboutMeNotifierProvider.notifier)

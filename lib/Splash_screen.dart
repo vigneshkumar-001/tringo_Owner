@@ -137,7 +137,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       // 3) Continue normal flow
       await ref.read(selectedShopProvider.notifier).switchShop('');
-      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
+      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '',filter: '');
       await ref.read(subscriptionNotifier.notifier).getCurrentPlan();
 
       if (!mounted) return;
