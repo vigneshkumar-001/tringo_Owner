@@ -49,6 +49,9 @@ import 'home_screen_analytics.dart';
 // ✅ NEW
 import '../../../Core/Utility/filter_enum.dart';
 
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+
 class HomeScreens extends ConsumerStatefulWidget {
   const HomeScreens({super.key});
 
@@ -66,6 +69,126 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   // ✅ NEW: chart filter state + loading state (only for chart reload)
   ChartFilter _selectedChartFilter = ChartFilter.day;
   bool _chartLoading = false;
+
+  final Map<String, bool> _sending = {}; // enquiryId -> isSending
+
+  bool _isSending(String id) => _sending[id] ?? false;
+
+  void _setSending(String id, bool val) {
+    setState(() => _sending[id] = val);
+  }
+
+  final ImagePicker _picker = ImagePicker();
+
+  // enquiryId -> isAds enabled
+  final Map<String, bool> _adsEnabled = {};
+
+  // enquiryId -> picked image
+  final Map<String, XFile?> _pickedImage = {};
+
+  // enquiryId -> controllers
+  final Map<String, TextEditingController> _msgCtrl = {};
+  final Map<String, TextEditingController> _priceCtrl = {};
+
+  static const int _maxMsgLen = 120;
+
+  TextEditingController _getMsgCtrl(String id) =>
+      _msgCtrl.putIfAbsent(id, () => TextEditingController());
+
+  TextEditingController _getPriceCtrl(String id) =>
+      _priceCtrl.putIfAbsent(id, () => TextEditingController());
+
+  bool _isAdsEnabled(String id) => _adsEnabled[id] ?? false;
+
+  void _enableAds(String id) {
+    setState(() => _adsEnabled[id] = true);
+  }
+
+  XFile? _getPicked(String id) => _pickedImage[id];
+
+  void _setPicked(String id, XFile? file) {
+    setState(() => _pickedImage[id] = file);
+  }
+
+  Future<void> _pickFromCamera(String id) async {
+    final x = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
+    if (!mounted) return;
+    _setPicked(id, x);
+  }
+
+  Future<void> _pickFromGallery(String id) async {
+    final x = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (!mounted) return;
+    _setPicked(id, x);
+  }
+
+  void _removeImage(String id) => _setPicked(id, null);
+
+  Future<void> _showPickOptions(String id) async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined),
+                  title: Text('Camera', style: AppTextStyles.mulish()),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickFromCamera(id);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_outlined),
+                  title: Text('Gallery', style: AppTextStyles.mulish()),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickFromGallery(id);
+                  },
+                ),
+                const SizedBox(height: 6),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final c in _msgCtrl.values) {
+      c.dispose();
+    }
+    for (final c in _priceCtrl.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  final Map<String, bool> _adsEnabledMap = {}; // enquiryId -> isAds enabled?
 
   Future<void> _openQrScanner() async {
     var status = await Permission.camera.request();
@@ -1024,6 +1147,223 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           itemBuilder: (context, index) {
                             final data = currentItems[index];
 
+                            final type = (data.contextType ?? '').toString().toUpperCase();
+
+                            String productTitle = 'Enquiry';
+                            String rating = '0.0';
+                            String ratingCount = '0';
+                            String priceText = '';
+                            String offerPrice = '';
+                            String image = '';
+
+                            final String customerName = data.customer.name;
+                            final String whatsappNumber = data.customer.whatsappNumber;
+                            final String phone = data.customer.phone;
+                            final String customerImg = data.customer.avatarUrl.toString();
+                            final String timeText = data.createdTime;
+
+                            // ---------- your existing context mapping ----------
+                            if (type == 'PRODUCT_SHOP' || type == 'SERVICE_SHOP') {
+                              final shop = data.shop;
+                              productTitle = (shop?.englishName.toUpperCase() ?? '').isNotEmpty
+                                  ? shop!.englishName.toUpperCase()
+                                  : 'Shop Enquiry';
+                              rating = (shop?.rating ?? 0).toString();
+                              ratingCount = (shop?.ratingCount ?? 0).toString();
+                              offerPrice = '${shop?.category.toUpperCase() ?? ''}';
+                              image = shop?.primaryImageUrl ?? '';
+                            } else if (type == 'PRODUCT_SERVICE' || type == 'SERVICE_SHOP') {
+                              final service = data.service;
+                              productTitle = (service?.name ?? '').isNotEmpty ? service!.name : 'Service Enquiry';
+                              rating = (service?.rating ?? 0).toString();
+                              image = (service?.primaryImageUrl ?? '').toString();
+                              ratingCount = (service?.ratingCount ?? 0).toString();
+
+                              if (service != null && service.startsAt > 0) {
+                                priceText = 'From ₹${service.startsAt}';
+                              } else {
+                                priceText = 'Service';
+                              }
+                            } else if (type == 'PRODUCT') {
+                              productTitle = data.product?.name.toString() ?? '';
+                              priceText = '${data.product?.price ?? ''}';
+                              offerPrice = '₹${data.product?.offerPrice ?? ''}';
+                              image = data.product?.imageUrl ?? '';
+                              rating = '${data.product?.rating ?? ''}';
+                              ratingCount = '${data.product?.ratingCount ?? ''}';
+                            } else if (type == 'SERVICE') {
+                              productTitle = data.service?.name.toString() ?? '';
+                              offerPrice = '₹${data.service?.startsAt ?? ''}';
+                              image = data.service?.primaryImageUrl ?? '';
+                              rating = '${data.service?.rating ?? ''}';
+                              ratingCount = '${data.service?.ratingCount ?? ''}';
+                            }
+
+                            // ---------- flags ----------
+                            final enquirySource = (data.enquirySource ?? '').toString().toUpperCase();
+                            final bool isSmartConnect = enquirySource == 'SMART_CONNECT';
+
+                            final status = (data.status ?? '').toString().toUpperCase();
+                            final bool isClosed = status == 'CLOSED';
+
+                            final String enquiryId = data.id.toString();
+
+                            // isAds = reply-form-open toggle (your existing)
+                            final bool isAds = isSmartConnect ? _isAdsEnabled(enquiryId) : false;
+                            final bool isSending = _isSending(enquiryId);
+
+                            // ✅ SAFE answer parsing (fixes "Map has no getter title")
+                            final Map<String, dynamic>? answerMap =
+                            (data.answer is Map<String, dynamic>) ? (data.answer as Map<String, dynamic>) : null;
+
+                            // ✅ closed + smartconnect + has answer => show read-only answer UI
+                            final bool showAnswerOnly = isSmartConnect && isClosed && answerMap != null;
+
+                            final String answerTitle = (answerMap?['title'] ?? '').toString();
+                            final String answerDescription = (answerMap?['description'] ?? '').toString();
+
+                            final int answerPrice = (() {
+                              final v = answerMap?['price'];
+                              if (v == null) return 0;
+                              if (v is int) return v;
+                              return int.tryParse(v.toString()) ?? 0;
+                            })();
+
+                            final List<String> answerImages = (() {
+                              final v = answerMap?['images'];
+                              if (v is List) return v.map((e) => e.toString()).toList();
+                              return <String>[];
+                            })();
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Column(
+                                children: [
+                                  CommonContainer.inquiryProductCard(
+                                    isSmartConnect: isSmartConnect,
+                                    isAds: isAds,
+
+                                    // ✅ CLOSED read-only answer
+                                    showAnswerOnly: showAnswerOnly,
+                                    answerTitle: answerTitle,
+                                    answerDescription: answerDescription,
+                                    answerPrice: answerPrice,
+                                    answerImages: answerImages,
+
+                                    // ✅ OPEN reply controllers only when NOT closed
+                                    pickedImage: showAnswerOnly ? null : _getPicked(enquiryId),
+                                    messageController: showAnswerOnly ? null : _getMsgCtrl(enquiryId),
+                                    priceController: showAnswerOnly ? null : _getPriceCtrl(enquiryId),
+                                    maxMessageLength: _maxMsgLen,
+                                    isSending: showAnswerOnly ? false : isSending,
+
+                                    onPickImage: showAnswerOnly ? null : () => _showPickOptions(enquiryId),
+                                    onRemoveImage: showAnswerOnly ? null : () => _removeImage(enquiryId),
+
+                                    onSendTap: showAnswerOnly
+                                        ? null
+                                        : () async {
+                                      if (_isSending(enquiryId)) return;
+
+                                      final msgCtrl = _getMsgCtrl(enquiryId);
+                                      final priceCtrl = _getPriceCtrl(enquiryId);
+
+                                      final msg = msgCtrl.text.trim();
+                                      final priceStr = priceCtrl.text.trim();
+
+                                      if (msg.isEmpty) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Please enter message")),
+                                        );
+                                        return;
+                                      }
+
+                                      final price = int.tryParse(priceStr);
+                                      if (price == null || price <= 0) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Please enter valid price")),
+                                        );
+                                        return;
+                                      }
+
+                                      final pickedX = _getPicked(enquiryId);
+                                      final File? pickedFile = pickedX == null ? null : File(pickedX.path);
+
+                                      _setSending(enquiryId, true);
+                                      try {
+                                        await ref.read(homeNotifierProvider.notifier).replyEnquiry(
+                                          shopId: data.shop?.id.toString() ?? '',
+                                          requestId: enquiryId,
+                                          productTitle: productTitle,
+                                          message: msg,
+                                          price: price,
+                                          ownerImageFile: pickedFile,
+                                        );
+
+                                        final st = ref.read(homeNotifierProvider);
+
+                                        if (st.error == null) {
+                                          msgCtrl.clear();
+                                          priceCtrl.clear();
+                                          _removeImage(enquiryId);
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Reply sent successfully")),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(st.error ?? "Failed")),
+                                          );
+                                        }
+                                      } finally {
+                                        _setSending(enquiryId, false);
+                                      }
+                                    },
+
+                                    questionText: '',
+                                    productTitle: productTitle,
+                                    rating: rating,
+                                    ratingCount: ratingCount,
+                                    priceText: offerPrice,
+                                    mrpText: '$priceText',
+                                    phoneImageAsset: image,
+                                    avatarAsset: customerImg,
+                                    customerName: customerName,
+                                    timeText: timeText,
+
+                                    // ✅ OPEN only
+                                    onChatTap: () {
+                                      if (showAnswerOnly) return; // closed => disable
+                                      if (isSmartConnect) {
+                                        _enableAds(enquiryId); // open reply form
+                                        return;
+                                      }
+                                      CallHelper.openWhatsapp(context: context, phone: whatsappNumber);
+                                      ref.read(homeNotifierProvider.notifier).markEnquiry(enquiryId: data.id);
+                                      ref.read(selectedShopProvider.notifier).switchShop('');
+                                    },
+
+                                    onCallTap: () {
+                                      if (showAnswerOnly) return;
+                                      if (isSmartConnect) return;
+                                      CallHelper.openDialer(context: context, rawPhone: phone);
+                                      ref.read(homeNotifierProvider.notifier).markEnquiry(enquiryId: data.id);
+                                      ref.read(selectedShopProvider.notifier).switchShop('');
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      /*ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: currentItems.length,
+                          itemBuilder: (context, index) {
+                            final data = currentItems[index];
+
                             final type = data.contextType.toUpperCase();
 
                             String productTitle = 'Enquiry';
@@ -1088,7 +1428,9 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               ratingCount =
                                   '${data.service?.ratingCount ?? ''}';
                             }
-
+                            final isSmartConnect =
+                                (data.enquirySource ?? '').toUpperCase() ==
+                                'SMART_CONNECT';
                             return Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 15,
@@ -1096,6 +1438,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               child: Column(
                                 children: [
                                   CommonContainer.inquiryProductCard(
+                                    isAds: isSmartConnect,
                                     questionText: '',
                                     productTitle: productTitle,
                                     rating: rating,
@@ -1136,7 +1479,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               ),
                             );
                           },
-                        ),
+                        ),*/
                     ] else ...[
                       // ================== NON-TEXTILES BRANCH (NO FOOD WASTAGE etc.) ==================
                       // (your existing non-textiles UI unchanged)

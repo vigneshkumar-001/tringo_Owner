@@ -18,6 +18,7 @@ import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Model/store
 import 'package:tringo_owner/Presentation/Home/Model/enquiry_analytics_response.dart';
 import 'package:tringo_owner/Presentation/Home/Model/enquiry_response.dart';
 import 'package:tringo_owner/Presentation/Home/Model/mark_enquiry.dart';
+import 'package:tringo_owner/Presentation/Home/Model/reply_response.dart';
 import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
 import 'package:tringo_owner/Presentation/Login/model/app_version_response.dart';
 import 'package:tringo_owner/Presentation/Login/model/login_response.dart';
@@ -1332,15 +1333,15 @@ class ApiDataSource extends BaseApiDataSource {
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e) {
-      AppLogger.log.e(e);
+    } catch (e,st) {
+      AppLogger.log.e('${e},${st}');
       return Left(ServerFailure(e.toString()));
     }
   }
 
   Future<Either<Failure, ShopsResponse>> getAllShops({
     required String shopId,
-    required String filter
+    required String filter,
   }) async {
     try {
       final url = ApiUrl.getAllShopsDetails(shopId: shopId, filter: filter);
@@ -2995,6 +2996,57 @@ dateRange: $start → $end
       }
     } catch (e, st) {
       AppLogger.log.e(" error: $e\n$st");
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, ReplyResponse>> replyEnquiry({
+    required String shopId,
+    required String requestId,
+    required String productTitle,
+    required String message,
+    required List<String> images, // ✅ FIX: List<String>
+    required int price,
+  }) async {
+    try {
+      final url = ApiUrl.replyEnquiry(requestId: requestId);
+      final body = {
+        "shopId": shopId,
+        "productTitle": productTitle,
+        "message": message,
+        "price": price,
+        "images": images,
+      };
+
+      dynamic response = await Request.sendRequest(url, body, 'POST', true);
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        // If status code is success
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(ReplyResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          // ❗ API returned non-success code but has JSON error message
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e) {
+      AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));
     }
   }

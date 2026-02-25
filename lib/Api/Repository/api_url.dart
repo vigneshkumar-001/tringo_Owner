@@ -120,6 +120,10 @@ class ApiUrl {
     return "${base}api/v1/dashboard/enquiries?page=1&limit=20&shopId=$shopId";
   }
 
+  static String replyEnquiry({required String requestId}) {
+    return "${base}api/smart-connect/$requestId/responses";
+  }
+
   static String getAllShopsDetails({required String shopId, required String filter}) {
     return "${base}api/v1/dashboard/shops?shopId=$shopId&filter=$filter";
   }
