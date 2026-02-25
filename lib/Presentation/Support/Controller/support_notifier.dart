@@ -30,7 +30,8 @@ class SupportState {
     this.supportListResponse,
     this.createSupportResponse,
     this.chatMessageResponse,
-    this.sendMessageResponse,   this.refreshKey = 0, // default
+    this.sendMessageResponse,
+    this.refreshKey = 0, // default
   });
 
   factory SupportState.initial() => const SupportState();
@@ -49,7 +50,8 @@ class SupportState {
   }) {
     return SupportState(
       isLoading: isLoading ?? this.isLoading,
-      isCreateTicketLoading: isCreateTicketLoading ?? this.isCreateTicketLoading,
+      isCreateTicketLoading:
+          isCreateTicketLoading ?? this.isCreateTicketLoading,
       isMsgSendingLoading: isMsgSendingLoading ?? this.isMsgSendingLoading,
 
       error: error,
@@ -123,16 +125,19 @@ class SupportNotifier extends Notifier<SupportState> {
 
     String customerImageUrl = '';
 
-    final hasValidImage = ownerImageFile != null &&
+    final hasValidImage =
+        ownerImageFile != null &&
         ownerImageFile.path.isNotEmpty &&
         await ownerImageFile.exists();
 
     if (hasValidImage) {
-      final uploadResult = await api.userProfileUpload(imageFile: ownerImageFile);
+      final uploadResult = await api.userProfileUpload(
+        imageFile: ownerImageFile,
+      );
 
       customerImageUrl = uploadResult.fold(
-            (failure) => '',
-            (success) => success.message.toString(),
+        (failure) => '',
+        (success) => success.message.toString(),
       );
     }
 
@@ -145,12 +150,15 @@ class SupportNotifier extends Notifier<SupportState> {
 
     // ✅ IMPORTANT: capture fold value and return it
     final String? ticketId = result.fold(
-          (failure) {
-        state = state.copyWith(isCreateTicketLoading: false, error: failure.message);
+      (failure) {
+        state = state.copyWith(
+          isCreateTicketLoading: false,
+          error: failure.message,
+        );
         AppSnackBar.error(context, failure.message);
         return null; // return ticketId as null on failure
       },
-          (response) {
+      (response) {
         state = state.copyWith(
           isCreateTicketLoading: false,
           error: null,

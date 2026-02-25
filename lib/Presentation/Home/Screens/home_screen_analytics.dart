@@ -703,6 +703,7 @@ class _AnalyticsItemCard extends ConsumerWidget {
       child: Column(
         children: [
           CommonContainer.inquiryProductCard(
+
             questionText: '',
             productTitle: title,
             rating: rating,

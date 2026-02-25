@@ -1,7 +1,10 @@
 // home_notifier.dart
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Presentation/Home/Model/reply_response.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../Login/controller/login_notifier.dart';
@@ -133,6 +136,7 @@ class HomeState {
   final String? error;
 
   final EnquiryResponse? enquiryResponse;
+  final ReplyResponse? replyResponse;
   final ShopsResponse? shopsResponse;
   final MarkEnquiry? markEnquiry;
 
@@ -149,6 +153,7 @@ class HomeState {
     this.isLoading = false,
     this.error,
     this.enquiryResponse,
+    this.replyResponse,
     this.shopsResponse,
     this.markEnquiry,
     this.enquiryAnalyticsResponse,
@@ -164,6 +169,7 @@ class HomeState {
     bool? isLoading,
     String? error,
     EnquiryResponse? enquiryResponse,
+    ReplyResponse? replyResponse,
     ShopsResponse? shopsResponse,
     MarkEnquiry? markEnquiry,
     EnquiryAnalyticsResponse? enquiryAnalyticsResponse,
@@ -176,6 +182,7 @@ class HomeState {
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error, // ✅ FIX
       enquiryResponse: enquiryResponse ?? this.enquiryResponse,
+      replyResponse: replyResponse ?? this.replyResponse,
       shopsResponse: shopsResponse ?? this.shopsResponse,
       markEnquiry: markEnquiry ?? this.markEnquiry,
       enquiryAnalyticsResponse:
@@ -223,6 +230,61 @@ class HomeNotifier extends Notifier<HomeState> {
         error: null,
         enquiryResponse: response,
       ),
+    );
+  }
+  Future<void> replyEnquiry({
+    required String shopId,
+    required String requestId,      // ✅ must pass real requestId
+    required String productTitle,   // ✅ must pass real title
+    required String message,        // ✅ must pass real message
+    required int price,             // ✅ must pass real price
+    File? ownerImageFile,
+  }) async {
+    state = state.copyWith(isLoading: false, error: null);
+
+    String uploadedUrl = '';
+
+    final hasValidImage =
+        ownerImageFile != null &&
+            ownerImageFile.path.isNotEmpty &&
+            await ownerImageFile.exists();
+
+    if (hasValidImage) {
+      final uploadResult = await api.userProfileUpload(imageFile: ownerImageFile);
+
+      uploadedUrl = uploadResult.fold(
+            (failure) => '',
+            (success) => (success.message ?? '').toString(), // ✅ your API returns URL in message
+      );
+    }
+
+    // ✅ images list (send empty list if no upload)
+    final imagesList = uploadedUrl.isNotEmpty ? [uploadedUrl] : <String>[];
+
+    final result = await api.replyEnquiry(
+      shopId: shopId,
+      requestId: requestId,           // ✅ FIX: pass real values
+      productTitle: productTitle,
+      message: message,
+      images: imagesList,             // ✅ FIX: List<String>
+      price: price,
+    );
+
+    result.fold(
+          (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          replyResponse: null,
+        );
+      },
+          (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          replyResponse: response,
+        );
+      },
     );
   }
 

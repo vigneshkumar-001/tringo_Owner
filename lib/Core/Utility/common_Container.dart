@@ -9,6 +9,8 @@ import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 
 import 'app_textstyles.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 enum DatePickMode { none, single, range }
 
@@ -3319,11 +3321,825 @@ class CommonContainer {
       ),
     );
   }
-
   static Widget inquiryProductCard({
     required String questionText,
     required String productTitle,
     required String rating,
+    bool isSmartConnect = false,
+    bool isAds = false,
+    required String ratingCount,
+    required String priceText,
+    required String mrpText,
+    required String phoneImageAsset,
+    required String avatarAsset,
+    required String customerName,
+    required String timeText,
+
+    // ✅ CLOSED Answer UI
+    bool showAnswerOnly = false,
+    String? answerTitle,
+    String? answerDescription,
+    int? answerPrice,
+    List<String>? answerImages,
+
+    // ✅ Reply form...
+    XFile? pickedImage,
+    TextEditingController? messageController,
+    TextEditingController? priceController,
+    int maxMessageLength = 120,
+    bool isSending = false,
+    VoidCallback? onPickImage,
+    VoidCallback? onRemoveImage,
+    VoidCallback? onSendTap,
+
+    // ✅ Top actions
+    VoidCallback? onChatTap,
+    VoidCallback? onCallTap,
+
+    Color floralWhite = const Color(0xFFF9FAF6),
+  }) {
+    final msg = messageController?.text ?? '';
+    final lettersLeft = maxMessageLength - msg.length;
+
+    final List<String> ansImgs = answerImages ?? const <String>[];
+    final bool hasAnsImage = ansImgs.isNotEmpty && ansImgs.first.trim().isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: BoxDecoration(
+        color: floralWhite,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (questionText.isNotEmpty) ...[
+            Text(
+              questionText,
+              style: AppTextStyles.mulish(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // =========================================================
+          // NORMAL CARD UI (isAds == false)
+          // =========================================================
+          if (isAds == false) ...[
+            _productInfoTop(
+              productTitle: productTitle,
+              rating: rating,
+              ratingCount: ratingCount,
+              priceText: priceText,
+              mrpText: mrpText,
+              phoneImageAsset: phoneImageAsset,
+            ),
+            const SizedBox(height: 14),
+
+            _bottomRow(
+              avatarAsset: avatarAsset,
+              customerName: customerName,
+              timeText: timeText,
+              isSmartConnect: isSmartConnect,
+              showActions: !showAnswerOnly,
+              onChatTap: onChatTap,
+              onCallTap: onCallTap,
+            ),
+
+            // ✅ CLOSED smartconnect: show answer here also (read-only reply UI)
+            if (showAnswerOnly) ...[
+              const SizedBox(height: 18),
+              _readOnlyReplyUI(
+                title: answerTitle ?? '',
+                description: answerDescription ?? '',
+                price: answerPrice ?? 0,
+                showImage: hasAnsImage,
+                imageUrl: hasAnsImage ? ansImgs.first : '',
+              ),
+            ],
+          ] else ...[
+            // =========================================================
+            // ADS / REPLY UI (isAds == true)
+            // =========================================================
+            _adsTopRow(customerName: customerName, timeText: timeText),
+            const SizedBox(height: 25),
+
+            _productInfoTop(
+              productTitle: productTitle,
+              rating: rating,
+              ratingCount: ratingCount,
+              priceText: priceText,
+              mrpText: mrpText,
+              phoneImageAsset: phoneImageAsset,
+              isBigPrice: true,
+            ),
+
+            const SizedBox(height: 25),
+
+            // ✅ CLOSED => read-only reply UI (NO send, NO edit)
+            if (showAnswerOnly) ...[
+              _readOnlyReplyUI(
+                title: answerTitle ?? '',
+                description: answerDescription ?? '',
+                price: answerPrice ?? 0,
+                showImage: hasAnsImage,
+                imageUrl: hasAnsImage ? ansImgs.first : '',
+              ),
+            ] else ...[
+              // ✅ OPEN => your editable reply form + send button
+              _editableReplyFormUI(
+                pickedImage: pickedImage,
+                messageController: messageController,
+                priceController: priceController,
+                maxMessageLength: maxMessageLength,
+                lettersLeft: lettersLeft,
+                isSending: isSending,
+                onPickImage: onPickImage,
+                onRemoveImage: onRemoveImage,
+                onSendTap: onSendTap,
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+  static Widget _productInfoTop({
+    required String productTitle,
+    required String rating,
+    required String ratingCount,
+    required String priceText,
+    required String mrpText,
+    required String phoneImageAsset,
+    bool isBigPrice = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            const Positioned.fill(child: ColoredBox(color: Color(0xFFF8FBF8))),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      const Color(0xFF000000).withOpacity(0.02),
+                      const Color(0xFF000000).withOpacity(0.00),
+                      const Color(0xFF000000).withOpacity(0.00),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          productTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.mulish(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF31CC64),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '$rating ',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 12,
+                                      color: AppColor.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Icon(Icons.star, size: 14, color: Colors.white),
+                                  Text(
+                                    ratingCount,
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 12,
+                                      color: AppColor.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Text(
+                              priceText,
+                              style: AppTextStyles.mulish(
+                                fontSize: isBigPrice ? 16 : 14,
+                                color: AppColor.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              mrpText,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: const Color(0xFF888888),
+                                decoration: TextDecoration.lineThrough,
+                                fontFamily: AppTextStyles.mulish().fontFamily,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: CachedNetworkImage(
+                    imageUrl: phoneImageAsset,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.grey.shade200,
+                    ),
+                    errorWidget: (_, __, ___) => const Icon(
+                      Icons.broken_image,
+                      size: 40,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  static Widget _bottomRow({
+    required String avatarAsset,
+    required String customerName,
+    required String timeText,
+    required bool isSmartConnect,
+    required bool showActions,
+    VoidCallback? onChatTap,
+    VoidCallback? onCallTap,
+  }) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundImage: (avatarAsset.isNotEmpty)
+              ? CachedNetworkImageProvider(avatarAsset)
+              : AssetImage(AppImages.profile) as ImageProvider,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DottedBorder(
+            color: Colors.grey.shade300,
+            strokeWidth: 1.2,
+            dashPattern: const [4, 3],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(30),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    customerName,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      color: AppColor.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Text(
+                  timeText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: AppColor.darkGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        if (showActions)
+          Row(
+            children: [
+              if (!isSmartConnect) ...[
+                GestureDetector(
+                  onTap: onCallTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppColor.skyBlue,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Image.asset(
+                      AppImages.callImage,
+                      color: AppColor.white,
+                      height: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 5),
+              ],
+              GestureDetector(
+                onTap: onChatTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: isSmartConnect ? AppColor.skyBlue : AppColor.green,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Image.asset(
+                    isSmartConnect ? AppImages.messageImage : AppImages.whatsappImage,
+                    color: AppColor.white,
+                    height: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+  static Widget _adsTopRow({
+    required String customerName,
+    required String timeText,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: DottedBorder(
+            color: Colors.grey.shade300,
+            strokeWidth: 1.2,
+            dashPattern: const [4, 3],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(30),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Icon(Icons.location_on_rounded, color: AppColor.darkGrey, size: 13),
+                Text(
+                  '100 M',
+                  style: AppTextStyles.mulish(
+                    color: AppColor.darkGrey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Text(
+                    customerName,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      color: AppColor.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Spacer(),
+        Text(
+          timeText,
+          style: AppTextStyles.mulish(fontSize: 12, color: AppColor.gray84),
+        ),
+      ],
+    );
+  }
+  static Widget _readOnlyReplyUI({
+    required String title,
+    required String description,
+    required int price,
+    required bool showImage,
+    required String imageUrl,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Your Reply",
+                style: AppTextStyles.mulish(
+                  color: AppColor.darkGrey,
+                  fontSize: 12,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "CLOSED",
+                  style: AppTextStyles.mulish(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.skyBlue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          if (showImage) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(height: 150, color: Colors.grey.shade200),
+                errorWidget: (_, __, ___) => Container(
+                  height: 150,
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.broken_image, color: Colors.grey),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          if (title.trim().isNotEmpty)
+            Text(
+              title,
+              style: AppTextStyles.mulish(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColor.black,
+              ),
+            ),
+
+          if (description.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Text(
+                description,
+                style: AppTextStyles.mulish(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColor.darkGrey,
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 14),
+
+          // price block like your UI
+          Container(
+            decoration: BoxDecoration(
+              color: AppColor.leftArrow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  "My Price",
+                  style: AppTextStyles.mulish(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  width: 1.5,
+                  height: 23,
+                  decoration: BoxDecoration(
+                    color: AppColor.borderLightGrey,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "₹$price",
+                  style: AppTextStyles.mulish(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+          Text(
+            "Sent to customer (read-only)",
+            style: AppTextStyles.mulish(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColor.gray84,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  static Widget _editableReplyFormUI({
+    required XFile? pickedImage,
+    required TextEditingController? messageController,
+    required TextEditingController? priceController,
+    required int maxMessageLength,
+    required int lettersLeft,
+    required bool isSending,
+    required VoidCallback? onPickImage,
+    required VoidCallback? onRemoveImage,
+    required VoidCallback? onSendTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Reply to Enquiry",
+                style: AppTextStyles.mulish(
+                  color: AppColor.darkGrey,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                "Report",
+                style: AppTextStyles.mulish(
+                  color: AppColor.red1,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          GestureDetector(
+            onTap: onPickImage,
+            child: Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 150,
+                      child: pickedImage == null
+                          ? Container(
+                        color: Colors.grey.shade200,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_a_photo_outlined, size: 28, color: Colors.grey.shade700),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Tap to choose image",
+                                style: AppTextStyles.mulish(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.darkGrey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                          : Image.file(File(pickedImage.path), fit: BoxFit.cover),
+                    ),
+                  ),
+                  if (pickedImage != null)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onRemoveImage,
+                        child: Container(
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          padding: const EdgeInsets.all(5),
+                          child: Image.asset(AppImages.closeImage, height: 12, color: AppColor.black),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          TextField(
+            controller: messageController,
+            maxLength: maxMessageLength,
+            decoration: InputDecoration(
+              hintText: "Type message to customer...",
+              counterText: "",
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+            ),
+            style: AppTextStyles.mulish(fontSize: 14, fontWeight: FontWeight.w600),
+            minLines: 2,
+            maxLines: 4,
+          ),
+
+          const SizedBox(height: 6),
+          Text(
+            "$lettersLeft Letters left",
+            style: AppTextStyles.mulish(fontSize: 12, color: AppColor.darkGrey),
+          ),
+
+          const SizedBox(height: 14),
+
+          Container(
+            decoration: BoxDecoration(
+              color: AppColor.leftArrow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Text("My Price", style: AppTextStyles.mulish(fontSize: 14, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 10),
+                Container(
+                  width: 1.5,
+                  height: 23,
+                  decoration: BoxDecoration(
+                    color: AppColor.borderLightGrey,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: "Enter price",
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: AppTextStyles.mulish(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          // ✅ Send button only in OPEN
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: isSending ? null : onSendTap,
+              child: Opacity(
+                opacity: isSending ? 0.7 : 1,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColor.skyBlue,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Center(
+                    child: isSending
+                        ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          "Sending...",
+                          style: AppTextStyles.mulish(
+                            color: AppColor.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    )
+                        : Text(
+                      "Send",
+                      style: AppTextStyles.mulish(
+                        color: AppColor.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /*
+  static Widget inquiryProductCard({
+    required String questionText,
+    required String productTitle,
+    required String rating,
+    // ✅ NEW
+    bool isSmartConnect = false,
     bool isAds = false,
     required String ratingCount,
     required String priceText,
@@ -3597,7 +4413,8 @@ class CommonContainer {
                 ),
               ],
             ),
-          ] else ...[
+          ]
+          else ...[
             Row(
               children: [
                 Expanded(
@@ -3651,14 +4468,14 @@ class CommonContainer {
                 ),
               ],
             ),
-            const SizedBox(height: 25),
-            Text(
-              questionText,
-              style: AppTextStyles.mulish(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            //
+            // Text(
+            //   questionText,
+            //   style: AppTextStyles.mulish(
+            //     fontWeight: FontWeight.bold,
+            //     fontSize: 16,
+            //   ),
+            // ),
             const SizedBox(height: 25),
             Container(
               decoration: BoxDecoration(
@@ -3785,7 +4602,7 @@ class CommonContainer {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(15),
                           child: Image.asset(
-                            phoneImageAsset,
+                            AppImages.imageContainer1,
                             width: 100,
                             height: 110,
                             fit: BoxFit.cover,
@@ -4051,7 +4868,7 @@ class CommonContainer {
         ],
       ),
     );
-  }
+  }*/
 
   static Widget offerTile(String title, String count) {
     return Container(
