@@ -226,6 +226,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
 
     // ✅ shops: use dynamic to avoid type errors
     final shopsRes = homeState.shopsResponse;
+
     final List<dynamic> shops =
         (shopsRes?.data.items as List?)?.toList() ?? <dynamic>[];
     final dynamic mainShop = shops.isNotEmpty ? shops.first : null;
@@ -233,7 +234,8 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final String mainShopId = (mainShop?.id ?? '').toString();
     final String mainShopName = (mainShop?.englishName ?? '').toString();
     final String mainShopCategory = (mainShop?.category ?? '').toString();
-
+    final loginContext = shopsRes?.data.loginContext;
+    final bool isOwner = loginContext == "OWNER";
     // ✅ offers
     final offerState = ref.watch(offerNotifierProvider);
     final offerData = offerState.offerModel?.data;
@@ -463,10 +465,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       scrollDirection: Axis.horizontal,
-                      itemCount: shops.length + 1,
+                      // itemCount: shops.length + 1,
+                      itemCount: isOwner ? shops.length + 1 : shops.length,
                       physics: const BouncingScrollPhysics(),
                       itemBuilder: (context, index) {
-                        if (index == shops.length) {
+                        // if (index == shops.length) {
+                        if (isOwner && index == shops.length) {
                           return Row(
                             children: [
                               CommonContainer.smallShopContainer(

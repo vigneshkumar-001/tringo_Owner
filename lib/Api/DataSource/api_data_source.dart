@@ -3045,8 +3045,8 @@ dateRange: $start → $end
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e) {
-      AppLogger.log.e(e);
+    } catch (e,st) {
+      AppLogger.log.e('$e,$st');
       return Left(ServerFailure(e.toString()));
     }
   }

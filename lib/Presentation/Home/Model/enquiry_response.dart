@@ -208,8 +208,8 @@ class Shop {
       category: json['category']?.toString() ?? '',
       subCategory: json['subCategory']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
-      rating: json['rating'] ?? 0,
-      ratingCount: json['ratingCount'] ?? 0,
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
       primaryImageUrl: json['primaryImageUrl']?.toString(),
     );
   }
@@ -219,13 +219,13 @@ class Product {
   final String id;
   final String name;
   final String? subtitle;
-  final int? price;
-  final int? mrp;
-  final int? offerPrice;
+  final double? price;
+  final double? mrp;
+  final double? offerPrice;
   final String? offerLabel;
   final String? offerValue;
   final String? imageUrl;
-  final int rating;
+  final double rating;
   final int ratingCount;
 
   const Product({
@@ -247,14 +247,14 @@ class Product {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       subtitle: json['subtitle']?.toString(),
-      price: json['price'],
-      mrp: json['mrp'],
-      offerPrice: json['offerPrice'],
+      price: (json['price'] as num?)?.toDouble(),
+      mrp: (json['mrp'] as num?)?.toDouble(),
+      offerPrice: (json['offerPrice'] as num?)?.toDouble(),
       offerLabel: json['offerLabel']?.toString(),
       offerValue: json['offerValue']?.toString(),
       imageUrl: json['imageUrl']?.toString(),
-      rating: json['rating'] ?? 0,
-      ratingCount: json['ratingCount'] ?? 0,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -281,18 +281,17 @@ class ServiceModel {
     required this.rating,
     required this.ratingCount,
   });
-
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     return ServiceModel(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      startsAt: json['startsAt'] ?? 0,
-      durationMinutes: json['durationMinutes'] ?? 0,
+      startsAt: (json['startsAt'] as num?)?.toInt() ?? 0,
+      durationMinutes: (json['durationMinutes'] as num?)?.toInt() ?? 0,
       offerLabel: json['offerLabel']?.toString(),
       offerValue: json['offerValue']?.toString(),
       primaryImageUrl: json['primaryImageUrl']?.toString(),
-      rating: json['rating'] ?? 0,
-      ratingCount: json['ratingCount'] ?? 0,
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

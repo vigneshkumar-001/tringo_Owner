@@ -25,6 +25,7 @@ import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../AddProduct/Controller/product_notifier.dart';
 import '../../AddProduct/Screens/product_category_screens.dart';
+import '../../Home/Controller/home_notifier.dart';
 import '../../Home/Controller/shopContext_provider.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
@@ -893,6 +894,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   }
 
   Widget _buildShopHeaderCard(AboutMeState aboutState) {
+    final homeState = ref.watch(homeNotifierProvider);
+    final shopsRes = homeState.shopsResponse;
+    final loginContext = shopsRes?.data.loginContext;
+    final bool isOwner = loginContext == "OWNER";
     final selectedShop = _getSelectedShop(aboutState);
     final name = _getShopTitle(selectedShop);
     final address = _getShopAddress(selectedShop);
@@ -972,32 +977,65 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                CommonContainer.editShopContainer(
-                  text: 'Add Branch',
-                  onTap: () {
-                    final bool isService =
-                        selectedShop?.shopKind.toString().toUpperCase() ==
-                        'SERVICE';
-                    if (_isFreemium == false) {
-                      context.push(
-                        AppRoutes.shopCategoryInfoPath,
-                        extra: {
-                          'isService': isService,
-                          'isIndividual': '',
-                          'initialShopNameEnglish':
-                              selectedShop?.shopEnglishName,
-                          'initialShopNameTamil': selectedShop?.shopTamilName,
-                          'isEditMode': true,
-                        },
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => SubscriptionScreen()),
-                      );
-                    }
-                  },
-                ),
+                if (isOwner) ...[
+                  CommonContainer.editShopContainer(
+                    text: 'Add Branch',
+                    onTap: () {
+                      final bool isService =
+                          selectedShop?.shopKind.toString().toUpperCase() == 'SERVICE';
+
+                      if (_isFreemium == false) {
+                        context.push(
+                          AppRoutes.shopCategoryInfoPath,
+                          extra: {
+                            'isService': isService,
+                            'isIndividual': '',
+                            'initialShopNameEnglish':
+                            selectedShop?.shopEnglishName,
+                            'initialShopNameTamil':
+                            selectedShop?.shopTamilName,
+                            'isEditMode': true,
+                          },
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SubscriptionScreen(),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                ],
+
+                // CommonContainer.editShopContainer(
+                //   text: 'Add Branch',
+                //   onTap: () {
+                //     final bool isService =
+                //         selectedShop?.shopKind.toString().toUpperCase() ==
+                //         'SERVICE';
+                //     if (_isFreemium == false) {
+                //       context.push(
+                //         AppRoutes.shopCategoryInfoPath,
+                //         extra: {
+                //           'isService': isService,
+                //           'isIndividual': '',
+                //           'initialShopNameEnglish':
+                //               selectedShop?.shopEnglishName,
+                //           'initialShopNameTamil': selectedShop?.shopTamilName,
+                //           'isEditMode': true,
+                //         },
+                //       );
+                //     } else {
+                //       Navigator.push(
+                //         context,
+                //         MaterialPageRoute(builder: (_) => SubscriptionScreen()),
+                //       );
+                //     }
+                //   },
+                // ),
                 const SizedBox(width: 10),
                 CommonContainer.editShopContainer(
                   text: 'Edit Shop Details',

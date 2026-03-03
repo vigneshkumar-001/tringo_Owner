@@ -386,6 +386,8 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
 
     // ✅ shops
     final shopsRes = homeState.shopsResponse;
+    final loginContext = shopsRes?.data.loginContext;
+    final bool isOwner = loginContext == "OWNER";
     final List<dynamic> shops =
         (shopsRes?.data.items as List?)?.toList() ?? <dynamic>[];
     final dynamic mainShop = shops.isNotEmpty ? shops.first : null;
@@ -454,10 +456,12 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     scrollDirection: Axis.horizontal,
-                    itemCount: shops.length + 1,
+                    // itemCount: shops.length + 1,
+                    itemCount: isOwner ? shops.length + 1 : shops.length,
                     physics: const BouncingScrollPhysics(),
                     itemBuilder: (context, index) {
-                      if (index == shops.length) {
+                      // if (index == shops.length) {
+                      if (isOwner && index == shops.length) {
                         return Row(
                           children: [
                             CommonContainer.smallShopContainer(

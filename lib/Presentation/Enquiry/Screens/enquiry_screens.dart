@@ -51,7 +51,37 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
   static const int _maxMsgLen = 500;
 
   final ImagePicker _picker = ImagePicker();
+// 🔥 Store images per enquiryId
+  final Map<String, List<XFile>> _pickedImagesMap = {};
 
+  List<XFile> _getPickedImages(String id) {
+    return _pickedImagesMap[id] ?? [];
+  }
+
+  void _addImage(String id, XFile image) {
+    final list = _pickedImagesMap[id] ?? [];
+    if (list.length >= 3) return; // max 3
+
+    list.add(image);
+    _pickedImagesMap[id] = list;
+
+    setState(() {});
+  }
+
+  void _removeImage(String id, int index) {
+    final list = _pickedImagesMap[id];
+    if (list == null) return;
+
+    if (index >= 0 && index < list.length) {
+      list.removeAt(index);
+      setState(() {});
+    }
+  }
+
+  void _clearImages(String id) {
+    _pickedImagesMap.remove(id);
+    setState(() {});
+  }
   // per-enquiry states
   final Map<String, bool> _adsOpenMap = {}; // enquiryId -> reply form open?
   final Map<String, bool> _sendingMap = {}; // enquiryId -> is sending?
@@ -92,11 +122,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
     });
   }
 
-  void _removeImage(String enquiryId) {
-    setState(() {
-      _pickedMap.remove(enquiryId);
-    });
-  }
+
 
   Future<void> _showPickOptions(String enquiryId) async {
     // Bottom sheet: Camera / Gallery
@@ -377,7 +403,8 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
 
     final enquiry = homeState.enquiryResponse;
     final shopsRes = homeState.shopsResponse;
-
+    final loginContext = shopsRes?.data.loginContext;
+    final bool isOwner = loginContext == "OWNER";
     final List<Shop> shops = shopsRes?.data.items ?? [];
     final bool hasShops = shops.isNotEmpty;
     final bool hasEnquiries =
@@ -541,10 +568,12 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
-                          itemCount: shops.length + 1,
+                          // itemCount: shops.length + 1,
+                          itemCount: isOwner ? shops.length + 1 : shops.length,
                           physics: const BouncingScrollPhysics(),
                           itemBuilder: (context, index) {
-                            if (index == shops.length) {
+                            // if (index == shops.length) {
+                            if (isOwner && index == shops.length) {
                               return Row(
                                 children: [
                                   CommonContainer.smallShopContainer(
@@ -874,6 +903,243 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                         itemBuilder: (context, index) {
                           final data = currentItems[index];
 
+                          final type = (data.contextType ?? '').toString().toUpperCase();
+
+                          String productTitle = 'Enquiry';
+                          String rating = '0.0';
+                          String ratingCount = '0';
+                          String priceText = '';
+                          String offerPrice = '';
+                          String image = '';
+
+                          final String customerName = data.customer.name;
+                          final String whatsappNumber = data.customer.whatsappNumber;
+                          final String phone = data.customer.phone;
+                          final String customerImg = data.customer.avatarUrl.toString();
+                          final String timeText = data.createdTime;
+
+                          // ================= CONTEXT MAPPING =================
+
+                          if (type == 'PRODUCT_SHOP' || type == 'SERVICE_SHOP') {
+                            final shop = data.shop;
+                            productTitle = (shop?.englishName.toUpperCase() ?? '').isNotEmpty
+                                ? shop!.englishName.toUpperCase()
+                                : 'Shop Enquiry';
+                            rating = (shop?.rating ?? 0).toString();
+                            ratingCount = (shop?.ratingCount ?? 0).toString();
+                            offerPrice = '${shop?.category.toUpperCase() ?? ''}';
+                            image = shop?.primaryImageUrl ?? '';
+                          } else if (type == 'PRODUCT') {
+                            productTitle = data.product?.name.toString() ?? '';
+                            priceText = '${data.product?.price ?? ''}';
+                            offerPrice = '₹${data.product?.offerPrice ?? ''}';
+                            image = data.product?.imageUrl ?? '';
+                            rating = '${data.product?.rating ?? ''}';
+                            ratingCount = '${data.product?.ratingCount ?? ''}';
+                          } else if (type == 'SERVICE') {
+                            productTitle = data.service?.name.toString() ?? '';
+                            offerPrice = '₹${data.service?.startsAt ?? ''}';
+                            image = data.service?.primaryImageUrl ?? '';
+                            rating = '${data.service?.rating ?? ''}';
+                            ratingCount = '${data.service?.ratingCount ?? ''}';
+                          }
+
+                          // ================= FLAGS =================
+
+                          final enquirySource =
+                          (data.enquirySource ?? '').toString().toUpperCase();
+                          final bool isSmartConnect = enquirySource == 'SMART_CONNECT';
+
+                          final status = (data.status ?? '').toString().toUpperCase();
+                          final bool isClosed = status == 'CLOSED';
+
+                          final String enquiryId = data.id.toString();
+
+                          final bool isAds =
+                          isSmartConnect ? _isAdsEnabled(enquiryId) : false;
+                          final bool isSending = _isSending(enquiryId);
+
+                          // ================= ANSWER SAFE PARSE =================
+
+                          final Map<String, dynamic>? answerMap =
+                          (data.answer is Map<String, dynamic>)
+                              ? (data.answer as Map<String, dynamic>)
+                              : null;
+
+                          final bool showAnswerOnly =
+                              isSmartConnect && isClosed && answerMap != null;
+
+                          final String answerTitle =
+                          (answerMap?['title'] ?? '').toString();
+
+                          final String answerDescription =
+                          (answerMap?['description'] ?? '').toString();
+
+                          final int answerPrice = (() {
+                            final v = answerMap?['price'];
+                            if (v == null) return 0;
+                            if (v is int) return v;
+                            return int.tryParse(v.toString()) ?? 0;
+                          })();
+
+                          final List<String> answerImages = (() {
+                            final v = answerMap?['images'];
+                            if (v is List) {
+                              return v.map((e) => e.toString()).toList();
+                            }
+                            return <String>[];
+                          })();
+
+                          // ================= PICKED IMAGES =================
+
+                          final List<XFile> pickedImages =
+                          showAnswerOnly ? [] : _getPickedImages(enquiryId);
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Column(
+                              children: [
+                                CommonContainer.inquiryProductCard(
+                                  isSmartConnect: isSmartConnect,
+                                  isAds: isAds,
+
+                                  showAnswerOnly: showAnswerOnly,
+                                  answerTitle: answerTitle,
+                                  answerDescription: answerDescription,
+                                  answerPrice: answerPrice,
+                                  answerImages: answerImages,
+
+                                  // 🔥 UPDATED MULTI IMAGE
+                                  pickedImages: pickedImages,
+                                  messageController:
+                                  showAnswerOnly ? null : _getMsgCtrl(enquiryId),
+                                  priceController:
+                                  showAnswerOnly ? null : _getPriceCtrl(enquiryId),
+                                  maxMessageLength: _maxMsgLen,
+                                  isSending: showAnswerOnly ? false : isSending,
+
+                                  onPickImage: showAnswerOnly
+                                      ? null
+                                      : () => _showPickOptions(enquiryId),
+
+                                  onRemoveImage: showAnswerOnly
+                                      ? null
+                                      : (imgIndex) =>
+                                      _removeImage(enquiryId, imgIndex),
+
+                                  onSendTap: showAnswerOnly
+                                      ? null
+                                      : () async {
+                                    if (_isSending(enquiryId)) return;
+
+                                    final msgCtrl =
+                                    _getMsgCtrl(enquiryId);
+                                    final priceCtrl =
+                                    _getPriceCtrl(enquiryId);
+
+                                    final msg = msgCtrl.text.trim();
+                                    final priceStr =
+                                    priceCtrl.text.trim();
+
+                                    if (msg.isEmpty) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                            Text("Please enter message")),
+                                      );
+                                      return;
+                                    }
+
+                                    final price =
+                                    int.tryParse(priceStr);
+
+                                    if (price == null ||
+                                        price <= 0) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                            Text("Please enter valid price")),
+                                      );
+                                      return;
+                                    }
+
+                                    final List<XFile> picked =
+                                    _getPickedImages(enquiryId);
+
+                                    final List<File> files =
+                                    picked
+                                        .map((e) => File(e.path))
+                                        .toList();
+
+                                    _setSending(enquiryId, true);
+
+                                    try {
+                                      await ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .replyEnquiry(
+                                        shopId:
+                                        data.shop?.id.toString() ?? '',
+                                        requestId: enquiryId,
+                                        productTitle: productTitle,
+                                        message: msg,
+                                        price: price,
+                                        ownerImageFiles:
+                                        files, // 🔥 MULTI FILES
+                                      );
+
+                                      final st =
+                                      ref.read(homeNotifierProvider);
+
+                                      if (st.error == null) {
+                                        msgCtrl.clear();
+                                        priceCtrl.clear();
+                                        _clearImages(enquiryId);
+
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  "Reply sent successfully")),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  st.error ?? "Failed")),
+                                        );
+                                      }
+                                    } finally {
+                                      _setSending(enquiryId, false);
+                                    }
+                                  },
+
+                                  questionText: '',
+                                  productTitle: productTitle,
+                                  rating: rating,
+                                  ratingCount: ratingCount,
+                                  priceText: offerPrice,
+                                  mrpText: '$priceText',
+                                  phoneImageAsset: image,
+                                  avatarAsset: customerImg,
+                                  customerName: customerName,
+                                  timeText: timeText,
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          );
+                        },
+                      )
+                    /*  ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: currentItems.length,
+                        itemBuilder: (context, index) {
+                          final data = currentItems[index];
+
                           // ✅ SAFE type
                           final type = (data.contextType ?? '')
                               .toString()
@@ -1182,7 +1448,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                             ),
                           );
                         },
-                      ),
+                      ),*/
                   ],
                 ),
               ),
