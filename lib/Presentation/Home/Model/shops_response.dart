@@ -14,6 +14,7 @@ class ShopsResponse {
 
 class ShopsData {
   final bool isNewOwner;
+  final String loginContext;
   final List<Shop> items;
   final Subscription subscription;
   final bool canCreateMoreShops;
@@ -24,6 +25,7 @@ class ShopsData {
 
   const ShopsData({
     required this.isNewOwner,
+    required this. loginContext ,
     required this.items,
     required this.subscription,
     required this.canCreateMoreShops,
@@ -34,6 +36,7 @@ class ShopsData {
   factory ShopsData.fromJson(Map<String, dynamic> json) {
     return ShopsData(
       isNewOwner: json['isNewOwner'] == true,
+      loginContext: (json['loginContext'] ?? '').toString(),
       items: (json['items'] as List? ?? const [])
           .map((e) => Shop.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),

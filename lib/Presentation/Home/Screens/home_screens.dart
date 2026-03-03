@@ -69,8 +69,9 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   // ✅ NEW: chart filter state + loading state (only for chart reload)
   ChartFilter _selectedChartFilter = ChartFilter.day;
   bool _chartLoading = false;
-
-  final Map<String, bool> _sending = {}; // enquiryId -> isSending
+  final Map<String, bool> _adsEnabled = {};
+  final Map<String, bool> _sending = {};
+  final Map<String, List<XFile>> _pickedImagesMap = {};
 
   bool _isSending(String id) => _sending[id] ?? false;
 
@@ -78,13 +79,17 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     setState(() => _sending[id] = val);
   }
 
+  bool _isAdsEnabled(String id) => _adsEnabled[id] ?? false;
+
+  void _enableAds(String id) {
+    setState(() => _adsEnabled[id] = true);
+  }
+
   final ImagePicker _picker = ImagePicker();
 
   // enquiryId -> isAds enabled
-  final Map<String, bool> _adsEnabled = {};
 
   // enquiryId -> picked image
-  final Map<String, XFile?> _pickedImage = {};
 
   // enquiryId -> controllers
   final Map<String, TextEditingController> _msgCtrl = {};
@@ -98,16 +103,35 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   TextEditingController _getPriceCtrl(String id) =>
       _priceCtrl.putIfAbsent(id, () => TextEditingController());
 
-  bool _isAdsEnabled(String id) => _adsEnabled[id] ?? false;
+  // 🔥 Store images per enquiryId
 
-  void _enableAds(String id) {
-    setState(() => _adsEnabled[id] = true);
+  List<XFile> _getPickedImages(String id) {
+    return _pickedImagesMap[id] ?? [];
   }
 
-  XFile? _getPicked(String id) => _pickedImage[id];
+  void _addImage(String id, XFile image) {
+    final list = _pickedImagesMap[id] ?? [];
+    if (list.length >= 3) return; // max 3
 
-  void _setPicked(String id, XFile? file) {
-    setState(() => _pickedImage[id] = file);
+    list.add(image);
+    _pickedImagesMap[id] = list;
+
+    setState(() {});
+  }
+
+  void _removeImage(String id, int index) {
+    final list = _pickedImagesMap[id];
+    if (list == null) return;
+
+    if (index >= 0 && index < list.length) {
+      list.removeAt(index);
+      setState(() {});
+    }
+  }
+
+  void _clearImages(String id) {
+    _pickedImagesMap.remove(id);
+    setState(() {});
   }
 
   Future<void> _pickFromCamera(String id) async {
@@ -115,8 +139,10 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       source: ImageSource.camera,
       imageQuality: 85,
     );
-    if (!mounted) return;
-    _setPicked(id, x);
+
+    if (!mounted || x == null) return;
+
+    _addImage(id, x); // ✅ new
   }
 
   Future<void> _pickFromGallery(String id) async {
@@ -124,11 +150,11 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       source: ImageSource.gallery,
       imageQuality: 85,
     );
-    if (!mounted) return;
-    _setPicked(id, x);
-  }
 
-  void _removeImage(String id) => _setPicked(id, null);
+    if (!mounted || x == null) return;
+
+    _addImage(id, x); // ✅ new
+  }
 
   Future<void> _showPickOptions(String id) async {
     showModalBottomSheet(
@@ -275,6 +301,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
     final bool hasShops = shops.isNotEmpty;
     final homeChart = shopsRes?.data.homeChart;
+    final loginContext = shopsRes?.data.loginContext;
+    final bool isOwner = loginContext == "OWNER";
 
     bool hasEnquiries = false;
     final enquiryData = enquiry?.data;
@@ -286,7 +314,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
     final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
     final bool isPremium = isFreemium;
-    AppLogger.log.w(isPremium);
+    // AppLogger.log.w(isPremium);
 
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
@@ -470,11 +498,13 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
-                          itemCount: shops.length + 1,
+                          // itemCount: shops.length + 1,
+                          itemCount: isOwner ? shops.length + 1 : shops.length,
                           itemBuilder: (context, index) {
                             final bool showSwitch = shops.length > 1;
 
-                            if (index == shops.length) {
+                            // if (index == shops.length) {
+                            if (isOwner && index == shops.length) {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 10),
                                 child: CommonContainer.smallShopContainer(
@@ -1147,6 +1177,279 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           itemBuilder: (context, index) {
                             final data = currentItems[index];
 
+                            final type = (data.contextType ?? '')
+                                .toString()
+                                .toUpperCase();
+
+                            String productTitle = 'Enquiry';
+                            String rating = '0.0';
+                            String ratingCount = '0';
+                            String priceText = '';
+                            String offerPrice = '';
+                            String image = '';
+
+                            final String customerName = data.customer.name;
+                            final String whatsappNumber =
+                                data.customer.whatsappNumber;
+                            final String phone = data.customer.phone;
+                            final String customerImg = data.customer.avatarUrl
+                                .toString();
+                            final String timeText = data.createdTime;
+
+                            // ================= CONTEXT MAPPING =================
+
+                            if (type == 'PRODUCT_SHOP' ||
+                                type == 'SERVICE_SHOP') {
+                              final shop = data.shop;
+                              productTitle =
+                                  (shop?.englishName.toUpperCase() ?? '')
+                                      .isNotEmpty
+                                  ? shop!.englishName.toUpperCase()
+                                  : 'Shop Enquiry';
+                              rating = (shop?.rating ?? 0).toString();
+                              ratingCount = (shop?.ratingCount ?? 0).toString();
+                              offerPrice =
+                                  '${shop?.category.toUpperCase() ?? ''}';
+                              image = shop?.primaryImageUrl ?? '';
+                            } else if (type == 'PRODUCT') {
+                              productTitle =
+                                  data.product?.name.toString() ?? '';
+                              priceText = '${data.product?.price ?? ''}';
+                              offerPrice = '₹${data.product?.offerPrice ?? ''}';
+                              image = data.product?.imageUrl ?? '';
+                              rating = '${data.product?.rating ?? ''}';
+                              ratingCount =
+                                  '${data.product?.ratingCount ?? ''}';
+                            } else if (type == 'SERVICE') {
+                              productTitle =
+                                  data.service?.name.toString() ?? '';
+                              offerPrice = '₹${data.service?.startsAt ?? ''}';
+                              image = data.service?.primaryImageUrl ?? '';
+                              rating = '${data.service?.rating ?? ''}';
+                              ratingCount =
+                                  '${data.service?.ratingCount ?? ''}';
+                            }
+
+                            // ================= FLAGS =================
+
+                            final enquirySource = (data.enquirySource ?? '')
+                                .toString()
+                                .toUpperCase();
+
+                            final bool isSmartConnect =
+                                enquirySource == 'SMART_CONNECT';
+
+                            final status = (data.status ?? '')
+                                .toString()
+                                .toUpperCase();
+                            final bool isClosed = status == 'CLOSED';
+
+                            final String enquiryId = data.id.toString();
+
+                            // final bool isAds = isSmartConnect
+                            //     ? _isAdsEnabled(enquiryId)
+                            //     : false;
+                            // final bool isSending = _isSending(enquiryId);
+
+                            // ================= ANSWER SAFE PARSE =================
+
+                            final Map<String, dynamic>? answerMap =
+                                (data.answer is Map<String, dynamic>)
+                                ? (data.answer as Map<String, dynamic>)
+                                : null;
+
+                            final bool showAnswerOnly =
+                                isSmartConnect && isClosed && answerMap != null;
+
+                            final String answerTitle =
+                                (answerMap?['title'] ?? '').toString();
+
+                            final String answerDescription =
+                                (answerMap?['description'] ?? '').toString();
+
+                            final int answerPrice = (() {
+                              final v = answerMap?['price'];
+                              if (v == null) return 0;
+                              if (v is int) return v;
+                              return int.tryParse(v.toString()) ?? 0;
+                            })();
+
+                            final List<String> answerImages = (() {
+                              final v = answerMap?['images'];
+                              if (v is List) {
+                                return v.map((e) => e.toString()).toList();
+                              }
+                              return <String>[];
+                            })();
+
+                            // ================= PICKED IMAGES =================
+
+                            final List<XFile> pickedImages = showAnswerOnly
+                                ? []
+                                : _getPickedImages(enquiryId);
+                            final bool isAds = _isAdsEnabled(enquiryId);
+                            final bool isSending = _isSending(enquiryId);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
+                              child: Column(
+                                children: [
+                                  CommonContainer.inquiryProductCard(
+                                    isSmartConnect: isSmartConnect,
+                                    isAds: isAds,
+                                    onChatTap: showAnswerOnly
+                                        ? null
+                                        : () {
+                                            _enableAds(enquiryId);
+                                          },
+
+                                    showAnswerOnly: showAnswerOnly,
+                                    answerTitle: answerTitle,
+                                    answerDescription: answerDescription,
+                                    answerPrice: answerPrice,
+                                    answerImages: answerImages,
+
+                                    // 🔥 UPDATED MULTI IMAGE
+                                    pickedImages: pickedImages,
+                                    messageController: showAnswerOnly
+                                        ? null
+                                        : _getMsgCtrl(enquiryId),
+                                    priceController: showAnswerOnly
+                                        ? null
+                                        : _getPriceCtrl(enquiryId),
+                                    maxMessageLength: _maxMsgLen,
+                                    isSending: showAnswerOnly
+                                        ? false
+                                        : isSending,
+
+                                    onPickImage: showAnswerOnly
+                                        ? null
+                                        : () => _showPickOptions(enquiryId),
+
+                                    onRemoveImage: showAnswerOnly
+                                        ? null
+                                        : (imgIndex) =>
+                                              _removeImage(enquiryId, imgIndex),
+
+                                    onSendTap: showAnswerOnly
+                                        ? null
+                                        : () async {
+                                            if (_isSending(enquiryId)) return;
+
+                                            final msg = _getMsgCtrl(
+                                              enquiryId,
+                                            ).text.trim();
+                                            final priceStr = _getPriceCtrl(
+                                              enquiryId,
+                                            ).text.trim();
+
+                                            if (msg.isEmpty) {
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    "Please enter message",
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            final price = int.tryParse(
+                                              priceStr,
+                                            );
+                                            if (price == null || price <= 0) {
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    "Please enter valid price",
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            final List<File> files =
+                                                _getPickedImages(enquiryId)
+                                                    .map((e) => File(e.path))
+                                                    .toList();
+
+                                            _setSending(enquiryId, true);
+
+                                            try {
+                                              await ref
+                                                  .read(
+                                                    homeNotifierProvider
+                                                        .notifier,
+                                                  )
+                                                  .replyEnquiry(
+                                                    shopId:
+                                                        data.shop?.id
+                                                            .toString() ??
+                                                        '',
+                                                    requestId: enquiryId,
+                                                    productTitle: productTitle,
+                                                    message: msg,
+                                                    price: price,
+                                                    ownerImageFiles: files,
+                                                  );
+
+                                              _getMsgCtrl(enquiryId).clear();
+                                              _getPriceCtrl(enquiryId).clear();
+                                              _clearImages(enquiryId);
+
+                                              await ref
+                                                  .read(
+                                                    homeNotifierProvider
+                                                        .notifier,
+                                                  )
+                                                  .fetchAllEnquiry(shopId: '');
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    "Reply sent successfully",
+                                                  ),
+                                                ),
+                                              );
+                                            } finally {
+                                              _setSending(enquiryId, false);
+                                            }
+                                          },
+
+                                    questionText: '',
+                                    productTitle: productTitle,
+                                    rating: rating,
+                                    ratingCount: ratingCount,
+                                    priceText: offerPrice,
+                                    mrpText: '$priceText',
+                                    phoneImageAsset: image,
+                                    avatarAsset: customerImg,
+                                    customerName: customerName,
+                                    timeText: timeText,
+                                  ),
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+
+                      /*ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: currentItems.length,
+                          itemBuilder: (context, index) {
+                            final data = currentItems[index];
+
                             final type = (data.contextType ?? '').toString().toUpperCase();
 
                             String productTitle = 'Enquiry';
@@ -1349,129 +1652,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                       CallHelper.openDialer(context: context, rawPhone: phone);
                                       ref.read(homeNotifierProvider.notifier).markEnquiry(enquiryId: data.id);
                                       ref.read(selectedShopProvider.notifier).switchShop('');
-                                    },
-                                  ),
-                                  const SizedBox(height: 20),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      /*ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: currentItems.length,
-                          itemBuilder: (context, index) {
-                            final data = currentItems[index];
-
-                            final type = data.contextType.toUpperCase();
-
-                            String productTitle = 'Enquiry';
-                            String rating = '0.0';
-                            String ratingCount = '0';
-                            String priceText = '';
-                            String offerPrice = '';
-                            String image = '';
-                            String customerName = data.customer.name;
-                            String whatsappNumber =
-                                data.customer.whatsappNumber;
-                            String phone = data.customer.phone;
-                            String customerImg = data.customer.avatarUrl
-                                .toString();
-                            String timeText = data.createdTime;
-
-                            if (type == 'PRODUCT_SHOP' ||
-                                type == 'SERVICE_SHOP') {
-                              final shop = data.shop;
-                              productTitle =
-                                  (shop?.englishName.toUpperCase() ?? '')
-                                      .isNotEmpty
-                                  ? shop!.englishName.toUpperCase()
-                                  : 'Shop Enquiry';
-                              rating = (shop?.rating ?? 0).toString();
-                              ratingCount = (shop?.ratingCount ?? 0).toString();
-                              offerPrice =
-                                  '${shop?.category.toUpperCase() ?? ''}';
-                              image = shop?.primaryImageUrl ?? '';
-                            } else if (type == 'PRODUCT_SERVICE' ||
-                                type == 'SERVICE_SHOP') {
-                              final service = data.service;
-                              productTitle = (service?.name ?? '').isNotEmpty
-                                  ? service!.name
-                                  : 'Service Enquiry';
-                              rating = (service?.rating ?? 0).toString();
-                              image = (service?.primaryImageUrl ?? 0)
-                                  .toString();
-                              ratingCount = (service?.ratingCount ?? 0)
-                                  .toString();
-                              if (service != null && service.startsAt > 0) {
-                                priceText = 'From ₹${service.startsAt}';
-                              } else {
-                                priceText = 'Service';
-                              }
-                            } else if (type == 'PRODUCT') {
-                              productTitle =
-                                  data.product?.name.toString() ?? '';
-                              priceText = '${data.product?.price ?? ''}';
-                              offerPrice = '₹${data.product?.offerPrice ?? ''}';
-                              image = data.product?.imageUrl ?? '';
-                              rating = '${data.product?.rating ?? ''}';
-                              ratingCount =
-                                  '${data.product?.ratingCount ?? ''}';
-                            } else if (type == 'SERVICE') {
-                              productTitle =
-                                  data.service?.name.toString() ?? '';
-                              offerPrice = '₹${data.service?.startsAt ?? ''}';
-
-                              image = data.service?.primaryImageUrl ?? '';
-                              rating = '${data.service?.rating ?? ''}';
-                              ratingCount =
-                                  '${data.service?.ratingCount ?? ''}';
-                            }
-                            final isSmartConnect =
-                                (data.enquirySource ?? '').toUpperCase() ==
-                                'SMART_CONNECT';
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              child: Column(
-                                children: [
-                                  CommonContainer.inquiryProductCard(
-                                    isAds: isSmartConnect,
-                                    questionText: '',
-                                    productTitle: productTitle,
-                                    rating: rating,
-                                    ratingCount: ratingCount,
-                                    priceText: offerPrice,
-                                    mrpText: '$priceText',
-                                    phoneImageAsset: image,
-                                    avatarAsset: customerImg,
-                                    customerName: customerName,
-                                    timeText: timeText,
-                                    onChatTap: () {
-                                      CallHelper.openWhatsapp(
-                                        context: context,
-                                        phone: whatsappNumber,
-                                      );
-                                      ref
-                                          .read(homeNotifierProvider.notifier)
-                                          .markEnquiry(enquiryId: data.id);
-                                      ref
-                                          .read(selectedShopProvider.notifier)
-                                          .switchShop('');
-                                    },
-                                    onCallTap: () {
-                                      CallHelper.openDialer(
-                                        context: context,
-                                        rawPhone: phone,
-                                      );
-                                      ref
-                                          .read(homeNotifierProvider.notifier)
-                                          .markEnquiry(enquiryId: data.id);
-                                      ref
-                                          .read(selectedShopProvider.notifier)
-                                          .switchShop('');
                                     },
                                   ),
                                   const SizedBox(height: 20),

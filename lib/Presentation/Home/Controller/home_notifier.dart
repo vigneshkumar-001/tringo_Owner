@@ -234,11 +234,70 @@ class HomeNotifier extends Notifier<HomeState> {
   }
   Future<void> replyEnquiry({
     required String shopId,
+    required String requestId,
+    required String productTitle,
+    required String message,
+    required int price,
+    required List<File> ownerImageFiles,
+  }) async {
+    state = state.copyWith(isLoading: false, error: null);
+
+    List<String> uploadedUrls = [];
+
+    // 🔥 Upload each image one by one
+    for (final file in ownerImageFiles) {
+      final hasValidImage =
+          file.path.isNotEmpty && await file.exists();
+
+      if (hasValidImage) {
+        final uploadResult =
+        await api.userProfileUpload(imageFile: file);
+
+        final url = uploadResult.fold(
+              (failure) => '',
+              (success) => (success.message ?? '').toString(),
+        );
+
+        if (url.isNotEmpty) {
+          uploadedUrls.add(url);
+        }
+      }
+    }
+
+    // ✅ Send all uploaded image URLs
+    final result = await api.replyEnquiry(
+      shopId: shopId,
+      requestId: requestId,
+      productTitle: productTitle,
+      message: message,
+      images: uploadedUrls, // List<String>
+      price: price,
+    );
+
+    result.fold(
+          (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          replyResponse: null,
+        );
+      },
+          (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          replyResponse: response,
+        );
+      },
+    );
+  }
+ /* Future<void> replyEnquiry({
+    required String shopId,
     required String requestId,      // ✅ must pass real requestId
     required String productTitle,   // ✅ must pass real title
     required String message,        // ✅ must pass real message
     required int price,             // ✅ must pass real price
-    File? ownerImageFile,
+    List<File> ownerImageFiles
   }) async {
     state = state.copyWith(isLoading: false, error: null);
 
@@ -286,7 +345,7 @@ class HomeNotifier extends Notifier<HomeState> {
         );
       },
     );
-  }
+  }*/
 
   Future<ShopsResponse?> fetchShops({
     required String shopId,
