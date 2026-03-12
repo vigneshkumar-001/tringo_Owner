@@ -31,8 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // selectedKind == true  → Individual
-    // selectedKind == false → Company
     final bool isIndividual = selectedKind!;
     final BusinessType businessType = isIndividual
         ? BusinessType.individual
@@ -55,39 +53,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  ///new1///
-  // void _goNext() {
-  //   if (selectedKind == null) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Please select your business type.')),
-  //     );
-  //     return;
-  //   }
-  //
-  //   // selectedKind == true  → Individual
-  //   // selectedKind == false → Company
-  //   final bool isIndividual = selectedKind!;
-  //   final BusinessType businessType = isIndividual
-  //       ? BusinessType.individual
-  //       : BusinessType.company;
-  //
-  //   // 🔹 Save premium / non-premium to both sessions
-  //   RegistrationSession.instance.businessType = businessType;
-  //   RegistrationProductSeivice.instance.businessType = businessType;
-  //
-  //   // 🔹 Product / Service selection
-  //   final BusinessCategory businessCategory = (selectedIndex == 0)
-  //       ? BusinessCategory.product
-  //       : BusinessCategory.service;
-  //
-  //   RegistrationProductSeivice.instance.businessCategory = businessCategory;
-  //
-  //   // 🔹 Go to owner info with flags
-  //   context.pushNamed(
-  //     AppRoutes.ownerInfo,
-  //     extra: {'isService': selectedIndex == 1, 'isIndividual': isIndividual},
-  //   );
-  // }
 
   @override
   void dispose() {

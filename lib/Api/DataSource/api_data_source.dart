@@ -351,7 +351,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final payload = <String, dynamic>{
         "category": category,
-        "subCategory": subCategory,
+        // "subCategory": subCategory,
         "englishName": englishName,
         "tamilName": tamilName,
         "descriptionEn": descriptionEn,
@@ -436,9 +436,11 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, ShopCategoryListResponse>> getShopCategories() async {
+  Future<Either<Failure, ShopCategoryListResponse>> getShopCategories({
+    required String type,
+  }) async {
     try {
-      String url = ApiUrl.categoriesShop;
+      String url = ApiUrl.categoriesShop(type: type);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
 
@@ -640,7 +642,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final payload = {
         "category": category,
-        "subCategory": subCategory,
+        // "subCategory": subCategory,
         "englishName": englishName,
         "price": price,
         "offerLabel": offerLabel,
@@ -668,7 +670,8 @@ class ApiDataSource extends BaseApiDataSource {
       return Left(
         ServerFailure(response.data['message'] ?? "Something went wrong"),
       );
-    } catch (e) {
+    } catch (e,st) {
+      AppLogger.log.e('$e,$st');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -1333,7 +1336,7 @@ class ApiDataSource extends BaseApiDataSource {
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e,st) {
+    } catch (e, st) {
       AppLogger.log.e('${e},${st}');
       return Left(ServerFailure(e.toString()));
     }
@@ -3045,7 +3048,7 @@ dateRange: $start → $end
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
-    } catch (e,st) {
+    } catch (e, st) {
       AppLogger.log.e('$e,$st');
       return Left(ServerFailure(e.toString()));
     }
