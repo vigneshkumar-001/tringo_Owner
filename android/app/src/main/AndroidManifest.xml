@@ -21,22 +21,22 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Foreground service -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />-->
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />-->
 
     <!-- Phone -->
-    <uses-permission
-        android:name="android.permission.READ_PHONE_STATE"
-        tools:node="replace" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+<!--    <uses-permission-->
+<!--        android:name="android.permission.READ_PHONE_STATE"-->
+<!--        tools:node="replace" />-->
+<!--    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />-->
 
     <!-- Optional (you are using ACTION_DIAL, so CALL_PHONE is NOT needed)
          Keep only if you ever use ACTION_CALL -->
     <!-- <uses-permission android:name="android.permission.CALL_PHONE" /> -->
 
     <!-- If you really read call log/contacts in your code -->
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+<!--    <uses-permission android:name="android.permission.READ_CONTACTS" />-->
+<!--    <uses-permission android:name="android.permission.READ_CALL_LOG" />-->
     <!-- Write call log requires special/limited use - remove unless you truly need -->
     <!-- <uses-permission android:name="android.permission.WRITE_CALL_LOG" /> -->
 

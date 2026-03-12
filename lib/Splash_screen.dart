@@ -48,22 +48,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // ✅ 1) MUST request Phone/CallLog/Contacts first
-      final ok = await PermissionService.requestCorePermissionsWithDialog(
-        context,
-      );
-      if (!ok) return;
-      // final nativeOk = await CallerIdRoleHelper.debugPhonePerm();
-      // debugPrint("✅ NATIVE READ_PHONE_STATE => $nativeOk");
-      // ✅ 2) Overlay permission (optional here)
-      final req = await CallerIdRoleHelper.requestReadPhoneState();
-      final now = await CallerIdRoleHelper.debugPhonePerm();
-      print("PHONE req=$req now=$now");
-
-      await PermissionService.requestOverlayIfNeeded();
+      // // ✅ 1) MUST request Phone/CallLog/Contacts first
+      // final ok = await PermissionService.requestCorePermissionsWithDialog(
+      //   context,
+      // );
+      // if (!ok) return;
+      // // final nativeOk = await CallerIdRoleHelper.debugPhonePerm();
+      // // debugPrint("✅ NATIVE READ_PHONE_STATE => $nativeOk");
+      // // ✅ 2) Overlay permission (optional here)
+      // final req = await CallerIdRoleHelper.requestReadPhoneState();
+      // final now = await CallerIdRoleHelper.debugPhonePerm();
+      // print("PHONE req=$req now=$now");
+      //
+      // await PermissionService.requestOverlayIfNeeded();
 
       // ✅ 3) Continue your flow
 
@@ -71,46 +70,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
   /// When user returns from Settings, re-check and mark done
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      _batteryFlowRunning = false;
-      await _postSettingsRecheckAndMarkDone();
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) async {
+  //   if (state == AppLifecycleState.resumed) {
+  //     _batteryFlowRunning = false;
+  //     await _postSettingsRecheckAndMarkDone();
+  //   }
+  // }
 
-  Future<void> _postSettingsRecheckAndMarkDone() async {
-    if (!Platform.isAndroid) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final went = prefs.getBool(_kWentToBatterySettings) ?? false;
-    if (!went) return;
-
-    await prefs.setBool(_kWentToBatterySettings, false);
-
-    // some devices need time before returning correct value
-    await Future.delayed(const Duration(milliseconds: 400));
-
-    bool ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
-    if (!ignoring) {
-      await Future.delayed(const Duration(milliseconds: 400));
-      ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
-    }
-
-    AppLogger.log.i("🔋 Post-settings recheck ignoring=$ignoring");
-
-    if (ignoring == true) {
-      await prefs.setBool(_kBatteryDoneKey, true);
-      AppLogger.log.i("✅ Battery optimization marked DONE");
-    }
-  }
+  // Future<void> _postSettingsRecheckAndMarkDone() async {
+  //   if (!Platform.isAndroid) return;
+  //
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final went = prefs.getBool(_kWentToBatterySettings) ?? false;
+  //   if (!went) return;
+  //
+  //   await prefs.setBool(_kWentToBatterySettings, false);
+  //
+  //   // some devices need time before returning correct value
+  //   await Future.delayed(const Duration(milliseconds: 400));
+  //
+  //   bool ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
+  //   if (!ignoring) {
+  //     await Future.delayed(const Duration(milliseconds: 400));
+  //     ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
+  //   }
+  //
+  //   AppLogger.log.i("🔋 Post-settings recheck ignoring=$ignoring");
+  //
+  //   if (ignoring == true) {
+  //     await prefs.setBool(_kBatteryDoneKey, true);
+  //     AppLogger.log.i("✅ Battery optimization marked DONE");
+  //   }
+  // }
 
   Future<void> _initializeSplash() async {
     try {
@@ -133,7 +126,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
 
       // 2) Battery flow (before navigation)
-      await _batteryOptimizationFlow();
+      // await _batteryOptimizationFlow();
 
       // 3) Continue normal flow
       await ref.read(selectedShopProvider.notifier).switchShop('');
@@ -165,7 +158,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
   }
 
-  Future<void> _batteryOptimizationFlow() async {
+  /*  Future<void> _batteryOptimizationFlow() async {
     if (!Platform.isAndroid) return;
     if (_batteryFlowRunning) return;
     _batteryFlowRunning = true;
@@ -238,9 +231,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     } catch (_) {
       _batteryFlowRunning = false;
     }
-  }
+  }*/
 
-  Future<_BatterySheetAction?> _showBatteryMandatoryBottomSheet() async {
+  /*Future<_BatterySheetAction?> _showBatteryMandatoryBottomSheet() async {
     return showModalBottomSheet<_BatterySheetAction>(
       context: context,
       backgroundColor: AppColor.white,
@@ -298,7 +291,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         );
       },
     );
-  }
+  }*/
 
   void _showUpdateBottomSheet() {
     showModalBottomSheet(
@@ -383,4 +376,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 }
 
-enum _BatterySheetAction { openSettings }
+// enum _BatterySheetAction { openSettings }

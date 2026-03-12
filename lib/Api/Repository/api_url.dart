@@ -3,6 +3,7 @@ class ApiUrl {
   //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
   static const String base = "https://bknd.tringobiz.com/";
+  // static const String base = "https://qbkqz1b4-4000.inc1.devtunnels.ms/";
   static const String baseUrlImage = "https://bknd.tringobiz.com/";
   static const String privacyPolicy =
       "${base}api/v1/public/pages/privacy-policy";
@@ -42,9 +43,10 @@ class ApiUrl {
       "${base}api/v1/auth/phone-verification/request";
   static const String shopNumberOtpVerify =
       "${base}api/v1/auth/phone-verification/verify";
-  static const String categoriesShop =
-      "${base}api/v1/public/categories?type=shop";
 
+  static String categoriesShop({required String type}) {
+    return "${base}api/v1/public/categories?type=$type";
+  }
   static String shopPhotosUpload({required String shopId}) {
     return "${base}api/v1/shops/$shopId/media";
   }

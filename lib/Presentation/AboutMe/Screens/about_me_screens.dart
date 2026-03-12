@@ -982,7 +982,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     text: 'Add Branch',
                     onTap: () {
                       final bool isService =
-                          selectedShop?.shopKind.toString().toUpperCase() == 'SERVICE';
+                          selectedShop?.shopKind.toString().toUpperCase() ==
+                          'SERVICE';
 
                       if (_isFreemium == false) {
                         context.push(
@@ -991,9 +992,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                             'isService': isService,
                             'isIndividual': '',
                             'initialShopNameEnglish':
-                            selectedShop?.shopEnglishName,
-                            'initialShopNameTamil':
-                            selectedShop?.shopTamilName,
+                                selectedShop?.shopEnglishName,
+                            'initialShopNameTamil': selectedShop?.shopTamilName,
                             'isEditMode': true,
                           },
                         );

@@ -100,8 +100,7 @@ class _ProductCategoryScreensState
     WidgetRef ref,
     TextEditingController controller, {
     void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  })
-  {
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -264,8 +263,7 @@ class _ProductCategoryScreensState
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  )
-  {
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -604,76 +602,76 @@ class _ProductCategoryScreensState
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      GestureDetector(
-                        onTap: () {
-                          if (_categoryController.text.isEmpty) {
-                            AppSnackBar.info(
-                              context,
-                              'Please select a category first',
-                            );
-                            setState(() {
-                              _categoryHasError = true;
-                            });
-                            return;
-                          }
-
-                          if (_selectedCategoryChildren == null ||
-                              _selectedCategoryChildren!.isEmpty) {
-                            AppSnackBar.info(
-                              context,
-                              'No subcategories available for this category',
-                            );
-                            return;
-                          }
-
-                          _showCategoryChildrenBottomSheet(
-                            context,
-                            _selectedCategoryChildren!,
-                            _subCategoryController,
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 19,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColor.lightGray,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: _subCategoryHasError
-                                  ? Colors.red
-                                  : Colors.transparent,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _subCategoryController.text.isEmpty
-                                        ? " "
-                                        : _subCategoryController.text,
-                                    style: AppTextStyles.mulish(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 18,
-                                      color: _subCategoryController.text.isEmpty
-                                          ? Colors.grey
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                Image.asset(AppImages.downArrow, height: 30),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      // const SizedBox(height: 10),
+                      // GestureDetector(
+                      //   onTap: () {
+                      //     if (_categoryController.text.isEmpty) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'Please select a category first',
+                      //       );
+                      //       setState(() {
+                      //         _categoryHasError = true;
+                      //       });
+                      //       return;
+                      //     }
+                      //
+                      //     if (_selectedCategoryChildren == null ||
+                      //         _selectedCategoryChildren!.isEmpty) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'No subcategories available for this category',
+                      //       );
+                      //       return;
+                      //     }
+                      //
+                      //     _showCategoryChildrenBottomSheet(
+                      //       context,
+                      //       _selectedCategoryChildren!,
+                      //       _subCategoryController,
+                      //     );
+                      //   },
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(
+                      //       horizontal: 12,
+                      //       vertical: 19,
+                      //     ),
+                      //     decoration: BoxDecoration(
+                      //       color: AppColor.lightGray,
+                      //       borderRadius: BorderRadius.circular(20),
+                      //       border: Border.all(
+                      //         color: _subCategoryHasError
+                      //             ? Colors.red
+                      //             : Colors.transparent,
+                      //         width: 1.5,
+                      //       ),
+                      //     ),
+                      //     child: Padding(
+                      //       padding: const EdgeInsets.symmetric(
+                      //         horizontal: 8.0,
+                      //       ),
+                      //       child: Row(
+                      //         children: [
+                      //           Expanded(
+                      //             child: Text(
+                      //               _subCategoryController.text.isEmpty
+                      //                   ? " "
+                      //                   : _subCategoryController.text,
+                      //               style: AppTextStyles.mulish(
+                      //                 fontWeight: FontWeight.w700,
+                      //                 fontSize: 18,
+                      //                 color: _subCategoryController.text.isEmpty
+                      //                     ? Colors.grey
+                      //                     : Colors.black,
+                      //               ),
+                      //             ),
+                      //           ),
+                      //           Image.asset(AppImages.downArrow, height: 30),
+                      //         ],
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       const SizedBox(height: 25),
                       Text(
                         isServiceFlow ? 'Service Name' : 'Product name',
@@ -861,7 +859,6 @@ class _ProductCategoryScreensState
                           }
 
                           if (isServiceFlow) {
-
                             final serviceResponse = await ref
                                 .read(serviceInfoNotifierProvider.notifier)
                                 .saveServiceInfo(
@@ -955,7 +952,9 @@ class _ProductCategoryScreensState
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => AddProductList(isService: isServiceFlow,),
+                                    builder: (_) => AddProductList(
+                                      isService: isServiceFlow,
+                                    ),
                                   ),
                                 );
                               }
@@ -982,7 +981,6 @@ class _ProductCategoryScreensState
                         imgHeight: 20,
                       ),
 
-
                       const SizedBox(height: 36),
                     ],
                   ),
@@ -995,4 +993,3 @@ class _ProductCategoryScreensState
     );
   }
 }
-
