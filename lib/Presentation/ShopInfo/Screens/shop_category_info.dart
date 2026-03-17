@@ -30,8 +30,6 @@ import '../../../Core/Utility/thanglish_to_tamil.dart';
 import '../../../Core/Widgets/owner_verify_feild.dart';
 import '../../AboutMe/Controller/about_me_notifier.dart';
 
-
-
 class GpsInputField extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
@@ -251,83 +249,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     return '+91$ten';
   }
 
-  Future<void> _openGoogleMapsFromGpsField() async {
-    try {
-      // 1) Try from existing text (lat,lng)
-      double? lat;
-      double? lng;
-
-      final t = _gpsController.text.trim();
-      final parts = t.split(',');
-      if (parts.length == 2) {
-        lat = double.tryParse(parts[0].trim());
-        lng = double.tryParse(parts[1].trim());
-      }
-
-      // 2) If not available, get current location
-      if (lat == null || lng == null) {
-        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (!serviceEnabled) {
-          AppSnackBar.info(context, 'Turn on Location.');
-          // ScaffoldMessenger.of(context).
-          // showSnackBar(
-          //   const SnackBar(content: Text('Turn on Location.')),
-          // );
-          return;
-        }
-
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-        }
-        if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission denied.')),
-          );
-          return;
-        }
-        if (permission == LocationPermission.deniedForever) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location permissions are permanently denied.'),
-            ),
-          );
-          return;
-        }
-
-        final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-        lat = pos.latitude;
-        lng = pos.longitude;
-
-        // Optional: field-la update pannalam
-        setState(() {
-          _gpsController.text =
-              '${lat!.toStringAsFixed(6)}, ${lng!.toStringAsFixed(6)}';
-          _gpsFetched = true;
-        });
-      }
-
-      // 3) Launch Google Maps app
-      final uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
-      );
-
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open Google Maps')),
-        );
-      }
-    } catch (e) {
-      debugPrint('❌ Google Maps open error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to open Google Maps')),
-      );
-    }
-  }
-
   TimeOfDay? _parseTimeOfDay(String input) {
     try {
       final parts = input.trim().split(' ');
@@ -347,324 +268,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     }
   }
 
-  Future<void> _openGoogleSearchBottomSheet() async {
-    final picked = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-      enableDrag: true,
-      builder: (ctx) {
-        final TextEditingController q = TextEditingController();
-        bool loading = false;
-        List<Map<String, dynamic>> results = [];
-
-        Future<void> doSearch(
-          String text,
-          void Function(void Function()) setSheetState,
-        ) async {
-          final query = text.trim();
-          if (query.isEmpty) {
-            setSheetState(() => results = []);
-            return;
-          }
-
-          setSheetState(() => loading = true);
-          try {
-            final r = await LocationHelper.searchPlaces(
-              query,
-              radiusMeters: 10000,
-            );
-            setSheetState(() => results = r);
-          } finally {
-            setSheetState(() => loading = false);
-          }
-        }
-
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.8,
-              minChildSize: 0.4,
-              maxChildSize: 0.95,
-              expand: false,
-              snap: true,
-              snapSizes: const [0.4, 0.6, 0.95],
-              builder: (context, scrollController) {
-                final size = MediaQuery.of(context).size;
-                final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
-                // Adjust sizing for tablets/large screens
-                final isTablet = size.shortestSide >= 600;
-                final horizontalPadding = isTablet ? 24.0 : 16.0;
-
-                return AnimatedPadding(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.only(bottom: bottomInset),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: isTablet ? 600 : double.infinity,
-                    ),
-                    margin: isTablet
-                        ? EdgeInsets.symmetric(
-                            horizontal: (size.width - 600) / 2,
-                          )
-                        : EdgeInsets.zero,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Drag handle
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12, bottom: 8),
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-
-                        // Header with title
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Search Location',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () => Navigator.pop(ctx),
-                                tooltip: 'Close',
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Search field
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                            vertical: 8,
-                          ),
-                          child: TextField(
-                            controller: q,
-                            autofocus: true,
-                            textInputAction: TextInputAction.search,
-                            decoration: InputDecoration(
-                              hintText: 'Search for a place...',
-                              prefixIcon: const Icon(Icons.search, size: 22),
-                              suffixIcon: loading
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(14),
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                        ),
-                                      ),
-                                    )
-                                  : q.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear, size: 20),
-                                      onPressed: () {
-                                        q.clear();
-                                        setSheetState(() => results = []);
-                                      },
-                                      tooltip: 'Clear',
-                                    )
-                                  : null,
-                              filled: true,
-                              fillColor: Colors.grey.shade100,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Theme.of(context).primaryColor,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                            ),
-                            onChanged: (v) {
-                              setSheetState(() {});
-                              doSearch(v, setSheetState);
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        // Results list
-                        Flexible(
-                          child: results.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(32),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          loading
-                                              ? Icons.search
-                                              : Icons.location_on_outlined,
-                                          size: 48,
-                                          color: Colors.grey.shade400,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          loading
-                                              ? 'Searching...'
-                                              : 'Type to search for places',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : ListView.separated(
-                                  controller: scrollController,
-                                  padding: EdgeInsets.only(
-                                    left: horizontalPadding,
-                                    right: horizontalPadding,
-                                    bottom:
-                                        16 +
-                                        MediaQuery.of(context).padding.bottom,
-                                  ),
-                                  itemCount: results.length,
-                                  separatorBuilder: (_, __) =>
-                                      const Divider(height: 1, indent: 16),
-                                  itemBuilder: (_, i) {
-                                    final r = results[i];
-                                    final lat = r['lat'];
-                                    final lng = r['lng'];
-                                    final distM =
-                                        r['distanceMeters'] as double?;
-                                    final distKm = distM == null
-                                        ? ''
-                                        : '${(distM / 1000).toStringAsFixed(1)} km away';
-
-                                    return ListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 0,
-                                            vertical: 8,
-                                          ),
-                                      leading: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(
-                                            context,
-                                          ).primaryColor.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.place,
-                                          color: Theme.of(context).primaryColor,
-                                          size: 22,
-                                        ),
-                                      ),
-                                      title: Text(
-                                        (r['description'] ?? '').toString(),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      subtitle: distKm.isNotEmpty
-                                          ? Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 4,
-                                              ),
-                                              child: Text(
-                                                distKm,
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                      trailing: const Icon(
-                                        Icons.arrow_forward_ios,
-                                        size: 16,
-                                      ),
-                                      onTap: () => Navigator.pop(ctx, r),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-
-    if (picked == null) return;
-
-    final lat = (picked['lat'] as num).toDouble();
-    final lng = (picked['lng'] as num).toDouble();
-    final desc = (picked['description'] ?? '').toString();
-
-    setState(() {
-      _gpsController.text =
-          '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
-      _gpsFetched = true;
-    });
-
-    AppLogger.log.i('✅ Selected place: $desc');
-    AppLogger.log.i('✅ LatLng: $lat, $lng');
-  }
-
   void _showCategoryBottomSheet(
     BuildContext context,
     TextEditingController controller, {
     void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  })
-  {
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -846,155 +454,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     }
   }
 
-  void _showCategoryChildrenBottomSheet(
-    BuildContext context,
-    List<ShopCategoryListData> children,
-    TextEditingController controller,
-  )
-  {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        final searchController = TextEditingController();
-        List<ShopCategoryListData> filtered = List.from(children);
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.6,
-              minChildSize: 0.4,
-              maxChildSize: 0.9,
-              builder: (context, scrollController) {
-                return Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      child: SizedBox(
-                        width: 40,
-                        height: 4,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.grey,
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Select Subcategory',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // 🔹 Search field with no underline
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: TextField(
-                        controller: searchController,
-                        onChanged: (value) {
-                          setModalState(() {
-                            filtered = children
-                                .where(
-                                  (c) => c.name.toLowerCase().contains(
-                                    value.toLowerCase(),
-                                  ),
-                                )
-                                .toList();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search subcategory...',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none, // ❌ No divider
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No subcategories found',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: scrollController,
-                              itemCount: filtered.length,
-                              itemBuilder: (context, index) {
-                                final child = filtered[index];
-                                return ListTile(
-                                  title: Text(child.name),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    setState(() {
-                                      controller.text = child.name;
-                                      subCategorySlug = child.slug;
-                                      _subCategoryErrorText = null;
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
   XFile? _permanentImage;
   bool _hasExistingOwnerImage = false;
   String? _existingUrl;
   File? _pickedImage;
   bool _imageInvalid = false;
 
-  // Future<void> _pickImage(ImageSource source) async {
-  //   final pickedFile = await _picker.pickImage(
-  //     source: source,
-  //     imageQuality: 85,
-  //   );
-  //
-  //   if (pickedFile == null) return;
-  //
-  //   setState(() {
-  //     _pickedImage = File(pickedFile.path);
-  //     _existingUrl = null; // clear server image
-  //     _imageInvalid = false;
-  //     _imageErrorText = null;
-  //   });
-  // }
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(
       source: source,
@@ -1048,75 +513,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     );
   }
 
-  Widget _buildImageWidget() {
-    if (_pickedImage != null) {
-      return Row(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(_pickedImage!, height: 140, fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () {
-              setState(() {
-                _pickedImage = null;
-                _imageInvalid = true;
-                _imageErrorText = 'Please upload image';
-              });
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  AppImages.closeImage,
-                  height: 26,
-                  color: AppColor.mediumGray,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Clear',
-                  style: AppTextStyles.mulish(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: AppColor.mediumLightGray,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (_existingUrl != null && _existingUrl!.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: CachedNetworkImage(imageUrl: _existingUrl!, fit: BoxFit.cover),
-      );
-    }
-
-    return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(AppImages.uploadImage, height: 30),
-          const SizedBox(width: 10),
-          Text(
-            'Upload',
-            style: AppTextStyles.mulish(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColor.mediumLightGray,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   TimeOfDay? _openTod;
   TimeOfDay? _closeTod;
   int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
@@ -1125,67 +521,34 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     return _toMinutes(_closeTod!) > _toMinutes(_openTod!);
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location services are disabled.')),
-        );
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission denied.')),
-          );
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location permissions are permanently denied.'),
-          ),
-        );
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      setState(() {
-        _gpsController.text =
-            '${position.latitude.toStringAsFixed(6)}, '
-            '${position.longitude.toStringAsFixed(6)}';
-        _gpsFetched = true; // Mark GPS as fetched
-      });
-
-      if (_isSubmitted) {
-        _formKey.currentState?.validate();
-      }
-
-      debugPrint('📍 Current Location → ${_gpsController.text}');
-    } catch (e) {
-      debugPrint('❌ Error getting location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to get current location.')),
-      );
-    }
-  }
-
+  bool _whatsappAutoFilledFromPrimary = false;
   @override
   void initState() {
     super.initState();
     AppLogger.log.i(widget.shopId);
     AppLogger.log.i(widget.isService);
+    ref.listenManual(shopCategoryNotifierProvider, (previous, next) {
+      final response = next.shopNumberOtpResponse;
+
+      if (response?.data?.verified == true &&
+          response?.data?.hasWhatsapp == true &&
+          response?.data?.type == 'SHOP_PRIMARY_PHONE') {
+        final normalizedPhone = _normalizeIndianPhone10(
+          response?.data?.phoneNumber ?? _primaryMobileController.text,
+        );
+
+        if (mounted) {
+          setState(() {
+            _whatsappController.text = normalizedPhone;
+            _whatsappAutoFilledFromPrimary = true;
+          });
+        }
+      }
+    });
+
     final bool isServiceFlow = widget.isService ?? false;
-    final String typeText = isServiceFlow ? 'service' : 'product';
+    // final String typeText = isServiceFlow ? 'service' : 'product';
+    final String typeText = 'category';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(shopCategoryNotifierProvider.notifier)
@@ -1387,7 +750,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   Widget build(BuildContext context) {
     final state = ref.watch(shopCategoryNotifierProvider);
     final bool isServiceFlow = widget.isService ?? false;
-    final String typeText = isServiceFlow ? 'service' : 'product';
+    // final String typeText = isServiceFlow ? 'service' : 'product';
+    final String typeText = 'category';
     final bool isIndividualFlow = widget.isIndividual ?? true;
     final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
     return Scaffold(
@@ -1872,6 +1236,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       const SizedBox(height: 10),
                       if (isEditFromAboutMe) ...[
+                        // onChanged: (value) {
+                        //   if (_whatsappAutoFilledFromPrimary) {
+                        //     _whatsappController.clear();
+                        //     _whatsappAutoFilledFromPrimary = false;
+                        //   }
+                        // },
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 400),
                           transitionBuilder: (child, animation) =>
@@ -1880,6 +1250,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             controller: _primaryMobileController,
                             isLoading: state.isSendingOtp,
                             isOtpVerifying: state.isVerifyingOtp,
+
                             onSendOtp: (mobile) {
                               final phone10 = _normalizeIndianPhone10(mobile);
                               return ref
@@ -1940,29 +1311,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             },
                           ),
                         ),
-                        // CommonContainer.fillingContainer(
-                        //   controller: _primaryMobileController,
-                        //   verticalDivider: true,
-                        //   isMobile: true, // mobile behavior +91 etc
-                        //   text: 'Mobile No',
-                        //   keyboardType: TextInputType.phone,
-                        //   validator: (value) {
-                        //     if (value == null || value.isEmpty) {
-                        //       return 'Please Enter Primary Mobile Number';
-                        //     }
-                        //     return null;
-                        //   },
-                        // ),
                       ],
-                      // CommonContainer.fillingContainer(
-                      //   controller: _primaryMobileController,
-                      //   verticalDivider: true,
-                      //   isMobile: true,
-                      //   text: 'Mobile No',
-                      //   // validator: (value) => value == null || value.isEmpty
-                      //   //     ? 'Please Enter Primary Mobile Number'
-                      //   //     : null,
-                      // ),
+
                       const SizedBox(height: 25),
                       Text(
                         'Whatsapp Number',
@@ -1995,15 +1345,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           },
                         ),
                       ],
-                      // CommonContainer.fillingContainer(
-                      //   controller: _whatsappController,
-                      //   verticalDivider: true,
-                      //   isMobile: true,
-                      //   text: 'Mobile No',
-                      //   // validator: (value) => value == null || value.isEmpty
-                      //   //     ? 'Please Enter Whatsapp Number'
-                      //   //     : null,
-                      // ),
+
                       const SizedBox(height: 25),
                       Text(
                         'Open Time',
@@ -2368,29 +1710,29 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                           // ✅ VERIFIED CHECK FIX (OTP or Pref token)
                           // ✅ OTP verified required ONLY in register flow
-                          if (!isEditFromAboutMe) {
-                            final shopState = ref.read(
-                              shopCategoryNotifierProvider,
-                            );
-                            final savedToken =
-                                await AppPrefs.getVerificationToken();
+                          // if (!isEditFromAboutMe) {
+                          //   final shopState = ref.read(
+                          //     shopCategoryNotifierProvider,
+                          //   );
+                          //   final savedToken =
+                          //       await AppPrefs.getVerificationToken();
 
-                            final isVerified =
-                                (shopState
-                                        .shopNumberOtpResponse
-                                        ?.data
-                                        ?.verified ==
-                                    true) ||
-                                (savedToken != null && savedToken.isNotEmpty);
+                          //   final isVerified =
+                          //       (shopState
+                          //               .shopNumberOtpResponse
+                          //               ?.data
+                          //               ?.verified ==
+                          //           true) ||
+                          //       (savedToken != null && savedToken.isNotEmpty);
 
-                            if (!isVerified) {
-                              AppSnackBar.error(
-                                context,
-                                "Please verify Primary Mobile Number",
-                              );
-                              return;
-                            }
-                          }
+                          //   if (!isVerified) {
+                          //     AppSnackBar.error(
+                          //       context,
+                          //       "Please verify Primary Mobile Number",
+                          //     );
+                          //     return;
+                          //   }
+                          // }
 
                           // final shopState = ref.read(
                           //   shopCategoryNotifierProvider,

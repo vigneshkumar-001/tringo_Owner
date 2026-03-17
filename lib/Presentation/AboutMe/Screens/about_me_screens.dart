@@ -538,7 +538,9 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
               onRefresh: () async {
                 await ref
                     .read(aboutMeNotifierProvider.notifier)
-                    .fetchAllShopDetails();
+                    .fetchAllShopDetails(
+                      shopId: _currentShopId ?? selectedShop?.shopId ?? '',
+                    );
               },
               showBottomButton: false,
               showTopBackArrow: false,
@@ -557,7 +559,9 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             onRefresh: () async {
               await ref
                   .read(aboutMeNotifierProvider.notifier)
-                  .fetchAllShopDetails();
+                  .fetchAllShopDetails(
+                    shopId: _currentShopId ?? selectedShop?.shopId ?? '',
+                  );
             },
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -2042,6 +2046,37 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                     ? 'Unnamed Product'
                                     : title;
 
+                                final initialServiceMedia = [...s.media]
+                                  ..sort(
+                                    (a, b) => (a.displayOrder ?? 0).compareTo(
+                                      b.displayOrder ?? 0,
+                                    ),
+                                  );
+                                final initialServiceImageUrls =
+                                    initialServiceMedia
+                                        .map((e) => (e.url ?? '').trim())
+                                        .where((e) => e.isNotEmpty)
+                                        .toList();
+                                final initialServiceFeatures = s.features
+                                    .map<Map<String, String>?>((e) {
+                                      if (e is Map<String, dynamic>) {
+                                        final heading =
+                                            (e['label'] ?? '').toString().trim();
+                                        final answer =
+                                            (e['value'] ?? '').toString().trim();
+                                        if (heading.isEmpty && answer.isEmpty) {
+                                          return null;
+                                        }
+                                        return {
+                                          'heading': heading,
+                                          'answer': answer,
+                                        };
+                                      }
+                                      return null;
+                                    })
+                                    .whereType<Map<String, String>>()
+                                    .toList();
+
                                 final updated = await Navigator.push<bool>(
                                   context,
                                   MaterialPageRoute(
@@ -2059,6 +2094,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                           initialDescription: s.description,
                                           initialOfferLabel: s.offerLabel,
                                           initialOfferValue: s.offerValue,
+                                          initialImageUrls:
+                                              initialServiceImageUrls,
+                                          initialFeatures:
+                                              initialServiceFeatures,
                                         ),
                                   ),
                                 );
@@ -2319,6 +2358,18 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                     ? 'Yes'
                                     : 'No';
 
+                                final initialProductMedia = [...p.media]
+                                  ..sort(
+                                    (a, b) => (a.displayOrder ?? 0).compareTo(
+                                      b.displayOrder ?? 0,
+                                    ),
+                                  );
+                                final initialProductImageUrls =
+                                    initialProductMedia
+                                        .map((e) => (e.url ?? '').trim())
+                                        .where((e) => e.isNotEmpty)
+                                        .toList();
+
                                 final updated = await Navigator.push<bool>(
                                   context,
                                   MaterialPageRoute(
@@ -2341,6 +2392,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                           initialCategorySlug: p.categorySlug,
                                           initialSubCategorySlug:
                                               p.subCategorySlug,
+                                          initialImageUrls:
+                                              initialProductImageUrls,
                                         ),
                                   ),
                                 );
@@ -3409,3 +3462,7 @@ class _FakeSeriesItem {
   final String label;
   _FakeSeriesItem({required this.value, required this.label});
 }
+
+
+
+

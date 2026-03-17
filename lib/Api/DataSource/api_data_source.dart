@@ -689,7 +689,8 @@ class ApiDataSource extends BaseApiDataSource {
           ? apiShopId
           : (savedShopId ?? '');
 
-      final url = ApiUrl.productCategoryList(shopId: shopId);
+      // final url = ApiUrl.productCategoryList(shopId: shopId);
+      final url = ApiUrl.categoriesShop(type: 'subcategory');
       dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
 
       AppLogger.log.i(response);
@@ -1742,7 +1743,7 @@ class ApiDataSource extends BaseApiDataSource {
   }) async {
     try {
       final url = ApiUrl.version;
-
+AppLogger.log.w(appVersion);
       dynamic response = await Request.sendGetRequest(
         url,
         {},

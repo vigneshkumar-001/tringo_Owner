@@ -1126,6 +1126,33 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                                   avatarAsset: customerImg,
                                   customerName: customerName,
                                   timeText: timeText,
+                                  onChatTap: () {
+                                    if (showAnswerOnly) return;
+                                    if (isSmartConnect) {
+                                      _enableAds(enquiryId);
+                                      return;
+                                    }
+
+                                    CallHelper.openWhatsapp(
+                                      context: context,
+                                      phone: whatsappNumber,
+                                    );
+                                    ref
+                                        .read(homeNotifierProvider.notifier)
+                                        .markEnquiry(enquiryId: data.id);
+                                  },
+                                  onCallTap: () {
+                                    if (showAnswerOnly) return;
+                                    if (isSmartConnect) return;
+
+                                    CallHelper.openDialer(
+                                      context: context,
+                                      rawPhone: phone,
+                                    );
+                                    ref
+                                        .read(homeNotifierProvider.notifier)
+                                        .markEnquiry(enquiryId: data.id);
+                                  },
                                 ),
                                 const SizedBox(height: 20),
                               ],
@@ -2793,3 +2820,4 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
   }
 }
 */
+

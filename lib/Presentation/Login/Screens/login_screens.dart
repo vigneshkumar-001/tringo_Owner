@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_number/mobile_number.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 
 import '../../../../../Core/Utility/app_loader.dart';
@@ -628,7 +630,6 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber>
                         const SizedBox(height: 20),
                         _whatsappCheckboxTile(),
                         const SizedBox(height: 20),
-
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 35),
                           child: CommonContainer.button2(
@@ -661,6 +662,9 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber>
                                     }
 
                                     _lastRawPhone = rawPhone;
+
+                                    // ✅ save phone for owner info screens
+                                    await AppPrefs.setOwnerPhone(rawPhone);
 
                                     // 1) SIM check
                                     // await loadSimInfoFor(rawPhone);
@@ -713,6 +717,89 @@ class _LoginMobileNumberState extends ConsumerState<LoginMobileNumber>
                           ),
                         ),
 
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(horizontal: 35),
+                        //   child: CommonContainer.button2(
+                        //     width: double.infinity,
+                        //     loader: isBusy ? const ThreeDotsLoader() : null,
+                        //     onTap: isBusy
+                        //         ? null
+                        //         : () async {
+                        //             final formatted = mobileNumberController
+                        //                 .text
+                        //                 .trim();
+                        //             final rawPhone = formatted.replaceAll(
+                        //               ' ',
+                        //               '',
+                        //             );
+                        //
+                        //             if (rawPhone.isEmpty) {
+                        //               AppSnackBar.info(
+                        //                 context,
+                        //                 'Please enter phone number',
+                        //               );
+                        //               return;
+                        //             }
+                        //             if (rawPhone.length != 10) {
+                        //               AppSnackBar.info(
+                        //                 context,
+                        //                 'Please enter a valid 10-digit number',
+                        //               );
+                        //               return;
+                        //             }
+                        //
+                        //             _lastRawPhone = rawPhone;
+                        //
+                        //             // 1) SIM check
+                        //             // await loadSimInfoFor(rawPhone);
+                        //
+                        //             // ✅ decide SIM1 eligibility for THIS attempt
+                        //             _sim1EligibleForLastAttempt =
+                        //                 (numberMatch && matchedSlotIndex == 0);
+                        //
+                        //             // ✅ token ONLY if SIM1 eligible
+                        //             final fullPhone =
+                        //                 '$_selectedDialCode$rawPhone';
+                        //             _simTokenForLastAttempt =
+                        //                 _sim1EligibleForLastAttempt
+                        //                 ? generateSimToken(fullPhone)
+                        //                 : '';
+                        //
+                        //             // 2) SIM1 direct verify
+                        //             if (_sim1EligibleForLastAttempt) {
+                        //               _allowDirectHome = true;
+                        //
+                        //               await _triggerSimVerifyDirect(
+                        //                 phone: rawPhone,
+                        //                 simToken: _simTokenForLastAttempt,
+                        //               );
+                        //               return;
+                        //             }
+                        //
+                        //             _allowDirectHome = false;
+                        //
+                        //             // 3) Non-SIM1: Checkbox ON => WhatsApp verify first
+                        //             if (isWhatsappChecked) {
+                        //               _waitingWhatsapp = true;
+                        //
+                        //               await notifier.verifyWhatsappNumber(
+                        //                 contact: rawPhone,
+                        //                 purpose: 'owner',
+                        //               );
+                        //               return; // whatsappResponse listener will continue
+                        //             }
+                        //
+                        //             // 4) Checkbox OFF => direct loginNewUser (NO sim token)
+                        //             notifier.resetState();
+                        //             await notifier.loginNewUser(
+                        //               phoneNumber: rawPhone,
+                        //               simToken:
+                        //                   '', // ✅ IMPORTANT: NO token for non-SIM1
+                        //             );
+                        //           },
+                        //     text: 'Verify Now',
+                        //   ),
+                        // ),
                         const SizedBox(height: 50),
                       ],
                     ),

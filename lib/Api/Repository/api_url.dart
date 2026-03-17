@@ -45,7 +45,7 @@ class ApiUrl {
       "${base}api/v1/auth/phone-verification/verify";
 
   static String categoriesShop({required String type}) {
-    return "${base}api/v1/public/categories?type=$type";
+    return "${base}api/v1/public/categories?kind=$type";
   }
   static String shopPhotosUpload({required String shopId}) {
     return "${base}api/v1/shops/$shopId/media";

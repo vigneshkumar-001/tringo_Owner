@@ -10,7 +10,7 @@ class AppPrefs {
   static const String _refreshToken = 'refreshToken';
   static const String _sessionToken = 'sessionToken';
   static const String _role = 'role';
-
+  static const _kOwnerPhone = 'owner_phone';
   static Future<void> setToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_token, token);
@@ -30,8 +30,18 @@ class AppPrefs {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_role, role);
   }
+  static Future<void> setOwnerPhone(String phone) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kOwnerPhone, phone);
+  }
+
+
 
   /// Read
+  static Future<String?> getOwnerPhone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kOwnerPhone);
+  }
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_token);
@@ -58,6 +68,7 @@ class AppPrefs {
     await prefs.remove(_role);
     await prefs.remove(_sessionToken);
     await prefs.remove(_refreshToken);
+    await prefs.remove(_kOwnerPhone);
     // _cachedVerificationToken = null;
   }
   static Future<void> setVerificationToken(String token) async {

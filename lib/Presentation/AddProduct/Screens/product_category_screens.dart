@@ -12,7 +12,7 @@ import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
-import '../../ShopInfo/model/shop_category_list_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import '../Service Info/Controller/service_info_notifier.dart';
 import 'add_product_list.dart';
 
@@ -35,6 +35,9 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
   final String? initialDoorDelivery; // "Yes" / "No"
   final String? initialCategorySlug;
   final String? initialSubCategorySlug;
+  final List<String> initialImageUrls;
+  final List<Map<String, String>> initialFeatures;
+  final List<String> initialKeywords;
 
   const ProductCategoryScreens({
     super.key,
@@ -55,6 +58,9 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
     this.initialDoorDelivery,
     this.initialCategorySlug,
     this.initialSubCategorySlug,
+    this.initialImageUrls = const [],
+    this.initialFeatures = const [],
+    this.initialKeywords = const [],
   });
 
   @override
@@ -940,28 +946,119 @@ class _ProductCategoryScreensState
                           }
 
                           if (success) {
-                            // 🎯 Navigation logic (product + service both use this)
+                            final productResp =
+                                ref.read(productNotifierProvider).productResponse?.data;
+                            final serviceResp = ref
+                                .read(serviceInfoNotifierProvider)
+                                .serviceInfoResponse
+                                ?.data;
+
+                            final initialImageUrls = isServiceFlow
+                                ? ((serviceResp?.media
+                                              .map((e) => e.url)
+                                              .where((e) => e.trim().isNotEmpty)
+                                              .toList() ??
+                                          <String>[])
+                                      .isNotEmpty
+                                    ? (serviceResp?.media
+                                              .map((e) => e.url)
+                                              .where((e) => e.trim().isNotEmpty)
+                                              .toList() ??
+                                          <String>[])
+                                    : widget.initialImageUrls)
+                                : ((productResp?.media ?? const <dynamic>[])
+                                              .map((e) {
+                                                if (e is Map<String, dynamic>) {
+                                                  return (e['url'] ?? '').toString();
+                                                }
+                                                try {
+                                                  return (e.url ?? '').toString();
+                                                } catch (_) {
+                                                  return '';
+                                                }
+                                              })
+                                              .where((e) => e.trim().isNotEmpty)
+                                              .toList()
+                                              .isNotEmpty
+                                      ? (productResp?.media ?? const <dynamic>[])
+                                            .map((e) {
+                                              if (e is Map<String, dynamic>) {
+                                                return (e['url'] ?? '').toString();
+                                              }
+                                              try {
+                                                return (e.url ?? '').toString();
+                                              } catch (_) {
+                                                return '';
+                                              }
+                                            })
+                                            .where((e) => e.trim().isNotEmpty)
+                                            .toList()
+                                      : widget.initialImageUrls);
+
+                            final initialFeatures = isServiceFlow
+                                ? ((serviceResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                      .isNotEmpty
+                                    ? (serviceResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                    : widget.initialFeatures)
+                                : ((productResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                      .isNotEmpty
+                                    ? (productResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                    : widget.initialFeatures);
+
+                            final initialKeywords = isServiceFlow
+                                ? ((serviceResp?.keywords ?? <String>[]).isNotEmpty
+                                    ? (serviceResp?.keywords ?? <String>[])
+                                    : widget.initialKeywords)
+                                : ((productResp?.keywords ?? <String>[]).isNotEmpty
+                                    ? (productResp?.keywords ?? <String>[])
+                                    : widget.initialKeywords);
+
+                            final nextPage = AddProductList(
+                              isService: isServiceFlow,
+                              isEditFlow: widget.page == 'AboutMeScreens' &&
+                                  widget.productId != null &&
+                                  widget.productId!.isNotEmpty,
+                              initialImageUrls: initialImageUrls,
+                              initialKeywords: initialKeywords,
+                              initialFeatures: initialFeatures,
+                            );
+
                             if (widget.page == 'AboutMeScreens') {
-                              // EDIT mode (product or service) -> productId / serviceId present
-                              if (widget.productId != null &&
-                                  widget.productId!.isNotEmpty) {
-                                // ✅ Tell AboutMeScreens that something was updated
+                              final updated = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(builder: (_) => nextPage),
+                              );
+                              if (updated == true && mounted) {
                                 Navigator.pop(context, true);
-                              } else {
-                                // ADD mode from AboutMe -> go to AddProductList
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AddProductList(
-                                      isService: isServiceFlow,
-                                    ),
-                                  ),
-                                );
                               }
                             } else {
-                              context.pushNamed(
-                                AppRoutes.addProductList,
-                                extra: {'isService': isServiceFlow},
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => nextPage),
                               );
                             }
                           }
@@ -993,3 +1090,9 @@ class _ProductCategoryScreensState
     );
   }
 }
+
+
+
+
+
+

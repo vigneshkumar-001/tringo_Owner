@@ -440,3 +440,4 @@ bool? _parseBool(dynamic value) {
 
   return null;
 }
+
