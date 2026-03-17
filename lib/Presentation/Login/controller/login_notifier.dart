@@ -70,6 +70,7 @@ class LoginState {
 }
 
 class LoginNotifier extends Notifier<LoginState> {
+
   late final ApiDataSource api;
 
   @override

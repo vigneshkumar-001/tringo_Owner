@@ -129,10 +129,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // await _batteryOptimizationFlow();
 
       // 3) Continue normal flow
-      await ref.read(selectedShopProvider.notifier).switchShop('');
+   
+      final savedShopId = prefs.getString('currentShopId') ?? '';
+
+      await ref.read(selectedShopProvider.notifier).switchShop(savedShopId);
       await ref
           .read(homeNotifierProvider.notifier)
-          .fetchShops(shopId: '', filter: '');
+          .fetchShops(shopId: savedShopId, filter: '');
       await ref.read(subscriptionNotifier.notifier).getCurrentPlan();
 
       if (!mounted) return;
@@ -377,3 +380,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 }
 
 // enum _BatterySheetAction { openSettings }
+

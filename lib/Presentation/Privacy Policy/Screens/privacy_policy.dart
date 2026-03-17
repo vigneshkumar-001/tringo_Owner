@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
@@ -20,6 +21,7 @@ class PrivacyPolicy extends ConsumerStatefulWidget {
 }
 
 class _PrivacyPolicyState extends ConsumerState<PrivacyPolicy> {
+  bool isTermsAccepted = false;
   @override
   void initState() {
     super.initState();
@@ -213,12 +215,12 @@ class _PrivacyPolicyState extends ConsumerState<PrivacyPolicy> {
                                 margin: Margins.zero,
                                 padding: HtmlPaddings.zero,
                                 lineHeight: LineHeight.number(1.6),
-                                fontSize: FontSize(14),
+                                fontSize: FontSize(15),
                                 color: AppColor.darkGrey, // match your design
                               ),
                               "p": Style(margin: Margins.only(bottom: 12)),
                               "span": Style(
-                                fontSize: FontSize(14),
+                                fontSize: FontSize(15),
                                 color: AppColor.darkGrey,
                               ),
                             },
@@ -227,11 +229,35 @@ class _PrivacyPolicyState extends ConsumerState<PrivacyPolicy> {
                       ),
                     ),
 
-                    const SizedBox(height: 35),
-
                     if (widget.showAcceptReject &&
                         hasContent &&
-                        !state.isLoading)
+                        !state.isLoading) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: isTermsAccepted,
+                              onChanged: (value) {
+                                setState(() {
+                                  isTermsAccepted = value ?? false;
+                                });
+                              },
+                            ),
+                            Expanded(
+                              child: Text(
+                                'I agree to the Terms and Conditions',
+                                style: AppTextStyles.mulish(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColor.darkBlue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 35),
                         child: Row(
@@ -264,6 +290,13 @@ class _PrivacyPolicyState extends ConsumerState<PrivacyPolicy> {
                             InkWell(
                               borderRadius: BorderRadius.circular(15),
                               onTap: () {
+                                if (!isTermsAccepted) {
+                                  AppSnackBar.info(
+                                    context,
+                                    'Please accept Terms and Conditions',
+                                  );
+                                  return;
+                                }
                                 context.pushNamed(AppRoutes.register);
                               },
                               child: Container(
@@ -287,8 +320,8 @@ class _PrivacyPolicyState extends ConsumerState<PrivacyPolicy> {
                             ),
                           ],
                         ),
-                      )
-                    else
+                      ),
+                    ] else
                       const SizedBox.shrink(),
                   ],
                 ),

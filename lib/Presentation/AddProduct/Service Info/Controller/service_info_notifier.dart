@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../Api/DataSource/api_data_source.dart';
 import '../../../Login/controller/login_notifier.dart';
-import '../Model/service_info_response.dart';
+import 'package:tringo_owner/Presentation/AddProduct/Service Info/Model/service_info_response.dart';
 
 class ServiceInfoState {
   final bool isLoading;
@@ -92,11 +92,13 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
 
   Future<bool> uploadServiceImages({
     required List<File?> images,
+    required List<String> existingImageUrls,
     required List<Map<String, String>> features,
     required BuildContext context,
   }) async {
     // ---- VALIDATION ----
-    if (images.isEmpty || images.every((f) => f == null)) {
+    final hasExistingImages = existingImageUrls.any((e) => e.trim().isNotEmpty);
+    if ((images.isEmpty || images.every((f) => f == null)) && !hasExistingImages) {
       state = const ServiceInfoState(
         isLoading: false,
         error: "Please select at least 1 image",
@@ -107,7 +109,9 @@ class ServiceInfoNotifier extends Notifier<ServiceInfoState> {
     state = const ServiceInfoState(isLoading: true);
 
     // ---- STEP 1: UPLOAD IMAGES ONE BY ONE ----
-    final List<String> uploadedUrls = [];
+    final List<String> uploadedUrls = existingImageUrls
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
 
     for (final file in images) {
       if (file == null) continue;
@@ -195,3 +199,5 @@ final serviceInfoNotifierProvider =
     NotifierProvider<ServiceInfoNotifier, ServiceInfoState>(
       ServiceInfoNotifier.new,
     );
+
+

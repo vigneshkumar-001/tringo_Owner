@@ -68,7 +68,11 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
           ref.read(homeNotifierProvider).shopsResponse?.data.items ?? [];
       // await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
       if (existingShops.isNotEmpty) {
-        final shopId = existingShops.first.id;
+        final selectedShopId = ref.read(selectedShopProvider);
+        final shopId = ((selectedShopId ?? '').toString().trim().isNotEmpty
+                ? selectedShopId
+                : existingShops.first.id)
+            .toString();
         _calledOnce = true;
 
         AppLogger.log.i("Shop already exists: $shopId");
@@ -232,6 +236,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final dynamic mainShop = shops.isNotEmpty ? shops.first : null;
 
     final String mainShopId = (mainShop?.id ?? '').toString();
+    final String selectedShopId =
+        (ref.watch(selectedShopProvider) ?? '').toString().trim();
+    final String currentShopId =
+        selectedShopId.isNotEmpty ? selectedShopId : mainShopId;
     final String mainShopName = (mainShop?.englishName ?? '').toString();
     final String mainShopCategory = (mainShop?.category ?? '').toString();
     final loginContext = shopsRes?.data.loginContext;
@@ -366,10 +374,10 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
             onRefresh: () async {
               await ref
                   .read(homeNotifierProvider.notifier)
-                  .fetchShops(shopId: '',filter: '');
+                  .fetchShops(shopId: currentShopId,filter: '');
               await ref
                   .read(offerNotifierProvider.notifier)
-                  .offerScreenEnquiry(shopId: '');
+                  .offerScreenEnquiry(shopId: currentShopId);
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -591,7 +599,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    CreateAppOffer(shopId: mainShopId),
+                                    CreateAppOffer(shopId: currentShopId),
                               ),
                             );
                           } else {
@@ -3000,3 +3008,4 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
 //   }
 //
 // }
+

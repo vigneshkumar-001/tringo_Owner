@@ -8,6 +8,7 @@ import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Utility/app_loader.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
@@ -16,6 +17,7 @@ import 'package:tringo_owner/Core/Utility/thanglish_to_tamil.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../Login/controller/login_notifier.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 import '../controller/owner_info_notifier.dart';
 
@@ -66,6 +68,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
     ownershipType = widget.isIndividual ? 'INDIVIDUAL' : 'COMPANY';
     businessTypeForApi = widget.isService ? 'SERVICES' : 'SELLING_PRODUCTS';
 
+    _loadOwnerPhone();
     otpControllers = List.generate(otpLength, (_) => TextEditingController());
     otpFocusNodes = List.generate(otpLength, (_) => FocusNode());
   }
@@ -88,6 +91,18 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
     super.dispose();
   }
 
+  Future<void> _loadOwnerPhone() async {
+    final phone = await AppPrefs.getOwnerPhone() ?? '';
+
+    AppLogger.log.i('owner_phone => $phone');
+
+    if (mounted) {
+      setState(() {
+        mobileController.text = phone;
+      });
+    }
+  }
+
   void _startResendTimer() {
     resendSeconds = 30;
     Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -105,6 +120,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(ownerInfoNotifierProvider);
+    AppLogger.log.w(mobileController.text);
     final bool isIndividualFlow = widget.isIndividual ?? true;
     return Scaffold(
       body: SafeArea(
@@ -246,7 +262,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                       /// ENGLISH NAME
                       CommonContainer.fillingContainer(
                         text: '',
-                        verticalDivider: true,
+                        verticalDivider: false,
                         controller: englishNameController,
                         context: context,
                         validator: (v) =>
@@ -321,6 +337,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                       const SizedBox(height: 10),
 
                       CommonContainer.fillingContainer(
+                        readOnly: true,
                         controller: mobileController,
                         verticalDivider: true,
                         isMobile: true,
@@ -379,7 +396,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                       CommonContainer.fillingContainer(
                         controller: dateOfBirthController,
                         isDOB: true,
-                        verticalDivider: true,
+                        verticalDivider: false,
                         datePickMode: DatePickMode.single,
                         singleType:
                             DateSingleType.dob18Plus, // ✅ 18+ restriction
