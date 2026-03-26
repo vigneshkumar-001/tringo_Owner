@@ -11,6 +11,22 @@ class AppPrefs {
   static const String _sessionToken = 'sessionToken';
   static const String _role = 'role';
   static const _kOwnerPhone = 'owner_phone';
+  static const String _kOnboardingStep = 'onboardingStep';
+
+  // Registration flow flags (needed to resume onboarding screens after restart)
+  static const String _kIsService = 'reg_isService';
+  static const String _kIsIndividual = 'reg_isIndividual';
+
+  // Selected slugs (needed for keyword suggestions)
+  static const String _kShopCategorySlug = 'shopCategorySlug';
+  static const String _kProductCategorySlug = 'productCategorySlug';
+
+  // Convenience: onboarding considered "incomplete" when step-* is present.
+  static bool isIncompleteOnboardingStep(String? step) {
+    final s = (step ?? '').trim().toLowerCase();
+    return s.startsWith('step-');
+  }
+
   static Future<void> setToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_token, token);
@@ -33,6 +49,76 @@ class AppPrefs {
   static Future<void> setOwnerPhone(String phone) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kOwnerPhone, phone);
+  }
+
+  static Future<void> setOnboardingStep(String? step) async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = (step ?? '').trim();
+    if (s.isEmpty) {
+      await prefs.remove(_kOnboardingStep);
+    } else {
+      await prefs.setString(_kOnboardingStep, s);
+    }
+  }
+
+  static Future<String?> getOnboardingStep() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString(_kOnboardingStep);
+    return (s == null || s.trim().isEmpty) ? null : s.trim();
+  }
+
+  static Future<void> setRegistrationFlags({
+    required bool isService,
+    required bool isIndividual,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kIsService, isService);
+    await prefs.setBool(_kIsIndividual, isIndividual);
+  }
+
+  static Future<Map<String, bool>> getRegistrationFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'isService': prefs.getBool(_kIsService) ?? false,
+      'isIndividual': prefs.getBool(_kIsIndividual) ?? true,
+    };
+  }
+
+  static Future<bool> hasRegistrationFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey(_kIsService) && prefs.containsKey(_kIsIndividual);
+  }
+
+  static Future<void> setShopCategorySlug(String slug) async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = slug.trim();
+    if (s.isEmpty) {
+      await prefs.remove(_kShopCategorySlug);
+    } else {
+      await prefs.setString(_kShopCategorySlug, s);
+    }
+  }
+
+  static Future<String?> getShopCategorySlug() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString(_kShopCategorySlug);
+    return (s == null || s.trim().isEmpty) ? null : s.trim();
+  }
+
+  static Future<void> setProductCategorySlug(String slug) async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = slug.trim();
+    if (s.isEmpty) {
+      await prefs.remove(_kProductCategorySlug);
+    } else {
+      await prefs.setString(_kProductCategorySlug, s);
+    }
+  }
+
+  static Future<String?> getProductCategorySlug() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString(_kProductCategorySlug);
+    return (s == null || s.trim().isEmpty) ? null : s.trim();
   }
 
 
@@ -69,6 +155,7 @@ class AppPrefs {
     await prefs.remove(_sessionToken);
     await prefs.remove(_refreshToken);
     await prefs.remove(_kOwnerPhone);
+    await prefs.remove(_kOnboardingStep);
     // _cachedVerificationToken = null;
   }
   static Future<void> setVerificationToken(String token) async {

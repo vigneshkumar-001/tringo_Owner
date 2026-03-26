@@ -88,7 +88,7 @@
 
     <application
         android:name="${applicationName}"
-        android:label="Tringo Business"
+        android:label="Business Tringo"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:enableOnBackInvokedCallback="true"

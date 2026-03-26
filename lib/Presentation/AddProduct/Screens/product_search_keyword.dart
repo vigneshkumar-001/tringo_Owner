@@ -14,6 +14,7 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
@@ -52,6 +53,7 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
   final List<String> _keywords = [];
 
   bool _showRecommended = false;
+  String _categorySlug = '';
 
   // ✅ Suggestions
   Timer? _debounce;
@@ -74,15 +76,19 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
     );
 
     // ✅ fetch initial recommended list once screen opens (based on product/service)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final bool isServiceFlow =
           widget.isService ??
           RegistrationProductSeivice.instance.isServiceBusiness;
 
-      ref
-          .read(shopCategoryNotifierProvider.notifier)
-          .fetchKeyWords(
-            type: isServiceFlow ? "service" : "product",
+      _categorySlug = isServiceFlow
+          ? (await AppPrefs.getShopCategorySlug() ?? '')
+          : (await AppPrefs.getProductCategorySlug() ?? '');
+
+      if (_categorySlug.trim().isEmpty) return;
+
+      ref.read(shopCategoryNotifierProvider.notifier).fetchKeyWords(
+            categorySlug: _categorySlug,
             query: "",
           );
     });
@@ -140,8 +146,6 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
     final bool isCompany = widget.isCompanyResolved;
 
     // ✅ API type to send
-    final String keywordType = isService ? "service" : "product";
-
     // service/product submit states
     final serviceState = ref.watch(serviceInfoNotifierProvider);
     final productState = ref.watch(productNotifierProvider);
@@ -245,29 +249,32 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                             fontSize: 14,
                             color: AppColor.gray84,
                           ),
-                          suffixIcon: _searchKeywordController.text.trim().isNotEmpty
+                          suffixIcon:
+                              _searchKeywordController.text.trim().isNotEmpty
                               ? Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () {
-                                _addKeyword(_searchKeywordController.text);
-                                _searchKeywordController.clear();
-                                setState(() => _showSuggestions = false);
-                                _debounce?.cancel();
-                              },
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.black,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          )
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      _addKeyword(
+                                        _searchKeywordController.text,
+                                      );
+                                      _searchKeywordController.clear();
+                                      setState(() => _showSuggestions = false);
+                                      _debounce?.cancel();
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child:   Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                )
                               : null,
                           // suffixIcon: _searchKeywordController.text.isNotEmpty
                           //     ? IconButton(
@@ -306,10 +313,11 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                           _debounce = Timer(
                             const Duration(milliseconds: 350),
                             () {
+                              if (_categorySlug.trim().isEmpty) return;
                               ref
                                   .read(shopCategoryNotifierProvider.notifier)
                                   .fetchKeyWords(
-                                    type: keywordType, // ✅ product/service
+                                    categorySlug: _categorySlug,
                                     query: q,
                                   );
                             },
@@ -449,10 +457,11 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                           setState(() => _showRecommended = !_showRecommended);
 
                           if (_showRecommended) {
+                            if (_categorySlug.trim().isEmpty) return;
                             await ref
                                 .read(shopCategoryNotifierProvider.notifier)
                                 .fetchKeyWords(
-                                  type: keywordType, // ✅ product/service
+                                  categorySlug: _categorySlug,
                                   query: "",
                                 );
                           }
@@ -592,9 +601,7 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                           if (widget.isEditFlow) {
                             Navigator.pop(context, true);
                           } else if (isService) {
-                            AppLogger.log.i(
-                              'Service Passing ',
-                            );
+                            AppLogger.log.i('Service Passing ');
                             context.goNamed(
                               AppRoutes.shopsDetails,
                               extra: {
@@ -645,8 +652,3 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
     );
   }
 }
-
- 
-
-
-

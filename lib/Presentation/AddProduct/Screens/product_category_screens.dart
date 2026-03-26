@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Presentation/AddProduct/Controller/product_notifier.dart';
 import '../../../Core/Const/app_color.dart';
@@ -245,6 +246,9 @@ class _ProductCategoryScreensState
                                           _subCategoryHasError = false;
                                         });
 
+                                        // Persist selected slug for ProductSearchKeyword suggestions
+                                        AppPrefs.setProductCategorySlug(category.slug);
+
                                         if (onCategorySelected != null) {
                                           onCategorySelected(category);
                                         }
@@ -451,6 +455,9 @@ class _ProductCategoryScreensState
 
     productCategorySlug = widget.initialCategorySlug ?? '';
     productSubCategorySlug = widget.initialSubCategorySlug ?? '';
+    if (productCategorySlug.trim().isNotEmpty) {
+      AppPrefs.setProductCategorySlug(productCategorySlug);
+    }
 
     _offerController.text = widget.initialOfferLabel ?? offers.first;
     _offerPriceController.text = widget.initialOfferValue ?? '5%';

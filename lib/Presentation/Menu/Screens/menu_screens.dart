@@ -14,6 +14,7 @@ import 'package:tringo_owner/Presentation/Menu/Screens/qr_code_screen.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/subscription_history.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart';
 import 'package:tringo_owner/Presentation/Wallet/Screens/wallet_screens.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
@@ -81,7 +82,18 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     const PrivacyPolicy(),
     const WalletScreens(),
   ];
+  Future<void> _openPrivacyPolicy() async {
+    final Uri url = Uri.parse('https://bknd.tringobiz.com/privacy-policy.html');
 
+    final launched = await launchUrl(
+      url,
+      mode: LaunchMode.  inAppWebView,
+    );
+
+    if (!launched && mounted) {
+      AppSnackBar.error(context, 'Could not open privacy policy');
+    }
+  }
   Future<bool> _confirmDeleteAccount(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
@@ -387,16 +399,18 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                             ),
                           );
                           break;
-
-                        case 9: // ✅ Privacy Policy
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const PrivacyPolicy(showAcceptReject: false),
-                            ),
-                          );
+                        case 9: // Privacy Policy
+                          await _openPrivacyPolicy();
                           break;
+                        // case 9: // ✅ Privacy Policy
+                        //   Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (_) =>
+                        //           const PrivacyPolicy(showAcceptReject: false),
+                        //     ),
+                        //   );
+                        //   break;
 
                         default:
                           Navigator.push(

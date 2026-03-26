@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class ShopRootResponse {
   final bool status;
   final List<Shop> data;
@@ -22,6 +20,7 @@ class ShopRootResponse {
 
 class Shop {
   final String? shopId;
+  final String? businessProfileId;
   final String? shopEnglishName;
   final String? shopTamilName;
   final String? shopDescriptionEn;
@@ -49,6 +48,11 @@ class Shop {
   final int? shopRating;
   final int? shopReviewCount;
 
+  final String? opensAt;
+  final String? closesAt;
+  final String? ownershipType;
+  final String? shopOwnerImageUrl;
+
   /// NEW: shopImages from API
   final List<ShopImage> shopImages;
 
@@ -58,6 +62,7 @@ class Shop {
 
   Shop({
     this.shopId,
+    this.businessProfileId,
     this.shopEnglishName,
     this.shopTamilName,
     this.shopDescriptionEn,
@@ -82,6 +87,10 @@ class Shop {
     this.shopIsTrusted,
     this.shopRating,
     this.shopReviewCount,
+    this.opensAt,
+    this.closesAt,
+    this.ownershipType,
+    this.shopOwnerImageUrl,
     required this.shopImages,
     required this.products,
     required this.services,
@@ -92,6 +101,7 @@ class Shop {
     final weeklyJson = json['shopWeeklyHours'] ?? json['weeklyHours'];
     return Shop(
       shopId: json["shopId"] as String?,
+      businessProfileId: json["businessProfileId"] as String?,
       shopEnglishName: json["shopEnglishName"] as String?,
       shopTamilName: json["shopTamilName"] as String?,
       shopDescriptionEn: json["shopDescriptionEn"] as String?,
@@ -106,7 +116,7 @@ class Shop {
       shopGpsLongitude: json["shopGpsLongitude"] as String?,
 
       shopWeeklyHours:
-          (json['weeklyHours'] as List<dynamic>?)
+          (weeklyJson as List<dynamic>?)
               ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
@@ -122,6 +132,11 @@ class Shop {
       // 🔹 avoids "type 'double' is not a subtype of type 'int?'"
       shopRating: (json["shopRating"] as num?)?.toInt(),
       shopReviewCount: (json["shopReviewCount"] as num?)?.toInt(),
+
+      opensAt: json["opensAt"] as String?,
+      closesAt: json["closesAt"] as String?,
+      ownershipType: json["ownershipType"] as String?,
+      shopOwnerImageUrl: json["shopOwnerImageUrl"] as String?,
 
       // 🔹 shopImages
       shopImages:
@@ -216,6 +231,8 @@ class Product {
   final bool? doorDelivery;
   final int? rating;
   final int? ratingCount;
+  final List<String> keywords;
+  final List<Feature> features;
   final List<Media> media;
 
   Product({
@@ -237,6 +254,8 @@ class Product {
     this.doorDelivery,
     this.rating,
     this.ratingCount,
+    this.keywords = const [],
+    this.features = const [],
     required this.media,
   });
 
@@ -260,6 +279,16 @@ class Product {
       doorDelivery: json["doorDelivery"] as bool?,
       rating: (json["rating"] as num?)?.toInt(),
       ratingCount: (json["ratingCount"] as num?)?.toInt(),
+      keywords:
+          (json["keywords"] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      features:
+          (json["features"] as List<dynamic>?)
+              ?.map((e) => Feature.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       media:
           (json["media"] as List<dynamic>?)
               ?.map((x) => Media.fromJson(x as Map<String, dynamic>))
@@ -289,7 +318,8 @@ class Service {
   final int? ratingCount;
   final String? status;
 
-  final List<dynamic> features;
+  final List<String> keywords;
+  final List<Feature> features;
   final List<Media> media;
 
   /// ✅ ADD THIS (derived field)
@@ -312,7 +342,8 @@ class Service {
     this.rating,
     this.ratingCount,
     this.status,
-    required this.features,
+    this.keywords = const [],
+    this.features = const [],
     required this.media,
     this.imageUrl, // 👈 new
   });
@@ -350,7 +381,16 @@ class Service {
       rating: (json["rating"] as num?)?.toInt(),
       ratingCount: (json["ratingCount"] as num?)?.toInt(),
       status: json["status"] as String?,
-      features: json["features"] ?? [],
+      keywords:
+          (json["keywords"] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      features:
+          (json["features"] as List<dynamic>?)
+              ?.map((e) => Feature.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       media: mediaList,
       imageUrl: imageUrl, // ✅ here
     );
@@ -358,6 +398,31 @@ class Service {
 }
 
 // ───────────────────────── MEDIA ─────────────────────────
+
+class Feature {
+  final String? id;
+  final String? label;
+  final String? value;
+  final String? language;
+
+  const Feature({this.id, this.label, this.value, this.language});
+
+  factory Feature.fromJson(Map<String, dynamic> json) {
+    return Feature(
+      id: json["id"]?.toString(),
+      label: json["label"]?.toString(),
+      value: json["value"]?.toString(),
+      language: json["language"]?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "label": label,
+    "value": value,
+    "language": language,
+  };
+}
 
 class Media {
   final String? id;

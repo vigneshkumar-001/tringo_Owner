@@ -50,6 +50,7 @@ import '../../Presentation/Create App Offer/Model/edit_offers_response.dart';
 import '../../Presentation/Create App Offer/Model/update_offer_model.dart';
 import '../../Presentation/Create Surprise Offers/Model/surprise_offer_list_response.dart';
 import '../../Presentation/Login/model/contact_response.dart';
+import '../../Presentation/Login/model/device_token_response.dart';
 import '../../Presentation/Login/model/login_new_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
 import '../../Presentation/Menu/Model/delete_response.dart';
@@ -2912,11 +2913,11 @@ dateRange: $start → $end
   }
 
   Future<Either<Failure, CategoryKeywordsResponse>> getKeyWords({
-    required String type,
+    required String categorySlug,
     required String query,
   }) async {
     try {
-      String url = ApiUrl.getKeyWords(type: type, query: query);
+      String url = ApiUrl.getKeyWords(categorySlug: categorySlug, query: query);
 
       dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
 
@@ -3051,6 +3052,56 @@ dateRange: $start → $end
       }
     } catch (e, st) {
       AppLogger.log.e('$e,$st');
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+
+  Future<Either<Failure, DeviceTokenResponse>> fcmTokenSend({
+    required String fcmToken,
+    required String platform,
+    required String deviceId,
+  }) async {
+    try {
+      final url = ApiUrl.fcmToken;
+
+      dynamic response = await Request.sendRequest(
+        url,
+        {
+          "fcmToken": fcmToken,
+          "platform": "android",
+          if (deviceId.trim().isNotEmpty) "deviceId": deviceId,
+        },
+        'POST',
+        true,
+      );
+
+      AppLogger.log.i(response);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(DeviceTokenResponse.fromJson(response.data));
+          } else {
+            return Left(
+              ServerFailure(response.data['message'] ?? "Login failed"),
+            );
+          }
+        } else {
+          return Left(
+            ServerFailure(response.data['message'] ?? "Something went wrong"),
+          );
+        }
+      } else {
+        final errorData = response.response?.data;
+        if (errorData is Map && errorData.containsKey('message')) {
+          return Left(ServerFailure(errorData['message']));
+        }
+        return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+      }
+    } catch (e, st) {
+      AppLogger.log.e(e);
+      print('$e,$st');
       return Left(ServerFailure(e.toString()));
     }
   }

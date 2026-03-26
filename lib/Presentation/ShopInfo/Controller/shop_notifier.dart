@@ -90,12 +90,15 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
 
   Future<void> fetchKeyWords({
-    required String type,
+    required String categorySlug,
     required String query,
   }) async {
     state = const ShopCategoryState(isKeyWordsLoading: true);
 
-    final result = await apiDataSource.getKeyWords(query: query, type: type);
+    final result = await apiDataSource.getKeyWords(
+      query: query,
+      categorySlug: categorySlug,
+    );
 
     result.fold(
           (failure) =>
@@ -178,12 +181,16 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       },
       (response) async {
         // ✅ use response.data.id
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('shop_id', response.data.id);
+	        final prefs = await SharedPreferences.getInstance();
+	        await prefs.setString('shop_id', response.data.id);
 
-        state = ShopCategoryState(
-          isLoading: false,
-          shopCategoryResponse: response,
+	        await AppPrefs.setOnboardingStep(
+	          response.data.businessProfile.onboardingStatus,
+	        );
+
+	        state = ShopCategoryState(
+	          isLoading: false,
+	          shopCategoryResponse: response,
         );
         return response;
       },
@@ -342,15 +349,20 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         AppLogger.log.e(failure.message);
         return false;
       },
-          (response) {
-        state = ShopCategoryState(
-          isLoading: false,
-          shopPhotoResponse: response,
-        );
-        return response.status == true;
-      },
-    );
-  }
+	          (response) {
+	        state = ShopCategoryState(
+	          isLoading: false,
+	          shopPhotoResponse: response,
+	        );
+
+	        final nextStep = response.data.isNotEmpty
+	            ? response.data.first.shop.businessProfile.onboardingStatus
+	            : null;
+	        AppPrefs.setOnboardingStep(nextStep);
+	        return response.status == true;
+	      },
+	    );
+	  }
 
   Future<bool> searchKeywords({required List<String> keywords}) async {
     state = const ShopCategoryState(isLoading: true);
@@ -364,14 +376,19 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         state = ShopCategoryState(isLoading: false, error: failure.message);
         success = false;
       },
-      (response) {
-        state = ShopCategoryState(
-          isLoading: false,
-          shopCategoryApiResponse: response,
-        );
-        success = true;
-      },
-    );
+	      (response) {
+	        state = ShopCategoryState(
+	          isLoading: false,
+	          shopCategoryApiResponse: response,
+	        );
+
+	        final nextStep = response.data.isNotEmpty
+	            ? response.data.first.shop.businessProfile.onboardingStatus
+	            : null;
+	        AppPrefs.setOnboardingStep(nextStep);
+	        success = true;
+	      },
+	    );
 
     return success;
   }
