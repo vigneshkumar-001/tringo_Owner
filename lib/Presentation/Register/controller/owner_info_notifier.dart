@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
 import '../../Login/controller/login_notifier.dart';
@@ -59,8 +60,11 @@ class OwnerInfoNotifier extends Notifier<OwnerInfoState> {
     result.fold(
       (Failure failure) =>
           state = OwnerInfoState(isLoading: false, error: failure.message),
-      (response) =>
-          state = OwnerInfoState(isLoading: false, ownerResponse: response),
+      (response) async {
+        // Persist onboarding step for cold-start resume forcing login
+        await AppPrefs.setOnboardingStep(response.data?.onboardingStatus);
+        state = OwnerInfoState(isLoading: false, ownerResponse: response);
+      },
     );
   }
 

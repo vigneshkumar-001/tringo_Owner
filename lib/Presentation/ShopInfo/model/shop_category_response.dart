@@ -221,7 +221,8 @@ class BusinessProfile {
       identityDocumentUrl: json['identityDocumentUrl'],
       ownerNameTamil: json['ownerNameTamil'],
       user: AppUser.fromJson(json['user'] ?? const {}),
-      onboardingStatus: json['onboardingStatus'],
+      onboardingStatus:
+          (json['onboardingStep'] ?? json['onboardingStatus'])?.toString(),
     );
   }
 

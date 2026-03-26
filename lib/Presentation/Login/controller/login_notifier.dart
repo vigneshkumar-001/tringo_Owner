@@ -251,6 +251,9 @@ class LoginNotifier extends Notifier<LoginState> {
         await prefs.setString('sessionToken', data?.sessionToken ?? '');
         await prefs.setString('role', data?.role ?? '');
 
+        // Store onboarding step so onboarding can resume after restart
+        await AppPrefs.setOnboardingStep(data?.onboardingStep);
+
         // ✅ OTP success state first (UI can navigate)
         state = state.copyWith(
           isLoading: false,

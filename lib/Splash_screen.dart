@@ -9,11 +9,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
+import 'Core/Utility/device_helper.dart';
 import 'Core/Widgets/caller_id_role_helper.dart';
 import 'Core/permissions/permission_service.dart';
 
@@ -104,11 +106,47 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   //     AppLogger.log.i("✅ Battery optimization marked DONE");
   //   }
   // }
+  bool _tokenSent = false;
+  Future<void> _sendDeviceTokenIfNeeded() async {
+    if (_tokenSent) return;
+    _tokenSent = true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final fcmToken = prefs.getString('fcmToken') ?? '';
+      AppLogger.log.i(fcmToken);
+
+      if (fcmToken.isEmpty) {
+        AppLogger.log.w("⚠️ No fcmToken in prefs yet");
+        return;
+      }
+
+      final deviceId = await DeviceIdHelper.getDeviceId();
+      final platform = Platform.isAndroid ? "android" : "ios";
+
+      await ref
+          .read(appVersionNotifierProvider.notifier)
+          .fcmTokenSend(
+            fcmToken: fcmToken,
+            platform: platform,
+            deviceId: deviceId,
+          );
+
+      final st = ref.read(appVersionNotifierProvider);
+      AppLogger.log.i(
+        "✅ device-token api response: ${st.deviceTokenResponse?.status}",
+      );
+    } catch (e, st) {
+      AppLogger.log.e("❌ sendDeviceToken failed: $e");
+      AppLogger.log.e(st);
+    }
+  }
 
   Future<void> _initializeSplash() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
+      final onboardingStep = prefs.getString('onboardingStep') ?? '';
 
       // 1) App version check
       await ref
@@ -129,7 +167,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // await _batteryOptimizationFlow();
 
       // 3) Continue normal flow
-   
+      // If onboarding is incomplete, force re-login on every cold start.
+      // After OTP login, backend returns the next onboarding step (step-1..step-4),
+      // and we navigate accordingly.
+      if (token.isEmpty || AppPrefs.isIncompleteOnboardingStep(onboardingStep)) {
+        await Future.delayed(const Duration(seconds: 2));
+        if (!mounted) return;
+        context.go(AppRoutes.loginPath);
+        return;
+      }
+
       final savedShopId = prefs.getString('currentShopId') ?? '';
 
       await ref.read(selectedShopProvider.notifier).switchShop(savedShopId);
@@ -147,13 +194,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
 
-      if (token.isNotEmpty) {
-        context.go(
-          isNewUser ? AppRoutes.privacyPolicyPath : AppRoutes.homeScreenPath,
-        );
-      } else {
-        context.go(AppRoutes.loginPath);
-      }
+      context.go(
+        isNewUser ? AppRoutes.privacyPolicyPath : AppRoutes.homeScreenPath,
+      );
+      await _sendDeviceTokenIfNeeded();
     } catch (e, st) {
       AppLogger.log.e("Splash init error: $e\n$st");
       if (!mounted) return;
@@ -380,4 +424,3 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 }
 
 // enum _BatterySheetAction { openSettings }
-

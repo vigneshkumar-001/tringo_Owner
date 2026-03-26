@@ -419,6 +419,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                           _subCategoryErrorText = null;
                                         });
 
+                                        // Persist selected slug for keyword suggestions screen
+                                        AppPrefs.setShopCategorySlug(category.slug);
+
                                         if (onCategorySelected != null) {
                                           onCategorySelected(category);
                                         }
@@ -623,7 +626,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     // 👉 category / subcategory
     if (widget.initialCategoryName?.isNotEmpty ?? false) {
       _categoryController.text = widget.initialCategoryName!;
-      categorySlug = widget.initialCategorySlug ?? '';
+    categorySlug = widget.initialCategorySlug ?? '';
+    if (categorySlug.trim().isNotEmpty) {
+      AppPrefs.setShopCategorySlug(categorySlug);
+    }
     }
     if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
       _subCategoryController.text = widget.initialSubCategoryName!;

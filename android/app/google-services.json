@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "278248608128",
+    "project_id": "tringoowner-49add",
+    "storage_bucket": "tringoowner-49add.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278248608128:android:d67c53255ff74eea5bf165",
+        "android_client_info": {
+          "package_name": "com.fenizo.tringo_owner.tringo_owner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVV2Z2m_9YK79NHV2davw9FX1igvVrWXg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

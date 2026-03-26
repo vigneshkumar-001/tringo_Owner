@@ -11,6 +11,7 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
+import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
@@ -34,6 +35,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
   Timer? _debounce;
   bool _showSuggestions = false;
   bool _showRecommended = false;
+  String _categorySlug = '';
 
   bool get isIndividualFlow {
     final session = RegistrationProductSeivice.instance;
@@ -45,11 +47,10 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
     super.initState();
 
     // ✅ Fetch initial recommended keywords on screen open
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(shopCategoryNotifierProvider.notifier)
-          .fetchKeyWords(
-            type: "shop",
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _categorySlug = await AppPrefs.getShopCategorySlug() ?? '';
+      ref.read(shopCategoryNotifierProvider.notifier).fetchKeyWords(
+            categorySlug: _categorySlug,
             query: "", // empty = recommended/default
           );
     });
@@ -206,8 +207,8 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                                   color: Colors.black,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.add,
+                                child:   Icon(
+                                  Icons.check,
                                   color: Colors.white,
                                   size: 20,
                                 ),
@@ -252,9 +253,13 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                           _debounce = Timer(
                             const Duration(milliseconds: 350),
                             () {
+                              if (_categorySlug.trim().isEmpty) return;
                               ref
                                   .read(shopCategoryNotifierProvider.notifier)
-                                  .fetchKeyWords(type: "shop", query: q);
+                                  .fetchKeyWords(
+                                    categorySlug: _categorySlug,
+                                    query: q,
+                                  );
                             },
                           );
                         },
@@ -392,9 +397,13 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                           setState(() => _showRecommended = !_showRecommended);
 
                           if (_showRecommended) {
+                            if (_categorySlug.trim().isEmpty) return;
                             await ref
                                 .read(shopCategoryNotifierProvider.notifier)
-                                .fetchKeyWords(type: "shop", query: "");
+                                .fetchKeyWords(
+                                  categorySlug: _categorySlug,
+                                  query: "",
+                                );
                           }
                         },
                         child: Container(

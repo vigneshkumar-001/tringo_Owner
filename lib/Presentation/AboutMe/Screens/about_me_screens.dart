@@ -2058,23 +2058,23 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                         .where((e) => e.isNotEmpty)
                                         .toList();
                                 final initialServiceFeatures = s.features
-                                    .map<Map<String, String>?>((e) {
-                                      if (e is Map<String, dynamic>) {
-                                        final heading =
-                                            (e['label'] ?? '').toString().trim();
-                                        final answer =
-                                            (e['value'] ?? '').toString().trim();
-                                        if (heading.isEmpty && answer.isEmpty) {
-                                          return null;
-                                        }
-                                        return {
-                                          'heading': heading,
-                                          'answer': answer,
-                                        };
+                                    .map<Map<String, String>?>((f) {
+                                      final heading = (f.label ?? '').trim();
+                                      final answer = (f.value ?? '').trim();
+                                      if (heading.isEmpty && answer.isEmpty) {
+                                        return null;
                                       }
-                                      return null;
+                                      return {
+                                        'heading': heading,
+                                        'answer': answer,
+                                      };
                                     })
                                     .whereType<Map<String, String>>()
+                                    .toList();
+
+                                final initialServiceKeywords = s.keywords
+                                    .map((e) => e.trim())
+                                    .where((e) => e.isNotEmpty)
                                     .toList();
 
                                 final updated = await Navigator.push<bool>(
@@ -2098,6 +2098,8 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                               initialServiceImageUrls,
                                           initialFeatures:
                                               initialServiceFeatures,
+                                          initialKeywords:
+                                              initialServiceKeywords,
                                         ),
                                   ),
                                 );
@@ -2370,6 +2372,26 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                         .where((e) => e.isNotEmpty)
                                         .toList();
 
+                                final initialProductFeatures = p.features
+                                    .map<Map<String, String>?>((f) {
+                                      final heading = (f.label ?? '').trim();
+                                      final answer = (f.value ?? '').trim();
+                                      if (heading.isEmpty && answer.isEmpty) {
+                                        return null;
+                                      }
+                                      return {
+                                        'heading': heading,
+                                        'answer': answer,
+                                      };
+                                    })
+                                    .whereType<Map<String, String>>()
+                                    .toList();
+
+                                final initialProductKeywords = p.keywords
+                                    .map((e) => e.trim())
+                                    .where((e) => e.isNotEmpty)
+                                    .toList();
+
                                 final updated = await Navigator.push<bool>(
                                   context,
                                   MaterialPageRoute(
@@ -2394,6 +2416,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                               p.subCategorySlug,
                                           initialImageUrls:
                                               initialProductImageUrls,
+                                          initialFeatures:
+                                              initialProductFeatures,
+                                          initialKeywords:
+                                              initialProductKeywords,
                                         ),
                                   ),
                                 );

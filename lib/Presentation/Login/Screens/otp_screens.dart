@@ -1,17 +1,25 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Utility/app_loader.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Presentation/Login/controller/app_version_notifier.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
+import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Utility/device_helper.dart';
 import '../../Home/Controller/shopContext_provider.dart';
 import '../controller/login_notifier.dart';
 
@@ -76,6 +84,36 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       }
     });
   }
+  bool _fcmSent = false;
+  Future<void> _sendFcmAfterLogin() async {
+    if (_fcmSent) return;
+    _fcmSent = true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final fcmToken = prefs.getString('fcmToken') ?? '';
+
+      if (fcmToken.isEmpty) {
+        AppLogger.log.w("⚠️ FCM token empty after login");
+        return;
+      }
+
+      final deviceId = await DeviceIdHelper.getDeviceId();
+      final platform = Platform.isAndroid ? "android" : "ios";
+
+      await ref
+          .read(appVersionNotifierProvider.notifier)
+          .fcmTokenSend(
+        fcmToken: fcmToken,
+        platform: platform,
+        deviceId: deviceId,
+      );
+
+      AppLogger.log.i("✅ FCM token sent after OTP login");
+    } catch (e) {
+      AppLogger.log.e("❌ FCM send failed: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,12 +129,48 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       }
       // OTP verified
       else if (next.otpResponse != null) {
+        Future(() => _sendFcmAfterLogin());
         AppSnackBar.success(context, 'OTP verified successfully!');
-        if (next.otpResponse?.data?.isNewOwner == false) {
+
+        final data = next.otpResponse?.data;
+        final step = (data?.onboardingStep ?? '').trim().toLowerCase();
+
+        if (data?.isNewOwner == false) {
+          // Existing owner
           context.goNamed(AppRoutes.homeScreen);
           await ref.read(selectedShopProvider.notifier).switchShop('');
         } else {
-          context.goNamed(AppRoutes.privacyPolicy);
+          // New owner / onboarding
+          final hasFlags = await AppPrefs.hasRegistrationFlags();
+          final flags = await AppPrefs.getRegistrationFlags();
+          final isService = flags['isService'] == true;
+          final isIndividual = flags['isIndividual'] == true;
+
+          // Restore in-memory registration singletons (needed by later screens)
+          final bt = isIndividual ? BusinessType.individual : BusinessType.company;
+          RegistrationSession.instance.businessType = bt;
+          RegistrationProductSeivice.instance.businessType = bt;
+          RegistrationProductSeivice.instance.businessCategory =
+              isService ? BusinessCategory.services : BusinessCategory.sellingProduct;
+
+          if (step == 'step-2') {
+            context.goNamed(
+              AppRoutes.shopCategoryInfo,
+              extra: {'isService': isService, 'isIndividual': isIndividual},
+            );
+          } else if (step == 'step-3') {
+            context.goNamed(AppRoutes.shopPhotoInfo, extra: 'onboarding');
+          } else if (step == 'step-4') {
+            context.goNamed(AppRoutes.searchKeyword);
+          } else if (step == 'step-1' && hasFlags) {
+            context.goNamed(
+              AppRoutes.ownerInfo,
+              extra: {'isService': isService, 'isIndividual': isIndividual},
+            );
+          } else {
+            // Default: start at business type selection
+            context.goNamed(AppRoutes.register);
+          }
         }
 
         notifier.resetState();

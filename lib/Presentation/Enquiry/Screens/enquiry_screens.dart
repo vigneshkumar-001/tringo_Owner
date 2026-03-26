@@ -159,7 +159,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                       source: ImageSource.gallery,
                       imageQuality: 85,
                     );
-                    if (x != null) _setPicked(enquiryId, x);
+                    if (x != null) _addImage(enquiryId, x);
                   },
                 ),
                 ListTile(
@@ -171,7 +171,7 @@ class _EnquiryScreensState extends ConsumerState<EnquiryScreens> {
                       source: ImageSource.camera,
                       imageQuality: 85,
                     );
-                    if (x != null) _setPicked(enquiryId, x);
+                    if (x != null) _addImage(enquiryId, x);
                   },
                 ),
                 const SizedBox(height: 6),

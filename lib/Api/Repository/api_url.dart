@@ -15,6 +15,7 @@ class ApiUrl {
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
+  static const String fcmToken = "${base}api/v1/auth/device-token";
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
   static const String version = "${base}api/v1/app/version";
   static const String deleteAccount = "${base}api/v1/auth/me";
@@ -31,8 +32,21 @@ class ApiUrl {
     return "${base}api/v1/support/tickets/$ticketId/messages";
   }
 
-  static String getKeyWords({required String type, required String query}) {
-    return "${base}api/v1/public/keywords?type=$type&q=$query";
+  static String getKeyWords({
+    required String categorySlug,
+    required String query,
+  }) {
+    final params = <String, String>{};
+
+    final slug = categorySlug.trim();
+    final q = query.trim();
+
+    if (slug.isNotEmpty) params['categorySlug'] = slug;
+    if (q.isNotEmpty) params['q'] = q;
+
+    return Uri.parse("${base}api/v1/public/keywords")
+        .replace(queryParameters: params.isEmpty ? null : params)
+        .toString();
   }
 
   static String getChatMessages({required String id}) {
@@ -47,6 +61,7 @@ class ApiUrl {
   static String categoriesShop({required String type}) {
     return "${base}api/v1/public/categories?kind=$type";
   }
+
   static String shopPhotosUpload({required String shopId}) {
     return "${base}api/v1/shops/$shopId/media";
   }
@@ -126,7 +141,10 @@ class ApiUrl {
     return "${base}api/smart-connect/$requestId/responses";
   }
 
-  static String getAllShopsDetails({required String shopId, required String filter}) {
+  static String getAllShopsDetails({
+    required String shopId,
+    required String filter,
+  }) {
     return "${base}api/v1/dashboard/shops?shopId=$shopId&filter=$filter";
   }
 
@@ -175,9 +193,15 @@ class ApiUrl {
   static String createAppOffer({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers/app";
   }
-  static String getShopAnalytics({required String shopId,required String filter,required String months}) {
+
+  static String getShopAnalytics({
+    required String shopId,
+    required String filter,
+    required String months,
+  }) {
     return "${base}api/v1/shops/$shopId/profile/about-me-analytics?month=$months&filter=$filter";
   }
+
   static String productListShowForOffer({
     required String shopId,
     required String type,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Presentation/Register/Screens/owner_info_screens.dart';
 
@@ -45,6 +46,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         : BusinessCategory.services;
 
     RegistrationProductSeivice.instance.businessCategory = businessCategory;
+
+    // Persist flags so onboarding can resume after app restart
+    AppPrefs.setRegistrationFlags(
+      isService: selectedIndex == 1,
+      isIndividual: isIndividual,
+    );
 
     // Owner info
     context.pushNamed(
