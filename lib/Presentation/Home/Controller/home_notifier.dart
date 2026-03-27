@@ -3,15 +3,14 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Presentation/Home/Model/reply_response.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
-import '../../Login/controller/login_notifier.dart';
-import '../Model/enquiry_response.dart';
-import '../Model/mark_enquiry.dart';
-import '../Model/shops_response.dart';
-import '../Model/enquiry_analytics_response.dart';
+import 'package:tringo_owner/Presentation/Login/controller/login_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Model/enquiry_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/mark_enquiry.dart';
+import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/enquiry_analytics_response.dart';
 
 enum AnalyticsType { enquiries, calls, locations }
 
@@ -208,6 +207,14 @@ class HomeNotifier extends Notifier<HomeState> {
 
   // ------------------- Existing Methods -------------------
 
+  Future<String> _resolveShopId(String shopId) async {
+    final direct = shopId.trim();
+    if (direct.isNotEmpty) return direct;
+
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getString('currentShopId') ?? '').trim();
+  }
+
   Future<void> selectShop(String shopId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('currentShopId', shopId);
@@ -215,9 +222,10 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> fetchAllEnquiry({required String shopId}) async {
+    final resolvedShopId = await _resolveShopId(shopId);
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await api.getAllEnquiry(shopId: shopId);
+    final result = await api.getAllEnquiry(shopId: resolvedShopId);
 
     result.fold(
       (failure) => state = state.copyWith(
@@ -229,9 +237,13 @@ class HomeNotifier extends Notifier<HomeState> {
         isLoading: false,
         error: null,
         enquiryResponse: response,
+        selectedShopId: resolvedShopId.isNotEmpty
+            ? resolvedShopId
+            : state.selectedShopId,
       ),
     );
   }
+
   Future<void> replyEnquiry({
     required String shopId,
     required String requestId,
@@ -246,16 +258,14 @@ class HomeNotifier extends Notifier<HomeState> {
 
     // 🔥 Upload each image one by one
     for (final file in ownerImageFiles) {
-      final hasValidImage =
-          file.path.isNotEmpty && await file.exists();
+      final hasValidImage = file.path.isNotEmpty && await file.exists();
 
       if (hasValidImage) {
-        final uploadResult =
-        await api.userProfileUpload(imageFile: file);
+        final uploadResult = await api.userProfileUpload(imageFile: file);
 
         final url = uploadResult.fold(
-              (failure) => '',
-              (success) => (success.message ?? '').toString(),
+          (failure) => '',
+          (success) => success.message.toString(),
         );
 
         if (url.isNotEmpty) {
@@ -275,14 +285,14 @@ class HomeNotifier extends Notifier<HomeState> {
     );
 
     result.fold(
-          (failure) {
+      (failure) {
         state = state.copyWith(
           isLoading: false,
           error: failure.message,
           replyResponse: null,
         );
       },
-          (response) {
+      (response) {
         state = state.copyWith(
           isLoading: false,
           error: null,
@@ -291,7 +301,7 @@ class HomeNotifier extends Notifier<HomeState> {
       },
     );
   }
- /* Future<void> replyEnquiry({
+  /* Future<void> replyEnquiry({
     required String shopId,
     required String requestId,      // ✅ must pass real requestId
     required String productTitle,   // ✅ must pass real title
@@ -351,9 +361,13 @@ class HomeNotifier extends Notifier<HomeState> {
     required String shopId,
     required String filter,
   }) async {
+    final resolvedShopId = await _resolveShopId(shopId);
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await api.getAllShops(shopId: shopId, filter: filter);
+    final result = await api.getAllShops(
+      shopId: resolvedShopId,
+      filter: filter,
+    );
 
     return result.fold(
       (failure) {
@@ -368,8 +382,22 @@ class HomeNotifier extends Notifier<HomeState> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(
           'isFreemium',
-          response.data.subscription?.isFreemium ?? false,
+          response.data.subscription.isFreemium,
         );
+
+        // If no shop selected yet, persist the first shop as default.
+        if (resolvedShopId.isEmpty &&
+            (prefs.getString('currentShopId') ?? '').trim().isEmpty) {
+          final firstId = (response.data.items.isNotEmpty)
+              ? response.data.items.first.id.toString().trim()
+              : '';
+          if (firstId.isNotEmpty) {
+            await prefs.setString('currentShopId', firstId);
+            state = state.copyWith(selectedShopId: firstId);
+          }
+        } else if (resolvedShopId.isNotEmpty) {
+          state = state.copyWith(selectedShopId: resolvedShopId);
+        }
 
         state = state.copyWith(
           isLoading: false,

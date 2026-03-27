@@ -19,10 +19,10 @@ import 'Core/Utility/device_helper.dart';
 import 'Core/Widgets/caller_id_role_helper.dart';
 import 'Core/permissions/permission_service.dart';
 
-import 'Presentation/Home/Controller/home_notifier.dart';
-import 'Presentation/Home/Controller/shopContext_provider.dart';
-import 'Presentation/Login/controller/app_version_notifier.dart';
-import 'Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
+import 'package:tringo_owner/Presentation/Login/controller/app_version_notifier.dart';
+import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -170,7 +170,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // If onboarding is incomplete, force re-login on every cold start.
       // After OTP login, backend returns the next onboarding step (step-1..step-4),
       // and we navigate accordingly.
-      if (token.isEmpty || AppPrefs.isIncompleteOnboardingStep(onboardingStep)) {
+      if (token.isEmpty ||
+          AppPrefs.isIncompleteOnboardingStep(onboardingStep)) {
         await Future.delayed(const Duration(seconds: 2));
         if (!mounted) return;
         context.go(AppRoutes.loginPath);

@@ -95,7 +95,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   final Map<String, TextEditingController> _msgCtrl = {};
   final Map<String, TextEditingController> _priceCtrl = {};
 
-  static const int _maxMsgLen = 120;
+  static const int _maxMsgLen = 500;
 
   TextEditingController _getMsgCtrl(String id) =>
       _msgCtrl.putIfAbsent(id, () => TextEditingController());
@@ -1445,7 +1445,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                             }
                                           },
 
-                                    questionText: '',
+                                    questionText: data.message.trim(),
                                     productTitle: productTitle,
                                     rating: rating,
                                     ratingCount: ratingCount,
