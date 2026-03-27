@@ -461,11 +461,13 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
                         );
 
                         if (success) {
-                          if (widget.pages == "AboutMeScreens") {
-                            context.pushNamed(AppRoutes.homeScreen, extra: 3);
-                          } else {
-                            context.pushNamed(AppRoutes.searchKeyword);
+                          if (widget.pages == "AboutMeEditFlow" ||
+                              widget.pages == "AboutMeScreens") {
+                            Navigator.pop(context, true);
+                            return;
                           }
+
+                          context.pushNamed(AppRoutes.searchKeyword);
                         } else {
                           final err = ref
                               .read(shopCategoryNotifierProvider)

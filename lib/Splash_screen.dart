@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tringo_owner/Core/Const/app_logger.dart';
@@ -15,14 +12,7 @@ import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
-import 'Core/Utility/device_helper.dart';
-import 'Core/Widgets/caller_id_role_helper.dart';
-import 'Core/permissions/permission_service.dart';
-
-import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
-import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
 import 'package:tringo_owner/Presentation/Login/controller/app_version_notifier.dart';
-import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -35,17 +25,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     with WidgetsBindingObserver {
   // Use your real app version value here
   final String appVersion = '1.0.0';
-
-  bool _batteryFlowRunning = false;
-  bool _batterySheetOpen = false;
-
-  // persist keys
-  static const _kBatteryDoneKey = "battery_opt_done";
-  static const _kBatteryLastShownAt = "battery_opt_last_shown_at";
-  static const _kWentToBatterySettings = "went_to_battery_settings";
-
-  // cooldown (avoid annoying user)
-  static const int _cooldownSeconds = 60 * 60 * 12; // 12 hours
 
   @override
   void initState() {
@@ -106,6 +85,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   //     AppLogger.log.i("✅ Battery optimization marked DONE");
   //   }
   // }
+  /*
   bool _tokenSent = false;
   Future<void> _sendDeviceTokenIfNeeded() async {
     if (_tokenSent) return;
@@ -141,13 +121,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       AppLogger.log.e(st);
     }
   }
+  */
 
   Future<void> _initializeSplash() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-      final onboardingStep = prefs.getString('onboardingStep') ?? '';
-
       // 1) App version check
       await ref
           .read(appVersionNotifierProvider.notifier)
@@ -166,39 +143,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // 2) Battery flow (before navigation)
       // await _batteryOptimizationFlow();
 
-      // 3) Continue normal flow
-      // If onboarding is incomplete, force re-login on every cold start.
-      // After OTP login, backend returns the next onboarding step (step-1..step-4),
-      // and we navigate accordingly.
-      if (token.isEmpty ||
-          AppPrefs.isIncompleteOnboardingStep(onboardingStep)) {
-        await Future.delayed(const Duration(seconds: 2));
-        if (!mounted) return;
-        context.go(AppRoutes.loginPath);
-        return;
-      }
-
-      final savedShopId = prefs.getString('currentShopId') ?? '';
-
-      await ref.read(selectedShopProvider.notifier).switchShop(savedShopId);
-      await ref
-          .read(homeNotifierProvider.notifier)
-          .fetchShops(shopId: savedShopId, filter: '');
-      await ref.read(subscriptionNotifier.notifier).getCurrentPlan();
-
-      if (!mounted) return;
-
-      final homeState = ref.read(homeNotifierProvider);
-      final bool isNewUser = homeState.shopsResponse?.data.isNewOwner ?? false;
-
-      // Optional: hold splash a bit
+      // 3) Auth policy: always show Login on cold start.
+      // This prevents the app from reopening directly to Home due to a saved token.
+      await AppPrefs.clearIds();
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
-
-      context.go(
-        isNewUser ? AppRoutes.privacyPolicyPath : AppRoutes.homeScreenPath,
-      );
-      await _sendDeviceTokenIfNeeded();
+      context.go(AppRoutes.loginPath);
     } catch (e, st) {
       AppLogger.log.e("Splash init error: $e\n$st");
       if (!mounted) return;

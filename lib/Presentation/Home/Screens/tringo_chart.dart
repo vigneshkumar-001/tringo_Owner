@@ -28,6 +28,7 @@ class ReachLineChart extends StatelessWidget {
 
     // Highlight max point (big dot like your design)
     final maxIndex = _maxIndex(points);
+    const lineColor = Color(0xFF4DA3FF);
 
     return SizedBox(
       height: 240,
@@ -53,12 +54,14 @@ class ReachLineChart extends StatelessWidget {
                 interval: 1,
                 getTitlesWidget: (value, meta) {
                   final i = value.toInt();
-                  if (i < 0 || i >= points.length)
+                  if (i < 0 || i >= points.length) {
                     return const SizedBox.shrink();
+                  }
 
                   // show fewer labels if too many points
-                  if (points.length > 10 && i % 2 == 1)
+                  if (points.length > 10 && i % 2 == 1) {
                     return const SizedBox.shrink();
+                  }
 
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
@@ -115,9 +118,12 @@ class ReachLineChart extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: spots,
-              isCurved: false,
-              color: Colors.blueAccent,
-              barWidth: 1.2,
+              isCurved: true,
+              curveSmoothness: 0.22,
+              preventCurveOverShooting: true,
+              color: lineColor,
+              barWidth: 2.4,
+              isStrokeCapRound: true,
 
               // ✅ Gradient fill under the line
               belowBarData: BarAreaData(
@@ -126,7 +132,7 @@ class ReachLineChart extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.blueAccent.withOpacity(0.25), // top (near line)
+                    lineColor.withValues(alpha: 0.28), // top (near line)
                     Colors.transparent, // bottom fade
                   ],
                 ),
@@ -137,8 +143,8 @@ class ReachLineChart extends StatelessWidget {
                 getDotPainter: (spot, percent, barData, index) {
                   final isMax = index == maxIndex;
                   return FlDotCirclePainter(
-                    color: isMax ? Colors.blueAccent : Colors.white54,
-                    radius: isMax ? 5 : 2,
+                    color: isMax ? lineColor : Colors.transparent,
+                    radius: isMax ? 5.5 : 0,
                     strokeWidth: 0,
                   );
                 },
@@ -186,14 +192,15 @@ class ReachLineChart extends StatelessWidget {
     final pow10 = pow(10, (log(v) / ln10).floor()).toDouble();
     final n = v / pow10;
     double nice;
-    if (n <= 1)
+    if (n <= 1) {
       nice = 1;
-    else if (n <= 2)
+    } else if (n <= 2) {
       nice = 2;
-    else if (n <= 5)
+    } else if (n <= 5) {
       nice = 5;
-    else
+    } else {
       nice = 10;
+    }
     return nice * pow10;
   }
 

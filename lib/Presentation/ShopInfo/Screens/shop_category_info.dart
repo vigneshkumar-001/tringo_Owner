@@ -17,6 +17,7 @@ import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/Controller/shop_notifier.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Screens/search_keyword.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -106,6 +107,9 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final bool isEditMode;
   final bool? isIndividual;
 
+  /// Existing shop images (used by AboutMe edit flow)
+  final List<String?>? initialImageUrls;
+
   // 👉 new fields for prefill when editing
   final String? initialDescriptionEnglish;
   final String? initialDescriptionTamil;
@@ -133,6 +137,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     required this.isEditMode,
     required this.isService,
     required this.isIndividual,
+    this.initialImageUrls,
     this.initialDescriptionEnglish,
     this.initialDescriptionTamil,
     this.initialAddressEnglish,
@@ -420,7 +425,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                         });
 
                                         // Persist selected slug for keyword suggestions screen
-                                        AppPrefs.setShopCategorySlug(category.slug);
+                                        AppPrefs.setShopCategorySlug(
+                                          category.slug,
+                                        );
 
                                         if (onCategorySelected != null) {
                                           onCategorySelected(category);
@@ -626,10 +633,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     // 👉 category / subcategory
     if (widget.initialCategoryName?.isNotEmpty ?? false) {
       _categoryController.text = widget.initialCategoryName!;
-    categorySlug = widget.initialCategorySlug ?? '';
-    if (categorySlug.trim().isNotEmpty) {
-      AppPrefs.setShopCategorySlug(categorySlug);
-    }
+      categorySlug = widget.initialCategorySlug ?? '';
+      if (categorySlug.trim().isNotEmpty) {
+        AppPrefs.setShopCategorySlug(categorySlug);
+      }
     }
     if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
       _subCategoryController.text = widget.initialSubCategoryName!;
@@ -1799,7 +1806,36 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               newState.error!.isNotEmpty) {
                             AppSnackBar.error(context, newState.error!);
                           } else if (response != null) {
-                            if (widget.pages == 'AboutMeScreens') {
+                            if (widget.pages == 'AboutMeEditFlow') {
+                              final updatedPhotos = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ShopPhotoInfo(
+                                    pages: 'AboutMeEditFlow',
+                                    shopId: widget.shopId,
+                                    initialImageUrls: widget.initialImageUrls,
+                                  ),
+                                ),
+                              );
+
+                              if (updatedPhotos != true || !context.mounted) {
+                                return;
+                              }
+
+                              final updatedKeywords =
+                                  await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const SearchKeyword(
+                                        pages: 'AboutMeEditFlow',
+                                      ),
+                                    ),
+                                  );
+
+                              if (updatedKeywords == true && context.mounted) {
+                                Navigator.pop(context, true);
+                              }
+                            } else if (widget.pages == 'AboutMeScreens') {
                               Navigator.pop(context, true);
                             } else {
                               context.pushNamed(

@@ -15,6 +15,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
+import 'package:tringo_owner/Core/Session/session_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'Core/Firebase_service/firebase_service.dart';
@@ -63,7 +64,43 @@ Future<void> main() async {
     // TODO: navigate based on initialMsg.data if needed
   }
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const AppRoot());
+}
+
+class AppRoot extends StatefulWidget {
+  const AppRoot({super.key});
+
+  @override
+  State<AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<AppRoot> {
+  final ValueNotifier<int> _scopeSeed = ValueNotifier<int>(0);
+
+  @override
+  void initState() {
+    super.initState();
+    SessionManager.bindProviderScopeResetSignal(_scopeSeed);
+  }
+
+  @override
+  void dispose() {
+    _scopeSeed.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _scopeSeed,
+      builder: (context, seed, _) {
+        return ProviderScope(
+          key: ValueKey(seed),
+          child: const MyApp(),
+        );
+      },
+    );
+  }
 }
 
 class MyApp extends ConsumerWidget {

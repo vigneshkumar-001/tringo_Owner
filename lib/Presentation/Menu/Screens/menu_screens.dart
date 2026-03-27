@@ -18,6 +18,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Session/session_manager.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
@@ -839,15 +840,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                     );
 
                     if (shouldLogout ?? false) {
-                      final prefs = await SharedPreferences.getInstance();
-                      // prefs.remove('token');
-                      // prefs.remove('isProfileCompleted');
-                      // prefs.remove('isNewOwner');
-                      await prefs.clear();
-
-                      // Then navigate
-                      context.goNamed(AppRoutes.login);
-                      // or: context.go(AppRoutes.loginPath);
+                      await SessionManager.forceLogout();
                     }
                   },
                   text: Text(

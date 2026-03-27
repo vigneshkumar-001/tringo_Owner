@@ -499,6 +499,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                                 preferredLanguage: '',
                               );
 
+                          if (!mounted) return;
                           final newState = ref.read(ownerInfoNotifierProvider);
 
                           if (newState.error != null) {

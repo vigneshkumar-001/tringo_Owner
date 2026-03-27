@@ -30,7 +30,6 @@ import '../../Home/Controller/shopContext_provider.dart';
 import '../../Menu/Screens/subscription_screen.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
-import '../../ShopInfo/Screens/shop_photo_info.dart';
 
 class AboutMeScreens extends ConsumerStatefulWidget {
   const AboutMeScreens({super.key, this.initialTab = 0});
@@ -1052,6 +1051,21 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     final selectedShop = _getSelectedShop(aboutState);
                     if (selectedShop == null) return;
 
+                    final images = List.from(selectedShop.shopImages)
+                      ..sort(
+                        (a, b) => (a.displayOrder ?? 0).compareTo(
+                          (b.displayOrder ?? 0),
+                        ),
+                      );
+
+                    final initialImageUrls = List<String?>.filled(4, null);
+                    for (int i = 0; i < images.length && i < 4; i++) {
+                      final url = images[i].url;
+                      if (url != null && url.trim().isNotEmpty) {
+                        initialImageUrls[i] = url.trim();
+                      }
+                    }
+
                     final bool isServiceFlow =
                         (selectedShop.shopKind?.toUpperCase() == 'SERVICE');
 
@@ -1112,10 +1126,11 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       MaterialPageRoute(
                         builder: (_) => ShopCategoryInfo(
                           isEditMode: true,
-                          pages: "AboutMeScreens",
+                          pages: "AboutMeEditFlow",
                           shopId: selectedShop.shopId,
                           isService: isServiceFlow,
                           isIndividual: false,
+                          initialImageUrls: initialImageUrls,
                           initialShopNameEnglish: selectedShop.shopEnglishName,
                           initialShopNameTamil: selectedShop.shopTamilName,
                           initialDescriptionEnglish:
@@ -1158,48 +1173,6 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           );
                       setState(() {});
                     }
-                  },
-                ),
-                const SizedBox(width: 10),
-                CommonContainer.editShopContainer(
-                  text: 'Edit Shop Photos',
-                  onTap: () async {
-                    final selectedShop = _getSelectedShop(aboutState);
-                    if (selectedShop == null) return;
-
-                    final images = List.from(selectedShop.shopImages ?? [])
-                      ..sort(
-                        (a, b) => (a.displayOrder ?? 0).compareTo(
-                          (b.displayOrder ?? 0),
-                        ),
-                      );
-
-                    final initialImageUrls = List<String?>.filled(4, null);
-                    for (int i = 0; i < images.length && i < 4; i++) {
-                      final url = images[i].url;
-                      if (url != null && url.trim().isNotEmpty) {
-                        initialImageUrls[i] = url.trim();
-                      }
-                    }
-
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ShopPhotoInfo(
-                          pages: "AboutMeScreens",
-                          shopId: selectedShop.shopId,
-                          initialImageUrls: initialImageUrls,
-                        ),
-                      ),
-                    );
-
-                    if (!mounted) return;
-                    await ref
-                        .read(aboutMeNotifierProvider.notifier)
-                        .fetchAllShopDetails(
-                          shopId: _currentShopId ?? selectedShop.shopId,
-                        );
-                    setState(() {});
                   },
                 ),
               ],
@@ -3488,7 +3461,3 @@ class _FakeSeriesItem {
   final String label;
   _FakeSeriesItem({required this.value, required this.label});
 }
-
-
-
-

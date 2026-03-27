@@ -989,22 +989,28 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ),
                           CommonContainer.offerCardContainer(
                             onTap: () {
-                              // ✅ false => SurpriseOfferList, true => SubscriptionScreen
-                              if (isFreemium == false) {
-                                Navigator.push(
+                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => SurpriseOfferList(),
                                   ),
                                 );
-                              } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SubscriptionScreen(),
-                                  ),
-                                );
-                              }
+                              // ✅ false => SurpriseOfferList, true => SubscriptionScreen
+                              // if (isFreemium == false) {
+                              //   Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //       builder: (_) => SurpriseOfferList(),
+                              //     ),
+                              //   );
+                              // } else {
+                              //   Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //       builder: (_) => SubscriptionScreen(),
+                              //     ),
+                              //   );
+                              // }
 
                               AppLogger.log.i(mainShop?.id);
                             },
