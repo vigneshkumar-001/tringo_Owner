@@ -1,12 +1,8 @@
-
-
 import 'dart:io';
 
 import 'package:call_log/call_log.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
-
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,8 +18,8 @@ import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'Core/Firebase_service/firebase_service.dart';
-import 'Presentation/UserContact_Details/screen/call_logs_screen.dart';
-import 'Presentation/UserContact_Details/screen/contacts_screen.dart';
+import 'package:tringo_owner/Presentation/UserContact_Details/screen/call_logs_screen.dart';
+import 'package:tringo_owner/Presentation/UserContact_Details/screen/contacts_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -31,6 +27,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   AppLogger.log.i('🔕 [BG] messageId=${message.messageId}');
 }
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (FlutterErrorDetails details) {
