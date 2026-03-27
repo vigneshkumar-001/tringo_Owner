@@ -19,7 +19,9 @@ import '../Controller/shop_notifier.dart';
 
 class SearchKeyword extends ConsumerStatefulWidget {
   final bool? isIndividual;
-  const SearchKeyword({super.key, this.isIndividual});
+  final String? pages;
+
+  const SearchKeyword({super.key, this.isIndividual, this.pages});
 
   @override
   ConsumerState<SearchKeyword> createState() => _SearchKeywordState();
@@ -49,7 +51,9 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
     // ✅ Fetch initial recommended keywords on screen open
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _categorySlug = await AppPrefs.getShopCategorySlug() ?? '';
-      ref.read(shopCategoryNotifierProvider.notifier).fetchKeyWords(
+      ref
+          .read(shopCategoryNotifierProvider.notifier)
+          .fetchKeyWords(
             categorySlug: _categorySlug,
             query: "", // empty = recommended/default
           );
@@ -192,29 +196,32 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                             fontSize: 14,
                             color: AppColor.gray84,
                           ),
-                          suffixIcon: _searchKeywordController.text.trim().isNotEmpty
+                          suffixIcon:
+                              _searchKeywordController.text.trim().isNotEmpty
                               ? Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () {
-                                _addKeyword(_searchKeywordController.text);
-                                _searchKeywordController.clear();
-                                setState(() => _showSuggestions = false);
-                                _debounce?.cancel();
-                              },
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.black,
-                                  shape: BoxShape.circle,
-                                ),
-                                child:   Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          )
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      _addKeyword(
+                                        _searchKeywordController.text,
+                                      );
+                                      _searchKeywordController.clear();
+                                      setState(() => _showSuggestions = false);
+                                      _debounce?.cancel();
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                )
                               : null,
                           // suffixIcon: _searchKeywordController.text.isNotEmpty
                           //     ? IconButton(
@@ -498,6 +505,11 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                           );
 
                           if (success) {
+                            if (widget.pages == 'AboutMeEditFlow') {
+                              Navigator.pop(context, true);
+                              return;
+                            }
+
                             context.pushNamed(
                               AppRoutes.productCategoryScreens,
                               extra: 'SearchKeyword',
@@ -536,5 +548,3 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
     );
   }
 }
-
-

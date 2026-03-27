@@ -59,7 +59,7 @@ import '../../Presentation/Menu/Model/purchase_response.dart';
 import '../../Presentation/Menu/Model/qr_action_response.dart';
 import '../../Presentation/Mobile Nomber Verify/Model/sim_verify_response.dart';
 import '../../Presentation/Offer/Model/offer_model.dart';
-import '../../Presentation/Register/model/owner_info_response.dart';
+import 'package:tringo_owner/Presentation/Register/model/owner_info_response.dart';
 import '../../Presentation/ShopInfo/model/shop_number_otp_response.dart';
 import '../../Presentation/ShopInfo/model/shop_number_verify_response.dart';
 import '../../Presentation/ShopInfo/model/user_image_response.dart';
@@ -67,7 +67,6 @@ import '../../Presentation/Support/Model/chat_message_response.dart';
 import '../../Presentation/Support/Model/create_support_response.dart';
 import '../../Presentation/Support/Model/send_message_response.dart';
 import '../../Presentation/Support/Model/support_list_response.dart';
-import '../Repository/api_url.dart';
 
 enum AnalyticsType { enquiries, calls, locations }
 

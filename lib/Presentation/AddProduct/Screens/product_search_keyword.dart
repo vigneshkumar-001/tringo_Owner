@@ -68,12 +68,12 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
   void initState() {
     super.initState();
 
-    _keywords.addAll(
-      widget.initialKeywords
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toSet(),
-    );
+    // _keywords.addAll(
+    //   widget.initialKeywords
+    //       .map((e) => e.trim())
+    //       .where((e) => e.isNotEmpty)
+    //       .toSet(),
+    // );
 
     // ✅ fetch initial recommended list once screen opens (based on product/service)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
