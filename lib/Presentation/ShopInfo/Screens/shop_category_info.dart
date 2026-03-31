@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:image_picker/image_picker.dart';
 
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
@@ -25,7 +23,6 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
-import '../../../Core/Utility/location_helper.dart';
 import '../../../Core/Utility/map_picker_page.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
 import '../../../Core/Widgets/owner_verify_feild.dart';
@@ -127,6 +124,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialOpenTimeText;
   final String? initialCloseTimeText;
   final String? initialOwnerImageUrl;
+  final List<String> initialShopKeywords;
 
   const ShopCategoryInfo({
     super.key,
@@ -154,6 +152,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialOpenTimeText,
     this.initialCloseTimeText,
     this.initialOwnerImageUrl,
+    this.initialShopKeywords = const [],
   });
 
   @override
@@ -188,6 +187,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       TextEditingController();
   final TextEditingController _primaryMobileController =
       TextEditingController();
+  String _initialPrimaryPhone10 = '';
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
   final List<String> doorDelivery = ['Yes', 'No'];
@@ -617,6 +617,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       var phone = widget.initialPrimaryMobile!.trim();
       phone = _stripIndianCode(phone);
       _primaryMobileController.text = phone;
+      _initialPrimaryPhone10 = _normalizeIndianPhone10(phone);
     }
 
     if (widget.initialWhatsapp?.isNotEmpty ?? false) {
@@ -1150,11 +1151,25 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         onMapTap: () async {
                           setState(() => _isFetchingGps = true);
 
+                          double? initialLat;
+                          double? initialLng;
+                          final gpsText = _gpsController.text.trim();
+                          if (gpsText.isNotEmpty && gpsText.contains(',')) {
+                            final parts = gpsText.split(',');
+                            if (parts.length >= 2) {
+                              initialLat = double.tryParse(parts[0].trim());
+                              initialLng = double.tryParse(parts[1].trim());
+                            }
+                          }
+
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
-                                  const GoogleLocationPickerScreen(),
+                                  GoogleLocationPickerScreen(
+                                initialLat: initialLat,
+                                initialLng: initialLng,
+                              ),
                             ),
                           );
 
@@ -1167,6 +1182,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                             _gpsController.text =
                                 '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+                            _gpsFetched = true;
 
                             debugPrint('LAT: $lat');
                             debugPrint('LNG: $lng');
@@ -1263,6 +1279,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             controller: _primaryMobileController,
                             isLoading: state.isSendingOtp,
                             isOtpVerifying: state.isVerifyingOtp,
+                            otpErrorText: state.error,
 
                             onSendOtp: (mobile) {
                               final phone10 = _normalizeIndianPhone10(mobile);
@@ -1303,6 +1320,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             controller: _primaryMobileController,
                             isLoading: state.isSendingOtp,
                             isOtpVerifying: state.isVerifyingOtp,
+                            otpErrorText: state.error,
                             onSendOtp: (mobile) {
                               final phone10 = _normalizeIndianPhone10(mobile);
                               return ref
@@ -1721,53 +1739,38 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             _whatsappController.text,
                           );
 
-                          // ✅ VERIFIED CHECK FIX (OTP or Pref token)
-                          // ✅ OTP verified required ONLY in register flow
-                          // if (!isEditFromAboutMe) {
-                          //   final shopState = ref.read(
-                          //     shopCategoryNotifierProvider,
-                          //   );
-                          //   final savedToken =
-                          //       await AppPrefs.getVerificationToken();
+                          // ✅ Primary phone verification guard:
+                          // - Register flow: always require OTP verification.
+                          // - Edit flow: require verification only if user changed the number.
+                          final currentPhone10 = _normalizeIndianPhone10(
+                            _primaryMobileController.text,
+                          );
+                          final bool phoneChanged =
+                              widget.isEditMode == true &&
+                              _initialPrimaryPhone10.isNotEmpty &&
+                              currentPhone10 != _initialPrimaryPhone10;
+                          final bool mustVerify =
+                              widget.isEditMode != true || phoneChanged;
 
-                          //   final isVerified =
-                          //       (shopState
-                          //               .shopNumberOtpResponse
-                          //               ?.data
-                          //               ?.verified ==
-                          //           true) ||
-                          //       (savedToken != null && savedToken.isNotEmpty);
+                          if (mustVerify) {
+                            final savedToken =
+                                await AppPrefs.getVerificationToken();
+                            final savedPhone10 =
+                                await AppPrefs.getVerificationPhone10();
 
-                          //   if (!isVerified) {
-                          //     AppSnackBar.error(
-                          //       context,
-                          //       "Please verify Primary Mobile Number",
-                          //     );
-                          //     return;
-                          //   }
-                          // }
+                            final bool isVerified =
+                                (savedToken ?? '').trim().isNotEmpty &&
+                                (savedPhone10 ?? '').trim().isNotEmpty &&
+                                savedPhone10 == currentPhone10;
 
-                          // final shopState = ref.read(
-                          //   shopCategoryNotifierProvider,
-                          // );
-                          // final savedToken =
-                          //     await AppPrefs.getVerificationToken();
-                          //
-                          // final isVerified =
-                          //     (shopState
-                          //             .shopNumberOtpResponse
-                          //             ?.data
-                          //             ?.verified ==
-                          //         true) ||
-                          //     (savedToken != null && savedToken.isNotEmpty);
-                          //
-                          // if (!isVerified) {
-                          //   AppSnackBar.error(
-                          //     context,
-                          //     "Please verify Primary Mobile Number",
-                          //   );
-                          //   return;
-                          // }
+                            if (!isVerified) {
+                              AppSnackBar.error(
+                                context,
+                                "Please verify Primary Mobile Number",
+                              );
+                              return;
+                            }
+                          }
 
                           final response = await ref
                               .read(shopCategoryNotifierProvider.notifier)
@@ -1826,8 +1829,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                   await Navigator.push<bool>(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const SearchKeyword(
+                                      builder: (_) => SearchKeyword(
                                         pages: 'AboutMeEditFlow',
+                                        initialKeywords:
+                                            widget.initialShopKeywords,
                                       ),
                                     ),
                                   );

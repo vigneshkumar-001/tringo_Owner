@@ -1,10 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class AppPrefs {
   AppPrefs._(); // no instance
 
   static const _kPhoneVerifyToken = 'primaryPhoneVerificationToken';
+  static const _kPhoneVerifyPhone10 = 'primaryPhoneVerificationPhone10';
 
   static const String _token = 'token';
   static const String _refreshToken = 'refreshToken';
@@ -46,6 +46,7 @@ class AppPrefs {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_role, role);
   }
+
   static Future<void> setOwnerPhone(String phone) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kOwnerPhone, phone);
@@ -74,6 +75,12 @@ class AppPrefs {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kIsService, isService);
     await prefs.setBool(_kIsIndividual, isIndividual);
+  }
+
+  static Future<void> clearRegistrationFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kIsService);
+    await prefs.remove(_kIsIndividual);
   }
 
   static Future<Map<String, bool>> getRegistrationFlags() async {
@@ -121,13 +128,12 @@ class AppPrefs {
     return (s == null || s.trim().isEmpty) ? null : s.trim();
   }
 
-
-
   /// Read
   static Future<String?> getOwnerPhone() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kOwnerPhone);
   }
+
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_token);
@@ -158,9 +164,20 @@ class AppPrefs {
     await prefs.remove(_kOnboardingStep);
     // _cachedVerificationToken = null;
   }
+
   static Future<void> setVerificationToken(String token) async {
     final sp = await SharedPreferences.getInstance();
     await sp.setString(_kPhoneVerifyToken, token);
+  }
+
+  static Future<void> setVerificationPhone10(String phone10) async {
+    final sp = await SharedPreferences.getInstance();
+    final p = phone10.trim();
+    if (p.isEmpty) {
+      await sp.remove(_kPhoneVerifyPhone10);
+    } else {
+      await sp.setString(_kPhoneVerifyPhone10, p);
+    }
   }
 
   static Future<String?> getVerificationToken() async {
@@ -169,29 +186,35 @@ class AppPrefs {
     return (t == null || t.isEmpty) ? null : t;
   }
 
+  static Future<String?> getVerificationPhone10() async {
+    final sp = await SharedPreferences.getInstance();
+    final p = (sp.getString(_kPhoneVerifyPhone10) ?? '').trim();
+    return p.isEmpty ? null : p;
+  }
+
   static Future<void> clearVerificationToken() async {
     final sp = await SharedPreferences.getInstance();
     await sp.remove(_kPhoneVerifyToken);
+    await sp.remove(_kPhoneVerifyPhone10);
   }
 }
 
-
- // class AppPrefs {
- //   static const _kPhoneVerifyToken = 'primaryPhoneVerificationToken';
- //
- //   static Future<void> setVerificationToken(String token) async {
- //     final sp = await SharedPreferences.getInstance();
- //     await sp.setString(_kPhoneVerifyToken, token);
- //   }
- //
- //   static Future<String?> getVerificationToken() async {
- //     final sp = await SharedPreferences.getInstance();
- //     final t = sp.getString(_kPhoneVerifyToken);
- //     return (t == null || t.isEmpty) ? null : t;
- //   }
- //
- //   static Future<void> clearVerificationToken() async {
- //     final sp = await SharedPreferences.getInstance();
- //     await sp.remove(_kPhoneVerifyToken);
- //   }
- // }
+// class AppPrefs {
+//   static const _kPhoneVerifyToken = 'primaryPhoneVerificationToken';
+//
+//   static Future<void> setVerificationToken(String token) async {
+//     final sp = await SharedPreferences.getInstance();
+//     await sp.setString(_kPhoneVerifyToken, token);
+//   }
+//
+//   static Future<String?> getVerificationToken() async {
+//     final sp = await SharedPreferences.getInstance();
+//     final t = sp.getString(_kPhoneVerifyToken);
+//     return (t == null || t.isEmpty) ? null : t;
+//   }
+//
+//   static Future<void> clearVerificationToken() async {
+//     final sp = await SharedPreferences.getInstance();
+//     await sp.remove(_kPhoneVerifyToken);
+//   }
+// }

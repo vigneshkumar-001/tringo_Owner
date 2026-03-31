@@ -20,7 +20,6 @@ import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
 
 import '../Service Info/Controller/service_info_notifier.dart';
-import 'add_product_list.dart';
 
 class ProductSearchKeyword extends ConsumerStatefulWidget {
   final bool? isCompany;
@@ -68,12 +67,18 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
   void initState() {
     super.initState();
 
-    // _keywords.addAll(
-    //   widget.initialKeywords
-    //       .map((e) => e.trim())
-    //       .where((e) => e.isNotEmpty)
-    //       .toSet(),
-    // );
+    _keywords.addAll(
+      widget.initialKeywords
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList()
+          .fold<List<String>>(<String>[], (acc, e) {
+            if (acc.contains(e)) return acc;
+            if (acc.length >= 5) return acc;
+            acc.add(e);
+            return acc;
+          }),
+    );
 
     // ✅ fetch initial recommended list once screen opens (based on product/service)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -87,10 +92,9 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
 
       if (_categorySlug.trim().isEmpty) return;
 
-      ref.read(shopCategoryNotifierProvider.notifier).fetchKeyWords(
-            categorySlug: _categorySlug,
-            query: "",
-          );
+      ref
+          .read(shopCategoryNotifierProvider.notifier)
+          .fetchKeyWords(categorySlug: _categorySlug, query: "");
     });
   }
 
@@ -267,7 +271,7 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                                         color: Colors.black,
                                         shape: BoxShape.circle,
                                       ),
-                                      child:   Icon(
+                                      child: Icon(
                                         Icons.check,
                                         color: Colors.white,
                                         size: 20,
@@ -379,6 +383,7 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                                                   );
 
                                               _addKeyword(keyword);
+                                              _searchKeywordController.clear();
 
                                               setState(
                                                 () => _showSuggestions = false,
@@ -452,87 +457,87 @@ class _ProductSearchKeywordState extends ConsumerState<ProductSearchKeyword> {
                       const SizedBox(height: 20),
 
                       // ✅ Toggle Recommended
-                      GestureDetector(
-                        onTap: () async {
-                          setState(() => _showRecommended = !_showRecommended);
+                      // GestureDetector(
+                      //   onTap: () async {
+                      //     setState(() => _showRecommended = !_showRecommended);
 
-                          if (_showRecommended) {
-                            if (_categorySlug.trim().isEmpty) return;
-                            await ref
-                                .read(shopCategoryNotifierProvider.notifier)
-                                .fetchKeyWords(
-                                  categorySlug: _categorySlug,
-                                  query: "",
-                                );
-                          }
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColor.brightBlue,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 5,
-                            ),
-                            child: Text(
-                              _showRecommended
-                                  ? 'Hide Recommended Keywords'
-                                  : 'View Recommended Keywords',
-                              style: AppTextStyles.mulish(
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.scaffoldColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      //     if (_showRecommended) {
+                      //       if (_categorySlug.trim().isEmpty) return;
+                      //       await ref
+                      //           .read(shopCategoryNotifierProvider.notifier)
+                      //           .fetchKeyWords(
+                      //             categorySlug: _categorySlug,
+                      //             query: "",
+                      //           );
+                      //     }
+                      //   },
+                      //   child: Container(
+                      //     decoration: BoxDecoration(
+                      //       color: AppColor.brightBlue,
+                      //       borderRadius: BorderRadius.circular(50),
+                      //     ),
+                      //     child: Padding(
+                      //       padding: const EdgeInsets.symmetric(
+                      //         horizontal: 12,
+                      //         vertical: 5,
+                      //       ),
+                      //       child: Text(
+                      //         _showRecommended
+                      //             ? 'Hide Recommended Keywords'
+                      //             : 'View Recommended Keywords',
+                      //         style: AppTextStyles.mulish(
+                      //           fontWeight: FontWeight.w700,
+                      //           color: AppColor.scaffoldColor,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
 
-                      const SizedBox(height: 20),
+                      // const SizedBox(height: 20),
 
-                      // ✅ Recommended list from API
-                      if (_showRecommended)
-                        keywordState.isKeyWordsLoading
-                            ? Padding(
-                                padding: EdgeInsets.all(12),
-                                child: Center(
-                                  child: AppLoader.circularLoader(
-                                    color: AppColor.black,
-                                  ),
-                                ),
-                              )
-                            : Wrap(
-                                spacing: 10,
-                                runSpacing: 10,
-                                children: apiKeywords.map((keyword) {
-                                  return GestureDetector(
-                                    onTap: () => _addKeyword(keyword),
-                                    child: DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      radius: const Radius.circular(12),
-                                      color: AppColor.lightSilver,
-                                      strokeWidth: 1,
-                                      dashPattern: const [3, 2],
-                                      padding: const EdgeInsets.all(1),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 9,
-                                          horizontal: 16,
-                                        ),
-                                        child: Text(
-                                          keyword,
-                                          style: AppTextStyles.mulish(
-                                            color: AppColor.gray84,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
+                      // // ✅ Recommended list from API
+                      // if (_showRecommended)
+                      //   keywordState.isKeyWordsLoading
+                      //       ? Padding(
+                      //           padding: EdgeInsets.all(12),
+                      //           child: Center(
+                      //             child: AppLoader.circularLoader(
+                      //               color: AppColor.black,
+                      //             ),
+                      //           ),
+                      //         )
+                      //       : Wrap(
+                      //           spacing: 10,
+                      //           runSpacing: 10,
+                      //           children: apiKeywords.map((keyword) {
+                      //             return GestureDetector(
+                      //               onTap: () => _addKeyword(keyword),
+                      //               child: DottedBorder(
+                      //                 borderType: BorderType.RRect,
+                      //                 radius: const Radius.circular(12),
+                      //                 color: AppColor.lightSilver,
+                      //                 strokeWidth: 1,
+                      //                 dashPattern: const [3, 2],
+                      //                 padding: const EdgeInsets.all(1),
+                      //                 child: Padding(
+                      //                   padding: const EdgeInsets.symmetric(
+                      //                     vertical: 9,
+                      //                     horizontal: 16,
+                      //                   ),
+                      //                   child: Text(
+                      //                     keyword,
+                      //                     style: AppTextStyles.mulish(
+                      //                       color: AppColor.gray84,
+                      //                     ),
+                      //                   ),
+                      //                 ),
+                      //               ),
+                      //             );
+                      //           }).toList(),
+                      //         ),
 
-                      const SizedBox(height: 30),
+                      // const SizedBox(height: 30),
 
                       // ✅ Preview Shop & Product
                       CommonContainer.button(

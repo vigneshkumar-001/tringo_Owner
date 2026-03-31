@@ -1,5 +1,6 @@
 // firebase_service.dart
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -25,7 +26,9 @@ class FirebaseService {
   StreamSubscription<String>? _tokenRefreshSub;
   bool _loggedServiceNotAvailable = false;
 
-  Future<void> initializeFirebase() async {
+  Future<void> initializeFirebase({
+    void Function(Map<String, dynamic> data)? onLocalNotificationTapData,
+  }) async {
     // Local notifications init
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidInit);
@@ -35,6 +38,21 @@ class FirebaseService {
       settings: initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         AppLogger.log.i('🔔 Notification tapped. payload: ${response.payload}');
+
+        if (onLocalNotificationTapData == null) return;
+        final payload = response.payload?.trim();
+        if (payload == null || payload.isEmpty) return;
+
+        try {
+          final decoded = jsonDecode(payload);
+          if (decoded is Map) {
+            onLocalNotificationTapData(
+              decoded.map((k, v) => MapEntry(k.toString(), v)),
+            );
+          }
+        } catch (e, st) {
+          AppLogger.log.w('Local notification payload decode failed: $e\n$st');
+        }
       },
     );
 
@@ -168,7 +186,7 @@ class FirebaseService {
       title: message.notification?.title ?? 'Notification',
       body: message.notification?.body ?? '',
       notificationDetails: details,
-      payload: message.data.isNotEmpty ? message.data.toString() : null,
+      payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import '../Const/app_color.dart';
 import '../Const/app_images.dart';
+import '../Utility/app_prefs.dart';
 import '../Utility/app_textstyles.dart';
 
 /// ✅ OTP Paste Formatter: paste "1234" in any box → fills all boxes
@@ -27,9 +28,9 @@ class OtpPasteFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue,
-      TextEditingValue newValue,
-      ) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.length <= 1) return newValue;
 
     onPasteStart();
@@ -74,6 +75,7 @@ class OwnerVerifyField extends StatefulWidget {
   final bool isLoading;
   final bool isOtpVerifying;
   final bool readOnly;
+  final String? otpErrorText;
 
   final Future<String?> Function(String mobile)? onSendOtp;
   final Future<bool> Function(String mobile, String otp)? onVerifyOtp;
@@ -86,6 +88,7 @@ class OwnerVerifyField extends StatefulWidget {
     this.isLoading = false,
     this.isOtpVerifying = false,
     this.readOnly = false,
+    this.otpErrorText,
     this.onSendOtp,
     this.onVerifyOtp,
   });
@@ -97,7 +100,7 @@ class OwnerVerifyField extends StatefulWidget {
 class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
   final List<TextEditingController> otpControllers = List.generate(
     4,
-        (_) => TextEditingController(),
+    (_) => TextEditingController(),
   );
 
   final List<FocusNode> otpFocusNodes = List.generate(4, (_) => FocusNode());
@@ -105,10 +108,43 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
   bool showOtp = false;
   bool isVerified = false;
   bool showOtpError = false;
+  String _verifiedPhone10 = '';
 
   int resendSeconds = 30;
   Timer? resendTimer;
   bool _isPastingOtp = false;
+
+  String _onlyIndian10(String input) {
+    var p = input.trim();
+    p = p.replaceAll(RegExp(r'[^0-9]'), '');
+    if (p.startsWith('91') && p.length == 12) p = p.substring(2);
+    if (p.length > 10) p = p.substring(p.length - 10);
+    return p;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _syncVerifiedFromPrefs();
+  }
+
+  Future<void> _syncVerifiedFromPrefs() async {
+    final t = await AppPrefs.getVerificationToken();
+    final p = await AppPrefs.getVerificationPhone10();
+    final current = _onlyIndian10(widget.controller?.text ?? '');
+
+    if (!mounted) return;
+    if ((t ?? '').trim().isNotEmpty &&
+        (p ?? '').trim().isNotEmpty &&
+        p == current) {
+      setState(() {
+        isVerified = true;
+        _verifiedPhone10 = current;
+        showOtp = false;
+        showOtpError = false;
+      });
+    }
+  }
 
   void startResendTimer() {
     resendTimer?.cancel();
@@ -178,8 +214,7 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
     final textValue = widget.controller?.text ?? '';
     final isTenDigits = textValue.length == 10;
     final hasMobile = textValue.isNotEmpty;
-    final last4Digits =
-    hasMobile && textValue.length >= 4
+    final last4Digits = hasMobile && textValue.length >= 4
         ? textValue.substring(textValue.length - 4)
         : '';
 
@@ -246,21 +281,31 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color:
-                              lockMobileField ? Colors.grey : Colors.black,
+                              color: lockMobileField
+                                  ? Colors.grey
+                                  : Colors.black,
                               letterSpacing: 0.5,
                             ),
 
-                            onChanged:
-                            lockMobileField
+                            onChanged: lockMobileField
                                 ? null
                                 : (v) {
-                              state.didChange(v);
-                              setState(() {
-                                showOtpError = false;
-                                if (!isVerified) showOtp = false;
-                              });
-                            },
+                                    state.didChange(v);
+                                    setState(() {
+                                      showOtpError = false;
+                                      showOtp = false;
+
+                                      // If user edits after verifying, force re-verify.
+                                      final current = _onlyIndian10(v);
+                                      if (isVerified &&
+                                          _verifiedPhone10.isNotEmpty &&
+                                          current != _verifiedPhone10) {
+                                        isVerified = false;
+                                        _verifiedPhone10 = '';
+                                        AppPrefs.clearVerificationToken();
+                                      }
+                                    });
+                                  },
                           ),
                         ),
 
@@ -313,56 +358,53 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
 
                         if (isTenDigits && !isVerified && !showOtp)
                           GestureDetector(
-                            onTap:
-                            widget.isLoading
+                            onTap: widget.isLoading
                                 ? null
                                 : () async {
-                              if (widget.onSendOtp == null ||
-                                  widget.controller == null)
-                                return;
+                                    if (widget.onSendOtp == null ||
+                                        widget.controller == null)
+                                      return;
 
-                              final err = await widget.onSendOtp!(
-                                widget.controller!.text,
-                              );
-                              if (err != null) {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.error(message: err),
-                                );
-                                return;
-                              }
+                                    final err = await widget.onSendOtp!(
+                                      widget.controller!.text,
+                                    );
+                                    if (err != null) {
+                                      showTopSnackBar(
+                                        Overlay.of(context),
+                                        CustomSnackBar.error(message: err),
+                                      );
+                                      return;
+                                    }
 
-                              _openOtpBox();
-                            },
+                                    _openOtpBox();
+                                  },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color:
-                                widget.isLoading
+                                color: widget.isLoading
                                     ? Colors.grey
                                     : const Color(0xFF2196F3),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child:
-                              widget.isLoading
+                              child: widget.isLoading
                                   ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
                                   : Text(
-                                "Verify",
-                                style: AppTextStyles.mulish(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                                      "Verify",
+                                      style: AppTextStyles.mulish(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
                             ),
                           ),
 
@@ -443,37 +485,35 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                             const SizedBox(height: 8),
 
                             GestureDetector(
-                              onTap:
-                              resendSeconds > 0 || widget.isLoading
+                              onTap: resendSeconds > 0 || widget.isLoading
                                   ? null
                                   : () async {
-                                if (widget.onSendOtp == null ||
-                                    widget.controller == null)
-                                  return;
+                                      if (widget.onSendOtp == null ||
+                                          widget.controller == null)
+                                        return;
 
-                                final err = await widget.onSendOtp!(
-                                  widget.controller!.text,
-                                );
-                                if (err != null) {
-                                  showTopSnackBar(
-                                    Overlay.of(context),
-                                    CustomSnackBar.error(message: err),
-                                  );
-                                  return;
-                                }
+                                      final err = await widget.onSendOtp!(
+                                        widget.controller!.text,
+                                      );
+                                      if (err != null) {
+                                        showTopSnackBar(
+                                          Overlay.of(context),
+                                          CustomSnackBar.error(message: err),
+                                        );
+                                        return;
+                                      }
 
-                                if (!mounted) return;
-                                setState(() {
-                                  _clearOtp();
-                                  startResendTimer();
-                                });
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _clearOtp();
+                                        startResendTimer();
+                                      });
 
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  otpFocusNodes.first
-                                      .requestFocus();
-                                });
-                              },
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                            otpFocusNodes.first.requestFocus();
+                                          });
+                                    },
                               child: Text(
                                 resendSeconds > 0
                                     ? "Resend in ${resendSeconds}s"
@@ -508,16 +548,16 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                                       inputFormatters: [
                                         FilteringTextInputFormatter.digitsOnly,
                                         OtpPasteFormatter(
-                                          onPasteStart:
-                                              () => _isPastingOtp = true,
-                                          onPasteEnd:
-                                              () => _isPastingOtp = false,
+                                          onPasteStart: () =>
+                                              _isPastingOtp = true,
+                                          onPasteEnd: () =>
+                                              _isPastingOtp = false,
                                           controllers: otpControllers,
                                           focusNodes: otpFocusNodes,
                                           onFilled: () {
                                             if (mounted) {
                                               setState(
-                                                    () => showOtpError = false,
+                                                () => showOtpError = false,
                                               );
                                             }
                                           },
@@ -532,8 +572,7 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                                             15,
                                           ),
                                           borderSide: BorderSide(
-                                            color:
-                                            showOtpError
+                                            color: showOtpError
                                                 ? Colors.red
                                                 : Colors.white,
                                           ),
@@ -543,8 +582,7 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                                             15,
                                           ),
                                           borderSide: BorderSide(
-                                            color:
-                                            showOtpError
+                                            color: showOtpError
                                                 ? Colors.red
                                                 : Colors.white,
                                           ),
@@ -559,18 +597,36 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                                           ),
                                         ),
                                       ),
+                                      onTap: () {
+                                        final t = otpControllers[index].text;
+                                        otpControllers[index].selection =
+                                            TextSelection(
+                                              baseOffset: 0,
+                                              extentOffset: t.length,
+                                            );
+                                      },
                                       onChanged: (value) {
-                                        if (mounted)
+                                        if (mounted) {
                                           setState(() => showOtpError = false);
+                                        }
 
                                         // ✅ ignore focus shifting while paste is happening
                                         if (_isPastingOtp) return;
 
-                                        if (value.length == 1 && index < 3) {
+                                        // If user typed more than 1 char, keep last digit.
+                                        if (value.length > 1) {
+                                          final last = value[value.length - 1];
+                                          otpControllers[index].text = last;
+                                          otpControllers[index].selection =
+                                              const TextSelection.collapsed(
+                                                offset: 1,
+                                              );
+                                        }
+
+                                        if (otpControllers[index].text.length ==
+                                                1 &&
+                                            index < 3) {
                                           otpFocusNodes[index + 1]
-                                              .requestFocus();
-                                        } else if (value.isEmpty && index > 0) {
-                                          otpFocusNodes[index - 1]
                                               .requestFocus();
                                         }
                                       },
@@ -579,71 +635,68 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                                 }),
 
                                 GestureDetector(
-                                  onTap:
-                                  widget.isOtpVerifying
+                                  onTap: widget.isOtpVerifying
                                       ? null
                                       : () async {
-                                    if (widget.onVerifyOtp == null ||
-                                        widget.controller == null)
-                                      return;
+                                          if (widget.onVerifyOtp == null ||
+                                              widget.controller == null)
+                                            return;
 
-                                    final otp =
-                                    otpControllers
-                                        .map((c) => c.text)
-                                        .join();
-                                    if (otp.length != 4) {
-                                      setState(
-                                            () => showOtpError = true,
-                                      );
-                                      return;
-                                    }
+                                          final otp = otpControllers
+                                              .map((c) => c.text)
+                                              .join();
+                                          if (otp.length != 4) {
+                                            setState(() => showOtpError = true);
+                                            return;
+                                          }
 
-                                    final ok = await widget
-                                        .onVerifyOtp!(
-                                      widget.controller!.text,
-                                      otp,
-                                    );
+                                          final ok = await widget.onVerifyOtp!(
+                                            widget.controller!.text,
+                                            otp,
+                                          );
 
-                                    if (!ok) {
-                                      setState(
-                                            () => showOtpError = true,
-                                      );
-                                      return;
-                                    }
+                                          if (!ok) {
+                                            setState(() => showOtpError = true);
+                                            return;
+                                          }
 
-                                    if (!mounted) return;
-                                    setState(() {
-                                      isVerified = true;
-                                      showOtp = false;
-                                      showOtpError = false;
-                                      resendTimer?.cancel();
-                                    });
+                                          if (!mounted) return;
+                                          setState(() {
+                                            _verifiedPhone10 = _onlyIndian10(
+                                              widget.controller!.text,
+                                            );
+                                            AppPrefs.setVerificationPhone10(
+                                              _verifiedPhone10,
+                                            );
+                                            isVerified = true;
+                                            showOtp = false;
+                                            showOtpError = false;
+                                            resendTimer?.cancel();
+                                          });
 
-                                    FocusScope.of(context).unfocus();
-                                  },
+                                          FocusScope.of(context).unfocus();
+                                        },
                                   child: Container(
                                     width: 53,
                                     height: 52,
                                     decoration: BoxDecoration(
-                                      color:
-                                      widget.isOtpVerifying
+                                      color: widget.isOtpVerifying
                                           ? Colors.grey
                                           : Colors.black,
                                       borderRadius: BorderRadius.circular(15),
                                     ),
-                                    child:
-                                    widget.isOtpVerifying
+                                    child: widget.isOtpVerifying
                                         ? const Padding(
-                                      padding: EdgeInsets.all(12),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
+                                            padding: EdgeInsets.all(12),
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
                                         : const Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                    ),
+                                            Icons.check,
+                                            color: Colors.white,
+                                          ),
                                   ),
                                 ),
                               ],
@@ -653,7 +706,12 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 8, left: 4),
                                 child: Text(
-                                  "⚠️ Please Enter Valid OTP",
+                                  (() {
+                                    final msg = (widget.otpErrorText ?? '')
+                                        .trim();
+                                    if (msg.isNotEmpty) return msg;
+                                    return "⚠️ Please Enter Valid OTP";
+                                  })(),
                                   style: AppTextStyles.mulish(
                                     color: Colors.red,
                                     fontSize: 13,
@@ -683,4 +741,3 @@ class _OwnerVerifyFieldState extends State<OwnerVerifyField> {
     );
   }
 }
-

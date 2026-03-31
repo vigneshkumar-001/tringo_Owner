@@ -5,7 +5,6 @@ import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 
 // 👇 add this to read premium/non-premium
-import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 // Your screens
 import 'package:tringo_owner/Presentation/Home/Screens/home_screens.dart';
@@ -20,10 +19,12 @@ import '../Session/registration_product_seivice.dart';
 class CommonBottomNavigation extends StatefulWidget {
   final int initialIndex;
   final int? initialAboutMeTab;
+  final Map<String, dynamic>? deepLinkData;
   const CommonBottomNavigation({
     super.key,
     this.initialIndex = 0,
     this.initialAboutMeTab,
+    this.deepLinkData,
   });
 
   @override
@@ -63,7 +64,7 @@ class CommonBottomNavigationState extends State<CommonBottomNavigation>
       case 0:
         return const HomeScreens();
       case 1:
-        return const EnquiryScreens();
+        return EnquiryScreens(deepLinkData: widget.deepLinkData);
       case 2:
         // 🔹 Company (premium) → PremiumOffers
         // 🔹 Individual / null (non-premium) → OfferScreens

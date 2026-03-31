@@ -9,10 +9,10 @@ import 'package:tringo_owner/Presentation/ShopInfo/model/category_keywords_respo
 import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_info_photos_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_number_otp_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_number_verify_response.dart';
 import '../../../Core/Utility/app_prefs.dart';
-import '../model/shop_info_photos_response.dart';
-import '../model/shop_number_otp_response.dart';
-import '../model/shop_number_verify_response.dart';
 
 class ShopCategoryState {
   final bool isLoading;
@@ -62,7 +62,7 @@ class ShopCategoryState {
       isLoading: isLoading ?? this.isLoading,
       isKeyWordsLoading: isKeyWordsLoading ?? this.isKeyWordsLoading,
       categoryKeywordsResponse:
-      categoryKeywordsResponse ?? this.categoryKeywordsResponse,
+          categoryKeywordsResponse ?? this.categoryKeywordsResponse,
       isSendingOtp: isSendingOtp ?? this.isSendingOtp,
       isVerifyingOtp: isVerifyingOtp ?? this.isVerifyingOtp,
       error: clearError ? null : (error ?? this.error),
@@ -88,7 +88,6 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
   @override
   ShopCategoryState build() => ShopCategoryState.initial();
 
-
   Future<void> fetchKeyWords({
     required String categorySlug,
     required String query,
@@ -101,19 +100,16 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     );
 
     result.fold(
-          (failure) =>
-      state = ShopCategoryState(
+      (failure) => state = ShopCategoryState(
         isKeyWordsLoading: false,
         error: failure.message,
       ),
-          (response) =>
-      state = ShopCategoryState(
+      (response) => state = ShopCategoryState(
         isKeyWordsLoading: false,
         categoryKeywordsResponse: response,
       ),
     );
   }
-
 
   Future<ShopCategoryResponse?> shopCategoryInfo({
     required String category,
@@ -181,16 +177,16 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       },
       (response) async {
         // ✅ use response.data.id
-	        final prefs = await SharedPreferences.getInstance();
-	        await prefs.setString('shop_id', response.data.id);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('shop_id', response.data.id);
 
-	        await AppPrefs.setOnboardingStep(
-	          response.data.businessProfile.onboardingStatus,
-	        );
+        await AppPrefs.setOnboardingStep(
+          response.data.businessProfile.onboardingStatus,
+        );
 
-	        state = ShopCategoryState(
-	          isLoading: false,
-	          shopCategoryResponse: response,
+        state = ShopCategoryState(
+          isLoading: false,
+          shopCategoryResponse: response,
         );
         return response;
       },
@@ -200,7 +196,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
   Future<void> fetchCategories({required String type}) async {
     state = const ShopCategoryState(isLoading: true);
 
-    final result = await apiDataSource.getShopCategories(type :type);
+    final result = await apiDataSource.getShopCategories(type: type);
 
     result.fold(
       (failure) =>
@@ -211,6 +207,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       ),
     );
   }
+
   //
   // /// Returns true on success; false otherwise.
   // /// No SnackBars here — let the UI decide what to show.
@@ -288,8 +285,9 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
     // ✅ If no new images AND no existing urls -> error
     final hasAnyPicked = images.any((e) => e != null);
-    final hasAnyExisting =
-    (existingUrls ?? []).any((e) => e != null && e.trim().isNotEmpty);
+    final hasAnyExisting = (existingUrls ?? []).any(
+      (e) => e != null && e.trim().isNotEmpty,
+    );
 
     if (!hasAnyPicked && !hasAnyExisting) {
       state = const ShopCategoryState(
@@ -313,8 +311,8 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         );
 
         final uploadedUrl = uploadResult.fold<String?>(
-              (failure) => null,
-              (success) => success.message,
+          (failure) => null,
+          (success) => success.message,
         );
 
         if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
@@ -344,25 +342,25 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     );
 
     return apiResult.fold(
-          (failure) {
+      (failure) {
         state = ShopCategoryState(isLoading: false, error: failure.message);
         AppLogger.log.e(failure.message);
         return false;
       },
-	          (response) {
-	        state = ShopCategoryState(
-	          isLoading: false,
-	          shopPhotoResponse: response,
-	        );
+      (response) {
+        state = ShopCategoryState(
+          isLoading: false,
+          shopPhotoResponse: response,
+        );
 
-	        final nextStep = response.data.isNotEmpty
-	            ? response.data.first.shop.businessProfile.onboardingStatus
-	            : null;
-	        AppPrefs.setOnboardingStep(nextStep);
-	        return response.status == true;
-	      },
-	    );
-	  }
+        final nextStep = response.data.isNotEmpty
+            ? response.data.first.shop.businessProfile.onboardingStatus
+            : null;
+        AppPrefs.setOnboardingStep(nextStep);
+        return response.status == true;
+      },
+    );
+  }
 
   Future<bool> searchKeywords({required List<String> keywords}) async {
     state = const ShopCategoryState(isLoading: true);
@@ -376,19 +374,19 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         state = ShopCategoryState(isLoading: false, error: failure.message);
         success = false;
       },
-	      (response) {
-	        state = ShopCategoryState(
-	          isLoading: false,
-	          shopCategoryApiResponse: response,
-	        );
+      (response) {
+        state = ShopCategoryState(
+          isLoading: false,
+          shopCategoryApiResponse: response,
+        );
 
-	        final nextStep = response.data.isNotEmpty
-	            ? response.data.first.shop.businessProfile.onboardingStatus
-	            : null;
-	        AppPrefs.setOnboardingStep(nextStep);
-	        success = true;
-	      },
-	    );
+        final nextStep = response.data.isNotEmpty
+            ? response.data.first.shop.businessProfile.onboardingStatus
+            : null;
+        AppPrefs.setOnboardingStep(nextStep);
+        success = true;
+      },
+    );
 
     return success;
   }
@@ -448,6 +446,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         final token = response.data?.verificationToken ?? '';
         if (token.isNotEmpty) {
           await AppPrefs.setVerificationToken(token);
+          await AppPrefs.setVerificationPhone10(phone10);
         }
 
         state = state.copyWith(

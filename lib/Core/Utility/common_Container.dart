@@ -4,7 +4,6 @@ import 'package:dotted_border/dotted_border.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 
@@ -2464,6 +2463,7 @@ class CommonContainer {
     required int resendSeconds,
     required String last4Digits,
     bool showError = false,
+    String? errorText,
   }) {
     return Container(
       key: const ValueKey('otpCard'),
@@ -2528,6 +2528,7 @@ class CommonContainer {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -2553,11 +2554,16 @@ class CommonContainer {
                           ),
                         ),
                       ),
+                      onTap: () {
+                        final t = controllers[index].text;
+                        controllers[index].selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: t.length,
+                        );
+                      },
                       onChanged: (value) {
                         if (value.isNotEmpty && index < 3) {
                           FocusScope.of(context).nextFocus();
-                        } else if (value.isEmpty && index > 0) {
-                          FocusScope.of(context).previousFocus();
                         }
                       },
                     ),
@@ -2584,11 +2590,13 @@ class CommonContainer {
           ),
 
           if (showError)
-            const Padding(
-              padding: EdgeInsets.only(top: 8, left: 4),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
               child: Text(
-                "⚠️ Please Enter Valid OTP",
-                style: TextStyle(color: Colors.red, fontSize: 13),
+                (errorText ?? '').trim().isNotEmpty
+                    ? errorText!.trim()
+                    : "⚠️ Please Enter Valid OTP",
+                style: const TextStyle(color: Colors.red, fontSize: 13),
               ),
             ),
         ],

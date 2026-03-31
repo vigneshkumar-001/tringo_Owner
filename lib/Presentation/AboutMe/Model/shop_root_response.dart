@@ -34,6 +34,7 @@ class Shop {
   final String? shopGpsLatitude;
   final String? shopGpsLongitude;
   final List<ShopWeeklyHour> shopWeeklyHours;
+  final List<String> shopKeywords;
 
   final String? category;
   final String? subCategory;
@@ -76,6 +77,7 @@ class Shop {
     this.shopGpsLatitude,
     this.shopGpsLongitude,
     this.shopWeeklyHours = const [],
+    this.shopKeywords = const [],
 
     this.category,
     this.subCategory,
@@ -118,6 +120,11 @@ class Shop {
       shopWeeklyHours:
           (weeklyJson as List<dynamic>?)
               ?.map((e) => ShopWeeklyHour.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      shopKeywords:
+          (json["shopKeywords"] as List<dynamic>?)
+              ?.map((e) => e.toString())
               .toList() ??
           const [],
       category: json["category"] as String?,
@@ -450,12 +457,7 @@ class Review {
   final String? comment;
   final String? createdAtRelative;
 
-  const Review({
-    this.id,
-    this.rating,
-    this.comment,
-    this.createdAtRelative,
-  });
+  const Review({this.id, this.rating, this.comment, this.createdAtRelative});
 
   factory Review.fromJson(Map<String, dynamic> json) {
     double? parseRating(dynamic v) {
@@ -487,7 +489,6 @@ class Review {
   };
 }
 
-
 bool? _parseBool(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
@@ -505,4 +506,3 @@ bool? _parseBool(dynamic value) {
 
   return null;
 }
-

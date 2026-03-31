@@ -1130,6 +1130,10 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                           shopId: selectedShop.shopId,
                           isService: isServiceFlow,
                           isIndividual: false,
+                          initialShopKeywords: selectedShop.shopKeywords
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .toList(),
                           initialImageUrls: initialImageUrls,
                           initialShopNameEnglish: selectedShop.shopEnglishName,
                           initialShopNameTamil: selectedShop.shopTamilName,
@@ -2991,7 +2995,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                               vertical: 6,
                             ),
                             child: GestureDetector(
-                              onTap: canViewProfiles == true
+                              onTap: canViewProfiles == false
                                   ? () {
                                       Navigator.push(
                                         context,
@@ -3260,8 +3264,8 @@ class _FollowerAvatar extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(15),
           child: SizedBox(
-            height: 50,
-            width: 50,
+            height: 40,
+            width: 40,
             child: Stack(
               fit: StackFit.expand,
               children: [
