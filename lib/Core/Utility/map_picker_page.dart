@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,14 @@ import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class GoogleLocationPickerScreen extends StatefulWidget {
-  const GoogleLocationPickerScreen({super.key});
+  final double? initialLat;
+  final double? initialLng;
+
+  const GoogleLocationPickerScreen({
+    super.key,
+    this.initialLat,
+    this.initialLng,
+  });
 
   @override
   State<GoogleLocationPickerScreen> createState() =>
@@ -20,6 +28,8 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
   LatLng? currentLocation;
   LatLng? selectedLocation;
   bool _hideBottomSheet = false;
+  bool _hasLocationPermission = false;
+  bool _isRecentering = false;
 
   String locality = 'Fetching location...';
   String city = '';
@@ -36,6 +46,8 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
   late Animation<double> _fadeAnimation;
 
   static const double _zoom = 16;
+  static const Duration _positionTimeout = Duration(seconds: 6);
+  static const LocationAccuracy _fastAccuracy = LocationAccuracy.medium;
 
   // IMPORTANT:
   // 1) ROTATE your leaked key in Google Cloud Console.
@@ -53,7 +65,13 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    _getCurrentLocation();
+
+    final initial = _initialLatLngFromWidget();
+    if (initial != null) {
+      _initWithInitialLocation(initial);
+    } else {
+      _initWithDeviceLocation();
+    }
   }
 
   @override
@@ -65,14 +83,69 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
     super.dispose();
   }
 
-  Future<void> _getCurrentLocation() async {
+  LatLng? _initialLatLngFromWidget() {
+    final lat = widget.initialLat;
+    final lng = widget.initialLng;
+    if (lat == null || lng == null) return null;
+    return LatLng(lat, lng);
+  }
+
+  Future<bool> _ensureLocationPermission({bool requestIfDenied = true}) async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied && requestIfDenied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    final granted = permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
+
+    if (!mounted) return granted;
+    setState(() => _hasLocationPermission = granted);
+    return granted;
+  }
+
+  Future<void> _initWithInitialLocation(LatLng initial) async {
+    _setInitialMapLocation(initial);
+    unawaited(_reverseGeocode(initial.latitude, initial.longitude));
+
+    // Optional: try to fetch device location later for recenter/search bias,
+    // without overriding the initially selected shop location.
+    _updateDeviceLocationForRecenter();
+  }
+
+  void _setInitialMapLocation(LatLng loc) {
+    currentLocation = loc;
+    selectedLocation = loc;
+
+    if (!mounted) return;
+    if (loading) setState(() => loading = false);
+    _animationController.forward();
+  }
+
+  Future<void> _updateDeviceLocationForRecenter() async {
     try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      final granted = await _ensureLocationPermission(requestIfDenied: false);
+      if (!granted) return;
+
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: _fastAccuracy,
+        timeLimit: _positionTimeout,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        currentLocation = LatLng(pos.latitude, pos.longitude);
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  Future<void> _initWithDeviceLocation() async {
+    try {
+      final granted = await _ensureLocationPermission(requestIfDenied: true);
+      if (!granted) {
         if (!mounted) return;
         setState(() {
           loading = false;
@@ -82,18 +155,24 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
         return;
       }
 
+      // 1) Show map ASAP using last known location (fast)
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) {
+        _setInitialMapLocation(LatLng(last.latitude, last.longitude));
+        unawaited(_reverseGeocode(last.latitude, last.longitude));
+      }
+
+      // 2) Then fetch a fresher location (may take time)
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: _fastAccuracy,
+        timeLimit: _positionTimeout,
       );
 
-      currentLocation = LatLng(pos.latitude, pos.longitude);
-      selectedLocation = currentLocation;
-
-      await _reverseGeocode(pos.latitude, pos.longitude);
+      _setInitialMapLocation(LatLng(pos.latitude, pos.longitude));
+      unawaited(_reverseGeocode(pos.latitude, pos.longitude));
 
       if (!mounted) return;
-      setState(() => loading = false);
-      _animationController.forward();
+      if (loading) setState(() => loading = false);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -298,11 +377,66 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
   }
 
   void _recenter() {
-    if (currentLocation == null || _mapController == null) return;
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(currentLocation!, _zoom),
-    );
-    _onMapTap(currentLocation!);
+    _recenterToMyLocation();
+  }
+
+  Future<void> _recenterToMyLocation() async {
+    if (_mapController == null) return;
+    if (_isRecentering) return;
+
+    _isRecentering = true;
+    try {
+      final granted = await _ensureLocationPermission(requestIfDenied: true);
+      if (!granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Enable location permission to use current location'),
+          ),
+        );
+        return;
+      }
+
+      // Fast recenter using cached location first (if available)
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null && mounted) {
+        final cached = LatLng(last.latitude, last.longitude);
+        setState(() {
+          currentLocation = cached;
+          selectedLocation = cached;
+        });
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(cached, _zoom),
+        );
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: _fastAccuracy,
+        timeLimit: _positionTimeout,
+      );
+
+      final my = LatLng(pos.latitude, pos.longitude);
+
+      if (!mounted) return;
+      setState(() {
+        currentLocation = my;
+        selectedLocation = my;
+      });
+
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(my, _zoom),
+      );
+
+      unawaited(_reverseGeocode(my.latitude, my.longitude));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to get current location: $e')),
+        );
+      }
+    } finally {
+      _isRecentering = false;
+    }
   }
 
   Widget _buildSearchBox() {
@@ -633,7 +767,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
               target: currentLocation!,
               zoom: _zoom,
             ),
-            myLocationEnabled: true,
+            myLocationEnabled: _hasLocationPermission,
             myLocationButtonEnabled: false,
             compassEnabled: true,
             mapToolbarEnabled: false,
@@ -657,7 +791,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
           // Recenter button
           Positioned(
             right: 16,
-            bottom: 240,
+            bottom: 350,
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Material(
@@ -667,7 +801,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
                   onTap: _recenter,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -682,7 +816,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
                     child: const Icon(
                       Icons.my_location,
                       color: Colors.blue,
-                      size: 26,
+                      size: 20,
                     ),
                   ),
                 ),

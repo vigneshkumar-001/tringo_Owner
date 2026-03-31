@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Core/Utility/app_prefs.dart';
+import 'package:tringo_owner/Core/Session/registration_product_seivice.dart';
+import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
@@ -143,12 +145,76 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // 2) Battery flow (before navigation)
       // await _batteryOptimizationFlow();
 
-      // 3) Auth policy: always show Login on cold start.
-      // This prevents the app from reopening directly to Home due to a saved token.
-      await AppPrefs.clearIds();
       await Future.delayed(const Duration(seconds: 2));
+
+      // 3) Auth policy: resume session if token exists.
+      final token = (await AppPrefs.getToken())?.trim() ?? '';
+
+      String? goPath;
+      String? goNamed;
+      Object? extra;
+
+      if (token.isEmpty) {
+        goPath = AppRoutes.loginPath;
+      } else {
+        // Resume onboarding if backend had marked it incomplete.
+        final step = (await AppPrefs.getOnboardingStep())?.trim().toLowerCase();
+        final needsOnboarding = AppPrefs.isIncompleteOnboardingStep(step);
+
+        if (!needsOnboarding) {
+          await AppPrefs.setOnboardingStep(null);
+          await AppPrefs.clearRegistrationFlags();
+          goNamed = AppRoutes.homeScreen;
+        } else {
+          final hasFlags = await AppPrefs.hasRegistrationFlags();
+          final flags = await AppPrefs.getRegistrationFlags();
+          final isService = flags['isService'] == true;
+          final isIndividual = flags['isIndividual'] == true;
+
+          // If token exists but registration flags are missing, treat as an
+          // existing/fully-onboarded session and avoid forcing business-type
+          // onboarding on every restart.
+          if (!hasFlags) {
+            await AppPrefs.setOnboardingStep(null);
+            await AppPrefs.clearRegistrationFlags();
+            goNamed = AppRoutes.homeScreen;
+          } else {
+            final bt = isIndividual
+                ? BusinessType.individual
+                : BusinessType.company;
+            RegistrationSession.instance.businessType = bt;
+            RegistrationProductSeivice.instance.businessType = bt;
+            RegistrationProductSeivice.instance.businessCategory = isService
+                ? BusinessCategory.services
+                : BusinessCategory.sellingProduct;
+
+            if (step == 'step-2') {
+              goNamed = AppRoutes.shopCategoryInfo;
+              extra = {'isService': isService, 'isIndividual': isIndividual};
+            } else if (step == 'step-3') {
+              goNamed = AppRoutes.shopPhotoInfo;
+              extra = 'onboarding';
+            } else if (step == 'step-4') {
+              goNamed = AppRoutes.searchKeyword;
+            } else if (step == 'step-1') {
+              goNamed = AppRoutes.ownerInfo;
+              extra = {'isService': isService, 'isIndividual': isIndividual};
+            } else {
+              // Default: start onboarding from the beginning
+              goNamed = AppRoutes.register;
+            }
+          }
+        }
+      }
+
       if (!mounted) return;
-      context.go(AppRoutes.loginPath);
+      if (goPath != null) {
+        context.go(goPath);
+      } else if (goNamed != null) {
+        context.goNamed(goNamed, extra: extra);
+      } else {
+        context.go(AppRoutes.loginPath);
+      }
     } catch (e, st) {
       AppLogger.log.e("Splash init error: $e\n$st");
       if (!mounted) return;

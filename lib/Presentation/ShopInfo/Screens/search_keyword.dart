@@ -20,8 +20,14 @@ import '../Controller/shop_notifier.dart';
 class SearchKeyword extends ConsumerStatefulWidget {
   final bool? isIndividual;
   final String? pages;
+  final List<String> initialKeywords;
 
-  const SearchKeyword({super.key, this.isIndividual, this.pages});
+  const SearchKeyword({
+    super.key,
+    this.isIndividual,
+    this.pages,
+    this.initialKeywords = const [],
+  });
 
   @override
   ConsumerState<SearchKeyword> createState() => _SearchKeywordState();
@@ -47,6 +53,19 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
   @override
   void initState() {
     super.initState();
+
+    _keywords.addAll(
+      widget.initialKeywords
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList()
+          .fold<List<String>>(<String>[], (acc, e) {
+            if (acc.contains(e)) return acc;
+            if (acc.length >= 5) return acc;
+            acc.add(e);
+            return acc;
+          }),
+    );
 
     // ✅ Fetch initial recommended keywords on screen open
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -326,6 +345,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                                                   );
 
                                               _addKeyword(keyword);
+                                              _searchKeywordController.clear();
 
                                               setState(
                                                 () => _showSuggestions = false,
@@ -398,88 +418,88 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
 
                       const SizedBox(height: 20),
 
-                      // ✅ Toggle Recommended
-                      GestureDetector(
-                        onTap: () async {
-                          setState(() => _showRecommended = !_showRecommended);
+                      // // ✅ Toggle Recommended
+                      // GestureDetector(
+                      //   onTap: () async {
+                      //     setState(() => _showRecommended = !_showRecommended);
 
-                          if (_showRecommended) {
-                            if (_categorySlug.trim().isEmpty) return;
-                            await ref
-                                .read(shopCategoryNotifierProvider.notifier)
-                                .fetchKeyWords(
-                                  categorySlug: _categorySlug,
-                                  query: "",
-                                );
-                          }
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColor.brightBlue,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 5,
-                            ),
-                            child: Text(
-                              _showRecommended
-                                  ? 'Hide Recommended Keywords'
-                                  : 'View Recommended Keywords',
-                              style: AppTextStyles.mulish(
-                                fontWeight: FontWeight.w700,
-                                color: AppColor.scaffoldColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      //     if (_showRecommended) {
+                      //       if (_categorySlug.trim().isEmpty) return;
+                      //       await ref
+                      //           .read(shopCategoryNotifierProvider.notifier)
+                      //           .fetchKeyWords(
+                      //             categorySlug: _categorySlug,
+                      //             query: "",
+                      //           );
+                      //     }
+                      //   },
+                      //   child: Container(
+                      //     decoration: BoxDecoration(
+                      //       color: AppColor.brightBlue,
+                      //       borderRadius: BorderRadius.circular(50),
+                      //     ),
+                      //     child: Padding(
+                      //       padding: const EdgeInsets.symmetric(
+                      //         horizontal: 12,
+                      //         vertical: 5,
+                      //       ),
+                      //       child: Text(
+                      //         _showRecommended
+                      //             ? 'Hide Recommended Keywords'
+                      //             : 'View Recommended Keywords',
+                      //         style: AppTextStyles.mulish(
+                      //           fontWeight: FontWeight.w700,
+                      //           color: AppColor.scaffoldColor,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
 
-                      const SizedBox(height: 20),
+                      // const SizedBox(height: 20),
 
-                      // ✅ Recommended list from API
-                      if (_showRecommended)
-                        state.isKeyWordsLoading
-                            ? Padding(
-                                padding: EdgeInsets.all(12),
-                                child: Center(
-                                  child: AppLoader.circularLoader(
-                                    color: AppColor.black,
-                                  ),
-                                ),
-                              )
-                            : Wrap(
-                                spacing: 10,
-                                runSpacing: 10,
-                                children: apiKeywords.map((keyword) {
-                                  return GestureDetector(
-                                    onTap: () => _addKeyword(keyword),
-                                    child: DottedBorder(
-                                      borderType: BorderType.RRect,
-                                      radius: const Radius.circular(12),
-                                      color: AppColor.lightSilver,
-                                      strokeWidth: 1,
-                                      dashPattern: const [3, 2],
-                                      padding: const EdgeInsets.all(1),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 9,
-                                          horizontal: 16,
-                                        ),
-                                        child: Text(
-                                          keyword,
-                                          style: AppTextStyles.mulish(
-                                            color: AppColor.gray84,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
+                      // // ✅ Recommended list from API
+                      // if (_showRecommended)
+                      //   state.isKeyWordsLoading
+                      //       ? Padding(
+                      //           padding: EdgeInsets.all(12),
+                      //           child: Center(
+                      //             child: AppLoader.circularLoader(
+                      //               color: AppColor.black,
+                      //             ),
+                      //           ),
+                      //         )
+                      //       : Wrap(
+                      //           spacing: 10,
+                      //           runSpacing: 10,
+                      //           children: apiKeywords.map((keyword) {
+                      //             return GestureDetector(
+                      //               onTap: () => _addKeyword(keyword),
+                      //               child: DottedBorder(
+                      //                 borderType: BorderType.RRect,
+                      //                 radius: const Radius.circular(12),
+                      //                 color: AppColor.lightSilver,
+                      //                 strokeWidth: 1,
+                      //                 dashPattern: const [3, 2],
+                      //                 padding: const EdgeInsets.all(1),
+                      //                 child: Padding(
+                      //                   padding: const EdgeInsets.symmetric(
+                      //                     vertical: 9,
+                      //                     horizontal: 16,
+                      //                   ),
+                      //                   child: Text(
+                      //                     keyword,
+                      //                     style: AppTextStyles.mulish(
+                      //                       color: AppColor.gray84,
+                      //                     ),
+                      //                   ),
+                      //                 ),
+                      //               ),
+                      //             );
+                      //           }).toList(),
+                      //         ),
 
-                      const SizedBox(height: 30),
+                      // const SizedBox(height: 30),
 
                       // ✅ Save & Continue
                       CommonContainer.button(
