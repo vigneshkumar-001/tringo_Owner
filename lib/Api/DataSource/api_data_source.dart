@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
@@ -130,7 +130,7 @@ class ApiDataSource extends BaseApiDataSource {
         ServerFailure(response.data['message'] ?? "Something went wrong"),
       );
     } on DioException catch (e) {
-      // 🔴 NO INTERNET
+      // ðŸ”´ NO INTERNET
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.unknown) {
         return Left(ServerFailure("No internet connection. Please try again"));
@@ -182,7 +182,7 @@ class ApiDataSource extends BaseApiDataSource {
         ServerFailure(response.data['message'] ?? "Something went wrong"),
       );
     } on DioException catch (e) {
-      // 🔴 NO INTERNET
+      // ðŸ”´ NO INTERNET
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.unknown) {
         return Left(ServerFailure("No internet connection. Please try again"));
@@ -226,7 +226,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -288,7 +288,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -333,7 +333,7 @@ class ApiDataSource extends BaseApiDataSource {
       AppLogger.log.w(savedShopId);
       AppLogger.log.w(apiShopId);
 
-      // ✅ Priority: 1) SharedPrefs → 2) apiShopId
+      // âœ… Priority: 1) SharedPrefs â†’ 2) apiShopId
       String? finalShopId;
       if (savedShopId != null && savedShopId.isNotEmpty) {
         finalShopId = savedShopId;
@@ -346,7 +346,7 @@ class ApiDataSource extends BaseApiDataSource {
           ? ApiUrl.updateShop(shopId: finalShopId)
           : ApiUrl.shop;
 
-      // ✅ READ verification token (saved after OTP verify)
+      // âœ… READ verification token (saved after OTP verify)
       final phoneVerifyToken = await AppPrefs.getVerificationToken();
 
       final payload = <String, dynamic>{
@@ -366,11 +366,11 @@ class ApiDataSource extends BaseApiDataSource {
         "doorDelivery": doorDelivery,
         "weeklyHours": weeklyHours,
 
-        // ✅ IMPORTANT: backend expects this
+        // âœ… IMPORTANT: backend expects this
         if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
           "primaryPhoneVerificationToken": phoneVerifyToken,
 
-        // ✅ keep this also (safe fallback)
+        // âœ… keep this also (safe fallback)
         if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
           "phoneVerifyToken": phoneVerifyToken,
       };
@@ -388,7 +388,7 @@ class ApiDataSource extends BaseApiDataSource {
           if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
             "x-phone-verify-token": phoneVerifyToken,
 
-          // ✅ fallback header keys (safe)
+          // âœ… fallback header keys (safe)
           if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
             "x-phone-verification-token": phoneVerifyToken,
           if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
@@ -408,7 +408,7 @@ class ApiDataSource extends BaseApiDataSource {
               body as Map<String, dynamic>,
             );
 
-            // ✅ clear token only after success
+            // âœ… clear token only after success
             await AppPrefs.clearVerificationToken();
 
             return Right(shopResponse);
@@ -458,7 +458,7 @@ class ApiDataSource extends BaseApiDataSource {
           //   );
           // }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -528,7 +528,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final shopIdToUse = apiShopId ?? prefs.getString('shop_id') ?? '';
 
-      // ❗ FIXED: remove `?? ''`
+      // â— FIXED: remove `?? ''`
       final url = ApiUrl.shopPhotosUpload(shopId: shopIdToUse);
 
       final payload = {"items": items};
@@ -623,9 +623,12 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 🔹 SHOP ID: can fallback to prefs
+      // ðŸ”¹ SHOP ID: can fallback to prefs
       String? shopIdToUse = apiShopId ?? prefs.getString('shop_id');
-      String? productId = apiProductId ?? prefs.getString('product_id');
+      final String? productId =
+          (apiProductId != null && apiProductId.trim().isNotEmpty)
+              ? apiProductId.trim()
+              : null;
 
       if (shopIdToUse == null || shopIdToUse.isEmpty) {
         return Left(
@@ -633,8 +636,8 @@ class ApiDataSource extends BaseApiDataSource {
         );
       }
 
-      // 🔹 PRODUCT ID: ONLY use what caller sends
-      // final String? productId = apiProductId; // ❗ no prefs fallback here
+      // ðŸ”¹ PRODUCT ID: ONLY use what caller sends
+      // final String? productId = apiProductId; // â— no prefs fallback here
 
       final String url = (productId != null && productId.isNotEmpty)
           ? ApiUrl.updateProducts(productId: productId) // UPDATE
@@ -684,7 +687,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final savedShopId = prefs.getString('shop_id');
 
-      // priority: apiShopId → savedShopId → empty
+      // priority: apiShopId â†’ savedShopId â†’ empty
       final shopId = (apiShopId != null && apiShopId.trim().isNotEmpty)
           ? apiShopId
           : (savedShopId ?? '');
@@ -707,7 +710,7 @@ class ApiDataSource extends BaseApiDataSource {
           //   );
           // }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -735,7 +738,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       String url = ApiUrl.updateProducts(productId: productId);
 
-      // ✅ Use the actual images + features passed from caller
+      // âœ… Use the actual images + features passed from caller
       final payload = {"images": images, "features": features};
 
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
@@ -779,7 +782,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       String url = ApiUrl.updateProducts(productId: productId);
 
-      // ✅ Use the actual images + features passed from caller
+      // âœ… Use the actual images + features passed from caller
       final payload = {"keywords": keywords};
 
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
@@ -844,7 +847,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -885,7 +888,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       return Left(ServerFailure(data['message'] ?? "Something went wrong"));
     }
-    // 🔴 NETWORK / INTERNET ERRORS
+    // ðŸ”´ NETWORK / INTERNET ERRORS
     on DioException catch (e) {
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.unknown) {
@@ -934,25 +937,27 @@ class ApiDataSource extends BaseApiDataSource {
       //
       final prefs = await SharedPreferences.getInstance();
 
-      final savedServiceId = prefs.getString('service_id');
-
-      final serviceIdToUse =
-          (apiServiceId != null && apiServiceId.trim().isNotEmpty)
-          ? apiServiceId
-          : (savedServiceId ?? '');
-      AppLogger.log.i('Service id - $apiServiceId');
+      // IMPORTANT: service id should come only from caller (avoid updating old service).
+      final serviceIdToUse = apiServiceId.trim();
+      AppLogger.log.i('Service id - $serviceIdToUse');
 
       final savedShopId = prefs.getString('shop_id');
       final shopIdToUse = (apiShopId != null && apiShopId.trim().isNotEmpty)
-          ? apiShopId
+          ? apiShopId.trim()
           : (savedShopId ?? '');
+
+      if (shopIdToUse.trim().isEmpty) {
+        return Left(
+          ServerFailure("Shop not found. Please complete shop setup first."),
+        );
+      }
 
       // DECIDE CREATE OR EDIT API
       // apiServiceId is required but may be "", so we check empty only
       final url = serviceIdToUse.isNotEmpty
           ? ApiUrl.serviceEdit(serviceId: serviceIdToUse)
           : ApiUrl.serviceInfo(shopId: shopIdToUse);
-      AppLogger.log.i("SERVICE URL → $url");
+      AppLogger.log.i("SERVICE URL â†’ $url");
       final payload = {
         "title": title,
         "tamilName": tamilName,
@@ -1026,7 +1031,7 @@ class ApiDataSource extends BaseApiDataSource {
         return Left(ServerFailure("Unexpected error type"));
       }
 
-      // ✅ Safely handle both String and Map
+      // âœ… Safely handle both String and Map
       late final Map<String, dynamic> responseData;
       if (response.data is String) {
         responseData =
@@ -1075,8 +1080,8 @@ class ApiDataSource extends BaseApiDataSource {
 
       final payload = {"images": images, "features": features};
 
-      // If your backend uses PATCH → 'Patch'
-      // If it uses PUT → 'Put'
+      // If your backend uses PATCH â†’ 'Patch'
+      // If it uses PUT â†’ 'Put'
       // Only keep 'Post' if your backend really expects POST here.
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
 
@@ -1119,7 +1124,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       String url = ApiUrl.serviceList(serviceId: serviceId);
 
-      // ✅ Use the actual images + features passed from caller
+      // âœ… Use the actual images + features passed from caller
       final payload = {"keywords": keywords};
 
       dynamic response = await Request.sendRequest(url, payload, 'Post', true);
@@ -1175,7 +1180,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -1236,7 +1241,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       final url = ApiUrl.serviceDelete(serviceId: id);
 
-      // ⚠️ Keep method string consistent with your other calls
+      // âš ï¸ Keep method string consistent with your other calls
       final response = await Request.sendRequest(url, {}, 'Delete', true);
 
       // Network / Dio error
@@ -1252,7 +1257,7 @@ class ApiDataSource extends BaseApiDataSource {
 
       return Right(ServiceRemoveResponse.fromJson(map));
     } catch (e, st) {
-      AppLogger.log.e('❌ deleteService exception: $e\n$st');
+      AppLogger.log.e('âŒ deleteService exception: $e\n$st');
       return Left(ServerFailure('Unexpected error'));
     }
   }
@@ -1279,7 +1284,7 @@ class ApiDataSource extends BaseApiDataSource {
       if (response is! DioException) {
         if (response.statusCode == 200 || response.statusCode == 201) {
           if (response.data['status'] == true) {
-            // ✅ API returns the same JSON you showed
+            // âœ… API returns the same JSON you showed
             return Right(SimVerifyResponse.fromJson(response.data));
           } else {
             return Left(
@@ -1325,7 +1330,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -1365,7 +1370,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -1470,7 +1475,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -1566,7 +1571,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -1605,7 +1610,7 @@ class ApiDataSource extends BaseApiDataSource {
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -2170,7 +2175,11 @@ AppLogger.log.w(appVersion);
   }) async {
     try {
       final url = ApiUrl.branchesList;
-      dynamic response = await Request.sendGetRequest(url, {}, 'Get', true);
+      final shopId = (apiShopId ?? '').trim();
+      final params = <String, dynamic>{};
+      if (shopId.isNotEmpty) params['shopId'] = shopId;
+
+      dynamic response = await Request.sendGetRequest(url, params, 'Get', true);
 
       AppLogger.log.i(response);
 
@@ -2186,7 +2195,7 @@ AppLogger.log.w(appVersion);
           //   );
           // }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -2252,6 +2261,57 @@ AppLogger.log.w(appVersion);
     }
   }
 
+  Future<Either<Failure, CreateSurpriseResponse>> updateSurpriseOffer({
+    required String offerId,
+    required String branchId,
+    required String bannerUrl,
+    required String shopIdToUse,
+    required String title,
+    required String description,
+    required int couponCount,
+    required String availableFrom,
+    required String availableTo,
+  }) async {
+    try {
+      final String url = ApiUrl.updateSurpriseOffer(
+        shopId: shopIdToUse,
+        offerId: offerId,
+      );
+
+      final payload = {
+        "branchId": branchId,
+        "bannerUrl": bannerUrl,
+        "title": title,
+        "description": description,
+        "couponCount": couponCount,
+        "availableFrom": availableFrom,
+        "availableTo": availableTo,
+      };
+
+      final response = await Request.sendRequest(url, payload, 'Post', true);
+
+      if (response is! Response) {
+        return Left(ServerFailure("Invalid response from server"));
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+
+        if (data["status"] == true) {
+          return Right(CreateSurpriseResponse.fromJson(data));
+        } else {
+          return Left(ServerFailure(data['message'] ?? "Request failed"));
+        }
+      }
+
+      return Left(
+        ServerFailure(response.data['message'] ?? "Something went wrong"),
+      );
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
   Future<Either<Failure, SurpriseOfferListResponse>> surpriseOfferList({
     required String shopId,
   }) async {
@@ -2271,7 +2331,7 @@ AppLogger.log.w(appVersion);
             return Left(ServerFailure(response.data['message'] ?? ""));
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -2297,14 +2357,14 @@ AppLogger.log.w(appVersion);
 
       final dynamic resp = await Request.sendGetRequest(url, {}, 'GET', true);
 
-      // ✅ VERY IMPORTANT: null guard
+      // âœ… VERY IMPORTANT: null guard
       if (resp == null) {
         return Left(
           ServerFailure("No response from server. Please try again."),
         );
       }
 
-      // ✅ Safe logs (no crash)
+      // âœ… Safe logs (no crash)
       if (resp is Response) {
         debugPrint("shopQrCode => status=${resp.statusCode}");
         debugPrint("shopQrCode => data=${resp.data}");
@@ -2318,7 +2378,7 @@ AppLogger.log.w(appVersion);
         AppLogger.log.i("shopQrCode => resp=${resp.toString()}");
       }
 
-      // ✅ If not DioException, it should be a Dio Response
+      // âœ… If not DioException, it should be a Dio Response
       if (resp is! DioException) {
         if (resp is Response) {
           final status = resp.statusCode ?? 0;
@@ -2355,7 +2415,7 @@ AppLogger.log.w(appVersion);
         return Left(ServerFailure("Invalid response type"));
       }
 
-      // ✅ DioException
+      // âœ… DioException
       final errorData = resp.response?.data;
       if (errorData is Map && errorData.containsKey('message')) {
         return Left(ServerFailure(errorData['message'].toString()));
@@ -2378,7 +2438,7 @@ AppLogger.log.w(appVersion);
   //
   //     final dynamic resp = await Request.sendGetRequest(url, {}, 'GET', true);
   //
-  //     // ✅ Safe logs (no type error)
+  //     // âœ… Safe logs (no type error)
   //     if (resp is Response) {
   //       AppLogger.log.i("shopQrCode => status=${resp.statusCode}");
   //       AppLogger.log.i("shopQrCode => data=${resp.data}");
@@ -2389,7 +2449,7 @@ AppLogger.log.w(appVersion);
   //       debugPrint("shopQrCode => resp=${resp.toString()}");
   //     }
   //
-  //     // ✅ If not DioException, it should be a Dio Response
+  //     // âœ… If not DioException, it should be a Dio Response
   //     if (resp is! DioException) {
   //       if (resp is Response) {
   //         if (resp.statusCode == 200 || resp.statusCode == 201) {
@@ -2424,7 +2484,7 @@ AppLogger.log.w(appVersion);
   //       return Left(ServerFailure("Invalid response type"));
   //     }
   //
-  //     // ✅ DioException
+  //     // âœ… DioException
   //     final errorData = resp.response?.data;
   //     if (errorData is Map && errorData.containsKey('message')) {
   //       return Left(ServerFailure(errorData['message'].toString()));
@@ -2554,7 +2614,7 @@ AppLogger.log.w(appVersion);
     required String tCoin,
   }) async {
     try {
-      final String url = ApiUrl.uIDSendApi; // ✅ /v1/wallet/transfer
+      final String url = ApiUrl.uIDSendApi; // âœ… /v1/wallet/transfer
 
       final payload = {
         "toUid": toUid.trim(),
@@ -2602,7 +2662,7 @@ AppLogger.log.w(appVersion);
 
       final response = await Request.sendRequest(url, payload, 'Post', true);
 
-      // 🔴 1. Network / Dio error
+      // ðŸ”´ 1. Network / Dio error
       if (response is DioException) {
         final data = response.response?.data;
 
@@ -2613,18 +2673,18 @@ AppLogger.log.w(appVersion);
         return Left(ServerFailure(response.message ?? 'Network error'));
       }
 
-      // 🔴 2. Normal HTTP response (200 / 400 / 422 etc)
+      // ðŸ”´ 2. Normal HTTP response (200 / 400 / 422 etc)
       final body = response.data;
 
       if (body is Map<String, dynamic>) {
-        // ❌ business failure → pass message AS-IS
+        // âŒ business failure â†’ pass message AS-IS
         if (body['status'] != true) {
           return Left(
             ServerFailure(body['message']?.toString() ?? 'UNKNOWN_ERROR'),
           );
         }
 
-        // ✅ success
+        // âœ… success
         final parsed = WithdrawRequestResponse.fromJson(body);
 
         if (parsed.data.success != true) {
@@ -2636,7 +2696,7 @@ AppLogger.log.w(appVersion);
         return Right(parsed);
       }
 
-      // 🔴 3. Unexpected response shape
+      // ðŸ”´ 3. Unexpected response shape
       return Left(ServerFailure('INVALID_RESPONSE'));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -2697,14 +2757,14 @@ AppLogger.log.w(appVersion);
       final int mapSkip = (tab == "MAP") ? skip : 0;
 
       AppLogger.log.i('''
-📤 fetchEnquiryAnalyticsPaged
+ðŸ“¤ fetchEnquiryAnalyticsPaged
 shopId: $shopId
 tab: $tab
 take: $take | skip: $skip
 enquiryTake: $enquiryTake | enquirySkip: $enquirySkip
 callTake: $callTake | callSkip: $callSkip
 mapTake: $mapTake | mapSkip: $mapSkip
-dateRange: $start → $end
+dateRange: $start â†’ $end
 ''');
 
       final url = ApiUrl.fetchAnalyticsActivity(
@@ -2723,19 +2783,19 @@ dateRange: $start → $end
         end: end,
       );
 
-      AppLogger.log.i("🌐 URL => $url");
+      AppLogger.log.i("ðŸŒ URL => $url");
 
       final dynamic res = await Request.sendGetRequest(url, {}, 'GET', true);
 
-      AppLogger.log.i("📥 Raw response type => ${res.runtimeType}");
+      AppLogger.log.i("ðŸ“¥ Raw response type => ${res.runtimeType}");
 
       if (res == null) {
-        AppLogger.log.e("❌ Response is NULL");
+        AppLogger.log.e("âŒ Response is NULL");
         return Left(ServerFailure("No response from server"));
       }
 
       if (res is DioException) {
-        AppLogger.log.e("❌ DioException");
+        AppLogger.log.e("âŒ DioException");
         AppLogger.log.e("message => ${res.message}");
         AppLogger.log.e("status => ${res.response?.statusCode}");
         AppLogger.log.e("data => ${res.response?.data}");
@@ -2754,8 +2814,8 @@ dateRange: $start → $end
       final int statusCode = res.statusCode ?? 0;
       final dynamic data = res.data;
 
-      AppLogger.log.i("✅ statusCode => $statusCode");
-      AppLogger.log.i("📦 response data => $data");
+      AppLogger.log.i("âœ… statusCode => $statusCode");
+      AppLogger.log.i("ðŸ“¦ response data => $data");
 
       if (statusCode == 200 || statusCode == 201) {
         if (data is Map) {
@@ -2785,7 +2845,7 @@ dateRange: $start → $end
 
       return Left(ServerFailure("Unexpected error"));
     } catch (e, s) {
-      AppLogger.log.e("🔥 Exception in fetchEnquiryAnalyticsPaged");
+      AppLogger.log.e("ðŸ”¥ Exception in fetchEnquiryAnalyticsPaged");
       AppLogger.log.e(e);
       AppLogger.log.e(s);
       return Left(ServerFailure(e.toString()));
@@ -2817,7 +2877,7 @@ dateRange: $start → $end
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -2934,7 +2994,7 @@ dateRange: $start → $end
           //   );
           // }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -3009,7 +3069,7 @@ dateRange: $start → $end
     required String requestId,
     required String productTitle,
     required String message,
-    required List<String> images, // ✅ FIX: List<String>
+    required List<String> images, // âœ… FIX: List<String>
     required int price,
   }) async {
     try {
@@ -3037,7 +3097,7 @@ dateRange: $start → $end
             );
           }
         } else {
-          // ❗ API returned non-success code but has JSON error message
+          // â— API returned non-success code but has JSON error message
           return Left(
             ServerFailure(response.data['message'] ?? "Something went wrong"),
           );
@@ -3105,3 +3165,4 @@ dateRange: $start → $end
     }
   }
 }
+

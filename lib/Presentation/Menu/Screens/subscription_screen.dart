@@ -41,6 +41,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     final planAmount = state.planListResponse?.data;
 
+    final List<PlanFeature> comparisonFeatures = () {
+      final plans = planAmount ?? const <PlanModel>[];
+      if (plans.isEmpty) return <PlanFeature>[];
+
+      if (_selectedBilling >= 0 && _selectedBilling < plans.length) {
+        final selected = plans[_selectedBilling].features;
+        if (selected.isNotEmpty) {
+          return selected;
+        }
+      }
+
+      for (final p in plans) {
+        if (p.features.isNotEmpty) return p.features;
+      }
+
+      return <PlanFeature>[];
+    }();
+
+
     return Scaffold(
       backgroundColor: Color(0xFFF3F3F3),
       body: SafeArea(
@@ -82,12 +101,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           //
                           //       final router = GoRouter.of(context);
                           //
-                          //       // 1️⃣ Close this SubscriptionScreen if it was pushed via Navigator
+                          //       // 1ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â£ Close this SubscriptionScreen if it was pushed via Navigator
                           //       if (Navigator.of(context).canPop()) {
                           //         Navigator.of(context).pop();
                           //       }
                           //
-                          //       // 2️⃣ Now use go_router to show ShopsDetails
+                          //       // 2ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â£ Now use go_router to show ShopsDetails
                           //       router.goNamed(
                           //         AppRoutes.shopsDetails,
                           //         extra: {
@@ -124,7 +143,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       ),
                       SizedBox(height: 10),
                       Text(
-                        "Unlock the Tringo’s",
+                        "Unlock the Tringo's",
                         style: AppTextStyles.mulish(fontSize: 22),
                       ),
                       Text(
@@ -135,7 +154,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      _ComparisonCard(),
+                      _ComparisonCard(features: comparisonFeatures),
                       SizedBox(height: 20),
                       Center(
                         child: Text(
@@ -225,7 +244,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               //         return Padding(
               //           padding: const EdgeInsets.symmetric(horizontal: 5),
               //           child: _BillingChip(
-              //             labelTop: '₹ ${data?.price}',
+              //             labelTop: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹ ${data?.price}',
               //             labelBottom: data?.type.toString() ?? '',
               //             selected: _selectedBilling == 0,
               //             onTap: () {},
@@ -251,7 +270,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 10),
                         child: _BillingOptions(
-                          index: index, // ✅ add this
+                          index: index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ add this
                           price: data.price.toString(),
 
                           type: data.type
@@ -305,7 +324,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
                             final subState = ref.read(subscriptionNotifier);
 
-                            // ✅ SUCCESS → navigate
+                            // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ SUCCESS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ navigate
                             if (subState.purchaseResponse != null &&
                                 subState.purchaseResponse!.status == true) {
                               Navigator.push(
@@ -431,7 +450,9 @@ void showTopSnackBar(
 }
 
 class _ComparisonCard extends StatelessWidget {
-  _ComparisonCard();
+  final List<PlanFeature> features;
+
+  const _ComparisonCard({required this.features});
 
   @override
   Widget build(BuildContext context) {
@@ -441,16 +462,25 @@ class _ComparisonCard extends StatelessWidget {
       colors: [Color(0xFF0797FD), Color(0xFF07C8FD), Color(0xFF0797FD)],
     );
 
-    // text + availability in Free
-    const features = <({String text, bool free, bool premium})>[
-      (text: 'Search engine visibility upto 5km', free: true, premium: true),
-      (text: 'Unlimited Reply in Smart Connect', free: false, premium: true),
-      (text: 'Reach your entire district', free: false, premium: true),
-      (text: 'Search engine priority', free: false, premium: true),
-      (text: 'Place 2 ads per month', free: false, premium: true),
-      (text: 'Get Trusted Batch to gain clients', free: false, premium: true),
-      (text: 'View Followers Picture', free: false, premium: true),
-    ];
+    final List<({String text, bool free, bool premium})> uiFeatures;
+    if (features.isNotEmpty) {
+      final sorted = [...features]..sort((a, b) => a.sort.compareTo(b.sort));
+      uiFeatures = sorted
+          .where((f) => f.label.trim().isNotEmpty)
+          .map((f) => (text: _cleanFeatureText(f.label), free: f.free, premium: f.premium))
+          .toList();
+    } else {
+      uiFeatures = const <({String text, bool free, bool premium})>[
+        (text: "Limited visibility (5 km only)", free: true, premium: false),
+        (text: "Only 3 leads per month", free: true, premium: false),
+        (text: "Miss many customers", free: true, premium: false),
+        (text: "No priority listing", free: true, premium: false),
+        (text: "Reach entire district", free: false, premium: true),
+        (text: "Reply to 10 leads daily", free: false, premium: true),
+        (text: "Get priority in search", free: false, premium: true),
+        (text: "Place ads in Caller ID (100+ users/month)", free: false, premium: true),
+      ];
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -471,16 +501,14 @@ class _ComparisonCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           child: Stack(
             children: [
-              // Background bands (left = cardColor shows; middle = Free; right = Premium gradient)
-              // Make backgrounds fill the card area
               Positioned.fill(
                 child: Row(
                   children: [
-                    const Expanded(flex: 2, child: Text('')),
+                    const Expanded(flex: 2, child: Text("")),
                     Expanded(
                       flex: 1,
                       child: Container(color: AppColor.textWhite),
-                    ), // Free
+                    ),
                     Expanded(
                       flex: 1,
                       child: Container(
@@ -496,48 +524,36 @@ class _ComparisonCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
-                      children: [
-                        Expanded(flex: 3, child: Text('')),
-
+                      children: const [
+                        Expanded(flex: 3, child: Text("")),
                         Expanded(
                           flex: 3,
                           child: Center(
                             child: Text(
-                              'Free',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
-                              ),
+                              "Free",
+                              style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black),
                             ),
                           ),
                         ),
                         Expanded(
-                          flex: 0,
+                          flex: 2,
                           child: Center(
                             child: Text(
-                              'Premium',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                              "Premium",
+                              style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
-
-                    ...features.map(
+                    const SizedBox(height: 8),
+                    ...uiFeatures.map(
                       (f) => Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -552,22 +568,16 @@ class _ComparisonCard extends StatelessWidget {
                               ),
                             ),
                           ),
-
                           Expanded(
                             flex: 3,
                             child: Center(
-                              child: f.free
-                                  ? star(color: AppColor.skyBlue)
-                                  : SizedBox.shrink(),
+                              child: f.free ? star(color: AppColor.skyBlue) : const SizedBox.shrink(),
                             ),
                           ),
-
                           Expanded(
                             flex: 2,
                             child: Center(
-                              child: f.premium
-                                  ? star(color: AppColor.white)
-                                  : SizedBox.shrink(),
+                              child: f.premium ? star(color: AppColor.white) : const SizedBox.shrink(),
                             ),
                           ),
                         ],
@@ -582,6 +592,20 @@ class _ComparisonCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _cleanFeatureText(String input) {
+  var s = input.trim();
+  if (s.isEmpty) return s;
+
+  // Remove leading bullets/symbols
+  s = s.replaceFirst(RegExp(r'^[\u2022Ã¢â‚¬Â¢\-Ã¢â‚¬â€œÃ¢â‚¬â€\*]+\s*'), '');
+
+  // Remove leading list markers like "1.", "1)", "a.", "a,", "1 -"
+  s = s.replaceFirst(RegExp(r'^([0-9]{1,3}|[a-zA-Z])\s*[\)\.\-:,]\s*'), '');
+  s = s.replaceFirst(RegExp(r'^([0-9]{1,3}|[a-zA-Z])\s+\)\s*'), '');
+
+  return s.trim();
 }
 
 Widget star({Color? color = AppColor.white}) {
@@ -600,8 +624,8 @@ class _BillingOptions extends StatelessWidget {
     required this.price,
   });
 
-  final int index; // ✅ current item index
-  final int selectedIndex; // ✅ selected index in parent
+  final int index; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ current item index
+  final int selectedIndex; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ selected index in parent
   final ValueChanged<int> onChanged;
 
   final String type;
@@ -610,10 +634,10 @@ class _BillingOptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _BillingChip(
-      labelTop: '₹ $price',
+      labelTop: '\u20B9 $price',
       labelBottom: type,
-      selected: selectedIndex == index, // ✅ compare with index
-      onTap: () => onChanged(index), // ✅ send index
+      selected: selectedIndex == index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compare with index
+      onTap: () => onChanged(index), // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ send index
       highlight: index == 0, // optional
     );
   }
@@ -723,7 +747,7 @@ class _BillingChip extends StatelessWidget {
 //               ),
 //                SizedBox(height: 10),
 //               Text(
-//                 "Unlock the Tringo’s",
+//                 "Unlock the TringoÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢s",
 //                 style: AppTextStyles.mulish(fontSize: 22),
 //               ),
 //               Text(

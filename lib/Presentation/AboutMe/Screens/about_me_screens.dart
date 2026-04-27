@@ -28,6 +28,7 @@ import '../../AddProduct/Screens/product_category_screens.dart';
 import '../../Home/Controller/home_notifier.dart';
 import '../../Home/Controller/shopContext_provider.dart';
 import '../../Menu/Screens/subscription_screen.dart';
+import '../../Menu/Screens/subscription_history.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../../ShopInfo/Screens/shop_category_info.dart';
 
@@ -86,14 +87,14 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     {'icon': AppImages.groupPeople, 'label': 'Followers'},
   ];
 
-  // ✅ ANALYTICS STATE
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ ANALYTICS STATE
   AnalyticsFilter _analyticsFilter = AnalyticsFilter.month;
   String? _monthKey; // ex "2026-03"
   String? _weekKey; // ex "2026-01-19_2026-01-25"
   String? _yearKey; // ex "2026"
   String? _dayKey; // if backend gives
 
-  // ✅ Month labels for YEAR axis
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Month labels for YEAR axis
   static const List<String> _monthShort = [
     'Jan',
     'Feb',
@@ -215,7 +216,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   }
 
   // ==========================================================
-  // ✅ ANALYTICS HELPERS (CLEAN + FIXED)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ ANALYTICS HELPERS (CLEAN + FIXED)
   // ==========================================================
 
   void _syncAnalyticsDefaultsFromApi(AboutMeState state) {
@@ -258,12 +259,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
         .read(aboutMeNotifierProvider.notifier)
         .fetchAnalytics(
           shopId: shopId,
-          months: monthsParam, // ✅ only for MONTH (as per your backend)
+          months:
+              monthsParam, // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ only for MONTH (as per your backend)
           filter: _analyticsFilter.api,
         );
   }
 
-  // ✅ Days in month from "YYYY-MM" (Feb auto 28/29)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Days in month from "YYYY-MM" (Feb auto 28/29)
   int _daysInMonthFromKey(String? monthKey) {
     if (monthKey == null || monthKey.trim().isEmpty) return 30;
     try {
@@ -278,7 +280,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     }
   }
 
-  // ✅ Detect if WEEK series is W1..W4 style
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Detect if WEEK series is W1..W4 style
   bool _isWeekBucketSeries(List series) {
     if (series.isEmpty) return false;
     bool ok = true;
@@ -293,7 +295,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return ok;
   }
 
-  // ✅ Pad series to fixed length (MONTH=days, YEAR=12) ONLY
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Pad series to fixed length (MONTH=days, YEAR=12) ONLY
   List _padSeriesToLength(List series, int neededLen) {
     if (series.length >= neededLen) return series.take(neededLen).toList();
     final padded = [...series];
@@ -303,7 +305,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return padded;
   }
 
-  // ✅ Parse month index from item.key ("YYYY-MM") or item.label ("Apr"/"04")
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Parse month index from item.key ("YYYY-MM") or item.label ("Apr"/"04")
   int? _monthIndexFromSeriesItem(dynamic item) {
     final key = (item.key ?? '').toString().trim();
     final lbl = (item.label ?? '').toString().trim();
@@ -327,7 +329,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     return null;
   }
 
-  // ✅ YEAR normalization: always 12 items (Jan..Dec), missing months => 0
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ YEAR normalization: always 12 items (Jan..Dec), missing months => 0
   List<_FakeSeriesItem> _normalizeYearSeries(List rawSeries) {
     final values = List<int>.filled(12, 0);
     for (final it in rawSeries) {
@@ -343,7 +345,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     );
   }
 
-  // ✅ Build X labels based on filter (WEEK fix: show W1..W4 if bucket series)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Build X labels based on filter (WEEK fix: show W1..W4 if bucket series)
   List<String> _buildXAxisLabelsForCurrentFilter({
     required dynamic data,
     required List series,
@@ -354,7 +356,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
         return List.generate(days, (i) => '${i + 1}'); // 1..31
 
       case AnalyticsFilter.week:
-        // ✅ YOUR API gives W1..W4 (bucket weeks) -> show W1..W4 in UI
+        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ YOUR API gives W1..W4 (bucket weeks) -> show W1..W4 in UI
         if (_isWeekBucketSeries(series)) {
           return List.generate(series.length, (i) {
             final dynamic it = series[i];
@@ -377,7 +379,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
         return _labelsFromSeries(series);
 
       case AnalyticsFilter.year:
-        // ✅ always show Jan..Dec
+        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ always show Jan..Dec
         return _monthShort;
 
       case AnalyticsFilter.day:
@@ -437,7 +439,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
       minY: 0,
       maxY: safeMaxY,
 
-      // ✅ FIX: tooltip should NOT cause hiding
+      // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ FIX: tooltip should NOT cause hiding
       lineTouchData: LineTouchData(
         enabled: true,
         handleBuiltInTouches: true,
@@ -520,7 +522,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   }
 
   // ==========================================================
-  // ✅ UI (Build)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ UI (Build)
   // ==========================================================
 
   @override
@@ -709,7 +711,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   }
 
   // ==========================================================
-  // ✅ SHOP HERO + HEADER (YOUR ORIGINAL - unchanged)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ SHOP HERO + HEADER (YOUR ORIGINAL - unchanged)
   // ==========================================================
 
   Future<void> _showShopPickerBottomSheet(AboutMeState aboutState) async {
@@ -1393,7 +1395,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   }
 
   // ==========================================================
-  // ✅ ANALYTICS UI (FIXED: WEEK shows W1..W4, YEAR shows Jan..Dec)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ ANALYTICS UI (FIXED: WEEK shows W1..W4, YEAR shows Jan..Dec)
   // ==========================================================
   Widget _scrollableTrendChart({
     required Color lineColor,
@@ -1568,14 +1570,16 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final rawSeries = data?.series ?? const [];
     List series = rawSeries;
 
-    // ✅ IMPORTANT:
+    // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ IMPORTANT:
     // - WEEK: do NOT force 7 days when backend sends W1..W4 (bucket weeks)
     // - YEAR: always normalize to 12 months
     if (_analyticsFilter == AnalyticsFilter.month) {
       final days = _daysInMonthFromKey(_monthKey ?? data?.active?.month);
       series = _padSeriesToLength(rawSeries, days);
     } else if (_analyticsFilter == AnalyticsFilter.year) {
-      series = _normalizeYearSeries(rawSeries); // ✅ Jan..Dec always
+      series = _normalizeYearSeries(
+        rawSeries,
+      ); // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Jan..Dec always
     } else if (_analyticsFilter == AnalyticsFilter.week) {
       // keep raw (W1..W4) as is
       series = rawSeries;
@@ -1842,7 +1846,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
   }
 
   // ==========================================================
-  // ✅ KEEP YOUR SHOP DETAILS + FOLLOWERS (UNCHANGED)
+  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ KEEP YOUR SHOP DETAILS + FOLLOWERS (UNCHANGED)
   // ==========================================================
   // (Your _buildShopDetails and buildFollowersDetails are long; kept same from your paste)
   // ----------------------------------------------------------
@@ -1853,6 +1857,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
     final services = selectedShop?.services ?? [];
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
+    final bool isFreemiumUser = planData?.isFreemium ?? _isFreemium;
     final shopReviews = selectedShop?.reviews ?? [];
 
     String time = '-';
@@ -1901,18 +1906,28 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
             _buildShopHeaderCard(aboutState),
             const SizedBox(height: 28),
             if (!isPremium)
-              planData?.isFreemium == false
+              isFreemiumUser == false
                   ? CommonContainer.paidCustomerCard(
                       title:
                           '${planData?.plan.durationLabel} Premium Activated',
                       description: '${time} @ ${date}',
                       onTap: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => SubscriptionScreen(),
-                        //   ),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubscriptionHistory(
+                              titlePlan:
+                                  planData?.plan.durationLabel.toString() ??
+                                  '-',
+                              fromDate:
+                                  planData?.period.startsAtLabel.toString() ??
+                                  '-',
+                              toDate:
+                                  planData?.period.endsAtLabel.toString() ??
+                                  '-',
+                            ),
+                          ),
+                        );
                       },
                     )
                   : CommonContainer.attractCustomerCard(
@@ -1974,9 +1989,12 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
                   final startsAt = s.startsAt ?? 0;
                   final offerPrice = s.offerPrice ?? 0;
+                  // final priceText =
+                  //     ' ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹$startsAt';
+                  // final offerPriceText =
+                  //     ' ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹$offerPrice';
                   final priceText = ' ₹$startsAt';
                   final offerPriceText = ' ₹$offerPrice';
-
                   String imageUrl = '';
                   if (s.media.isNotEmpty) {
                     imageUrl = s.media.first.url ?? '';
@@ -2020,7 +2038,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                 final title =
                                     (s.englishName ?? s.tamilName ?? '').trim();
                                 final englishName = title.isEmpty
-                                    ? 'Unnamed Product'
+                                    ? 'Unnamed Service'
                                     : title;
 
                                 final initialServiceMedia = [...s.media]
@@ -2277,10 +2295,13 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                   final ratingCount = (p.ratingCount ?? 0).toString();
 
                   final price = p.price ?? 0;
-                  final priceText = '₹$price';
+                  final priceText =
+                      ' ₹$price';
 
                   final offerPrice = p.offerPrice ?? 0;
-                  final offerPriceText = '₹$offerPrice';
+                    final offerPriceText = ' ₹$offerPrice';
+                  // final offerPriceText =
+                  //     'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹$offerPrice';
 
                   String imageUrl = '';
                   if (p.media.isNotEmpty) {
@@ -2314,7 +2335,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                       ),
                       Row(
                         children: [
-                          // 🔵 EDIT BUTTON (unchanged)
+                          // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµ EDIT BUTTON (unchanged)
                           Expanded(
                             child: GestureDetector(
                               onTap: () async {
@@ -2503,7 +2524,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                                     productState.DeleteResponses?.message;
 
                                 if (success) {
-                                  // (optional) local remove – only if you want instant effect
+                                  // (optional) local remove ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ only if you want instant effect
                                   final currentShop = _getSelectedShop(
                                     aboutState,
                                   );
@@ -2587,7 +2608,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 
             const SizedBox(height: 20),
 
-            // 🔹 Add Product / Service
+            // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Add Product / Service
             InkWell(
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
@@ -2708,7 +2729,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                 itemBuilder: (context, index) {
                   final r = shopReviews[index];
 
-                  // 🔹 Your API: rating is "4.0" (String)
+                  // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Your API: rating is "4.0" (String)
                   final rating =
                       double.tryParse((r.rating ?? '0').toString()) ?? 0.0;
                   final comment = (r.comment ?? '').toString().trim();
@@ -2769,7 +2790,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                               ),
                               const SizedBox(width: 8),
 
-                              // ✅ Stars Row
+                              // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Stars Row
                               ...List.generate(5, (i) {
                                 final filled = rating >= (i + 1);
                                 return Padding(
@@ -3139,7 +3160,7 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
 }
 
 // ==========================================================
-// ✅ SMALL WIDGETS (Dropdowns)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ SMALL WIDGETS (Dropdowns)
 // ==========================================================
 class _FilterDropdown extends StatelessWidget {
   final AnalyticsFilter value;
@@ -3459,7 +3480,7 @@ class _KeyItem {
   _KeyItem(this.key, this.label);
 }
 
-// ✅ Fake series item for padding / normalized series
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Fake series item for padding / normalized series
 class _FakeSeriesItem {
   final int value;
   final String label;
