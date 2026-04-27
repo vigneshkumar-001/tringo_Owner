@@ -1,4 +1,4 @@
-// surprise_offer_models.dart
+﻿// surprise_offer_models.dart
 
 class SurpriseOfferListResponse {
   final bool status;
@@ -293,14 +293,16 @@ class OfferClaimers {
 class ClaimerPreview {
   final String? displayName;
   final String? contact; // phone number
+  final String? code; // coupon code
   final DateTime? claimedAt;
-  final String claimedLabel; // "1:06 PM  •  29 Jan 26"
+  final String claimedLabel; // "1:06 PM  â€¢  29 Jan 26"
   final String? callUri; // (tel:...)
   final String? whatsappUri; // (https://wa.me/...)
 
   const ClaimerPreview({
     this.displayName,
     this.contact,
+    this.code,
     this.claimedAt,
     required this.claimedLabel,
     this.callUri,
@@ -352,9 +354,20 @@ class ClaimerPreview {
       'whatsappLink',
     ]);
 
+
+    final code = _pickStr(json, [
+      'code',
+      'couponCode',
+      'coupon_code',
+      'coupon',
+      'offerCode',
+      'surpriseCode',
+    ]);
+
     return ClaimerPreview(
       displayName: displayName,
       contact: contact,
+      code: code,
       claimedAt: _tryParseDate(json['claimedAt'] ?? json['claimed_at']),
       claimedLabel: (json['claimedLabel'] ?? json['claimed_label'] ?? '').toString(),
       callUri: callUri,
@@ -365,6 +378,7 @@ class ClaimerPreview {
   Map<String, dynamic> toJson() => {
     "displayName": displayName,
     "contact": contact,
+    "code": code,
     "claimedAt": claimedAt?.toIso8601String(),
     "claimedLabel": claimedLabel,
     "callUri": callUri,
@@ -391,4 +405,6 @@ class ClaimerPreview {
     }
   }
 }
+
+
 

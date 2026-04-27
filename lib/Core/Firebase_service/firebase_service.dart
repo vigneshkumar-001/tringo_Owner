@@ -25,6 +25,17 @@ class FirebaseService {
   String? get fcmToken => _fcmToken;
   StreamSubscription<String>? _tokenRefreshSub;
   bool _loggedServiceNotAvailable = false;
+  bool _tokenFetchInProgress = false;
+  Timer? _tokenRetryTimer;
+  int _tokenRetryIndex = 0;
+  DateTime? _lastTokenAttemptAt;
+  DateTime? _lastNoTokenLogAt;
+
+  bool _isServiceNotAvailable(Object e) {
+    final msg = e.toString();
+    return msg.contains('SERVICE_NOT_AVAILABLE');
+  }
+
 
   Future<void> initializeFirebase({
     void Function(Map<String, dynamic> data)? onLocalNotificationTapData,
@@ -33,11 +44,11 @@ class FirebaseService {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidInit);
 
-    // ✅ v20.x uses `settings:` (NOT `initializationSettings:`)
+    // Ã¢Å“â€¦ v20.x uses `settings:` (NOT `initializationSettings:`)
     await flutterLocalNotificationsPlugin.initialize(
       settings: initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        AppLogger.log.i('🔔 Notification tapped. payload: ${response.payload}');
+        AppLogger.log.i('Notification tapped. payload: ${response.payload}');
 
         if (onLocalNotificationTapData == null) return;
         final payload = response.payload?.trim();
@@ -91,7 +102,7 @@ class FirebaseService {
         provisional: false,
       );
       AppLogger.log.i(
-        '🔔 Notification permission: ${settings.authorizationStatus}',
+        'Notification permission: ${settings.authorizationStatus}',
       );
     } catch (e, st) {
       AppLogger.log.w('requestPermission failed: $e\n$st');
@@ -110,7 +121,7 @@ class FirebaseService {
       _fcmToken = token;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fcmToken', token);
-      AppLogger.log.i('🔁 FCM Token refreshed: $token');
+      AppLogger.log.i('FCM Token refreshed: $token');
     });
   }
 
@@ -120,16 +131,19 @@ class FirebaseService {
     for (final s in delays) {
       try {
         final t = await FirebaseMessaging.instance.getToken();
-        if (t != null && t.isNotEmpty) return t;
+        final token = (t ?? "").trim();
+        if (token.isNotEmpty) return token;
       } catch (e) {
-        final msg = e.toString();
-        if (msg.contains('SERVICE_NOT_AVAILABLE') &&
-            !_loggedServiceNotAvailable) {
-          _loggedServiceNotAvailable = true;
-          AppLogger.log.w(
-            'FCM token service temporarily unavailable (will retry). '
-            'Common causes: first app start, weak network, or emulator without Google Play services.',
-          );
+        if (_isServiceNotAvailable(e)) {
+          if (!_loggedServiceNotAvailable) {
+            _loggedServiceNotAvailable = true;
+            AppLogger.log.w(
+              'FCM token service temporarily unavailable (SERVICE_NOT_AVAILABLE). '
+              'Common causes: first app start, weak network, or emulator without Google Play services. '
+              'Will retry in background.',
+            );
+          }
+          // Keep retries silent to avoid log spam.
         } else {
           AppLogger.log.w('getToken failed (retry in ${s}s): $e');
         }
@@ -137,10 +151,22 @@ class FirebaseService {
       await Future.delayed(Duration(seconds: s));
     }
 
+    // One last attempt (no stack traces).
     try {
-      return await FirebaseMessaging.instance.getToken();
-    } catch (e, st) {
-      AppLogger.log.e('getToken final failure: $e\n$st');
+      final t = await FirebaseMessaging.instance.getToken();
+      final token = (t ?? "").trim();
+      return token.isEmpty ? null : token;
+    } catch (e) {
+      if (_isServiceNotAvailable(e)) {
+        if (!_loggedServiceNotAvailable) {
+          _loggedServiceNotAvailable = true;
+          AppLogger.log.w(
+            'FCM token service temporarily unavailable (SERVICE_NOT_AVAILABLE). Will retry in background.',
+          );
+        }
+        return null;
+      }
+      AppLogger.log.w('getToken final failure: $e');
       return null;
     }
   }
@@ -149,22 +175,65 @@ class FirebaseService {
     final prefs = await SharedPreferences.getInstance();
     _fcmToken = prefs.getString('fcmToken');
 
-    if (_fcmToken != null && _fcmToken!.isNotEmpty) {
-      AppLogger.log.i('ℹ️ Existing FCM Token: $_fcmToken');
+    final existing = (_fcmToken ?? "").trim();
+    if (existing.isNotEmpty) {
+      _fcmToken = existing;
+      AppLogger.log.i('â„¹ï¸ Existing FCM Token: $_fcmToken');
       return;
     }
 
-    final token = await _getTokenWithBackoff();
-    _fcmToken = token;
+    if (_tokenFetchInProgress) return;
 
-    if (token != null && token.isNotEmpty) {
-      await prefs.setString('fcmToken', token);
-      AppLogger.log.i('✅ FCM Token: $token');
-    } else {
+    final now = DateTime.now();
+    final last = _lastTokenAttemptAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 5)) {
+      return;
+    }
+
+    _tokenFetchInProgress = true;
+    _lastTokenAttemptAt = now;
+
+    final token = await _getTokenWithBackoff();
+    _tokenFetchInProgress = false;
+
+    final trimmed = (token ?? "").trim();
+    _fcmToken = trimmed.isEmpty ? null : trimmed;
+
+    if (_fcmToken != null && _fcmToken!.isNotEmpty) {
+      await prefs.setString('fcmToken', _fcmToken!);
+      _tokenRetryIndex = 0;
+      _tokenRetryTimer?.cancel();
+      _tokenRetryTimer = null;
+      AppLogger.log.i('âœ… FCM Token: $_fcmToken');
+      return;
+    }
+
+    // Token could not be fetched now; schedule a background retry.
+    _scheduleTokenRetry();
+
+    final lastLog = _lastNoTokenLogAt;
+    if (lastLog == null || now.difference(lastLog) > const Duration(minutes: 1)) {
+      _lastNoTokenLogAt = now;
       AppLogger.log.w(
-        '⚠️ No FCM token (device/config/network). Will retry later.',
+        'âš ï¸ No FCM token (device/config/network). Will retry later.',
       );
     }
+  }
+
+  void _scheduleTokenRetry() {
+    if (_tokenRetryTimer?.isActive == true) return;
+
+    const scheduleSeconds = [15, 30, 60, 120, 300];
+    final idx = _tokenRetryIndex.clamp(0, scheduleSeconds.length - 1);
+    final delay = Duration(seconds: scheduleSeconds[idx]);
+
+    if (_tokenRetryIndex < scheduleSeconds.length - 1) {
+      _tokenRetryIndex++;
+    }
+
+    _tokenRetryTimer = Timer(delay, () {
+      fetchFCMTokenIfNeeded();
+    });
   }
 
   /// Call this when you receive an FCM message in foreground

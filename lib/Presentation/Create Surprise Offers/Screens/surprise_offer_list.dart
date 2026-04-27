@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +38,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
   int _selectedTab = 0; // 0 = Live, 1 = Upcoming, 2 = Expired
   final Set<String> _expandedOfferIds = <String>{};
 
-  bool _bootstrapped = false; // ✅ prevents repeated auto-calls
+  bool _bootstrapped = false; // âœ… prevents repeated auto-calls
 
   @override
   void initState() {
@@ -67,7 +67,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
       return;
     }
 
-    // ✅ always prefer real shopId from list / user tap
+    // âœ… always prefer real shopId from list / user tap
     final String sid = (forceShopId?.trim().isNotEmpty == true)
         ? forceShopId!.trim()
         : (ref.read(selectedShopProvider)?.toString().trim().isNotEmpty == true
@@ -213,7 +213,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
       if (d != null) return d;
     }
 
-    // ✅ 2) fallback: auto-detect from toJson map
+    // âœ… 2) fallback: auto-detect from toJson map
     final map = _claimerToMap(c);
 
     final callUriFromMap = _findFirstStringByKeys(map, [
@@ -343,7 +343,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
       return;
     }
 
-    // ✅ Try app scheme first (opens WhatsApp directly if installed)
+    // âœ… Try app scheme first (opens WhatsApp directly if installed)
     final appUri = Uri.parse(
       'whatsapp://send?phone=+$phone&text=${Uri.encodeComponent(message)}',
     );
@@ -351,7 +351,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
 
     if (okApp) return;
 
-    // ✅ fallback to wa.me
+    // âœ… fallback to wa.me
     final webUri = Uri.parse(
       'https://wa.me/$phone?text=${Uri.encodeComponent(message)}',
     );
@@ -361,7 +361,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
   Future<void> _launchUriSafe(Uri? uri, {required String errorMsg}) async {
     if (uri == null) {
       if (!mounted) return;
-      AppSnackBar.error(context, errorMsg); // ✅ if it needs context
+      AppSnackBar.error(context, errorMsg); // âœ… if it needs context
       return;
     }
 
@@ -384,15 +384,20 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
     final bool isLoading = offerState.isLoading == true;
     final String? error = offerState.error;
 
-    // ✅ shops
+    // âœ… shops
     final shopsRes = homeState.shopsResponse;
     final loginContext = shopsRes?.data.loginContext;
     final bool isOwner = loginContext == "OWNER";
     final List<dynamic> shops =
         (shopsRes?.data.items as List?)?.toList() ?? <dynamic>[];
     final dynamic mainShop = shops.isNotEmpty ? shops.first : null;
-
-    // ✅ data
+    final String selectedShopId =
+        (ref.watch(selectedShopProvider)?.toString().trim().isNotEmpty == true)
+            ? ref.watch(selectedShopProvider)!.toString().trim()
+            : (mainShop?.id?.toString().trim().isNotEmpty == true
+                  ? mainShop.id.toString().trim()
+                  : '');
+    // âœ… data
     final data = resp?.data;
 
     final liveCount = data?.liveCount ?? 0;
@@ -405,7 +410,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
         ? (data?.upcomingSections ?? const [])
         : (data?.expiredSections ?? const []);
 
-    // ✅ if first open and no data yet, auto load once
+    // âœ… if first open and no data yet, auto load once
     if (!_bootstrapped &&
         resp == null &&
         !isLoading &&
@@ -543,15 +548,24 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final sid = selectedShopId.trim();
+                        if (sid.isEmpty) {
+                          if (!mounted) return;
+                          AppSnackBar.error(context, 'Shop id missing');
+                          return;
+                        }
+
+                        final didChange = await Navigator.push<bool>(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => CreateSurpriseOffer(
-                              shopId: mainShop?.id.toString() ?? '',
-                            ),
+                            builder: (_) => CreateSurpriseOffer(shopId: sid),
                           ),
                         );
+
+                        if (didChange == true && mounted) {
+                          await _initialLoad(forceShopId: sid);
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -574,7 +588,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
 
               const SizedBox(height: 20),
 
-              // ✅ Tabs (API counts)
+              // âœ… Tabs (API counts)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 0),
                 child: SingleChildScrollView(
@@ -610,7 +624,7 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
 
               const SizedBox(height: 18),
 
-              // ✅ Loading / Error / Empty / List
+              // âœ… Loading / Error / Empty / List
               if (isLoading) ...[
                 const SizedBox(height: 80),
                 Center(child: ThreeDotsLoader(dotColor: AppColor.darkBlue)),
@@ -705,6 +719,34 @@ class _SurpriseOfferListState extends ConsumerState<SurpriseOfferList>
                                 expanded: expanded,
                                 onToggleExpanded: () =>
                                     _toggleExpanded(offer.id),
+                                onEdit: offer.editable
+                                    ? () async {
+                                        final sid = selectedShopId.trim();
+                                        if (sid.isEmpty) {
+                                          if (!mounted) return;
+                                          AppSnackBar.error(
+                                            context,
+                                            'Shop id missing',
+                                          );
+                                          return;
+                                        }
+
+                                        final didChange =
+                                            await Navigator.push<bool>(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => CreateSurpriseOffer(
+                                              shopId: sid,
+                                              initialOffer: offer,
+                                            ),
+                                          ),
+                                        );
+
+                                        if (didChange == true && mounted) {
+                                          await _initialLoad(forceShopId: sid);
+                                        }
+                                      }
+                                    : null,
                                 onCall: (c) => _launchCallByClaimer(c),
                                 onWhatsApp: (c) => _launchWhatsAppByClaimer(
                                   c,
@@ -773,6 +815,7 @@ class _OfferCardApi extends StatelessWidget {
   final OfferItem offer;
   final bool expanded;
   final VoidCallback onToggleExpanded;
+  final VoidCallback? onEdit;
   final void Function(ClaimerPreview c) onCall;
   final void Function(ClaimerPreview c) onWhatsApp;
 
@@ -780,6 +823,7 @@ class _OfferCardApi extends StatelessWidget {
     required this.offer,
     required this.expanded,
     required this.onToggleExpanded,
+    required this.onEdit,
     required this.onCall,
     required this.onWhatsApp,
   });
@@ -809,7 +853,7 @@ class _OfferCardApi extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ Optional banner
+          // âœ… Optional banner
           if ((offer.bannerUrl ?? '').trim().isNotEmpty) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(18),
@@ -852,7 +896,7 @@ class _OfferCardApi extends StatelessWidget {
           Row(
             children: [
               InkWell(
-                onTap: offer.editable ? () {} : null,
+                onTap: offer.editable ? onEdit : null,
                 child: Opacity(
                   opacity: offer.editable ? 1.0 : 0.4,
                   child: Container(
@@ -891,19 +935,20 @@ class _OfferCardApi extends StatelessWidget {
                   title: "Available Range",
                   valueBold: _rangeStart(offer.availableRangeLabel),
                   valueLight: _rangeEnd(offer.availableRangeLabel),
-                  trailing: Container(
-                    height: 32,
-                    width: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F7F2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: Colors.black,
-                    ),
-                  ),
+                  trailing : Container(),
+                  // trailing: Container(
+                  //   height: 32,
+                  //   width: 32,
+                  //   decoration: BoxDecoration(
+                  //     color: const Color(0xFFF3F7F2),
+                  //     borderRadius: BorderRadius.circular(12),
+                  //   ),
+                  //   // child: const Icon(
+                  //   //   Icons.edit,
+                  //   //   size: 16,
+                  //   //   color: Colors.black,
+                  //   // ),
+                  // ),
                 ),
               ),
             ],
@@ -962,6 +1007,7 @@ class _OfferCardApi extends StatelessWidget {
                         ),
                         child: _ClaimerTile(
                           name: name,
+                          code: (c.code ?? '').trim(),
                           time: c.claimedLabel,
                           faded: isFaded,
                           onCall: () => onCall(c),
@@ -1168,7 +1214,7 @@ class _InfoCards extends StatelessWidget {
           ),
           const SizedBox(width: 1),
           if (trailing != null) trailing!,
-        ],
+        ], 
       ),
     );
   }
@@ -1176,6 +1222,7 @@ class _InfoCards extends StatelessWidget {
 
 class _ClaimerTile extends StatelessWidget {
   final String name;
+  final String code;
   final String time;
   final bool faded;
   final VoidCallback onCall;
@@ -1183,6 +1230,7 @@ class _ClaimerTile extends StatelessWidget {
 
   const _ClaimerTile({
     required this.name,
+    required this.code,
     required this.time,
     required this.faded,
     required this.onCall,
@@ -1208,12 +1256,21 @@ class _ClaimerTile extends StatelessWidget {
                   Text(
                     name,
                     style: AppTextStyles.mulish(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Code: ${code.isEmpty ? '-' : code}",
+                    style: AppTextStyles.mulish(
+                      fontSize: 14,
+                       fontWeight: FontWeight.w700,
+                      color: const Color(0xFF9A9A9A),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
                   Text(
                     time,
                     style: AppTextStyles.mulish(
@@ -1352,3 +1409,4 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

@@ -4,16 +4,23 @@ import 'package:tringo_owner/Core/Utility/common_Container.dart';
 
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
+import 'subscription_screen.dart';
 
 class SubscriptionHistory extends StatefulWidget {
   final String titlePlan;
   final String fromDate;
   final String toDate;
+  final VoidCallback? onDownloadInvoice;
+  final VoidCallback? onCancelSubscription;
+  final VoidCallback? onExtendPlan;
   const SubscriptionHistory({
     super.key,
     required this.titlePlan,
     required this.fromDate,
     required this.toDate,
+    this.onDownloadInvoice,
+    this.onCancelSubscription,
+    this.onExtendPlan,
   });
 
   @override
@@ -21,6 +28,215 @@ class SubscriptionHistory extends StatefulWidget {
 }
 
 class _SubscriptionHistoryState extends State<SubscriptionHistory> {
+  void _showInfoSnack(String message) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _downloadInvoice() {
+    if (widget.onDownloadInvoice != null) {
+      widget.onDownloadInvoice!.call();
+      return;
+    }
+    _showInfoSnack('Download invoice is not connected yet.');
+  }
+
+  void _extendPlan() {
+    if (widget.onExtendPlan != null) {
+      widget.onExtendPlan!.call();
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SubscriptionScreen()),
+    );
+  }
+
+  Future<void> _confirmCancelSubscription() async {
+    final ok = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: AppColor.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    height: 4,
+                    width: 42,
+                    decoration: BoxDecoration(
+                      color: AppColor.border,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Cancel subscription',
+                        style: AppTextStyles.mulish(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColor.black,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      icon: const Icon(Icons.close),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'You can extend your plan anytime. Cancelling will stop renewal for this plan.',
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.gray84,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3F2),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColor.red1.withAlpha(64)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: AppColor.red1.withAlpha(31),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppColor.red1,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Plan: ${widget.titlePlan}',
+                              style: AppTextStyles.mulish(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Paid on ${widget.fromDate} • Expires on ${widget.toDate}',
+                              style: AppTextStyles.mulish(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColor.gray84,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColor.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColor.border),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Keep Subscription',
+                              style: AppTextStyles.mulish(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColor.red1,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Cancel Now',
+                              style: AppTextStyles.mulish(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: AppColor.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (ok != true) return;
+
+    if (widget.onCancelSubscription != null) {
+      widget.onCancelSubscription!.call();
+      return;
+    }
+
+    _showInfoSnack('Cancel subscription is not connected yet.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,70 +379,114 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
-                  SingleChildScrollView(
-                    physics: BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 30),
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColor.black,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(AppImages.downLoad, height: 20),
-                              SizedBox(width: 10),
-                              Text(
-                                'Download Invoice',
-                                style: AppTextStyles.mulish(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: AppColor.white,
-                                ),
+                  const SizedBox(height: 18),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _downloadInvoice,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
                               ),
-                            ],
+                              decoration: BoxDecoration(
+                                color: AppColor.black,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(AppImages.downLoad, height: 18),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Download Invoice',
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: AppColor.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: _confirmCancelSubscription,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.red1,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    AppImages.closeImage,
+                                    height: 18,
+                                    color: AppColor.white,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Cancel Subscription',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColor.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColor.red1,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                AppImages.closeImage,
-                                height: 20,
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: _extendPlan,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
                                 color: AppColor.white,
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(color: AppColor.border),
                               ),
-                              SizedBox(width: 5),
-                              Text(
-                                'Cancel Subscription',
-                                style: AppTextStyles.mulish(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColor.white,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.autorenew,
+                                    size: 18,
+                                    color: Colors.black,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Extend My Plan',
+                                    style: AppTextStyles.mulish(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  SizedBox(height: 50),
+                  const SizedBox(height: 35),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: Column(
@@ -234,14 +494,14 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                         CommonContainer.horizonalDivider(isSubscription: true),
                         SizedBox(height: 20),
                         Text(
-                          "Premium Tringo’s Features",
+                          "Premium Tringo's Features",
                           style: AppTextStyles.mulish(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: 20),
-                        _ComparisonCard(),
+                        const _ComparisonCard(),
                         SizedBox(height: 20),
                       ],
                     ),
@@ -257,7 +517,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
 }
 
 class _ComparisonCard extends StatelessWidget {
-  _ComparisonCard();
+  const _ComparisonCard();
 
   @override
   Widget build(BuildContext context) {

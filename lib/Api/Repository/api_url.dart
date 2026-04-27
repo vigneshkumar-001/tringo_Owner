@@ -1,4 +1,4 @@
-class ApiUrl {
+﻿class ApiUrl {
   // static const String base =
   //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
@@ -80,6 +80,13 @@ class ApiUrl {
 
   static String createSurpriseOffer({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers/surprise";
+  }
+
+  static String updateSurpriseOffer({
+    required String shopId,
+    required String offerId,
+  }) {
+    return "${base}api/v1/shops/$shopId/offers/surprise/$offerId";
   }
 
   static String updateProducts({required String productId}) {
@@ -270,3 +277,4 @@ class ApiUrl {
   }
 */
 }
+
