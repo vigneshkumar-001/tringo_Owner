@@ -116,6 +116,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialPrimaryMobile;
   final String? initialWhatsapp;
   final String? initialEmail;
+  final String? initialShopUpiId;
   final String? initialCategoryName;
   final String? initialCategorySlug;
   final String? initialSubCategoryName;
@@ -144,6 +145,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialPrimaryMobile,
     this.initialWhatsapp,
     this.initialEmail,
+    this.initialShopUpiId,
     this.initialCategoryName,
     this.initialCategorySlug,
     this.initialSubCategoryName,
@@ -174,6 +176,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   final TextEditingController _gpsController = TextEditingController();
   final TextEditingController _whatsappController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _upiIdController = TextEditingController();
 
   final TextEditingController addressTamilNameController =
       TextEditingController();
@@ -631,6 +634,10 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       _emailController.text = widget.initialEmail!;
     }
 
+    if (widget.initialShopUpiId?.isNotEmpty ?? false) {
+      _upiIdController.text = widget.initialShopUpiId!;
+    }
+
     // 👉 category / subcategory
     if (widget.initialCategoryName?.isNotEmpty ?? false) {
       _categoryController.text = widget.initialCategoryName!;
@@ -723,11 +730,20 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     _primaryMobileController.dispose();
     _whatsappController.dispose();
     _emailController.dispose();
+    _upiIdController.dispose();
     _subCategoryController.dispose();
     super.dispose();
   }
 
   // 🔹 Central validation function
+  bool _isValidUpiId(String value) {
+    final v = value.trim();
+    if (v.isEmpty) return false;
+    if (v.contains(' ')) return false;
+    // Basic UPI format: local@handle (examples: name@okicici, 9876543210@ybl)
+    return RegExp(r'^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9._-]{2,}$').hasMatch(v);
+  }
+
   bool _validateAll() {
     final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
     if (isEditFromAboutMe) {
@@ -1165,8 +1181,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  GoogleLocationPickerScreen(
+                              builder: (_) => GoogleLocationPickerScreen(
                                 initialLat: initialLat,
                                 initialLng: initialLng,
                               ),
@@ -1534,6 +1549,25 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         //   return null;
                         // },
                       ),
+                      const SizedBox(height: 25),
+                      Text(
+                        'UPI Id *',
+                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      ),
+                      const SizedBox(height: 10),
+                      CommonContainer.fillingContainer(
+                        keyboardType: TextInputType.text,
+                        controller: _upiIdController,
+                        verticalDivider: true,
+                        text: 'UPI Id',
+                        validator: (v) {
+                          final value = (v ?? '').trim();
+                          if (value.isEmpty) return 'UPI Id required';
+                          if (!_isValidUpiId(value))
+                            return 'Enter valid UPI Id';
+                          return null;
+                        },
+                      ),
                       SizedBox(height: 25),
                       // if (widget.isService ??
                       //     false || widget.pages != 'AboutMeScreens')
@@ -1687,6 +1721,19 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final bool isEditFromAboutMe =
                               widget.pages == "AboutMeScreens";
 
+                          final upiId = _upiIdController.text.trim();
+                          if (upiId.isEmpty) {
+                            AppSnackBar.error(context, "Please enter UPI Id");
+                            return;
+                          }
+                          if (!_isValidUpiId(upiId)) {
+                            AppSnackBar.error(
+                              context,
+                              "Please enter valid UPI Id",
+                            );
+                            return;
+                          }
+
                           // ✅ Only register flow should validate
                           if (!isEditFromAboutMe) {
                             if (!_validateAll()) return;
@@ -1791,6 +1838,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     .trim(),
                                 descriptionTa: descriptionTamilController.text
                                     .trim(),
+                                upiId: _upiIdController.text.trim(),
                                 doorDelivery: isDoorDeliveryEnabled,
                                 englishName: _shopNameEnglishController.text
                                     .trim(),

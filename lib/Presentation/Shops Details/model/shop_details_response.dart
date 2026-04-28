@@ -29,6 +29,7 @@ class ShopDetailsResponse {
 class ShopData {
   final String? shopId;
   final String? businessProfileId;
+  final String? shopUpiId;
 
   final String? shopEnglishName;
   final String? shopTamilName;
@@ -74,6 +75,7 @@ class ShopData {
   ShopData({
     this.shopId,
     this.businessProfileId,
+    this.shopUpiId,
     this.shopEnglishName,
     this.shopTamilName,
     this.shopDescriptionEn,
@@ -137,6 +139,7 @@ class ShopData {
     return ShopData(
       shopId: json['shopId']?.toString(),
       businessProfileId: json['businessProfileId']?.toString(),
+      shopUpiId: json['shopUpiId']?.toString(),
 
       shopEnglishName: json['shopEnglishName']?.toString(),
       shopTamilName: json['shopTamilName']?.toString(),

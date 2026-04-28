@@ -32,6 +32,7 @@ import 'package:tringo_owner/Presentation/Create%20App%20Offer/Controller/offer_
 import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/menu_screens.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/subscription_history.dart';
 
 import 'package:tringo_owner/Presentation/Create%20App%20Offer/Screens/create_app_offer.dart';
 import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
@@ -69,10 +70,11 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
       // await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
       if (existingShops.isNotEmpty) {
         final selectedShopId = ref.read(selectedShopProvider);
-        final shopId = ((selectedShopId ?? '').toString().trim().isNotEmpty
-                ? selectedShopId
-                : existingShops.first.id)
-            .toString();
+        final shopId =
+            ((selectedShopId ?? '').toString().trim().isNotEmpty
+                    ? selectedShopId
+                    : existingShops.first.id)
+                .toString();
         _calledOnce = true;
 
         AppLogger.log.i("Shop already exists: $shopId");
@@ -236,10 +238,12 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
     final dynamic mainShop = shops.isNotEmpty ? shops.first : null;
 
     final String mainShopId = (mainShop?.id ?? '').toString();
-    final String selectedShopId =
-        (ref.watch(selectedShopProvider) ?? '').toString().trim();
-    final String currentShopId =
-        selectedShopId.isNotEmpty ? selectedShopId : mainShopId;
+    final String selectedShopId = (ref.watch(selectedShopProvider) ?? '')
+        .toString()
+        .trim();
+    final String currentShopId = selectedShopId.isNotEmpty
+        ? selectedShopId
+        : mainShopId;
     final String mainShopName = (mainShop?.englishName ?? '').toString();
     final String mainShopCategory = (mainShop?.category ?? '').toString();
     final loginContext = shopsRes?.data.loginContext;
@@ -374,7 +378,7 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
             onRefresh: () async {
               await ref
                   .read(homeNotifierProvider.notifier)
-                  .fetchShops(shopId: currentShopId,filter: '');
+                  .fetchShops(shopId: currentShopId, filter: '');
               await ref
                   .read(offerNotifierProvider.notifier)
                   .offerScreenEnquiry(shopId: currentShopId);
@@ -559,7 +563,19 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                           title:
                               '${planData?.plan.durationLabel} Premium Activated',
                           description: '$time @ $date',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SubscriptionHistory(
+                                  fromDate:
+                                      planData?.period.startsAtLabel ?? '',
+                                  titlePlan: planData?.plan.durationLabel ?? '',
+                                  toDate: planData?.period.endsAtLabel ?? '',
+                                ),
+                              ),
+                            );
+                          },
                         )
                       : CommonContainer.attractCustomerCard(
                           title: 'Attract More Customers',
@@ -594,13 +610,13 @@ class _OfferScreensState extends ConsumerState<OfferScreens> {
                       ),
                       GestureDetector(
                         onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    CreateAppOffer(shopId: currentShopId),
-                              ),
-                            );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CreateAppOffer(shopId: currentShopId),
+                            ),
+                          );
                           // if (isFreemium == false) {
                           //   Navigator.push(
                           //     context,

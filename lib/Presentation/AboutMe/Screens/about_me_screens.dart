@@ -1126,16 +1126,17 @@ class _AboutMeScreensState extends ConsumerState<AboutMeScreens> {
                     final updated = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ShopCategoryInfo(
-                          isEditMode: true,
-                          pages: "AboutMeEditFlow",
-                          shopId: selectedShop.shopId,
-                          isService: isServiceFlow,
-                          isIndividual: false,
-                          initialShopKeywords: selectedShop.shopKeywords
-                              .map((e) => e.trim())
-                              .where((e) => e.isNotEmpty)
-                              .toList(),
+	                        builder: (_) => ShopCategoryInfo(
+	                          isEditMode: true,
+	                          pages: "AboutMeEditFlow",
+	                          shopId: selectedShop.shopId,
+	                          isService: isServiceFlow,
+	                          isIndividual: false,
+	                          initialShopUpiId: selectedShop.shopUpiId,
+	                          initialShopKeywords: selectedShop.shopKeywords
+	                              .map((e) => e.trim())
+	                              .where((e) => e.isNotEmpty)
+	                              .toList(),
                           initialImageUrls: initialImageUrls,
                           initialShopNameEnglish: selectedShop.shopEnglishName,
                           initialShopNameTamil: selectedShop.shopTamilName,

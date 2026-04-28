@@ -91,6 +91,7 @@ class Shop {
   final String addressEn;
   final String addressTa;
   final String? primaryImageUrl;
+  final String? shopUpiId;
 
   const Shop({
     required this.id,
@@ -103,6 +104,7 @@ class Shop {
     required this.addressEn,
     required this.addressTa,
     this.primaryImageUrl,
+    this.shopUpiId,
   });
 
   factory Shop.fromJson(Map<String, dynamic> json) {
@@ -117,6 +119,7 @@ class Shop {
       addressEn: (json['addressEn'] ?? '').toString(),
       addressTa: (json['addressTa'] ?? '').toString(),
       primaryImageUrl: json['primaryImageUrl']?.toString(),
+      shopUpiId: json['shopUpiId']?.toString(),
     );
   }
 }

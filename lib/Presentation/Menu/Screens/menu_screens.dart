@@ -86,15 +86,13 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
   Future<void> _openPrivacyPolicy() async {
     final Uri url = Uri.parse('https://bknd.tringobiz.com/privacy-policy.html');
 
-    final launched = await launchUrl(
-      url,
-      mode: LaunchMode.  inAppWebView,
-    );
+    final launched = await launchUrl(url, mode: LaunchMode.inAppWebView);
 
     if (!launched && mounted) {
       AppSnackBar.error(context, 'Could not open privacy policy');
     }
   }
+
   Future<bool> _confirmDeleteAccount(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
@@ -319,12 +317,17 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                               '${planData?.plan.durationLabel} Premium Activated',
                           description: '${time} @ ${date}',
                           onTap: () {
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => SubscriptionScreen(),
-                            //   ),
-                            // );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SubscriptionHistory(
+                                  fromDate:
+                                      planData?.period.startsAtLabel ?? '',
+                                  titlePlan: planData?.plan.durationLabel ?? '',
+                                  toDate: planData?.period.endsAtLabel ?? '',
+                                ),
+                              ),
+                            );
                           },
                         )
                       : CommonContainer.attractCustomerCard(

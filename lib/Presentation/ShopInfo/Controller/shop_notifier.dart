@@ -125,6 +125,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     required String primaryPhone,
     required String alternatePhone,
     required String contactEmail,
+    String? upiId,
     String? shopId,
     File? ownerImageFile, // only used if type == service
     required bool doorDelivery,
@@ -168,6 +169,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       ownerImageUrl: ownerImageUrl,
       contactEmail: contactEmail,
       doorDelivery: doorDelivery,
+      upiId: upiId,
     );
 
     return result.fold(
@@ -329,6 +331,19 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       if (url != null && url.trim().isNotEmpty) {
         items.add({"type": types[i], "url": url});
       }
+    }
+
+    // ✅ Enforce mandatory photos: SIGN_BOARD + OUTSIDE (Shop Advertisement).
+    bool hasType(String t) => items.any(
+      (m) => (m['type'] ?? '').toString().trim().toUpperCase() == t,
+    );
+
+    if (!hasType('SIGN_BOARD') || !hasType('OUTSIDE')) {
+      state = const ShopCategoryState(
+        isLoading: false,
+        error: 'Please upload Sign Board and Shop Advertisement photos',
+      );
+      return false;
     }
 
     if (items.isEmpty) {

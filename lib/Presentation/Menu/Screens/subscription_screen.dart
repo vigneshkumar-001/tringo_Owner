@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/payment_success_screen.dart';
 
+import '../../AboutMe/controller/about_me_notifier.dart';
+import '../../Home/Controller/shopContext_provider.dart';
+import '../../Login/controller/login_notifier.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 
+import 'ccavenue_checkout_screen.dart';
+import '../Widgets/payment_result_dialog.dart';
 import '../Controller/subscripe_notifier.dart';
 
 import '../Model/plan_list_response.dart';
@@ -24,6 +31,9 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  // Debug-only: set to true to force-show Best Value badge while testing UI.
+  // This is guarded by kDebugMode, so it won't affect production/release builds.
+  static const bool _forceBestValueDebug = false;
   // Selected billing index: 0 = 1 Year, 1 = 6 Month, 2 = 3 Month
   int _selectedBilling = 0;
 
@@ -58,7 +68,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
       return <PlanFeature>[];
     }();
-
 
     return Scaffold(
       backgroundColor: Color(0xFFF3F3F3),
@@ -136,33 +145,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         ],
                       ),
                       SizedBox(height: 10),
-                      Image.asset(
-                        AppImages.crown,
-                        height: 105,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(height: 10),
                       Text(
-                        "Unlock the Tringo's",
-                        style: AppTextStyles.mulish(fontSize: 22),
-                      ),
-                      Text(
-                        "Super Power",
+                        "Unlock your business growth",
                         style: AppTextStyles.mulish(
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      _ComparisonCard(features: comparisonFeatures),
-                      SizedBox(height: 20),
-                      Center(
-                        child: Text(
-                          'Cancel Subscription Any time',
-                          style: AppTextStyles.mulish(color: AppColor.darkGrey),
+                      Text(
+                        "Get more customers .Close more deals faster",
+                        style: AppTextStyles.mulish(
+                          fontSize: 12,
+                          color: AppColor.darkGrey,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
+                      _ComparisonCard(features: comparisonFeatures),
+
                       if (widget.showSkip)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 31),
@@ -204,7 +203,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                     Text(
                                       'Continue as Free',
                                       style: AppTextStyles.mulish(
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                         color: AppColor.darkBlue,
                                       ),
@@ -222,12 +221,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             ),
                           ),
                         ),
-                      SizedBox(height: 25),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // SizedBox(
               //   height: 90,
@@ -255,11 +253,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               //     ),
               //   ),
               // ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15),
+                child: _UpgradeNoticeCard(),
+              ),
+
               SizedBox(
-                height: 90,
+                height: 78,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 8.0,
+                    vertical: 6.0,
                     horizontal: 5,
                   ),
                   child: ListView.builder(
@@ -267,11 +270,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     itemCount: planAmount?.length ?? 0,
                     itemBuilder: (context, index) {
                       final data = planAmount![index];
+                      final bool isBestValueForUi =
+                          data.isBestValue ||
+                          (kDebugMode && _forceBestValueDebug && index == 0);
                       return Padding(
-                        padding: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.only(right: 8),
                         child: _BillingOptions(
-                          index: index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ add this
+                          index:
+                              index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ add this
                           price: data.price.toString(),
+                          isBestValue: isBestValueForUi,
 
                           type: data.type
                               .toString(), // better: show duration text
@@ -286,7 +294,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: Container(
@@ -315,62 +322,219 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
                             debugPrint('Selected planId: $planId');
 
-                            await ref
-                                .read(subscriptionNotifier.notifier)
-                                .purchasePlan(
-                                  planId: planId,
-                                  businessProfileId: '',
-                                );
-
-                            final subState = ref.read(subscriptionNotifier);
-
                             // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ SUCCESS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ navigate
-                            if (subState.purchaseResponse != null &&
-                                subState.purchaseResponse!.status == true) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PaySuccessAndCancel(
-                                    tittle:
-                                        subState
-                                            .purchaseResponse
-                                            ?.data
-                                            .plan
-                                            .durationLabel
-                                            .toString() ??
-                                        '',
-                                    planId: planId,
-                                    startAt:
-                                        subState
-                                            .purchaseResponse
-                                            ?.data
-                                            .period
-                                            .startsAtLabel
-                                            .toString() ??
-                                        '',
-                                    endsAt:
-                                        subState
-                                            .purchaseResponse
-                                            ?.data
-                                            .period
-                                            .endsAtLabel
-                                            .toString() ??
-                                        '',
+                            final prefs = await SharedPreferences.getInstance();
+                            final role = (prefs.getString('role') ?? '')
+                                .trim()
+                                .toUpperCase();
+
+                            final selectedShopId =
+                                (ref.read(selectedShopProvider) ?? '').trim();
+                            final persistedShopId =
+                                (prefs.getString('currentShopId') ??
+                                        prefs.getString('shop_id') ??
+                                        '')
+                                    .trim();
+                            final shopId = selectedShopId.isNotEmpty
+                                ? selectedShopId
+                                : persistedShopId;
+
+                            String? businessProfileId;
+                            final aboutState = ref.read(
+                              aboutMeNotifierProvider,
+                            );
+                            final shops =
+                                aboutState.shopRootResponse?.data ?? const [];
+                            if (shopId.isNotEmpty) {
+                              for (final s in shops) {
+                                if ((s.shopId ?? '').trim() == shopId) {
+                                  businessProfileId =
+                                      (s.businessProfileId ?? '').trim();
+                                  break;
+                                }
+                              }
+                            }
+
+                            // EMPLOYEE must send businessProfileId. Best-effort fallback via shop details.
+                            if (role == 'EMPLOYEE' &&
+                                (businessProfileId == null ||
+                                    businessProfileId!.isEmpty)) {
+                              if (shopId.isEmpty) {
+                                showTopSnackBar(
+                                  context,
+                                  const CustomSnackBar.error(
+                                    message:
+                                        "Please select a shop and try again",
                                   ),
+                                );
+                                return;
+                              }
+
+                              final api = ref.read(apiDataSourceProvider);
+                              final shopRes = await api.getShopDetails(
+                                apiShopId: shopId,
+                              );
+                              shopRes.fold((_) {}, (resp) {
+                                businessProfileId =
+                                    (resp.data?.businessProfileId ?? '').trim();
+                              });
+                            }
+
+                            if (role == 'EMPLOYEE' &&
+                                (businessProfileId == null ||
+                                    businessProfileId!.isEmpty)) {
+                              showTopSnackBar(
+                                context,
+                                const CustomSnackBar.error(
+                                  message:
+                                      "Business profile is required for this account. Please re-login or contact support.",
                                 ),
                               );
-                              ref
-                                  .watch(subscriptionNotifier.notifier)
-                                  .getCurrentPlan();
-                            } else {
+                              return;
+                            }
+
+                            final current = ref
+                                .read(subscriptionNotifier)
+                                .currentPlanResponse;
+                            final shouldExtend =
+                                (current?.data?.isFreemium == false) &&
+                                ((current?.data?.status ?? '').toUpperCase() ==
+                                    'ACTIVE');
+
+                            final initResp = await ref
+                                .read(subscriptionNotifier.notifier)
+                                .initCcAvenue(
+                                  planId: planId,
+                                  businessProfileId: businessProfileId,
+                                  shopId: shopId.isEmpty ? null : shopId,
+                                  extend: shouldExtend,
+                                );
+
+                            if (!mounted) return;
+
+                            final initData = initResp?.data;
+                            if (initData == null ||
+                                initData.form.action.trim().isEmpty ||
+                                initData.form.fields.encRequest
+                                    .trim()
+                                    .isEmpty ||
+                                initData.form.fields.accessCode
+                                    .trim()
+                                    .isEmpty) {
+                              final st = ref.read(subscriptionNotifier);
                               showTopSnackBar(
                                 context,
                                 CustomSnackBar.error(
                                   message:
-                                      subState.error ?? "Something went wrong",
+                                      st.error ?? "Unable to start payment",
                                 ),
                               );
+                              return;
                             }
+
+                            final result = await Navigator.of(context)
+                                .push<CcAvenueCheckoutResult>(
+                                  MaterialPageRoute(
+                                    builder: (_) => CcAvenueCheckoutScreen(
+                                      initData: initData,
+                                    ),
+                                  ),
+                                );
+
+                            if (!mounted) return;
+                            if (result == null) return;
+
+                            // Best-effort confirm (if we managed to capture encResp).
+                            if (result.encResp != null &&
+                                result.encResp!.trim().isNotEmpty) {
+                              final confirm = await ref
+                                  .read(subscriptionNotifier.notifier)
+                                  .confirmCcAvenue(
+                                    encResp: result.encResp!.trim(),
+                                  );
+
+                              final paymentStatus =
+                                  (confirm?.paymentStatus ??
+                                          confirm?.data?.payment?.status ??
+                                          '')
+                                      .trim()
+                                      .toUpperCase();
+
+                              if (paymentStatus == 'SUCCESS') {
+                                final period = confirm?.data?.period;
+                                final plan = confirm?.data?.plan;
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaySuccessAndCancel(
+                                      tittle:
+                                          (plan?.durationLabel ??
+                                                  selectedPlan.type)
+                                              .toString(),
+                                      planId: planId,
+                                      startAt: (period?.startsAtLabel ?? '')
+                                          .toString(),
+                                      endsAt: (period?.endsAtLabel ?? '')
+                                          .toString(),
+                                    ),
+                                  ),
+                                );
+                              } else if (paymentStatus == 'PENDING') {
+                                showTopSnackBar(
+                                  context,
+                                  CustomSnackBar.info(
+                                    message:
+                                        confirm?.message ??
+                                        "Payment is awaiting confirmation",
+                                  ),
+                                );
+                              } else if (paymentStatus == 'CANCELLED') {
+                                await PaymentResultDialog.show(
+                                  context,
+                                  type: PaymentResultType.cancelled,
+                                  message: confirm?.message,
+                                );
+                              } else if (paymentStatus == 'FAILED') {
+                                await PaymentResultDialog.show(
+                                  context,
+                                  type: PaymentResultType.failed,
+                                  message: confirm?.message,
+                                );
+                              } else {
+                                showTopSnackBar(
+                                  context,
+                                  CustomSnackBar.error(
+                                    message:
+                                        confirm?.message ??
+                                        "Payment status unknown",
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (result.callbackReached) {
+                                showTopSnackBar(
+                                  context,
+                                  const CustomSnackBar.info(
+                                    message:
+                                        "Payment submitted. Updating your subscription…",
+                                  ),
+                                );
+                              } else if (result.cancelled) {
+                                await PaymentResultDialog.show(
+                                  context,
+                                  type: PaymentResultType.cancelled,
+                                  message: "Payment cancelled",
+                                );
+                              }
+                            }
+
+                            // Refresh subscription state from backend.
+                            await ref
+                                .read(subscriptionNotifier.notifier)
+                                .getCurrentPlan(
+                                  businessProfileId: businessProfileId,
+                                );
                           },
 
                     style: ElevatedButton.styleFrom(
@@ -398,9 +562,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                 ),
                               )
                             : Text(
-                                'Pay for Premium',
+                                'Upgrade now and get leads',
                                 style: AppTextStyles.mulish(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -417,7 +581,22 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Center(
+                  child: Text(
+                    'One customer is enough to recover your cost',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.mulish(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -467,7 +646,13 @@ class _ComparisonCard extends StatelessWidget {
       final sorted = [...features]..sort((a, b) => a.sort.compareTo(b.sort));
       uiFeatures = sorted
           .where((f) => f.label.trim().isNotEmpty)
-          .map((f) => (text: _cleanFeatureText(f.label), free: f.free, premium: f.premium))
+          .map(
+            (f) => (
+              text: _cleanFeatureText(f.label),
+              free: f.free,
+              premium: f.premium,
+            ),
+          )
           .toList();
     } else {
       uiFeatures = const <({String text, bool free, bool premium})>[
@@ -478,7 +663,11 @@ class _ComparisonCard extends StatelessWidget {
         (text: "Reach entire district", free: false, premium: true),
         (text: "Reply to 10 leads daily", free: false, premium: true),
         (text: "Get priority in search", free: false, premium: true),
-        (text: "Place ads in Caller ID (100+ users/month)", free: false, premium: true),
+        (
+          text: "Place ads in Caller ID (100+ users/month)",
+          free: false,
+          premium: true,
+        ),
       ];
     }
 
@@ -525,7 +714,10 @@ class _ComparisonCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -537,7 +729,10 @@ class _ComparisonCard extends StatelessWidget {
                           child: Center(
                             child: Text(
                               "Free",
-                              style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -546,7 +741,10 @@ class _ComparisonCard extends StatelessWidget {
                           child: Center(
                             child: Text(
                               "Premium",
-                              style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -563,7 +761,7 @@ class _ComparisonCard extends StatelessWidget {
                               f.text,
                               style: AppTextStyles.mulish(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: AppColor.darkBlue,
                               ),
                             ),
@@ -571,13 +769,17 @@ class _ComparisonCard extends StatelessWidget {
                           Expanded(
                             flex: 3,
                             child: Center(
-                              child: f.free ? star(color: AppColor.skyBlue) : const SizedBox.shrink(),
+                              child: f.free
+                                  ? star(color: AppColor.skyBlue)
+                                  : const SizedBox.shrink(),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Center(
-                              child: f.premium ? star(color: AppColor.white) : const SizedBox.shrink(),
+                              child: f.premium
+                                  ? star(color: AppColor.white)
+                                  : const SizedBox.shrink(),
                             ),
                           ),
                         ],
@@ -622,23 +824,29 @@ class _BillingOptions extends StatelessWidget {
     required this.type,
     required this.onChanged,
     required this.price,
+    required this.isBestValue,
   });
 
   final int index; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ current item index
-  final int selectedIndex; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ selected index in parent
+  final int
+  selectedIndex; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ selected index in parent
   final ValueChanged<int> onChanged;
 
   final String type;
   final String price;
+  final bool isBestValue;
 
   @override
   Widget build(BuildContext context) {
     return _BillingChip(
-      labelTop: '\u20B9 $price',
+      labelTop: '\u20B9$price',
       labelBottom: type,
-      selected: selectedIndex == index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compare with index
-      onTap: () => onChanged(index), // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ send index
-      highlight: index == 0, // optional
+      selected:
+          selectedIndex ==
+          index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compare with index
+      onTap: () =>
+          onChanged(index), // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ send index
+      highlight: isBestValue,
     );
   }
 }
@@ -667,44 +875,170 @@ class _BillingChip extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: border, width: 2),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          SizedBox(
+            width: 145,
+            height: 66,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFF0797FD)
+                      : const Color(0xFFE5E7EB),
+                  width: selected ? 3 : 2,
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(top: highlight ? 12 : 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      labelTop,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: selected
+                            ? const Color(0xFF0797FD)
+                            : AppColor.black,
+                        fontSize: 19,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      labelBottom,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.mulish(
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: selected ? AppColor.black : AppColor.gray84,
+                        fontSize: 11,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (highlight)
+            Positioned(
+              top: 4,
+              right: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.local_fire_department_rounded,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      'Best Value',
+                      style: AppTextStyles.mulish(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UpgradeNoticeCard extends StatelessWidget {
+  const _UpgradeNoticeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFE7C7), Color(0xFFFFF3E3)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFF59E0B),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  labelTop,
-                  style: TextStyle(
+                  "Don't miss customers",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.mulish(
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: selected ? const Color(0xff0797FD) : AppColor.black,
-                    fontSize: 18,
+                    color: Colors.red,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black,
+                    ),
+                    children: const [
+                      TextSpan(text: 'Customers choose vendors '),
+                      TextSpan(
+                        text: 'who reply first',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      TextSpan(text: '.\n'),
+                      TextSpan(
+                        text: 'Upgrade now and stay ahead of competitors.',
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              labelBottom,
-
-              style: AppTextStyles.mulish(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                color: selected ? AppColor.darkBlue : AppColor.gray84,
-              ),
-              // style: TextStyle(
-              //   fontSize: 12,
-              //   color: selected ? AppColor.darkBlue : AppColor.gray84,
-              // ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
