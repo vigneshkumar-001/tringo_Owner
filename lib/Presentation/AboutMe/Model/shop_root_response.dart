@@ -21,6 +21,7 @@ class ShopRootResponse {
 class Shop {
   final String? shopId;
   final String? businessProfileId;
+  final String? shopUpiId;
   final String? shopEnglishName;
   final String? shopTamilName;
   final String? shopDescriptionEn;
@@ -64,6 +65,7 @@ class Shop {
   Shop({
     this.shopId,
     this.businessProfileId,
+    this.shopUpiId,
     this.shopEnglishName,
     this.shopTamilName,
     this.shopDescriptionEn,
@@ -104,6 +106,7 @@ class Shop {
     return Shop(
       shopId: json["shopId"] as String?,
       businessProfileId: json["businessProfileId"] as String?,
+      shopUpiId: json["shopUpiId"]?.toString(),
       shopEnglishName: json["shopEnglishName"] as String?,
       shopTamilName: json["shopTamilName"] as String?,
       shopDescriptionEn: json["shopDescriptionEn"] as String?,

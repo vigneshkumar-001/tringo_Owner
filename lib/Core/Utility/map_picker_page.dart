@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 
 class GoogleLocationPickerScreen extends StatefulWidget {
   final double? initialLat;
@@ -197,22 +200,35 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       if (response.statusCode != 200) {
         if (!mounted) return;
         setState(() {
-          locality = 'Unable to fetch location';
+          locality = 'Location unavailable';
           city = '';
-          fullAddress = 'HTTP ${response.statusCode}';
+          fullAddress = 'Network error. Please try again.';
         });
         return;
       }
 
       // Handle Google API errors clearly
       if (data['status'] != 'OK') {
+        final status = (data['status'] ?? '').toString();
+        final errorMsg = (data['error_message'] ?? '').toString();
+        _logGoogleMapsError('Geocode', status: status, errorMessage: errorMsg);
+
+        // Fallback: if Google APIs aren't enabled/reachable, try device geocoder
+        // (doesn't require Google Cloud API activation).
+        final didFallback = await _tryReverseGeocodeWithDevice(lat, lng);
+        if (didFallback) return;
+
+        final friendly = _friendlyGoogleMapsError(
+          status: status,
+          errorMessage: errorMsg,
+          apiName: 'Geocoding API',
+        );
+
         if (!mounted) return;
         setState(() {
-          locality = 'Unable to fetch location';
+          locality = 'Location unavailable';
           city = '';
-          fullAddress =
-              (data['error_message'] ?? data['status'] ?? 'Unknown error')
-                  .toString();
+          fullAddress = friendly;
         });
         return;
       }
@@ -252,12 +268,104 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       });
     } catch (e) {
       if (!mounted) return;
+      if (kDebugMode) AppLogger.log.w('Geocode exception: $e');
+
+      final didFallback = await _tryReverseGeocodeWithDevice(lat, lng);
+      if (didFallback) return;
+
       setState(() {
-        locality = 'Error fetching location';
+        locality = 'Location unavailable';
         city = '';
-        fullAddress = 'Unable to fetch address: $e';
+        fullAddress = 'Unable to fetch address. Please try again.';
       });
     }
+  }
+
+  Future<bool> _tryReverseGeocodeWithDevice(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return false;
+
+      final p = placemarks.first;
+
+      final loc = (p.subLocality?.trim().isNotEmpty == true)
+          ? p.subLocality!.trim()
+          : (p.locality?.trim().isNotEmpty == true)
+              ? p.locality!.trim()
+              : 'Selected Location';
+
+      final inferredCity = (p.administrativeArea?.trim().isNotEmpty == true)
+          ? p.administrativeArea!.trim()
+          : (p.subAdministrativeArea?.trim().isNotEmpty == true)
+              ? p.subAdministrativeArea!.trim()
+              : '';
+
+      final parts = <String>[
+        if (p.name?.trim().isNotEmpty == true) p.name!.trim(),
+        if (p.street?.trim().isNotEmpty == true) p.street!.trim(),
+        if (p.subLocality?.trim().isNotEmpty == true) p.subLocality!.trim(),
+        if (p.locality?.trim().isNotEmpty == true) p.locality!.trim(),
+        if (p.administrativeArea?.trim().isNotEmpty == true)
+          p.administrativeArea!.trim(),
+        if (p.postalCode?.trim().isNotEmpty == true) p.postalCode!.trim(),
+        if (p.country?.trim().isNotEmpty == true) p.country!.trim(),
+      ];
+
+      final addr = parts.toSet().join(', ');
+      if (!mounted) return true;
+
+      setState(() {
+        locality = loc;
+        city = inferredCity;
+        fullAddress = addr.isEmpty ? 'Selected Location' : addr;
+      });
+      return true;
+    } catch (e) {
+      if (kDebugMode) AppLogger.log.w('Device geocoder failed: $e');
+      return false;
+    }
+  }
+
+  String _friendlyGoogleMapsError({
+    required String status,
+    required String errorMessage,
+    required String apiName,
+  }) {
+    final s = status.trim().toUpperCase();
+
+    if (s == 'REQUEST_DENIED') {
+      return 'Map service is unavailable right now. Please try again.';
+    }
+
+    if (s == 'OVER_QUERY_LIMIT') {
+      return 'Map service is busy right now. Please try again in a few minutes.';
+    }
+
+    if (s == 'ZERO_RESULTS') {
+      return 'No address found for this location.';
+    }
+
+    if (s == 'INVALID_REQUEST') {
+      return 'Invalid map request. Please try again.';
+    }
+
+    // Default fallback (don't show raw Google error to user)
+    return 'Unable to fetch location. Please try again.';
+  }
+
+  void _logGoogleMapsError(
+    String source, {
+    required String status,
+    required String errorMessage,
+  }) {
+    if (!kDebugMode) return;
+
+    // Avoid dumping long/technical Google error messages in logs.
+    // Keep it short so logs remain readable and not scary for QA/users.
+    final s = status.trim().toUpperCase();
+    AppLogger.log.w(
+      '$source error: $s (check Google Cloud: enable APIs + billing + key restrictions)',
+    );
   }
 
   // Places Autocomplete (text -> predictions)
@@ -296,9 +404,25 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
         setState(() => _placePredictions = data['predictions'] as List);
       } else {
         // Typical: REQUEST_DENIED (Places API not enabled / key restricted)
+        final status = (data['status'] ?? '').toString();
+        final errorMsg = (data['error_message'] ?? '').toString();
+        _logGoogleMapsError(
+          'Places autocomplete',
+          status: status,
+          errorMessage: errorMsg,
+        );
         setState(() => _placePredictions = []);
-        // Optional: show error in address field for debugging
-        // setState(() => fullAddress = '${data['status']}: ${data['error_message'] ?? ''}');
+
+        // Optional UX: show a friendly hint only for hard failures (don't spam on ZERO_RESULTS)
+        if (status.toUpperCase() == 'REQUEST_DENIED') {
+          setState(() {
+            fullAddress = _friendlyGoogleMapsError(
+              status: status,
+              errorMessage: errorMsg,
+              apiName: 'Places API',
+            );
+          });
+        }
       }
     } catch (_) {
       if (!mounted) return;
@@ -325,10 +449,20 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       if (!mounted) return;
 
       if (res.statusCode != 200 || data['status'] != 'OK') {
+        final status = (data['status'] ?? '').toString();
+        final errorMsg = (data['error_message'] ?? '').toString();
+        _logGoogleMapsError(
+          'Place details',
+          status: status,
+          errorMessage: errorMsg,
+        );
         setState(() {
           _placePredictions = [];
-          fullAddress = (data['error_message'] ?? data['status'] ?? 'Error')
-              .toString();
+          fullAddress = _friendlyGoogleMapsError(
+            status: status,
+            errorMessage: errorMsg,
+            apiName: 'Places API',
+          );
         });
         return;
       }

@@ -24,6 +24,8 @@ import 'package:tringo_owner/Presentation/Login/model/app_version_response.dart'
 import 'package:tringo_owner/Presentation/Login/model/login_response.dart';
 import 'package:tringo_owner/Presentation/Login/model/otp_response.dart';
 import 'package:tringo_owner/Presentation/Menu/Model/current_plan_response.dart';
+import 'package:tringo_owner/Presentation/Menu/Model/ccavenue_init_response.dart';
+import 'package:tringo_owner/Presentation/Menu/Model/subscription_confirm_response.dart';
 import 'package:tringo_owner/Presentation/Privacy%20Policy/Model/terms_and_condition_model.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/category_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
@@ -322,11 +324,12 @@ class ApiDataSource extends BaseApiDataSource {
     String? primaryPhoneVerificationToken,
     required String primaryPhone,
     required String alternatePhone,
-    required String ownerImageUrl,
-    required String contactEmail,
-    required bool doorDelivery,
-    required String weeklyHours,
-  }) async {
+	    required String ownerImageUrl,
+	    required String contactEmail,
+	    required bool doorDelivery,
+	    required String weeklyHours,
+	    String? upiId,
+	  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedShopId = prefs.getString('shop_id');
@@ -362,14 +365,15 @@ class ApiDataSource extends BaseApiDataSource {
         "gpsLongitude": gpsLongitude,
         "primaryPhone": primaryPhone,
         "alternatePhone": alternatePhone,
-        "contactEmail": contactEmail,
-        "doorDelivery": doorDelivery,
-        "weeklyHours": weeklyHours,
-
-        // âœ… IMPORTANT: backend expects this
-        if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
-          "primaryPhoneVerificationToken": phoneVerifyToken,
-
+	        "contactEmail": contactEmail,
+	        "doorDelivery": doorDelivery,
+	        "weeklyHours": weeklyHours,
+	        "upiId": (upiId ?? '').trim().isEmpty ? null : (upiId ?? '').trim(),
+	
+	        // âœ… IMPORTANT: backend expects this
+	        if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
+	          "primaryPhoneVerificationToken": phoneVerifyToken,
+ 
         // âœ… keep this also (safe fallback)
         if (phoneVerifyToken != null && phoneVerifyToken.isNotEmpty)
           "phoneVerifyToken": phoneVerifyToken,
@@ -1632,7 +1636,8 @@ class ApiDataSource extends BaseApiDataSource {
     try {
       final url = ApiUrl.plans;
 
-      dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
+      // GET /subscriptions/plans is public (no x-session-token)
+      dynamic response = await Request.sendGetRequest(url, {}, 'GET', false);
 
       AppLogger.log.i(response);
 
@@ -1706,9 +1711,13 @@ class ApiDataSource extends BaseApiDataSource {
     }
   }
 
-  Future<Either<Failure, CurrentPlanResponse>> getCurrentPlan() async {
+  Future<Either<Failure, CurrentPlanResponse>> getCurrentPlan({
+    String? businessProfileId,
+  }) async {
     try {
-      final url = ApiUrl.currentPlans;
+      final url = ApiUrl.currentSubscription(
+        businessProfileId: businessProfileId,
+      );
 
       dynamic response = await Request.sendGetRequest(url, {}, 'GET', true);
 
@@ -1735,6 +1744,118 @@ class ApiDataSource extends BaseApiDataSource {
         }
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, CcAvenueInitResponse>> ccavenueInit({
+    required String planId,
+    String? businessProfileId,
+    String? shopId,
+  }) async {
+    try {
+      final url = ApiUrl.ccavenueInit;
+
+      final payload = <String, dynamic>{
+        "planId": planId,
+        if ((businessProfileId ?? '').trim().isNotEmpty)
+          "businessProfileId": businessProfileId!.trim(),
+        if ((shopId ?? '').trim().isNotEmpty) "shopId": shopId!.trim(),
+      };
+
+      final response = await Request.sendRequest(url, payload, 'POST', true);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(CcAvenueInitResponse.fromJson(response.data));
+          }
+          return Left(ServerFailure(response.data['message'] ?? "Init failed"));
+        }
+
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
+      }
+
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, CcAvenueInitResponse>> ccavenueExtendInit({
+    required String planId,
+    String? businessProfileId,
+    String? shopId,
+  }) async {
+    try {
+      final url = ApiUrl.ccavenueExtendInit;
+
+      final payload = <String, dynamic>{
+        "planId": planId,
+        if ((businessProfileId ?? '').trim().isNotEmpty)
+          "businessProfileId": businessProfileId!.trim(),
+        if ((shopId ?? '').trim().isNotEmpty) "shopId": shopId!.trim(),
+      };
+
+      final response = await Request.sendRequest(url, payload, 'POST', true);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data['status'] == true) {
+            return Right(CcAvenueInitResponse.fromJson(response.data));
+          }
+          return Left(ServerFailure(response.data['message'] ?? "Init failed"));
+        }
+
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
+      }
+
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
+    } catch (e) {
+      AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, SubscriptionConfirmResponse>> ccavenueConfirm({
+    required String encResp,
+  }) async {
+    try {
+      final url = ApiUrl.ccavenueConfirm;
+
+      final payload = <String, dynamic>{"encResp": encResp};
+      final response = await Request.sendRequest(url, payload, 'POST', true);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return Right(SubscriptionConfirmResponse.fromJson(response.data));
+        }
+
+        return Left(
+          ServerFailure(response.data['message'] ?? "Something went wrong"),
+        );
+      }
+
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? "Unknown Dio error"));
     } catch (e) {
       AppLogger.log.e(e);
       return Left(ServerFailure(e.toString()));

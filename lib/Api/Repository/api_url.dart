@@ -22,7 +22,22 @@
   static const String imageUrl = "${baseUrlImage}api/media/image-save";
   // "https://next.fenizotechnologies.com/Adrox/api/image-save";
   static const String plans = "${base}api/v1/subscriptions/plans";
-  static const String currentPlans = "${base}api/v1/subscriptions/current";
+
+  static String currentSubscription({String? businessProfileId}) {
+    final bp = (businessProfileId ?? '').trim();
+    return Uri.parse("${base}api/v1/subscriptions/current")
+        .replace(queryParameters: bp.isEmpty ? null : {"businessProfileId": bp})
+        .toString();
+  }
+
+  static const String ccavenueInit =
+      "${base}api/v1/subscriptions/ccavenue/init";
+  static const String ccavenueExtendInit =
+      "${base}api/v1/subscriptions/ccavenue/extend/init";
+  static const String ccavenueConfirm =
+      "${base}api/v1/subscriptions/ccavenue/confirm";
+
+  // Legacy endpoint (kept for backward compatibility in older builds)
   static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String contactInfo = "${base}api/v1/contacts/sync";
   static const String supportTicketsList = "${base}api/v1/support/tickets";

@@ -415,39 +415,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: _confirmCancelSubscription,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColor.red1,
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Image.asset(
-                                    AppImages.closeImage,
-                                    height: 18,
-                                    color: AppColor.white,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'Cancel Subscription',
-                                    style: AppTextStyles.mulish(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColor.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                         
                           const SizedBox(width: 12),
                           GestureDetector(
                             onTap: _extendPlan,
@@ -482,6 +450,40 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                               ),
                             ),
                           ),
+                           const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: _confirmCancelSubscription,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.red1,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    AppImages.closeImage,
+                                    height: 18,
+                                    color: AppColor.white,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Cancel Subscription',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColor.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        
                         ],
                       ),
                     ),

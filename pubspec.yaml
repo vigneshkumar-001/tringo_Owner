@@ -47,6 +47,7 @@ dependencies:
   intl: any
   flutter_riverpod: ^3.0.3
   dio: ^5.9.0
+  http: ^1.2.0
   shared_preferences: ^2.5.3
   logger: ^2.6.2
   equatable: ^2.0.7
@@ -69,9 +70,11 @@ dependencies:
   connectivity_plus: ^6.0.5
   google_maps_flutter: ^2.6.1
   geolocator: ^11.0.0
+  geocoding: ^3.0.0
   font_awesome_flutter: ^10.7.0
   qr_flutter: ^4.1.0
   flutter_html: ^3.0.0-beta.2
+  webview_flutter: ^4.8.0
   firebase_messaging: ^16.1.1
   flutter_local_notifications: ^20.1.0
   firebase_core: ^4.4.0

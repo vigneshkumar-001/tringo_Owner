@@ -23,6 +23,9 @@ class ShopDetails {
 
   final BusinessProfile businessProfile;
 
+  // NEW: shop UPI id (moved from business profile -> shop)
+  final String? shopUpiId;
+
   final String? category;
   final String? subCategory;
   final String? shopKind;
@@ -64,6 +67,7 @@ class ShopDetails {
     required this.createdAt,
     required this.updatedAt,
     required this.businessProfile,
+    this.shopUpiId,
     this.category,
     this.subCategory,
     this.shopKind,
@@ -101,6 +105,7 @@ class ShopDetails {
       businessProfile: BusinessProfile.fromJson(
         json['businessProfile'] ?? const {},
       ),
+      shopUpiId: (json['shopUpiId'] ?? json['upiId'])?.toString(),
       category: json['category'],
       subCategory: json['subCategory'],
       shopKind: json['shopKind'],
@@ -143,6 +148,7 @@ class ShopDetails {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'businessProfile': businessProfile.toJson(),
+      'shopUpiId': shopUpiId,
       'category': category,
       'subCategory': subCategory,
       'shopKind': shopKind,

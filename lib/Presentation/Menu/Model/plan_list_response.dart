@@ -2,10 +2,7 @@ class PlanListResponse {
   final bool status;
   final List<PlanModel> data;
 
-  PlanListResponse({
-    required this.status,
-    required this.data,
-  });
+  PlanListResponse({required this.status, required this.data});
 
   factory PlanListResponse.fromJson(Map<String, dynamic> json) {
     return PlanListResponse(
@@ -25,6 +22,7 @@ class PlanModel {
   final String type;
   final String price;
   final int durationDays;
+  final bool isBestValue;
   final List<PlanFeature> features;
 
   PlanModel({
@@ -35,10 +33,18 @@ class PlanModel {
     required this.type,
     required this.price,
     required this.durationDays,
+    required this.isBestValue,
     required this.features,
   });
 
   factory PlanModel.fromJson(Map<String, dynamic> json) {
+    bool parseBool(dynamic v) {
+      if (v is bool) return v;
+      if (v is num) return v != 0;
+      final s = (v ?? '').toString().trim().toLowerCase();
+      return s == 'true' || s == '1' || s == 'yes';
+    }
+
     final rawFeatures = json['features'];
 
     final List<PlanFeature> parsedFeatures = <PlanFeature>[];
@@ -75,6 +81,11 @@ class PlanModel {
       durationDays: (json['durationDays'] is int)
           ? (json['durationDays'] as int)
           : int.tryParse((json['durationDays'] ?? '0').toString()) ?? 0,
+      isBestValue:
+          parseBool(json['isBestValue']) ||
+          parseBool(json['is_best_value']) ||
+          parseBool(json['bestValue']) ||
+          parseBool(json['isBestvalue']),
       features: parsedFeatures,
     );
   }
