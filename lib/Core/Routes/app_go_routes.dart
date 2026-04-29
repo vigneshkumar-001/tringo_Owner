@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Presentation/Login/Screens/login_screens.dart';
 import 'package:tringo_owner/Presentation/Login/Screens/otp_screens.dart';
@@ -12,13 +12,11 @@ import 'package:tringo_owner/main.dart';
 import '../../Presentation/AddProduct/Screens/add_product_list.dart';
 import '../../Presentation/AddProduct/Screens/product_category_screens.dart';
 import '../../Presentation/Create App Offer/Screens/offer_products.dart';
-import '../../Presentation/Home/Screens/home_screens.dart';
 import '../../Presentation/Menu/Screens/subscription_screen.dart';
 import '../../Presentation/Mobile Nomber Verify/mobile_number_verify.dart';
 import '../../Presentation/Privacy Policy/Screens/privacy_policy.dart';
 import '../../Presentation/Shops Details/Screen/shops_details.dart';
 import '../../Splash_screen.dart';
-import '../Session/registration_product_seivice.dart';
 import '../Widgets/bottom_navigation_bar.dart';
 
 class AppRoutes {
@@ -89,7 +87,7 @@ final goRouter = GoRouter(
     GoRoute(
       path: AppRoutes.callDashboardScreenPath,
       name: AppRoutes.callDashboardScreen,
-      builder: (context, state) => CallDashboardScreen (),
+      builder: (context, state) => CallDashboardScreen(),
     ),
     GoRoute(
       path: AppRoutes.splashScreenPath,
@@ -240,8 +238,34 @@ final goRouter = GoRouter(
       path: AppRoutes.homeScreenPath,
       name: AppRoutes.homeScreen,
       builder: (context, state) {
-        final initialIndex = state.extra as int? ?? 0;
-        return CommonBottomNavigation(initialIndex: initialIndex);
+        int initialIndex = 0;
+        int? initialAboutMeTab;
+        Map<String, dynamic>? deepLinkData;
+
+        final extra = state.extra;
+        if (extra is int) {
+          initialIndex = extra;
+        } else if (extra is Map) {
+          final extraMap = extra.map((k, v) => MapEntry(k.toString(), v));
+          deepLinkData = extraMap.cast<String, dynamic>();
+
+          final v = extraMap['initialIndex'];
+          if (v is int) initialIndex = v;
+          if (v is String) initialIndex = int.tryParse(v) ?? 0;
+
+          final about = extraMap['initialAboutMeTab'];
+          if (about is int) initialAboutMeTab = about;
+          if (about is String) initialAboutMeTab = int.tryParse(about);
+        }
+
+        return CommonBottomNavigation(
+          key: ValueKey(
+            'bottom-$initialIndex-${initialAboutMeTab ?? ''}-${(deepLinkData?['requestId'] ?? '').toString()}-${(deepLinkData?['pushOpenId'] ?? '').toString()}',
+          ),
+          initialIndex: initialIndex,
+          initialAboutMeTab: initialAboutMeTab,
+          deepLinkData: deepLinkData,
+        );
       },
     ),
     GoRoute(

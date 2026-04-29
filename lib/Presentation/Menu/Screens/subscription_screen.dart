@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/payment_success_screen.dart';
 
+import '../../AboutMe/controller/about_me_notifier.dart';
+import '../../Home/Controller/shopContext_provider.dart';
+import '../../Login/controller/login_notifier.dart';
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 
+import 'ccavenue_checkout_screen.dart';
+import '../Widgets/payment_result_dialog.dart';
 import '../Controller/subscripe_notifier.dart';
 
 import '../Model/plan_list_response.dart';
@@ -24,6 +31,9 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  // Debug-only: set to true to force-show Best Value badge while testing UI.
+  // This is guarded by kDebugMode, so it won't affect production/release builds.
+  static const bool _forceBestValueDebug = false;
   // Selected billing index: 0 = 1 Year, 1 = 6 Month, 2 = 3 Month
   int _selectedBilling = 0;
 
@@ -40,6 +50,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final state = ref.watch(subscriptionNotifier);
 
     final planAmount = state.planListResponse?.data;
+
+    final List<PlanFeature> comparisonFeatures = () {
+      final plans = planAmount ?? const <PlanModel>[];
+      if (plans.isEmpty) return <PlanFeature>[];
+
+      if (_selectedBilling >= 0 && _selectedBilling < plans.length) {
+        final selected = plans[_selectedBilling].features;
+        if (selected.isNotEmpty) {
+          return selected;
+        }
+      }
+
+      for (final p in plans) {
+        if (p.features.isNotEmpty) return p.features;
+      }
+
+      return <PlanFeature>[];
+    }();
 
     return Scaffold(
       backgroundColor: Color(0xFFF3F3F3),
@@ -82,12 +110,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           //
                           //       final router = GoRouter.of(context);
                           //
-                          //       // 1️⃣ Close this SubscriptionScreen if it was pushed via Navigator
+                          //       // 1ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â£ Close this SubscriptionScreen if it was pushed via Navigator
                           //       if (Navigator.of(context).canPop()) {
                           //         Navigator.of(context).pop();
                           //       }
                           //
-                          //       // 2️⃣ Now use go_router to show ShopsDetails
+                          //       // 2ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â£ Now use go_router to show ShopsDetails
                           //       router.goNamed(
                           //         AppRoutes.shopsDetails,
                           //         extra: {
@@ -117,33 +145,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         ],
                       ),
                       SizedBox(height: 10),
-                      Image.asset(
-                        AppImages.crown,
-                        height: 105,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(height: 10),
                       Text(
-                        "Unlock the Tringo’s",
-                        style: AppTextStyles.mulish(fontSize: 22),
-                      ),
-                      Text(
-                        "Super Power",
+                        "Unlock your business growth",
                         style: AppTextStyles.mulish(
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      _ComparisonCard(),
-                      SizedBox(height: 20),
-                      Center(
-                        child: Text(
-                          'Cancel Subscription Any time',
-                          style: AppTextStyles.mulish(color: AppColor.darkGrey),
+                      Text(
+                        "Get more customers .Close more deals faster",
+                        style: AppTextStyles.mulish(
+                          fontSize: 12,
+                          color: AppColor.darkGrey,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
+                      _ComparisonCard(features: comparisonFeatures),
+
                       if (widget.showSkip)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 31),
@@ -185,7 +203,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                     Text(
                                       'Continue as Free',
                                       style: AppTextStyles.mulish(
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                         color: AppColor.darkBlue,
                                       ),
@@ -203,12 +221,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             ),
                           ),
                         ),
-                      SizedBox(height: 25),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 15),
+              SizedBox(height: 10),
 
               // SizedBox(
               //   height: 90,
@@ -225,7 +242,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               //         return Padding(
               //           padding: const EdgeInsets.symmetric(horizontal: 5),
               //           child: _BillingChip(
-              //             labelTop: '₹ ${data?.price}',
+              //             labelTop: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹ ${data?.price}',
               //             labelBottom: data?.type.toString() ?? '',
               //             selected: _selectedBilling == 0,
               //             onTap: () {},
@@ -236,11 +253,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               //     ),
               //   ),
               // ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15),
+                child: _UpgradeNoticeCard(),
+              ),
+
               SizedBox(
-                height: 90,
+                height: 78,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 8.0,
+                    vertical: 6.0,
                     horizontal: 5,
                   ),
                   child: ListView.builder(
@@ -248,11 +270,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     itemCount: planAmount?.length ?? 0,
                     itemBuilder: (context, index) {
                       final data = planAmount![index];
+                      final bool isBestValueForUi =
+                          data.isBestValue ||
+                          (kDebugMode && _forceBestValueDebug && index == 0);
                       return Padding(
-                        padding: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.only(right: 8),
                         child: _BillingOptions(
-                          index: index, // ✅ add this
+                          index:
+                              index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ add this
                           price: data.price.toString(),
+                          isBestValue: isBestValueForUi,
 
                           type: data.type
                               .toString(), // better: show duration text
@@ -267,7 +294,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: Container(
@@ -296,62 +322,219 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
                             debugPrint('Selected planId: $planId');
 
-                            await ref
-                                .read(subscriptionNotifier.notifier)
-                                .purchasePlan(
-                                  planId: planId,
-                                  businessProfileId: '',
-                                );
+                            // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ SUCCESS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ navigate
+                            final prefs = await SharedPreferences.getInstance();
+                            final role = (prefs.getString('role') ?? '')
+                                .trim()
+                                .toUpperCase();
 
-                            final subState = ref.read(subscriptionNotifier);
+                            final selectedShopId =
+                                (ref.read(selectedShopProvider) ?? '').trim();
+                            final persistedShopId =
+                                (prefs.getString('currentShopId') ??
+                                        prefs.getString('shop_id') ??
+                                        '')
+                                    .trim();
+                            final shopId = selectedShopId.isNotEmpty
+                                ? selectedShopId
+                                : persistedShopId;
 
-                            // ✅ SUCCESS → navigate
-                            if (subState.purchaseResponse != null &&
-                                subState.purchaseResponse!.status == true) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PaySuccessAndCancel(
-                                    tittle:
-                                        subState
-                                            .purchaseResponse
-                                            ?.data
-                                            .plan
-                                            .durationLabel
-                                            .toString() ??
-                                        '',
-                                    planId: planId,
-                                    startAt:
-                                        subState
-                                            .purchaseResponse
-                                            ?.data
-                                            .period
-                                            .startsAtLabel
-                                            .toString() ??
-                                        '',
-                                    endsAt:
-                                        subState
-                                            .purchaseResponse
-                                            ?.data
-                                            .period
-                                            .endsAtLabel
-                                            .toString() ??
-                                        '',
+                            String? businessProfileId;
+                            final aboutState = ref.read(
+                              aboutMeNotifierProvider,
+                            );
+                            final shops =
+                                aboutState.shopRootResponse?.data ?? const [];
+                            if (shopId.isNotEmpty) {
+                              for (final s in shops) {
+                                if ((s.shopId ?? '').trim() == shopId) {
+                                  businessProfileId =
+                                      (s.businessProfileId ?? '').trim();
+                                  break;
+                                }
+                              }
+                            }
+
+                            // EMPLOYEE must send businessProfileId. Best-effort fallback via shop details.
+                            if (role == 'EMPLOYEE' &&
+                                (businessProfileId == null ||
+                                    businessProfileId!.isEmpty)) {
+                              if (shopId.isEmpty) {
+                                showTopSnackBar(
+                                  context,
+                                  const CustomSnackBar.error(
+                                    message:
+                                        "Please select a shop and try again",
                                   ),
+                                );
+                                return;
+                              }
+
+                              final api = ref.read(apiDataSourceProvider);
+                              final shopRes = await api.getShopDetails(
+                                apiShopId: shopId,
+                              );
+                              shopRes.fold((_) {}, (resp) {
+                                businessProfileId =
+                                    (resp.data?.businessProfileId ?? '').trim();
+                              });
+                            }
+
+                            if (role == 'EMPLOYEE' &&
+                                (businessProfileId == null ||
+                                    businessProfileId!.isEmpty)) {
+                              showTopSnackBar(
+                                context,
+                                const CustomSnackBar.error(
+                                  message:
+                                      "Business profile is required for this account. Please re-login or contact support.",
                                 ),
                               );
-                              ref
-                                  .watch(subscriptionNotifier.notifier)
-                                  .getCurrentPlan();
-                            } else {
+                              return;
+                            }
+
+                            final current = ref
+                                .read(subscriptionNotifier)
+                                .currentPlanResponse;
+                            final shouldExtend =
+                                (current?.data?.isFreemium == false) &&
+                                ((current?.data?.status ?? '').toUpperCase() ==
+                                    'ACTIVE');
+
+                            final initResp = await ref
+                                .read(subscriptionNotifier.notifier)
+                                .initCcAvenue(
+                                  planId: planId,
+                                  businessProfileId: businessProfileId,
+                                  shopId: shopId.isEmpty ? null : shopId,
+                                  extend: shouldExtend,
+                                );
+
+                            if (!mounted) return;
+
+                            final initData = initResp?.data;
+                            if (initData == null ||
+                                initData.form.action.trim().isEmpty ||
+                                initData.form.fields.encRequest
+                                    .trim()
+                                    .isEmpty ||
+                                initData.form.fields.accessCode
+                                    .trim()
+                                    .isEmpty) {
+                              final st = ref.read(subscriptionNotifier);
                               showTopSnackBar(
                                 context,
                                 CustomSnackBar.error(
                                   message:
-                                      subState.error ?? "Something went wrong",
+                                      st.error ?? "Unable to start payment",
                                 ),
                               );
+                              return;
                             }
+
+                            final result = await Navigator.of(context)
+                                .push<CcAvenueCheckoutResult>(
+                                  MaterialPageRoute(
+                                    builder: (_) => CcAvenueCheckoutScreen(
+                                      initData: initData,
+                                    ),
+                                  ),
+                                );
+
+                            if (!mounted) return;
+                            if (result == null) return;
+
+                            // Best-effort confirm (if we managed to capture encResp).
+                            if (result.encResp != null &&
+                                result.encResp!.trim().isNotEmpty) {
+                              final confirm = await ref
+                                  .read(subscriptionNotifier.notifier)
+                                  .confirmCcAvenue(
+                                    encResp: result.encResp!.trim(),
+                                  );
+
+                              final paymentStatus =
+                                  (confirm?.paymentStatus ??
+                                          confirm?.data?.payment?.status ??
+                                          '')
+                                      .trim()
+                                      .toUpperCase();
+
+                              if (paymentStatus == 'SUCCESS') {
+                                final period = confirm?.data?.period;
+                                final plan = confirm?.data?.plan;
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaySuccessAndCancel(
+                                      tittle:
+                                          (plan?.durationLabel ??
+                                                  selectedPlan.type)
+                                              .toString(),
+                                      planId: planId,
+                                      startAt: (period?.startsAtLabel ?? '')
+                                          .toString(),
+                                      endsAt: (period?.endsAtLabel ?? '')
+                                          .toString(),
+                                    ),
+                                  ),
+                                );
+                              } else if (paymentStatus == 'PENDING') {
+                                showTopSnackBar(
+                                  context,
+                                  CustomSnackBar.info(
+                                    message:
+                                        confirm?.message ??
+                                        "Payment is awaiting confirmation",
+                                  ),
+                                );
+                              } else if (paymentStatus == 'CANCELLED') {
+                                await PaymentResultDialog.show(
+                                  context,
+                                  type: PaymentResultType.cancelled,
+                                  message: confirm?.message,
+                                );
+                              } else if (paymentStatus == 'FAILED') {
+                                await PaymentResultDialog.show(
+                                  context,
+                                  type: PaymentResultType.failed,
+                                  message: confirm?.message,
+                                );
+                              } else {
+                                showTopSnackBar(
+                                  context,
+                                  CustomSnackBar.error(
+                                    message:
+                                        confirm?.message ??
+                                        "Payment status unknown",
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (result.callbackReached) {
+                                showTopSnackBar(
+                                  context,
+                                  const CustomSnackBar.info(
+                                    message:
+                                        "Payment submitted. Updating your subscription…",
+                                  ),
+                                );
+                              } else if (result.cancelled) {
+                                await PaymentResultDialog.show(
+                                  context,
+                                  type: PaymentResultType.cancelled,
+                                  message: "Payment cancelled",
+                                );
+                              }
+                            }
+
+                            // Refresh subscription state from backend.
+                            await ref
+                                .read(subscriptionNotifier.notifier)
+                                .getCurrentPlan(
+                                  businessProfileId: businessProfileId,
+                                );
                           },
 
                     style: ElevatedButton.styleFrom(
@@ -379,9 +562,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                 ),
                               )
                             : Text(
-                                'Pay for Premium',
+                                'Upgrade now and get leads',
                                 style: AppTextStyles.mulish(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -398,7 +581,22 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Center(
+                  child: Text(
+                    'One customer is enough to recover your cost',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.mulish(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -431,7 +629,9 @@ void showTopSnackBar(
 }
 
 class _ComparisonCard extends StatelessWidget {
-  _ComparisonCard();
+  final List<PlanFeature> features;
+
+  const _ComparisonCard({required this.features});
 
   @override
   Widget build(BuildContext context) {
@@ -441,16 +641,35 @@ class _ComparisonCard extends StatelessWidget {
       colors: [Color(0xFF0797FD), Color(0xFF07C8FD), Color(0xFF0797FD)],
     );
 
-    // text + availability in Free
-    const features = <({String text, bool free, bool premium})>[
-      (text: 'Search engine visibility upto 5km', free: true, premium: true),
-      (text: 'Unlimited Reply in Smart Connect', free: false, premium: true),
-      (text: 'Reach your entire district', free: false, premium: true),
-      (text: 'Search engine priority', free: false, premium: true),
-      (text: 'Place 2 ads per month', free: false, premium: true),
-      (text: 'Get Trusted Batch to gain clients', free: false, premium: true),
-      (text: 'View Followers Picture', free: false, premium: true),
-    ];
+    final List<({String text, bool free, bool premium})> uiFeatures;
+    if (features.isNotEmpty) {
+      final sorted = [...features]..sort((a, b) => a.sort.compareTo(b.sort));
+      uiFeatures = sorted
+          .where((f) => f.label.trim().isNotEmpty)
+          .map(
+            (f) => (
+              text: _cleanFeatureText(f.label),
+              free: f.free,
+              premium: f.premium,
+            ),
+          )
+          .toList();
+    } else {
+      uiFeatures = const <({String text, bool free, bool premium})>[
+        (text: "Limited visibility (5 km only)", free: true, premium: false),
+        (text: "Only 3 leads per month", free: true, premium: false),
+        (text: "Miss many customers", free: true, premium: false),
+        (text: "No priority listing", free: true, premium: false),
+        (text: "Reach entire district", free: false, premium: true),
+        (text: "Reply to 10 leads daily", free: false, premium: true),
+        (text: "Get priority in search", free: false, premium: true),
+        (
+          text: "Place ads in Caller ID (100+ users/month)",
+          free: false,
+          premium: true,
+        ),
+      ];
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -471,16 +690,14 @@ class _ComparisonCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           child: Stack(
             children: [
-              // Background bands (left = cardColor shows; middle = Free; right = Premium gradient)
-              // Make backgrounds fill the card area
               Positioned.fill(
                 child: Row(
                   children: [
-                    const Expanded(flex: 2, child: Text('')),
+                    const Expanded(flex: 2, child: Text("")),
                     Expanded(
                       flex: 1,
                       child: Container(color: AppColor.textWhite),
-                    ), // Free
+                    ),
                     Expanded(
                       flex: 1,
                       child: Container(
@@ -496,24 +713,22 @@ class _ComparisonCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
-                  vertical: 16,
+                  vertical: 8,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
-                      children: [
-                        Expanded(flex: 3, child: Text('')),
-
+                      children: const [
+                        Expanded(flex: 3, child: Text("")),
                         Expanded(
                           flex: 3,
                           child: Center(
                             child: Text(
-                              'Free',
+                              "Free",
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: Colors.black,
@@ -522,10 +737,10 @@ class _ComparisonCard extends StatelessWidget {
                           ),
                         ),
                         Expanded(
-                          flex: 0,
+                          flex: 2,
                           child: Center(
                             child: Text(
-                              'Premium',
+                              "Premium",
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -535,9 +750,8 @@ class _ComparisonCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
-
-                    ...features.map(
+                    const SizedBox(height: 8),
+                    ...uiFeatures.map(
                       (f) => Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -547,27 +761,25 @@ class _ComparisonCard extends StatelessWidget {
                               f.text,
                               style: AppTextStyles.mulish(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: AppColor.darkBlue,
                               ),
                             ),
                           ),
-
                           Expanded(
                             flex: 3,
                             child: Center(
                               child: f.free
                                   ? star(color: AppColor.skyBlue)
-                                  : SizedBox.shrink(),
+                                  : const SizedBox.shrink(),
                             ),
                           ),
-
                           Expanded(
                             flex: 2,
                             child: Center(
                               child: f.premium
                                   ? star(color: AppColor.white)
-                                  : SizedBox.shrink(),
+                                  : const SizedBox.shrink(),
                             ),
                           ),
                         ],
@@ -584,6 +796,20 @@ class _ComparisonCard extends StatelessWidget {
   }
 }
 
+String _cleanFeatureText(String input) {
+  var s = input.trim();
+  if (s.isEmpty) return s;
+
+  // Remove leading bullets/symbols
+  s = s.replaceFirst(RegExp(r'^[\u2022Ã¢â‚¬Â¢\-Ã¢â‚¬â€œÃ¢â‚¬â€\*]+\s*'), '');
+
+  // Remove leading list markers like "1.", "1)", "a.", "a,", "1 -"
+  s = s.replaceFirst(RegExp(r'^([0-9]{1,3}|[a-zA-Z])\s*[\)\.\-:,]\s*'), '');
+  s = s.replaceFirst(RegExp(r'^([0-9]{1,3}|[a-zA-Z])\s+\)\s*'), '');
+
+  return s.trim();
+}
+
 Widget star({Color? color = AppColor.white}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -598,23 +824,29 @@ class _BillingOptions extends StatelessWidget {
     required this.type,
     required this.onChanged,
     required this.price,
+    required this.isBestValue,
   });
 
-  final int index; // ✅ current item index
-  final int selectedIndex; // ✅ selected index in parent
+  final int index; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ current item index
+  final int
+  selectedIndex; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ selected index in parent
   final ValueChanged<int> onChanged;
 
   final String type;
   final String price;
+  final bool isBestValue;
 
   @override
   Widget build(BuildContext context) {
     return _BillingChip(
-      labelTop: '₹ $price',
+      labelTop: '\u20B9$price',
       labelBottom: type,
-      selected: selectedIndex == index, // ✅ compare with index
-      onTap: () => onChanged(index), // ✅ send index
-      highlight: index == 0, // optional
+      selected:
+          selectedIndex ==
+          index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compare with index
+      onTap: () =>
+          onChanged(index), // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ send index
+      highlight: isBestValue,
     );
   }
 }
@@ -643,44 +875,170 @@ class _BillingChip extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 25),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: border, width: 2),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          SizedBox(
+            width: 145,
+            height: 66,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFF0797FD)
+                      : const Color(0xFFE5E7EB),
+                  width: selected ? 3 : 2,
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(top: highlight ? 12 : 0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      labelTop,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: selected
+                            ? const Color(0xFF0797FD)
+                            : AppColor.black,
+                        fontSize: 19,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      labelBottom,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.mulish(
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: selected ? AppColor.black : AppColor.gray84,
+                        fontSize: 11,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (highlight)
+            Positioned(
+              top: 4,
+              right: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.local_fire_department_rounded,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      'Best Value',
+                      style: AppTextStyles.mulish(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UpgradeNoticeCard extends StatelessWidget {
+  const _UpgradeNoticeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFE7C7), Color(0xFFFFF3E3)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFF59E0B),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  labelTop,
-                  style: TextStyle(
+                  "Don't miss customers",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.mulish(
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: selected ? const Color(0xff0797FD) : AppColor.black,
-                    fontSize: 18,
+                    color: Colors.red,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    style: AppTextStyles.mulish(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black,
+                    ),
+                    children: const [
+                      TextSpan(text: 'Customers choose vendors '),
+                      TextSpan(
+                        text: 'who reply first',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      TextSpan(text: '.\n'),
+                      TextSpan(
+                        text: 'Upgrade now and stay ahead of competitors.',
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              labelBottom,
-
-              style: AppTextStyles.mulish(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                color: selected ? AppColor.darkBlue : AppColor.gray84,
-              ),
-              // style: TextStyle(
-              //   fontSize: 12,
-              //   color: selected ? AppColor.darkBlue : AppColor.gray84,
-              // ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -723,7 +1081,7 @@ class _BillingChip extends StatelessWidget {
 //               ),
 //                SizedBox(height: 10),
 //               Text(
-//                 "Unlock the Tringo’s",
+//                 "Unlock the TringoÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢s",
 //                 style: AppTextStyles.mulish(fontSize: 22),
 //               ),
 //               Text(

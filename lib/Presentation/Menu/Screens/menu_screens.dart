@@ -14,9 +14,11 @@ import 'package:tringo_owner/Presentation/Menu/Screens/qr_code_screen.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/subscription_history.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart';
 import 'package:tringo_owner/Presentation/Wallet/Screens/wallet_screens.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Session/session_manager.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
@@ -81,6 +83,15 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     const PrivacyPolicy(),
     const WalletScreens(),
   ];
+  Future<void> _openPrivacyPolicy() async {
+    final Uri url = Uri.parse('https://bknd.tringobiz.com/privacy-policy.html');
+
+    final launched = await launchUrl(url, mode: LaunchMode.inAppWebView);
+
+    if (!launched && mounted) {
+      AppSnackBar.error(context, 'Could not open privacy policy');
+    }
+  }
 
   Future<bool> _confirmDeleteAccount(BuildContext context) async {
     final result = await showDialog<bool>(
@@ -306,12 +317,17 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                               '${planData?.plan.durationLabel} Premium Activated',
                           description: '${time} @ ${date}',
                           onTap: () {
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => SubscriptionScreen(),
-                            //   ),
-                            // );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SubscriptionHistory(
+                                  fromDate:
+                                      planData?.period.startsAtLabel ?? '',
+                                  titlePlan: planData?.plan.durationLabel ?? '',
+                                  toDate: planData?.period.endsAtLabel ?? '',
+                                ),
+                              ),
+                            );
                           },
                         )
                       : CommonContainer.attractCustomerCard(
@@ -387,16 +403,18 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                             ),
                           );
                           break;
-
-                        case 9: // ✅ Privacy Policy
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const PrivacyPolicy(showAcceptReject: false),
-                            ),
-                          );
+                        case 9: // Privacy Policy
+                          await _openPrivacyPolicy();
                           break;
+                        // case 9: // ✅ Privacy Policy
+                        //   Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (_) =>
+                        //           const PrivacyPolicy(showAcceptReject: false),
+                        //     ),
+                        //   );
+                        //   break;
 
                         default:
                           Navigator.push(
@@ -825,15 +843,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                     );
 
                     if (shouldLogout ?? false) {
-                      final prefs = await SharedPreferences.getInstance();
-                      // prefs.remove('token');
-                      // prefs.remove('isProfileCompleted');
-                      // prefs.remove('isNewOwner');
-                      await prefs.clear();
-
-                      // Then navigate
-                      context.goNamed(AppRoutes.login);
-                      // or: context.go(AppRoutes.loginPath);
+                      await SessionManager.forceLogout();
                     }
                   },
                   text: Text(

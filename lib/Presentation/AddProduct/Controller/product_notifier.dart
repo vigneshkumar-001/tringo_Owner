@@ -6,12 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Presentation/AddProduct/Model/product_response.dart';
 import '../../../Api/DataSource/api_data_source.dart';
-import '../../../Api/Repository/failure.dart';
-import '../../AboutMe/Model/service_edit_response.dart';
-import '../../AboutMe/Model/service_remove_response.dart';
+import 'package:tringo_owner/Presentation/AboutMe/Model/service_edit_response.dart';
+import 'package:tringo_owner/Presentation/AboutMe/Model/service_remove_response.dart';
 import '../../Login/controller/login_notifier.dart';
-import '../../ShopInfo/model/shop_category_list_response.dart';
-import '../Model/delete_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
+import 'package:tringo_owner/Presentation/AddProduct/Model/delete_response.dart';
 
 class ProductState {
   final bool isLoading;
@@ -151,11 +150,13 @@ class ProductNotifier extends Notifier<ProductState> {
 
   Future<bool> uploadProductImages({
     required List<File?> images,
+    required List<String> existingImageUrls,
     required List<Map<String, String>> features,
     required BuildContext context,
   }) async {
     // ---- VALIDATION ----
-    if (images.isEmpty || images.every((f) => f == null)) {
+    final hasExistingImages = existingImageUrls.any((e) => e.trim().isNotEmpty);
+    if ((images.isEmpty || images.every((f) => f == null)) && !hasExistingImages) {
       state = const ProductState(
         isLoading: false,
         error: "Please select at least 1 image",
@@ -166,7 +167,9 @@ class ProductNotifier extends Notifier<ProductState> {
     state = const ProductState(isLoading: true);
 
     // ---- STEP 1: UPLOAD IMAGES ONE BY ONE ----
-    List<String> uploadedUrls = [];
+    List<String> uploadedUrls = existingImageUrls
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
 
     for (final file in images) {
       if (file == null) continue;
@@ -300,3 +303,5 @@ class ProductNotifier extends Notifier<ProductState> {
 final productNotifierProvider = NotifierProvider<ProductNotifier, ProductState>(
   ProductNotifier.new,
 );
+
+

@@ -62,7 +62,8 @@ class OwnerData {
       identityDocumentUrl: json['identityDocumentUrl'],
       ownerNameTamil: json['ownerNameTamil'],
       user: User.fromJson(json['user']),
-      onboardingStatus: json['onboardingStatus'],
+      onboardingStatus:
+          (json['onboardingStep'] ?? json['onboardingStatus'] ?? '').toString(),
     );
   }
 

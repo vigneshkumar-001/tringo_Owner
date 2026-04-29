@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import '../../../Api/DataSource/api_data_source.dart';
 import '../../../Api/Repository/failure.dart';
 import '../../Login/controller/login_notifier.dart';
-import '../model/owner_info_response.dart';
+import 'package:tringo_owner/Presentation/Register/model/owner_info_response.dart';
 
 class OwnerInfoState {
   final bool isLoading;
@@ -57,10 +59,15 @@ class OwnerInfoNotifier extends Notifier<OwnerInfoState> {
     );
 
     result.fold(
-      (Failure failure) =>
-          state = OwnerInfoState(isLoading: false, error: failure.message),
-      (response) =>
-          state = OwnerInfoState(isLoading: false, ownerResponse: response),
+      (Failure failure) {
+        state = OwnerInfoState(isLoading: false, error: failure.message);
+      },
+      (response) {
+        // Update state synchronously so UI can react immediately after awaiting
+        // submitOwnerInfo(). Persist side-effects in background.
+        state = OwnerInfoState(isLoading: false, ownerResponse: response);
+        unawaited(AppPrefs.setOnboardingStep(response.data?.onboardingStatus));
+      },
     );
   }
 

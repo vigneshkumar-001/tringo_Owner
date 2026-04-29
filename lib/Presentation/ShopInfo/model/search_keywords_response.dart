@@ -257,7 +257,8 @@ class BusinessProfile {
         identityDocumentUrl: json['identityDocumentUrl'] as String?,
         ownerNameTamil: json['ownerNameTamil'] as String?,
         user: User.fromJson(json['user'] as Map<String, dynamic>),
-        onboardingStatus: json['onboardingStatus'] as String,
+        onboardingStatus: (json['onboardingStep'] ?? json['onboardingStatus'])
+            .toString(),
       );
 
   Map<String, dynamic> toJson() => {

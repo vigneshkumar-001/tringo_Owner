@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:image_picker/image_picker.dart';
 
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
@@ -17,6 +15,7 @@ import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/Controller/shop_notifier.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/Screens/shop_photo_info.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/Screens/search_keyword.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -24,13 +23,10 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
-import '../../../Core/Utility/location_helper.dart';
 import '../../../Core/Utility/map_picker_page.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
 import '../../../Core/Widgets/owner_verify_feild.dart';
 import '../../AboutMe/Controller/about_me_notifier.dart';
-import '../../AboutMe/Screens/about_me_screens.dart';
-import '../../Create App Offer/Screens/create_app_offer.dart';
 
 class GpsInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -108,6 +104,9 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final bool isEditMode;
   final bool? isIndividual;
 
+  /// Existing shop images (used by AboutMe edit flow)
+  final List<String?>? initialImageUrls;
+
   // 👉 new fields for prefill when editing
   final String? initialDescriptionEnglish;
   final String? initialDescriptionTamil;
@@ -117,6 +116,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialPrimaryMobile;
   final String? initialWhatsapp;
   final String? initialEmail;
+  final String? initialShopUpiId;
   final String? initialCategoryName;
   final String? initialCategorySlug;
   final String? initialSubCategoryName;
@@ -125,6 +125,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
   final String? initialOpenTimeText;
   final String? initialCloseTimeText;
   final String? initialOwnerImageUrl;
+  final List<String> initialShopKeywords;
 
   const ShopCategoryInfo({
     super.key,
@@ -135,6 +136,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     required this.isEditMode,
     required this.isService,
     required this.isIndividual,
+    this.initialImageUrls,
     this.initialDescriptionEnglish,
     this.initialDescriptionTamil,
     this.initialAddressEnglish,
@@ -143,6 +145,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialPrimaryMobile,
     this.initialWhatsapp,
     this.initialEmail,
+    this.initialShopUpiId,
     this.initialCategoryName,
     this.initialCategorySlug,
     this.initialSubCategoryName,
@@ -151,6 +154,7 @@ class ShopCategoryInfo extends ConsumerStatefulWidget {
     this.initialOpenTimeText,
     this.initialCloseTimeText,
     this.initialOwnerImageUrl,
+    this.initialShopKeywords = const [],
   });
 
   @override
@@ -172,6 +176,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
   final TextEditingController _gpsController = TextEditingController();
   final TextEditingController _whatsappController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _upiIdController = TextEditingController();
 
   final TextEditingController addressTamilNameController =
       TextEditingController();
@@ -185,6 +190,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       TextEditingController();
   final TextEditingController _primaryMobileController =
       TextEditingController();
+  String _initialPrimaryPhone10 = '';
 
   final List<String> categories = ['Electronics', 'Clothing', 'Groceries'];
   final List<String> doorDelivery = ['Yes', 'No'];
@@ -251,83 +257,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     return '+91$ten';
   }
 
-  Future<void> _openGoogleMapsFromGpsField() async {
-    try {
-      // 1) Try from existing text (lat,lng)
-      double? lat;
-      double? lng;
-
-      final t = _gpsController.text.trim();
-      final parts = t.split(',');
-      if (parts.length == 2) {
-        lat = double.tryParse(parts[0].trim());
-        lng = double.tryParse(parts[1].trim());
-      }
-
-      // 2) If not available, get current location
-      if (lat == null || lng == null) {
-        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (!serviceEnabled) {
-          AppSnackBar.info(context, 'Turn on Location.');
-          // ScaffoldMessenger.of(context).
-          // showSnackBar(
-          //   const SnackBar(content: Text('Turn on Location.')),
-          // );
-          return;
-        }
-
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-        }
-        if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission denied.')),
-          );
-          return;
-        }
-        if (permission == LocationPermission.deniedForever) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location permissions are permanently denied.'),
-            ),
-          );
-          return;
-        }
-
-        final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-        lat = pos.latitude;
-        lng = pos.longitude;
-
-        // Optional: field-la update pannalam
-        setState(() {
-          _gpsController.text =
-              '${lat!.toStringAsFixed(6)}, ${lng!.toStringAsFixed(6)}';
-          _gpsFetched = true;
-        });
-      }
-
-      // 3) Launch Google Maps app
-      final uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
-      );
-
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open Google Maps')),
-        );
-      }
-    } catch (e) {
-      debugPrint('❌ Google Maps open error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to open Google Maps')),
-      );
-    }
-  }
-
   TimeOfDay? _parseTimeOfDay(String input) {
     try {
       final parts = input.trim().split(' ');
@@ -345,318 +274,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     } catch (_) {
       return null;
     }
-  }
-
-  Future<void> _openGoogleSearchBottomSheet() async {
-    final picked = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-      enableDrag: true,
-      builder: (ctx) {
-        final TextEditingController q = TextEditingController();
-        bool loading = false;
-        List<Map<String, dynamic>> results = [];
-
-        Future<void> doSearch(
-          String text,
-          void Function(void Function()) setSheetState,
-        ) async {
-          final query = text.trim();
-          if (query.isEmpty) {
-            setSheetState(() => results = []);
-            return;
-          }
-
-          setSheetState(() => loading = true);
-          try {
-            final r = await LocationHelper.searchPlaces(
-              query,
-              radiusMeters: 10000,
-            );
-            setSheetState(() => results = r);
-          } finally {
-            setSheetState(() => loading = false);
-          }
-        }
-
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.8,
-              minChildSize: 0.4,
-              maxChildSize: 0.95,
-              expand: false,
-              snap: true,
-              snapSizes: const [0.4, 0.6, 0.95],
-              builder: (context, scrollController) {
-                final size = MediaQuery.of(context).size;
-                final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
-                // Adjust sizing for tablets/large screens
-                final isTablet = size.shortestSide >= 600;
-                final horizontalPadding = isTablet ? 24.0 : 16.0;
-
-                return AnimatedPadding(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.only(bottom: bottomInset),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: isTablet ? 600 : double.infinity,
-                    ),
-                    margin: isTablet
-                        ? EdgeInsets.symmetric(
-                            horizontal: (size.width - 600) / 2,
-                          )
-                        : EdgeInsets.zero,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Drag handle
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12, bottom: 8),
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-
-                        // Header with title
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Search Location',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () => Navigator.pop(ctx),
-                                tooltip: 'Close',
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Search field
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                            vertical: 8,
-                          ),
-                          child: TextField(
-                            controller: q,
-                            autofocus: true,
-                            textInputAction: TextInputAction.search,
-                            decoration: InputDecoration(
-                              hintText: 'Search for a place...',
-                              prefixIcon: const Icon(Icons.search, size: 22),
-                              suffixIcon: loading
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(14),
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                        ),
-                                      ),
-                                    )
-                                  : q.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear, size: 20),
-                                      onPressed: () {
-                                        q.clear();
-                                        setSheetState(() => results = []);
-                                      },
-                                      tooltip: 'Clear',
-                                    )
-                                  : null,
-                              filled: true,
-                              fillColor: Colors.grey.shade100,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Theme.of(context).primaryColor,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                            ),
-                            onChanged: (v) {
-                              setSheetState(() {});
-                              doSearch(v, setSheetState);
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        // Results list
-                        Flexible(
-                          child: results.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(32),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          loading
-                                              ? Icons.search
-                                              : Icons.location_on_outlined,
-                                          size: 48,
-                                          color: Colors.grey.shade400,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          loading
-                                              ? 'Searching...'
-                                              : 'Type to search for places',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : ListView.separated(
-                                  controller: scrollController,
-                                  padding: EdgeInsets.only(
-                                    left: horizontalPadding,
-                                    right: horizontalPadding,
-                                    bottom:
-                                        16 +
-                                        MediaQuery.of(context).padding.bottom,
-                                  ),
-                                  itemCount: results.length,
-                                  separatorBuilder: (_, __) =>
-                                      const Divider(height: 1, indent: 16),
-                                  itemBuilder: (_, i) {
-                                    final r = results[i];
-                                    final lat = r['lat'];
-                                    final lng = r['lng'];
-                                    final distM =
-                                        r['distanceMeters'] as double?;
-                                    final distKm = distM == null
-                                        ? ''
-                                        : '${(distM / 1000).toStringAsFixed(1)} km away';
-
-                                    return ListTile(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 0,
-                                            vertical: 8,
-                                          ),
-                                      leading: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(
-                                            context,
-                                          ).primaryColor.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.place,
-                                          color: Theme.of(context).primaryColor,
-                                          size: 22,
-                                        ),
-                                      ),
-                                      title: Text(
-                                        (r['description'] ?? '').toString(),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      subtitle: distKm.isNotEmpty
-                                          ? Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 4,
-                                              ),
-                                              child: Text(
-                                                distKm,
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                      trailing: const Icon(
-                                        Icons.arrow_forward_ios,
-                                        size: 16,
-                                      ),
-                                      onTap: () => Navigator.pop(ctx, r),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-
-    if (picked == null) return;
-
-    final lat = (picked['lat'] as num).toDouble();
-    final lng = (picked['lng'] as num).toDouble();
-    final desc = (picked['description'] ?? '').toString();
-
-    setState(() {
-      _gpsController.text =
-          '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
-      _gpsFetched = true;
-    });
-
-    AppLogger.log.i('✅ Selected place: $desc');
-    AppLogger.log.i('✅ LatLng: $lat, $lng');
   }
 
   void _showCategoryBottomSheet(
@@ -810,6 +427,11 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                           _subCategoryErrorText = null;
                                         });
 
+                                        // Persist selected slug for keyword suggestions screen
+                                        AppPrefs.setShopCategorySlug(
+                                          category.slug,
+                                        );
+
                                         if (onCategorySelected != null) {
                                           onCategorySelected(category);
                                         }
@@ -845,154 +467,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     }
   }
 
-  void _showCategoryChildrenBottomSheet(
-    BuildContext context,
-    List<ShopCategoryListData> children,
-    TextEditingController controller,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        final searchController = TextEditingController();
-        List<ShopCategoryListData> filtered = List.from(children);
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.6,
-              minChildSize: 0.4,
-              maxChildSize: 0.9,
-              builder: (context, scrollController) {
-                return Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      child: SizedBox(
-                        width: 40,
-                        height: 4,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.grey,
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Select Subcategory',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // 🔹 Search field with no underline
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: TextField(
-                        controller: searchController,
-                        onChanged: (value) {
-                          setModalState(() {
-                            filtered = children
-                                .where(
-                                  (c) => c.name.toLowerCase().contains(
-                                    value.toLowerCase(),
-                                  ),
-                                )
-                                .toList();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search subcategory...',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none, // ❌ No divider
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No subcategories found',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: scrollController,
-                              itemCount: filtered.length,
-                              itemBuilder: (context, index) {
-                                final child = filtered[index];
-                                return ListTile(
-                                  title: Text(child.name),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    setState(() {
-                                      controller.text = child.name;
-                                      subCategorySlug = child.slug;
-                                      _subCategoryErrorText = null;
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
   XFile? _permanentImage;
   bool _hasExistingOwnerImage = false;
   String? _existingUrl;
   File? _pickedImage;
   bool _imageInvalid = false;
 
-  // Future<void> _pickImage(ImageSource source) async {
-  //   final pickedFile = await _picker.pickImage(
-  //     source: source,
-  //     imageQuality: 85,
-  //   );
-  //
-  //   if (pickedFile == null) return;
-  //
-  //   setState(() {
-  //     _pickedImage = File(pickedFile.path);
-  //     _existingUrl = null; // clear server image
-  //     _imageInvalid = false;
-  //     _imageErrorText = null;
-  //   });
-  // }
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(
       source: source,
@@ -1046,109 +526,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     );
   }
 
-  // Future<void> _showImageSourcePicker() async {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     shape: const RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-  //     ),
-  //     builder: (_) {
-  //       return SafeArea(
-  //         child: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             ListTile(
-  //               leading: const Icon(Icons.camera_alt),
-  //               title: const Text('Camera'),
-  //               onTap: () {
-  //                 Navigator.pop(context);
-  //                 _pickImage(ImageSource.camera);
-  //               },
-  //             ),
-  //             ListTile(
-  //               leading: const Icon(Icons.photo_library),
-  //               title: const Text('Gallery'),
-  //               onTap: () {
-  //                 Navigator.pop(context);
-  //                 _pickImage(ImageSource.gallery);
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
-  Widget _buildImageWidget() {
-    if (_pickedImage != null) {
-      return Row(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(_pickedImage!, height: 140, fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () {
-              setState(() {
-                _pickedImage = null;
-                _imageInvalid = true;
-                _imageErrorText = 'Please upload image';
-              });
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  AppImages.closeImage,
-                  height: 26,
-                  color: AppColor.mediumGray,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Clear',
-                  style: AppTextStyles.mulish(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: AppColor.mediumLightGray,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (_existingUrl != null && _existingUrl!.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: CachedNetworkImage(imageUrl: _existingUrl!, fit: BoxFit.cover),
-      );
-    }
-
-    return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(AppImages.uploadImage, height: 30),
-          const SizedBox(width: 10),
-          Text(
-            'Upload',
-            style: AppTextStyles.mulish(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColor.mediumLightGray,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   TimeOfDay? _openTod;
   TimeOfDay? _closeTod;
   int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
@@ -1157,67 +534,38 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     return _toMinutes(_closeTod!) > _toMinutes(_openTod!);
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location services are disabled.')),
-        );
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission denied.')),
-          );
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location permissions are permanently denied.'),
-          ),
-        );
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      setState(() {
-        _gpsController.text =
-            '${position.latitude.toStringAsFixed(6)}, '
-            '${position.longitude.toStringAsFixed(6)}';
-        _gpsFetched = true; // Mark GPS as fetched
-      });
-
-      if (_isSubmitted) {
-        _formKey.currentState?.validate();
-      }
-
-      debugPrint('📍 Current Location → ${_gpsController.text}');
-    } catch (e) {
-      debugPrint('❌ Error getting location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to get current location.')),
-      );
-    }
-  }
-
+  bool _whatsappAutoFilledFromPrimary = false;
   @override
   void initState() {
     super.initState();
     AppLogger.log.i(widget.shopId);
     AppLogger.log.i(widget.isService);
+    ref.listenManual(shopCategoryNotifierProvider, (previous, next) {
+      final response = next.shopNumberOtpResponse;
+
+      if (response?.data?.verified == true &&
+          response?.data?.hasWhatsapp == true &&
+          response?.data?.type == 'SHOP_PRIMARY_PHONE') {
+        final normalizedPhone = _normalizeIndianPhone10(
+          response?.data?.phoneNumber ?? _primaryMobileController.text,
+        );
+
+        if (mounted) {
+          setState(() {
+            _whatsappController.text = normalizedPhone;
+            _whatsappAutoFilledFromPrimary = true;
+          });
+        }
+      }
+    });
+
+    final bool isServiceFlow = widget.isService ?? false;
+    // final String typeText = isServiceFlow ? 'service' : 'product';
+    final String typeText = 'category';
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(shopCategoryNotifierProvider.notifier).fetchCategories();
+      ref
+          .read(shopCategoryNotifierProvider.notifier)
+          .fetchCategories(type: typeText);
       final extra = GoRouterState.of(context).extra as Map<String, dynamic>;
       final parentShopId = extra['parentShopId'] as String?;
 
@@ -1272,6 +620,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       var phone = widget.initialPrimaryMobile!.trim();
       phone = _stripIndianCode(phone);
       _primaryMobileController.text = phone;
+      _initialPrimaryPhone10 = _normalizeIndianPhone10(phone);
     }
 
     if (widget.initialWhatsapp?.isNotEmpty ?? false) {
@@ -1285,10 +634,17 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       _emailController.text = widget.initialEmail!;
     }
 
+    if (widget.initialShopUpiId?.isNotEmpty ?? false) {
+      _upiIdController.text = widget.initialShopUpiId!;
+    }
+
     // 👉 category / subcategory
     if (widget.initialCategoryName?.isNotEmpty ?? false) {
       _categoryController.text = widget.initialCategoryName!;
       categorySlug = widget.initialCategorySlug ?? '';
+      if (categorySlug.trim().isNotEmpty) {
+        AppPrefs.setShopCategorySlug(categorySlug);
+      }
     }
     if (widget.initialSubCategoryName?.isNotEmpty ?? false) {
       _subCategoryController.text = widget.initialSubCategoryName!;
@@ -1374,11 +730,20 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     _primaryMobileController.dispose();
     _whatsappController.dispose();
     _emailController.dispose();
+    _upiIdController.dispose();
     _subCategoryController.dispose();
     super.dispose();
   }
 
   // 🔹 Central validation function
+  bool _isValidUpiId(String value) {
+    final v = value.trim();
+    if (v.isEmpty) return false;
+    if (v.contains(' ')) return false;
+    // Basic UPI format: local@handle (examples: name@okicici, 9876543210@ybl)
+    return RegExp(r'^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9._-]{2,}$').hasMatch(v);
+  }
+
   bool _validateAll() {
     final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
     if (isEditFromAboutMe) {
@@ -1411,66 +776,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     return allGood;
   }
 
-  // bool _validateAll() {
-  //   setState(() {
-  //     _isSubmitted = true;
-  //     _categoryErrorText = null;
-  //     _subCategoryErrorText = null;
-  //     _timeErrorText = null;
-  //     _imageErrorText = null;
-  //     _timetableInvalid = false;
-  //     _gpsErrorText = null;
-  //   });
-  //
-  //   final baseValid = _formKey.currentState?.validate() ?? false;
-  //   bool extraValid = true;
-  //
-  //   // Category
-  //   if (_categoryController.text.trim().isEmpty) {
-  //     _categoryErrorText = 'Please select a category';
-  //     extraValid = false;
-  //   }
-  //
-  //   // Subcategory
-  //   if (_subCategoryController.text.trim().isEmpty) {
-  //     _subCategoryErrorText = 'Please select a subcategory';
-  //     extraValid = false;
-  //   }
-  //
-  //   // Time order
-  //   if (_openTod != null && _closeTod != null && !validateTimes()) {
-  //     _timeErrorText = 'Close Time must be after Open Time';
-  //     extraValid = false;
-  //   }
-  //
-  //   // Image validation for service
-  //   if (widget.isService == true && _permanentImage == null) {
-  //     _imageErrorText = 'Please add your Photo';
-  //     _timetableInvalid = true;
-  //     extraValid = false;
-  //   }
-  //
-  //   if (widget.isService != true) {
-  //     if (_gpsController.text.trim().isEmpty) {
-  //       _gpsErrorText = 'Please get GPS location';
-  //       extraValid = false;
-  //     }
-  //   }
-  //
-  //   final allGood = baseValid && extraValid;
-  //
-  //   if (!allGood) {
-  //     AppSnackBar.error(context, 'Please fill all required fields correctly');
-  //   }
-  //
-  //   setState(() {});
-  //   return allGood;
-  // }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopCategoryNotifierProvider);
     final bool isServiceFlow = widget.isService ?? false;
+    // final String typeText = isServiceFlow ? 'service' : 'product';
+    final String typeText = 'category';
     final bool isIndividualFlow = widget.isIndividual ?? true;
     final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
     return Scaffold(
@@ -1573,7 +884,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           // 1️⃣ Start API call – this will set isLoading = true
                           ref
                               .read(shopCategoryNotifierProvider.notifier)
-                              .fetchCategories();
+                              .fetchCategories(type: typeText);
 
                           // 2️⃣ Open bottom sheet immediately
                           _showCategoryBottomSheet(
@@ -1636,128 +947,67 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                       const SizedBox(height: 10),
 
-                      GestureDetector(
-                        onTap: () {
-                          if (_categoryController.text.isEmpty ||
-                              _selectedCategoryChildren == null) {
-                            AppSnackBar.info(
-                              context,
-                              'Please select a category first',
-                            );
-                            return;
-                          }
-                          _showCategoryChildrenBottomSheet(
-                            context,
-                            _selectedCategoryChildren!,
-                            _subCategoryController,
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 19,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColor.lightGray,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _subCategoryController.text.isEmpty
-                                        ? " "
-                                        : _subCategoryController.text,
-                                    style: AppTextStyles.mulish(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 18,
-                                      color: _subCategoryController.text.isEmpty
-                                          ? Colors.grey
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                Image.asset(AppImages.downArrow, height: 30),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_subCategoryErrorText != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6.0, left: 4),
-                          child: Text(
-                            _subCategoryErrorText!,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-
-                      // const SizedBox(height: 15),
-                      // CommonContainer.fillingContainer(
-                      //   controller: tamilNameController,
-                      //   text: 'Tamil',
-                      //   isTamil: true,
-                      //   validator: (v) => (v == null || v.isEmpty)
-                      //       ? 'Please Enter Shop Name in Tamil'
-                      //       : null,
-                      //   onChanged: (value) async {
-                      //     // your existing suggestion logic can remain
-                      //     setState(() => isTamilNameLoading = true);
-                      //     final result =
-                      //         await TanglishTamilHelper.transliterate(value);
-                      //     setState(() {
-                      //       tamilNameSuggestion = result;
-                      //       isTamilNameLoading = false;
-                      //       _tamilPrefilled =
-                      //           true; // user started typing; stop auto-updates
-                      //     });
+                      //
+                      // GestureDetector(
+                      //   onTap: () {
+                      //     if (_categoryController.text.isEmpty ||
+                      //         _selectedCategoryChildren == null) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'Please select a category first',
+                      //       );
+                      //       return;
+                      //     }
+                      //     _showCategoryChildrenBottomSheet(
+                      //       context,
+                      //       _selectedCategoryChildren!,
+                      //       _subCategoryController,
+                      //     );
                       //   },
-                      // ),
-                      // if (isTamilNameLoading)
-                      //   const Padding(
-                      //     padding: EdgeInsets.all(8.0),
-                      //     child: CircularProgressIndicator(strokeWidth: 2),
-                      //   ),
-                      // if (isTamilNameLoading)
-                      //   const Padding(
-                      //     padding: EdgeInsets.all(8.0),
-                      //     child: CircularProgressIndicator(strokeWidth: 2),
-                      //   ),
-                      // if (tamilNameSuggestion.isNotEmpty)
-                      //   Container(
-                      //     margin: const EdgeInsets.only(top: 4),
-                      //     constraints: const BoxConstraints(maxHeight: 150),
-                      //     decoration: BoxDecoration(
-                      //       color: Colors.white,
-                      //       borderRadius: BorderRadius.circular(15),
-                      //       border: Border.all(color: Colors.grey),
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(
+                      //       horizontal: 12,
+                      //       vertical: 19,
                       //     ),
-                      //     child: ListView.builder(
-                      //       shrinkWrap: true,
-                      //       itemCount: tamilNameSuggestion.length,
-                      //       itemBuilder: (context, index) {
-                      //         final suggestion = tamilNameSuggestion[index];
-                      //         return ListTile(
-                      //           title: Text(suggestion),
-                      //           onTap: () {
-                      //             print("Selected suggestion: $suggestion");
-                      //             TanglishTamilHelper.applySuggestion(
-                      //               controller: tamilNameController,
-                      //               suggestion: suggestion,
-                      //               onSuggestionApplied: () {
-                      //                 setState(() => tamilNameSuggestion = []);
-                      //               },
-                      //             );
-                      //           },
-                      //         );
-                      //       },
+                      //     decoration: BoxDecoration(
+                      //       color: AppColor.lightGray,
+                      //       borderRadius: BorderRadius.circular(20),
+                      //     ),
+                      //     child: Padding(
+                      //       padding: const EdgeInsets.symmetric(
+                      //         horizontal: 8.0,
+                      //       ),
+                      //       child: Row(
+                      //         children: [
+                      //           Expanded(
+                      //             child: Text(
+                      //               _subCategoryController.text.isEmpty
+                      //                   ? " "
+                      //                   : _subCategoryController.text,
+                      //               style: AppTextStyles.mulish(
+                      //                 fontWeight: FontWeight.w700,
+                      //                 fontSize: 18,
+                      //                 color: _subCategoryController.text.isEmpty
+                      //                     ? Colors.grey
+                      //                     : Colors.black,
+                      //               ),
+                      //             ),
+                      //           ),
+                      //           Image.asset(AppImages.downArrow, height: 30),
+                      //         ],
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                      // if (_subCategoryErrorText != null)
+                      //   Padding(
+                      //     padding: const EdgeInsets.only(top: 6.0, left: 4),
+                      //     child: Text(
+                      //       _subCategoryErrorText!,
+                      //       style: const TextStyle(
+                      //         color: Colors.red,
+                      //         fontSize: 12,
+                      //       ),
                       //     ),
                       //   ),
                       const SizedBox(height: 25),
@@ -1917,10 +1167,24 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         onMapTap: () async {
                           setState(() => _isFetchingGps = true);
 
+                          double? initialLat;
+                          double? initialLng;
+                          final gpsText = _gpsController.text.trim();
+                          if (gpsText.isNotEmpty && gpsText.contains(',')) {
+                            final parts = gpsText.split(',');
+                            if (parts.length >= 2) {
+                              initialLat = double.tryParse(parts[0].trim());
+                              initialLng = double.tryParse(parts[1].trim());
+                            }
+                          }
+
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const GoogleLocationPickerScreen(),
+                              builder: (_) => GoogleLocationPickerScreen(
+                                initialLat: initialLat,
+                                initialLng: initialLng,
+                              ),
                             ),
                           );
 
@@ -1933,6 +1197,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
 
                             _gpsController.text =
                                 '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+                            _gpsFetched = true;
 
                             debugPrint('LAT: $lat');
                             debugPrint('LNG: $lng');
@@ -2015,6 +1280,12 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                       ),
                       const SizedBox(height: 10),
                       if (isEditFromAboutMe) ...[
+                        // onChanged: (value) {
+                        //   if (_whatsappAutoFilledFromPrimary) {
+                        //     _whatsappController.clear();
+                        //     _whatsappAutoFilledFromPrimary = false;
+                        //   }
+                        // },
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 400),
                           transitionBuilder: (child, animation) =>
@@ -2023,6 +1294,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             controller: _primaryMobileController,
                             isLoading: state.isSendingOtp,
                             isOtpVerifying: state.isVerifyingOtp,
+                            otpErrorText: state.error,
+
                             onSendOtp: (mobile) {
                               final phone10 = _normalizeIndianPhone10(mobile);
                               return ref
@@ -2062,6 +1335,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             controller: _primaryMobileController,
                             isLoading: state.isSendingOtp,
                             isOtpVerifying: state.isVerifyingOtp,
+                            otpErrorText: state.error,
                             onSendOtp: (mobile) {
                               final phone10 = _normalizeIndianPhone10(mobile);
                               return ref
@@ -2083,29 +1357,8 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             },
                           ),
                         ),
-                        // CommonContainer.fillingContainer(
-                        //   controller: _primaryMobileController,
-                        //   verticalDivider: true,
-                        //   isMobile: true, // mobile behavior +91 etc
-                        //   text: 'Mobile No',
-                        //   keyboardType: TextInputType.phone,
-                        //   validator: (value) {
-                        //     if (value == null || value.isEmpty) {
-                        //       return 'Please Enter Primary Mobile Number';
-                        //     }
-                        //     return null;
-                        //   },
-                        // ),
                       ],
-                      // CommonContainer.fillingContainer(
-                      //   controller: _primaryMobileController,
-                      //   verticalDivider: true,
-                      //   isMobile: true,
-                      //   text: 'Mobile No',
-                      //   // validator: (value) => value == null || value.isEmpty
-                      //   //     ? 'Please Enter Primary Mobile Number'
-                      //   //     : null,
-                      // ),
+
                       const SizedBox(height: 25),
                       Text(
                         'Whatsapp Number',
@@ -2138,15 +1391,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           },
                         ),
                       ],
-                      // CommonContainer.fillingContainer(
-                      //   controller: _whatsappController,
-                      //   verticalDivider: true,
-                      //   isMobile: true,
-                      //   text: 'Mobile No',
-                      //   // validator: (value) => value == null || value.isEmpty
-                      //   //     ? 'Please Enter Whatsapp Number'
-                      //   //     : null,
-                      // ),
+
                       const SizedBox(height: 25),
                       Text(
                         'Open Time',
@@ -2304,6 +1549,25 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                         //   return null;
                         // },
                       ),
+                      const SizedBox(height: 25),
+                      Text(
+                        'UPI Id *',
+                        style: AppTextStyles.mulish(color: AppColor.mildBlack),
+                      ),
+                      const SizedBox(height: 10),
+                      CommonContainer.fillingContainer(
+                        keyboardType: TextInputType.text,
+                        controller: _upiIdController,
+                        verticalDivider: true,
+                        text: 'UPI Id',
+                        validator: (v) {
+                          final value = (v ?? '').trim();
+                          if (value.isEmpty) return 'UPI Id required';
+                          if (!_isValidUpiId(value))
+                            return 'Enter valid UPI Id';
+                          return null;
+                        },
+                      ),
                       SizedBox(height: 25),
                       // if (widget.isService ??
                       //     false || widget.pages != 'AboutMeScreens')
@@ -2457,6 +1721,19 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           final bool isEditFromAboutMe =
                               widget.pages == "AboutMeScreens";
 
+                          final upiId = _upiIdController.text.trim();
+                          if (upiId.isEmpty) {
+                            AppSnackBar.error(context, "Please enter UPI Id");
+                            return;
+                          }
+                          if (!_isValidUpiId(upiId)) {
+                            AppSnackBar.error(
+                              context,
+                              "Please enter valid UPI Id",
+                            );
+                            return;
+                          }
+
                           // ✅ Only register flow should validate
                           if (!isEditFromAboutMe) {
                             if (!_validateAll()) return;
@@ -2509,22 +1786,29 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                             _whatsappController.text,
                           );
 
-                          // ✅ VERIFIED CHECK FIX (OTP or Pref token)
-                          // ✅ OTP verified required ONLY in register flow
-                          if (!isEditFromAboutMe) {
-                            final shopState = ref.read(
-                              shopCategoryNotifierProvider,
-                            );
+                          // ✅ Primary phone verification guard:
+                          // - Register flow: always require OTP verification.
+                          // - Edit flow: require verification only if user changed the number.
+                          final currentPhone10 = _normalizeIndianPhone10(
+                            _primaryMobileController.text,
+                          );
+                          final bool phoneChanged =
+                              widget.isEditMode == true &&
+                              _initialPrimaryPhone10.isNotEmpty &&
+                              currentPhone10 != _initialPrimaryPhone10;
+                          final bool mustVerify =
+                              widget.isEditMode != true || phoneChanged;
+
+                          if (mustVerify) {
                             final savedToken =
                                 await AppPrefs.getVerificationToken();
+                            final savedPhone10 =
+                                await AppPrefs.getVerificationPhone10();
 
-                            final isVerified =
-                                (shopState
-                                        .shopNumberOtpResponse
-                                        ?.data
-                                        ?.verified ==
-                                    true) ||
-                                (savedToken != null && savedToken.isNotEmpty);
+                            final bool isVerified =
+                                (savedToken ?? '').trim().isNotEmpty &&
+                                (savedPhone10 ?? '').trim().isNotEmpty &&
+                                savedPhone10 == currentPhone10;
 
                             if (!isVerified) {
                               AppSnackBar.error(
@@ -2534,28 +1818,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               return;
                             }
                           }
-
-                          // final shopState = ref.read(
-                          //   shopCategoryNotifierProvider,
-                          // );
-                          // final savedToken =
-                          //     await AppPrefs.getVerificationToken();
-                          //
-                          // final isVerified =
-                          //     (shopState
-                          //             .shopNumberOtpResponse
-                          //             ?.data
-                          //             ?.verified ==
-                          //         true) ||
-                          //     (savedToken != null && savedToken.isNotEmpty);
-                          //
-                          // if (!isVerified) {
-                          //   AppSnackBar.error(
-                          //     context,
-                          //     "Please verify Primary Mobile Number",
-                          //   );
-                          //   return;
-                          // }
 
                           final response = await ref
                               .read(shopCategoryNotifierProvider.notifier)
@@ -2576,6 +1838,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                                     .trim(),
                                 descriptionTa: descriptionTamilController.text
                                     .trim(),
+                                upiId: _upiIdController.text.trim(),
                                 doorDelivery: isDoorDeliveryEnabled,
                                 englishName: _shopNameEnglishController.text
                                     .trim(),
@@ -2594,7 +1857,38 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                               newState.error!.isNotEmpty) {
                             AppSnackBar.error(context, newState.error!);
                           } else if (response != null) {
-                            if (widget.pages == 'AboutMeScreens') {
+                            if (widget.pages == 'AboutMeEditFlow') {
+                              final updatedPhotos = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ShopPhotoInfo(
+                                    pages: 'AboutMeEditFlow',
+                                    shopId: widget.shopId,
+                                    initialImageUrls: widget.initialImageUrls,
+                                  ),
+                                ),
+                              );
+
+                              if (updatedPhotos != true || !context.mounted) {
+                                return;
+                              }
+
+                              final updatedKeywords =
+                                  await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => SearchKeyword(
+                                        pages: 'AboutMeEditFlow',
+                                        initialKeywords:
+                                            widget.initialShopKeywords,
+                                      ),
+                                    ),
+                                  );
+
+                              if (updatedKeywords == true && context.mounted) {
+                                Navigator.pop(context, true);
+                              }
+                            } else if (widget.pages == 'AboutMeScreens') {
                               Navigator.pop(context, true);
                             } else {
                               context.pushNamed(
@@ -2610,143 +1904,6 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                           }
                         },
 
-                        // onTap: () async {
-                        //   FocusScope.of(context).unfocus();
-                        //
-                        //   final bool isServiceFlow = widget.isService ?? false;
-                        //   final String type = isServiceFlow
-                        //       ? 'service'
-                        //       : 'product';
-                        //
-                        //   // GPS handling
-                        //   final gpsText = _gpsController.text.trim();
-                        //   double latitude = 0.0;
-                        //   double longitude = 0.0;
-                        //
-                        //   if (gpsText.isNotEmpty && gpsText.contains(',')) {
-                        //     final parts = gpsText.split(',');
-                        //     latitude = double.tryParse(parts[0].trim()) ?? 0.0;
-                        //     longitude = double.tryParse(parts[1].trim()) ?? 0.0;
-                        //   }
-                        //
-                        //   // -----------------------------
-                        //   // DOOR DELIVERY HANDLING
-                        //   // -----------------------------
-                        //   bool isDoorDeliveryEnabled = false;
-                        //
-                        //   if (!isServiceFlow) {
-                        //     // PRODUCT flow → must validate dropdown
-                        //     final doorDeliveryValue = _doorDeliveryController
-                        //         .text
-                        //         .trim();
-                        //
-                        //     if (doorDeliveryValue.isEmpty) {
-                        //       AppSnackBar.error(
-                        //         context,
-                        //         'Please select Door Delivery',
-                        //       );
-                        //       return; // stop flow
-                        //     }
-                        //
-                        //     isDoorDeliveryEnabled = doorDeliveryValue == 'Yes';
-                        //     print('Door Delivery: $isDoorDeliveryEnabled');
-                        //   } else {
-                        //     // SERVICE flow → always false, no validation
-                        //     isDoorDeliveryEnabled = false;
-                        //   }
-                        //
-                        //   // owner image
-                        //   final File? ownerFile = _pickedImage == null
-                        //       ? null
-                        //       : File(_pickedImage!.path);
-                        //   final weeklyHoursText =
-                        //       "${_openTimeController.text.trim()} - ${_closeTimeController.text.trim()}";
-                        //
-                        //   // 🔹 Phone values
-                        //
-                        //   final String primaryPhoneToSend = _toE164India(
-                        //     _primaryMobileController.text,
-                        //   );
-                        //   final String alternatePhoneToSend = _toE164India(
-                        //     _whatsappController.text,
-                        //   );
-                        //
-                        //   final shopState = ref.read(shopCategoryNotifierProvider);
-                        //   final isVerified = shopState.shopNumberOtpResponse?.data?.verified == true;
-                        //
-                        //   if (!isVerified) {
-                        //     AppSnackBar.error(context, "Please verify Primary Mobile Number");
-                        //     return;
-                        //   }
-                        //
-                        //   // final String primaryPhoneToSend = isEditFromAboutMe
-                        //   //     ? _primaryMobileController.text
-                        //   //           .trim() // AboutMe edit → no +91
-                        //   //     : _withCountryCode(
-                        //   //         _primaryMobileController.text,
-                        //   //       ); // Register → add +91
-                        //   //
-                        //   // final String alternatePhoneToSend = isEditFromAboutMe
-                        //   //     ? _whatsappController.text.trim()
-                        //   //     : _withCountryCode(_whatsappController.text);
-                        //
-                        //   // API CALL
-                        //   final response = await ref
-                        //       .read(shopCategoryNotifierProvider.notifier)
-                        //       .shopCategoryInfo(
-                        //         shopId: widget.shopId,
-                        //         ownerImageFile: ownerFile,
-                        //         type: type,
-                        //         addressEn: _addressEnglishController.text
-                        //             .trim(),
-                        //         addressTa: addressTamilNameController.text
-                        //             .trim(),
-                        //         // alternatePhone: _whatsappController.text.trim(),
-                        //         alternatePhone: alternatePhoneToSend,
-                        //         primaryPhone: primaryPhoneToSend,
-                        //
-                        //         category: categorySlug,
-                        //         contactEmail: _emailController.text.trim(),
-                        //         descriptionEn: _descriptionEnglishController
-                        //             .text
-                        //             .trim(),
-                        //         descriptionTa: descriptionTamilController.text
-                        //             .trim(),
-                        //         doorDelivery: isDoorDeliveryEnabled,
-                        //         englishName: _shopNameEnglishController.text
-                        //             .trim(),
-                        //         gpsLatitude: latitude,
-                        //         gpsLongitude: longitude,
-                        //         // primaryPhone: _primaryMobileController.text
-                        //         //     .trim(),
-                        //         subCategory: subCategorySlug,
-                        //         tamilName: tamilNameController.text.trim(),
-                        //         weeklyHours: weeklyHoursText,
-                        //       );
-                        //
-                        //   final newState = ref.read(
-                        //     shopCategoryNotifierProvider,
-                        //   );
-                        //
-                        //   if (newState.error != null &&
-                        //       newState.error!.isNotEmpty) {
-                        //     AppSnackBar.error(context, newState.error!);
-                        //   } else if (response != null) {
-                        //     if (widget.pages == 'AboutMeScreens') {
-                        //       Navigator.pop(context, true);
-                        //     } else {
-                        //       context.pushNamed(
-                        //         AppRoutes.shopPhotoInfo,
-                        //         extra: 'shopCategory',
-                        //       );
-                        //     }
-                        //   } else {
-                        //     AppSnackBar.error(
-                        //       context,
-                        //       "Unexpected error, please try again",
-                        //     );
-                        //   }
-                        // },
                         text: state.isLoading
                             ? ThreeDotsLoader()
                             : Text(
@@ -2888,125 +2045,4 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       ),
     );
   }
-
-  // Widget _buildOwnerPhotoWidget() {
-  //   // 1️⃣ New image picked from camera
-  //   if (_permanentImage != null) {
-  //     return Row(
-  //       children: [
-  //         Expanded(
-  //           child: ClipRRect(
-  //             borderRadius: BorderRadius.circular(12),
-  //             child: Image.file(
-  //               File(_permanentImage!.path),
-  //               height: 140,
-  //               fit: BoxFit.cover,
-  //             ),
-  //           ),
-  //         ),
-  //         const SizedBox(width: 8),
-  //         InkWell(
-  //           onTap: () {
-  //             setState(() {
-  //               _permanentImage = null;
-  //               _imageErrorText = 'Please Add Your Photo';
-  //               _timetableInvalid = true;
-  //             });
-  //           },
-  //           child: Padding(
-  //             padding: const EdgeInsets.symmetric(vertical: 35.0),
-  //             child: Column(
-  //               mainAxisAlignment: MainAxisAlignment.center,
-  //               children: [
-  //                 Image.asset(
-  //                   AppImages.closeImage,
-  //                   height: 26,
-  //                   color: AppColor.mediumGray,
-  //                 ),
-  //                 Text(
-  //                   'Clear',
-  //                   style: AppTextStyles.mulish(
-  //                     fontSize: 14,
-  //                     fontWeight: FontWeight.w400,
-  //                     color: AppColor.mediumLightGray,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     );
-  //   }
-  //
-  //   // 2️⃣ Existing owner image from server (edit mode)
-  //   if (_hasExistingOwnerImage &&
-  //       widget.initialOwnerImageUrl != null &&
-  //       widget.initialOwnerImageUrl!.trim().isNotEmpty) {
-  //     return Row(
-  //       children: [
-  //         Expanded(
-  //           child: ClipRRect(
-  //             borderRadius: BorderRadius.circular(12),
-  //             child: Image.network(
-  //               widget.initialOwnerImageUrl!,
-  //               height: 140,
-  //               fit: BoxFit.cover,
-  //             ),
-  //           ),
-  //         ),
-  //         const SizedBox(width: 8),
-  //         InkWell(
-  //           onTap: () {
-  //             setState(() {
-  //               _hasExistingOwnerImage = false;
-  //               _imageErrorText = 'Please Add Your Photo';
-  //               _timetableInvalid = true;
-  //             });
-  //           },
-  //           child: Padding(
-  //             padding: const EdgeInsets.symmetric(vertical: 35.0),
-  //             child: Column(
-  //               mainAxisAlignment: MainAxisAlignment.center,
-  //               children: [
-  //                 Image.asset(
-  //                   AppImages.closeImage,
-  //                   height: 26,
-  //                   color: AppColor.mediumGray,
-  //                 ),
-  //                 Text(
-  //                   'Clear',
-  //                   style: AppTextStyles.mulish(
-  //                     fontSize: 14,
-  //                     fontWeight: FontWeight.w400,
-  //                     color: AppColor.mediumLightGray,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     );
-  //   }
-  //
-  //   // 3️⃣ No image → default upload UI
-  //   return Center(
-  //     child: Row(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         Image.asset(AppImages.uploadImage, height: 30),
-  //         const SizedBox(width: 10),
-  //         Text(
-  //           'Upload',
-  //           style: AppTextStyles.mulish(
-  //             fontSize: 14,
-  //             fontWeight: FontWeight.w500,
-  //             color: AppColor.mediumLightGray,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

@@ -20,6 +20,7 @@ import 'package:tringo_owner/Core/Utility/call_helper.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Core/Widgets/bottom_navigation_bar.dart';
 import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Screens/tringo_chart.dart';
 import 'package:tringo_owner/Presentation/Menu/Controller/subscripe_notifier.dart';
 import 'package:tringo_owner/Presentation/Menu/Screens/subscription_history.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,6 +46,12 @@ import '../../under_processing.dart';
 import '../Controller/shopContext_provider.dart';
 import 'home_screen_analytics.dart';
 
+// ✅ NEW
+import '../../../Core/Utility/filter_enum.dart';
+
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+
 class HomeScreens extends ConsumerStatefulWidget {
   const HomeScreens({super.key});
 
@@ -58,6 +65,156 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   bool isTexTiles = true;
   int selectIndex = -1;
   bool _isFreemium = false;
+
+  // ✅ NEW: chart filter state + loading state (only for chart reload)
+  ChartFilter _selectedChartFilter = ChartFilter.day;
+  bool _chartLoading = false;
+  final Map<String, bool> _adsEnabled = {};
+  final Map<String, bool> _sending = {};
+  final Map<String, List<XFile>> _pickedImagesMap = {};
+
+  bool _isSending(String id) => _sending[id] ?? false;
+
+  void _setSending(String id, bool val) {
+    setState(() => _sending[id] = val);
+  }
+
+  bool _isAdsEnabled(String id) => _adsEnabled[id] ?? false;
+
+  void _enableAds(String id) {
+    setState(() => _adsEnabled[id] = true);
+  }
+
+  final ImagePicker _picker = ImagePicker();
+
+  // enquiryId -> isAds enabled
+
+  // enquiryId -> picked image
+
+  // enquiryId -> controllers
+  final Map<String, TextEditingController> _msgCtrl = {};
+  final Map<String, TextEditingController> _priceCtrl = {};
+
+  static const int _maxMsgLen = 500;
+
+  TextEditingController _getMsgCtrl(String id) =>
+      _msgCtrl.putIfAbsent(id, () => TextEditingController());
+
+  TextEditingController _getPriceCtrl(String id) =>
+      _priceCtrl.putIfAbsent(id, () => TextEditingController());
+
+  // 🔥 Store images per enquiryId
+
+  List<XFile> _getPickedImages(String id) {
+    return _pickedImagesMap[id] ?? [];
+  }
+
+  void _addImage(String id, XFile image) {
+    final list = _pickedImagesMap[id] ?? [];
+    if (list.length >= 3) return; // max 3
+
+    list.add(image);
+    _pickedImagesMap[id] = list;
+
+    setState(() {});
+  }
+
+  void _removeImage(String id, int index) {
+    final list = _pickedImagesMap[id];
+    if (list == null) return;
+
+    if (index >= 0 && index < list.length) {
+      list.removeAt(index);
+      setState(() {});
+    }
+  }
+
+  void _clearImages(String id) {
+    _pickedImagesMap.remove(id);
+    setState(() {});
+  }
+
+  Future<void> _pickFromCamera(String id) async {
+    final x = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
+
+    if (!mounted || x == null) return;
+
+    _addImage(id, x); // ✅ new
+  }
+
+  Future<void> _pickFromGallery(String id) async {
+    final x = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (!mounted || x == null) return;
+
+    _addImage(id, x); // ✅ new
+  }
+
+  Future<void> _showPickOptions(String id) async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined),
+                  title: Text('Camera', style: AppTextStyles.mulish()),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickFromCamera(id);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_outlined),
+                  title: Text('Gallery', style: AppTextStyles.mulish()),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickFromGallery(id);
+                  },
+                ),
+                const SizedBox(height: 6),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final c in _msgCtrl.values) {
+      c.dispose();
+    }
+    for (final c in _priceCtrl.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  final Map<String, bool> _adsEnabledMap = {}; // enquiryId -> isAds enabled?
 
   Future<void> _openQrScanner() async {
     var status = await Permission.camera.request();
@@ -82,29 +239,69 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //   await ref.read(homeNotifierProvider.notifier).fetchShops();
-    //   await ref.read(homeNotifierProvider.notifier).fetchAllEnquiry();
-    // });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final homeState = ref.read(homeNotifierProvider);
+      final prefs = await SharedPreferences.getInstance();
+      final selectedShopId =
+          homeState.selectedShopId ?? prefs.getString('currentShopId') ?? '';
+      final expectedChartFilter = chartFilterToApi(_selectedChartFilter);
+      final currentChart = homeState.shopsResponse?.data.homeChart;
+      final shouldReloadChart = currentChart == null ||
+          currentChart.shopId != selectedShopId ||
+          currentChart.filter != expectedChartFilter ||
+          currentChart.series.isEmpty;
+
+      if (selectedShopId.isNotEmpty &&
+          homeState.selectedShopId != selectedShopId) {
+        await ref.read(homeNotifierProvider.notifier).selectShop(selectedShopId);
+      }
+
+      if (shouldReloadChart) {
+        await ref.read(homeNotifierProvider.notifier).fetchShops(
+          shopId: selectedShopId,
+          filter: expectedChartFilter,
+        );
+      }
+
+      if (homeState.enquiryResponse == null) {
+        await ref
+            .read(homeNotifierProvider.notifier)
+            .fetchAllEnquiry(shopId: selectedShopId);
+      }
+    });
   }
 
   Future<void> openPdfInChrome() async {
     final prefs = await SharedPreferences.getInstance();
     final sessionToken = prefs.getString('sessionToken') ?? '';
-
-    // Assuming this returns a String like "https://.../enquiries/export?..."
     final String urlString = ApiUrl.enguiriesDownload(
       sessionToken: sessionToken,
     );
-
     final Uri url = Uri.parse(urlString);
-
-    // Try opening in browser (Chrome if default)
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      // Optional: handle failure
       debugPrint("Could not launch $url");
+    }
+  }
+
+  Future<void> _reloadChart({required String shopId}) async {
+    setState(() => _chartLoading = true);
+
+    final apiFilter = chartFilterToApi(
+      _selectedChartFilter,
+    ); // DAY/WEEK/MONTH/YEAR
+
+    try {
+      await ref
+          .read(homeNotifierProvider.notifier)
+          .fetchShops(
+            shopId: shopId,
+            filter: apiFilter, // ✅ ONLY THIS
+          );
+    } finally {
+      if (mounted) setState(() => _chartLoading = false);
     }
   }
 
@@ -114,14 +311,18 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     final homeNotifier = ref.watch(homeNotifierProvider.notifier);
     final planState = ref.watch(subscriptionNotifier);
     final planData = planState.currentPlanResponse?.data;
-    final isPremium = RegistrationProductSeivice.instance.isPremium;
+    // final isPremium = RegistrationProductSeivice.instance.isPremium;
     final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
     final selectedShopId = homeState.selectedShopId;
     final enquiry = homeState.enquiryResponse;
     final shopsRes = homeState.shopsResponse;
 
     final List<Shop> shops = shopsRes?.data.items ?? [];
+
     final bool hasShops = shops.isNotEmpty;
+    final homeChart = shopsRes?.data.homeChart;
+    final loginContext = shopsRes?.data.loginContext;
+    final bool isOwner = loginContext == "OWNER";
 
     bool hasEnquiries = false;
     final enquiryData = enquiry?.data;
@@ -132,6 +333,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     }
 
     final bool isFreemium = shopsRes?.data.subscription.isFreemium ?? true;
+    final bool isPremium = isFreemium;
+    // AppLogger.log.w(isPremium);
 
     //  GLOBAL "NO DATA FOUND" (no shops + no enquiries + not loading)
     if (!homeState.isLoading && !hasShops && !hasEnquiries) {
@@ -141,16 +344,19 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
             onRefresh: () async {
               await ref
                   .read(homeNotifierProvider.notifier)
-                  .fetchShops(shopId: '');
+                  .fetchShops(
+                    shopId: selectedShopId ?? '',
+                    filter: chartFilterToApi(_selectedChartFilter),
+                  );
               await ref
                   .read(homeNotifierProvider.notifier)
-                  .fetchAllEnquiry(shopId: '');
+                  .fetchAllEnquiry(shopId: selectedShopId ?? '');
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: const [
                 SizedBox(
-                  height: 600, // ensures scroll even when empty
+                  height: 600,
                   child: NoDataScreen(
                     showBottomButton: false,
                     showTopBackArrow: false,
@@ -163,23 +369,22 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
       );
     }
 
-    // ---------- NORMAL BUILD FLOW BELOW ----------
-
     // Open = Unanswered
     final openItems = enquiryData?.open.items ?? [];
-
     // Closed = Answered
     final closedItems = enquiryData?.closed.items ?? [];
-
-    // counts for chips
     final unansweredCount = openItems.length;
     final answeredCount = closedItems.length;
 
-    // main shop (first shop if available)
     final Shop? mainShop = hasShops ? shops.first : null;
 
     final bool isUnansweredTab = selectedIndex == 0;
     final currentItems = isUnansweredTab ? openItems : closedItems;
+
+    // ✅ CHOOSE current shopId for chart api
+    final String chartShopId = (selectedShopId ?? '').isNotEmpty
+        ? (selectedShopId ?? '')
+        : (mainShop?.id ?? '');
 
     return Skeletonizer(
       enabled: homeState.isLoading,
@@ -192,10 +397,13 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
               onRefresh: () async {
                 await ref
                     .read(homeNotifierProvider.notifier)
-                    .fetchShops(shopId: '');
+                    .fetchShops(
+                      shopId: selectedShopId ?? '',
+                      filter: chartFilterToApi(_selectedChartFilter),
+                    );
                 await ref
                     .read(homeNotifierProvider.notifier)
-                    .fetchAllEnquiry(shopId: '');
+                    .fetchAllEnquiry(shopId: selectedShopId ?? '');
               },
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -241,7 +449,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                             child: Column(
                               children: [
                                 Text(
-                                  // title fallback
                                   (mainShop?.englishName ?? '').isNotEmpty
                                       ? mainShop!.englishName
                                       : 'My Shop',
@@ -261,41 +468,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               ],
                             ),
                           ),
-                          // Expanded(
-                          //   flex: 1,
-                          //   child: GestureDetector(
-                          //     onTap: () {
-                          //       Navigator.push(
-                          //         context,
-                          //         MaterialPageRoute(
-                          //           builder: (context) => MenuScreens(),
-                          //         ),
-                          //       );
-                          //     },
-                          //     child: ClipRRect(
-                          //       borderRadius: BorderRadius.circular(25),
-                          //       child: SizedBox(
-                          //         height: 52,
-                          //         width: 52,
-                          //         child: CachedNetworkImage(
-                          //           imageUrl: mainShop?.primaryImageUrl ?? '',
-                          //           fit: BoxFit.cover,
-                          //
-                          //           // While loading
-                          //           placeholder: (context, url) => const Center(
-                          //             child: CircularProgressIndicator(
-                          //               strokeWidth: 2,
-                          //             ),
-                          //           ),
-                          //
-                          //           // If error occurs
-                          //           errorWidget: (context, url, error) =>
-                          //               const Icon(Icons.person, size: 40),
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
                           Expanded(
                             flex: 1,
                             child: GestureDetector(
@@ -323,6 +495,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
 
                     const SizedBox(height: 30),
 
+                    // ---------------- SHOPS LIST ----------------
                     if (shops.isEmpty) ...[
                       CommonContainer.smallShopContainer(
                         addAnotherShop: true,
@@ -345,15 +518,13 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
-
-                          // ✅ ALWAYS +1 for "Add Another Shop"
-                          itemCount: shops.length + 1,
-
+                          // itemCount: shops.length + 1,
+                          itemCount: isOwner ? shops.length + 1 : shops.length,
                           itemBuilder: (context, index) {
                             final bool showSwitch = shops.length > 1;
 
-                            // ✅ LAST ITEM → Add Another Shop (always)
-                            if (index == shops.length) {
+                            // if (index == shops.length) {
+                            if (isOwner && index == shops.length) {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 10),
                                 child: CommonContainer.smallShopContainer(
@@ -365,7 +536,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                       : 'Add a new branch',
                                   onTap: () {
                                     if (isFreemium) {
-                                      // 🔒 Freemium → subscription
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -373,7 +543,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                         ),
                                       );
                                     } else {
-                                      // ✅ Premium → add shop flow
                                       final bool isService =
                                           shopsRes?.data.items.first.shopKind
                                               .toUpperCase() ==
@@ -403,25 +572,33 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               );
                             }
 
-                            // ✅ NORMAL SHOP ITEM
                             final shop = shops[index];
 
                             return Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: CommonContainer.smallShopContainer(
-                                showSwitch: showSwitch, // 🔑 HERE
+                                showSwitch: showSwitch,
                                 shopImage: shop.primaryImageUrl ?? '',
                                 shopName: shop.englishName,
                                 shopLocation: '${shop.addressEn}, ${shop.city}',
-                                onTap: () {
+                                onTap: () async {
                                   ref
                                       .read(selectedShopProvider.notifier)
                                       .switchShop(shop.id);
+
+                                  // ✅ reload chart for new shop with current filter
+                                  if (shop.id.isNotEmpty) {
+                                    await _reloadChart(shopId: shop.id);
+                                  }
                                 },
-                                switchOnTap: () {
+                                switchOnTap: () async {
                                   ref
                                       .read(selectedShopProvider.notifier)
                                       .switchShop(shop.id);
+
+                                  if (shop.id.isNotEmpty) {
+                                    await _reloadChart(shopId: shop.id);
+                                  }
                                 },
                               ),
                             );
@@ -470,6 +647,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                           color: AppColor.scaffoldColor,
                                         ),
                                       ),
+
+                                      // ✅ UPDATED: dropdown filter inside dotted border
                                       DottedBorder(
                                         color: Colors.white24,
                                         dashPattern: const [7, 3],
@@ -486,28 +665,59 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                               20,
                                             ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                'Last 7 Days',
-                                                style: AppTextStyles.mulish(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColor.scaffoldColor,
-                                                  fontSize: 14,
-                                                ),
+                                          child: DropdownButtonHideUnderline(
+                                            child: DropdownButton<ChartFilter>(
+                                              value: _selectedChartFilter,
+                                              dropdownColor: const Color(
+                                                0xFF0A1E4D,
                                               ),
-                                              const SizedBox(width: 5),
-                                              const Padding(
-                                                padding: EdgeInsets.only(
-                                                  top: 3.0,
-                                                ),
-                                                child: Icon(
-                                                  Icons.keyboard_arrow_down,
-                                                  color: Colors.white,
-                                                  size: 17,
-                                                ),
+                                              icon: const Icon(
+                                                Icons.keyboard_arrow_down,
+                                                color: Colors.white,
+                                                size: 17,
                                               ),
-                                            ],
+                                              style: AppTextStyles.mulish(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColor.scaffoldColor,
+                                                fontSize: 14,
+                                              ),
+                                              items: const [
+                                                DropdownMenuItem(
+                                                  value: ChartFilter.day,
+                                                  child: Text('Last 7 Days'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: ChartFilter.week,
+                                                  child: Text('Last 4 Weeks'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: ChartFilter.month,
+                                                  child: Text('This Month'),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: ChartFilter.year,
+                                                  child: Text('This Year'),
+                                                ),
+                                              ],
+                                              onChanged: (v) async {
+                                                if (v == null) return;
+                                                setState(
+                                                  () =>
+                                                      _selectedChartFilter = v,
+                                                );
+
+                                                if (chartShopId.isNotEmpty) {
+                                                  await _reloadChart(
+                                                    shopId: chartShopId,
+                                                  );
+                                                } else {
+                                                  // fallback refresh
+                                                  await _reloadChart(
+                                                    shopId: mainShop?.id ?? '',
+                                                  );
+                                                }
+                                              },
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -523,145 +733,27 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                   ),
                                   child: SizedBox(
                                     height: 240,
-                                    child: LineChart(
-                                      LineChartData(
-                                        betweenBarsData: [
-                                          BetweenBarsData(
-                                            fromIndex: 1,
-                                            toIndex: 0,
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.white.withOpacity(0.2),
-                                                Colors.white.withOpacity(0.2),
-                                              ],
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                            ),
-                                          ),
-                                        ],
-                                        gridData: FlGridData(
-                                          drawVerticalLine: false,
-                                          getDrawingHorizontalLine: (value) =>
-                                              FlLine(
-                                                color: Colors.white12,
-                                                strokeWidth: 1,
+                                    child: _chartLoading
+                                        ? const Center(
+                                            child: SizedBox(
+                                              height: 24,
+                                              width: 24,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
                                               ),
-                                        ),
-                                        titlesData: FlTitlesData(
-                                          rightTitles: const AxisTitles(
-                                            sideTitles: SideTitles(
-                                              showTitles: false,
                                             ),
-                                          ),
-                                          topTitles: const AxisTitles(
-                                            sideTitles: SideTitles(
-                                              showTitles: false,
-                                            ),
-                                          ),
-                                          bottomTitles: const AxisTitles(
-                                            sideTitles: SideTitles(
-                                              showTitles: false,
-                                            ),
-                                          ),
-                                          leftTitles: AxisTitles(
-                                            sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30,
-                                              interval: 100,
-                                              getTitlesWidget: (value, meta) {
-                                                return Text(
-                                                  value.toInt().toString(),
-                                                  style: GoogleFonts.mulish(
-                                                    color: Colors.white54,
-                                                    fontSize: 10,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                        borderData: FlBorderData(show: false),
-                                        minX: 0,
-                                        maxX: 4,
-                                        minY: 0,
-                                        maxY: 600,
-                                        lineBarsData: [
-                                          // Premium User Line
-                                          LineChartBarData(
-                                            spots: const [
-                                              FlSpot(0, 400),
-                                              FlSpot(1, 500),
-                                              FlSpot(2, 600),
-                                              FlSpot(3, 450),
-                                              FlSpot(4, 500),
-                                            ],
-                                            isCurved: false,
-                                            color: Colors.white70,
-                                            barWidth: 0.5,
-                                            belowBarData: BarAreaData(
-                                              show: false,
-                                            ),
-                                            dotData: FlDotData(
-                                              show: true,
-                                              getDotPainter:
-                                                  (
-                                                    spot,
-                                                    percent,
-                                                    barData,
-                                                    index,
-                                                  ) {
-                                                    return FlDotCirclePainter(
-                                                      color: Colors.white,
-                                                      radius: spot.y == 600
-                                                          ? 4
-                                                          : 2,
-                                                      strokeWidth: 0,
-                                                    );
-                                                  },
-                                            ),
-                                          ),
-
-                                          // Your Reach Line
-                                          LineChartBarData(
-                                            spots: const [
-                                              FlSpot(0, 250),
-                                              FlSpot(1, 200),
-                                              FlSpot(2, 320),
-                                              FlSpot(3, 260),
-                                              FlSpot(4, 300),
-                                            ],
-                                            isCurved: false,
-                                            color: Colors.blueAccent,
-                                            barWidth: 0.5,
-                                            dotData: FlDotData(
-                                              show: true,
-                                              getDotPainter:
-                                                  (
-                                                    spot,
-                                                    percent,
-                                                    barData,
-                                                    index,
-                                                  ) {
-                                                    return FlDotCirclePainter(
-                                                      color: spot.y == 320
-                                                          ? Colors.blueAccent
-                                                          : Colors.white54,
-                                                      radius: spot.y == 320
-                                                          ? 5
-                                                          : 2,
-                                                      strokeWidth: 0,
-                                                    );
-                                                  },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                          )
+                                        : (homeChart == null
+                                              ? const SizedBox.shrink()
+                                              : ReachLineChart(
+                                                  chart: homeChart,
+                                                )),
                                   ),
                                 ),
+
                                 const SizedBox(height: 40),
 
-                                // Stats row
+                                // Stats row (unchanged)
                                 SingleChildScrollView(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 20,
@@ -669,22 +761,8 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                   physics: const BouncingScrollPhysics(),
                                   scrollDirection: Axis.horizontal,
                                   child: Row(
-                                    // if your Flutter doesn't support `spacing`, replace with SizedBox in children
                                     spacing: 10,
                                     children: [
-                                      // _statBox(
-                                      //   0,
-                                      //   shopsRes
-                                      //           ?.data
-                                      //           .homeChart
-                                      //           ?.totals
-                                      //           .profileViews
-                                      //           .toString() ??
-                                      //       '',
-                                      //   'Reach',
-                                      //   AppImages.search,
-                                      //   () {},
-                                      // ),
                                       _statBox(
                                         1,
                                         shopsRes
@@ -751,10 +829,9 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                                 ?.data
                                                 .homeChart
                                                 ?.totals
-                                                .mapClicks
+                                                .directions
                                                 .toString() ??
                                             '',
-
                                         'Direction',
                                         AppImages.location,
                                         () {
@@ -782,11 +859,12 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                   ),
                                 ),
 
-                                SizedBox(height: isPremium ? 20 : 90),
+                                SizedBox(height: isPremium == false ? 20 : 75),
                               ],
                             ),
                           ),
-                          if (!isPremium) ...[
+
+                          if (isPremium) ...[
                             Positioned(
                               bottom: -7,
                               left: 30,
@@ -797,7 +875,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                       planData?.isFreemium ?? true;
 
                                   if (!isFreemium) {
-                                    // NOT freemium → go to subscription history
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -819,7 +896,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                       ),
                                     );
                                   } else {
-                                    // Freemium → go to subscription screen
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -829,7 +905,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                     );
                                   }
                                 },
-
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 12,
@@ -889,8 +964,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                       ),
                     ),
 
-                    SizedBox(height: 140),
-
+                    const SizedBox(height: 140),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: Row(
@@ -915,22 +989,28 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           ),
                           CommonContainer.offerCardContainer(
                             onTap: () {
-                              // ✅ false => SurpriseOfferList, true => SubscriptionScreen
-                              if (isFreemium == false) {
-                                Navigator.push(
+                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => SurpriseOfferList(),
                                   ),
                                 );
-                              } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SubscriptionScreen(),
-                                  ),
-                                );
-                              }
+                              // ✅ false => SurpriseOfferList, true => SubscriptionScreen
+                              // if (isFreemium == false) {
+                              //   Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //       builder: (_) => SurpriseOfferList(),
+                              //     ),
+                              //   );
+                              // } else {
+                              //   Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //       builder: (_) => SubscriptionScreen(),
+                              //     ),
+                              //   );
+                              // }
 
                               AppLogger.log.i(mainShop?.id);
                             },
@@ -1123,7 +1203,9 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                           itemBuilder: (context, index) {
                             final data = currentItems[index];
 
-                            final type = data.contextType.toUpperCase();
+                            final type = (data.contextType ?? '')
+                                .toString()
+                                .toUpperCase();
 
                             String productTitle = 'Enquiry';
                             String rating = '0.0';
@@ -1131,13 +1213,16 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                             String priceText = '';
                             String offerPrice = '';
                             String image = '';
-                            String customerName = data.customer.name;
-                            String whatsappNumber =
+
+                            final String customerName = data.customer.name;
+                            final String whatsappNumber =
                                 data.customer.whatsappNumber;
-                            String phone = data.customer.phone;
-                            String customerImg = data.customer.avatarUrl
+                            final String phone = data.customer.phone;
+                            final String customerImg = data.customer.avatarUrl
                                 .toString();
-                            String timeText = data.createdTime;
+                            final String timeText = data.createdTime;
+
+                            // ================= CONTEXT MAPPING =================
 
                             if (type == 'PRODUCT_SHOP' ||
                                 type == 'SERVICE_SHOP') {
@@ -1152,22 +1237,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               offerPrice =
                                   '${shop?.category.toUpperCase() ?? ''}';
                               image = shop?.primaryImageUrl ?? '';
-                            } else if (type == 'PRODUCT_SERVICE' ||
-                                type == 'SERVICE_SHOP') {
-                              final service = data.service;
-                              productTitle = (service?.name ?? '').isNotEmpty
-                                  ? service!.name
-                                  : 'Service Enquiry';
-                              rating = (service?.rating ?? 0).toString();
-                              image = (service?.primaryImageUrl ?? 0)
-                                  .toString();
-                              ratingCount = (service?.ratingCount ?? 0)
-                                  .toString();
-                              if (service != null && service.startsAt > 0) {
-                                priceText = 'From ₹${service.startsAt}';
-                              } else {
-                                priceText = 'Service';
-                              }
                             } else if (type == 'PRODUCT') {
                               productTitle =
                                   data.product?.name.toString() ?? '';
@@ -1181,13 +1250,71 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               productTitle =
                                   data.service?.name.toString() ?? '';
                               offerPrice = '₹${data.service?.startsAt ?? ''}';
-
                               image = data.service?.primaryImageUrl ?? '';
                               rating = '${data.service?.rating ?? ''}';
                               ratingCount =
                                   '${data.service?.ratingCount ?? ''}';
                             }
 
+                            // ================= FLAGS =================
+
+                            final enquirySource = (data.enquirySource ?? '')
+                                .toString()
+                                .toUpperCase();
+
+                            final bool isSmartConnect =
+                                enquirySource == 'SMART_CONNECT';
+
+                            final status = (data.status ?? '')
+                                .toString()
+                                .toUpperCase();
+                            final bool isClosed = status == 'CLOSED';
+
+                            final String enquiryId = data.id.toString();
+
+                            // final bool isAds = isSmartConnect
+                            //     ? _isAdsEnabled(enquiryId)
+                            //     : false;
+                            // final bool isSending = _isSending(enquiryId);
+
+                            // ================= ANSWER SAFE PARSE =================
+
+                            final Map<String, dynamic>? answerMap =
+                                (data.answer is Map<String, dynamic>)
+                                ? (data.answer as Map<String, dynamic>)
+                                : null;
+
+                            final bool showAnswerOnly =
+                                isSmartConnect && isClosed && answerMap != null;
+
+                            final String answerTitle =
+                                (answerMap?['title'] ?? '').toString();
+
+                            final String answerDescription =
+                                (answerMap?['description'] ?? '').toString();
+
+                            final int answerPrice = (() {
+                              final v = answerMap?['price'];
+                              if (v == null) return 0;
+                              if (v is int) return v;
+                              return int.tryParse(v.toString()) ?? 0;
+                            })();
+
+                            final List<String> answerImages = (() {
+                              final v = answerMap?['images'];
+                              if (v is List) {
+                                return v.map((e) => e.toString()).toList();
+                              }
+                              return <String>[];
+                            })();
+
+                            // ================= PICKED IMAGES =================
+
+                            final List<XFile> pickedImages = showAnswerOnly
+                                ? []
+                                : _getPickedImages(enquiryId);
+                            final bool isAds = _isAdsEnabled(enquiryId);
+                            final bool isSending = _isSending(enquiryId);
                             return Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 15,
@@ -1195,6 +1322,333 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               child: Column(
                                 children: [
                                   CommonContainer.inquiryProductCard(
+                                    isSmartConnect: isSmartConnect,
+                                    isAds: isAds,
+                                    onChatTap: showAnswerOnly
+                                        ? null
+                                        : () {
+                                            _enableAds(enquiryId);
+                                          },
+
+                                    showAnswerOnly: showAnswerOnly,
+                                    answerTitle: answerTitle,
+                                    answerDescription: answerDescription,
+                                    answerPrice: answerPrice,
+                                    answerImages: answerImages,
+
+                                    // 🔥 UPDATED MULTI IMAGE
+                                    pickedImages: pickedImages,
+                                    messageController: showAnswerOnly
+                                        ? null
+                                        : _getMsgCtrl(enquiryId),
+                                    priceController: showAnswerOnly
+                                        ? null
+                                        : _getPriceCtrl(enquiryId),
+                                    maxMessageLength: _maxMsgLen,
+                                    isSending: showAnswerOnly
+                                        ? false
+                                        : isSending,
+
+                                    onPickImage: showAnswerOnly
+                                        ? null
+                                        : () => _showPickOptions(enquiryId),
+
+                                    onRemoveImage: showAnswerOnly
+                                        ? null
+                                        : (imgIndex) =>
+                                              _removeImage(enquiryId, imgIndex),
+
+                                    onSendTap: showAnswerOnly
+                                        ? null
+                                        : () async {
+                                            if (_isSending(enquiryId)) return;
+
+                                            final msg = _getMsgCtrl(
+                                              enquiryId,
+                                            ).text.trim();
+                                            final priceStr = _getPriceCtrl(
+                                              enquiryId,
+                                            ).text.trim();
+
+                                            if (msg.isEmpty) {
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    "Please enter message",
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            final price = int.tryParse(
+                                              priceStr,
+                                            );
+                                            if (price == null || price <= 0) {
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    "Please enter valid price",
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            final List<File> files =
+                                                _getPickedImages(enquiryId)
+                                                    .map((e) => File(e.path))
+                                                    .toList();
+
+                                            _setSending(enquiryId, true);
+
+                                            try {
+                                              await ref
+                                                  .read(
+                                                    homeNotifierProvider
+                                                        .notifier,
+                                                  )
+                                                  .replyEnquiry(
+                                                    shopId:
+                                                        data.shop?.id
+                                                            .toString() ??
+                                                        '',
+                                                    requestId: enquiryId,
+                                                    productTitle: productTitle,
+                                                    message: msg,
+                                                    price: price,
+                                                    ownerImageFiles: files,
+                                                  );
+
+                                              _getMsgCtrl(enquiryId).clear();
+                                              _getPriceCtrl(enquiryId).clear();
+                                              _clearImages(enquiryId);
+
+                                              await ref
+                                                  .read(
+                                                    homeNotifierProvider
+                                                        .notifier,
+                                                  )
+                                                  .fetchAllEnquiry(shopId: '');
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    "Reply sent successfully",
+                                                  ),
+                                                ),
+                                              );
+                                            } finally {
+                                              _setSending(enquiryId, false);
+                                            }
+                                          },
+
+                                    questionText: data.message.trim(),
+                                    productTitle: productTitle,
+                                    rating: rating,
+                                    ratingCount: ratingCount,
+                                    priceText: offerPrice,
+                                    mrpText: '$priceText',
+                                    phoneImageAsset: image,
+                                    avatarAsset: customerImg,
+                                    customerName: customerName,
+                                    timeText: timeText,
+                                  ),
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+
+                      /*ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: currentItems.length,
+                          itemBuilder: (context, index) {
+                            final data = currentItems[index];
+
+                            final type = (data.contextType ?? '').toString().toUpperCase();
+
+                            String productTitle = 'Enquiry';
+                            String rating = '0.0';
+                            String ratingCount = '0';
+                            String priceText = '';
+                            String offerPrice = '';
+                            String image = '';
+
+                            final String customerName = data.customer.name;
+                            final String whatsappNumber = data.customer.whatsappNumber;
+                            final String phone = data.customer.phone;
+                            final String customerImg = data.customer.avatarUrl.toString();
+                            final String timeText = data.createdTime;
+
+                            // ---------- your existing context mapping ----------
+                            if (type == 'PRODUCT_SHOP' || type == 'SERVICE_SHOP') {
+                              final shop = data.shop;
+                              productTitle = (shop?.englishName.toUpperCase() ?? '').isNotEmpty
+                                  ? shop!.englishName.toUpperCase()
+                                  : 'Shop Enquiry';
+                              rating = (shop?.rating ?? 0).toString();
+                              ratingCount = (shop?.ratingCount ?? 0).toString();
+                              offerPrice = '${shop?.category.toUpperCase() ?? ''}';
+                              image = shop?.primaryImageUrl ?? '';
+                            } else if (type == 'PRODUCT_SERVICE' || type == 'SERVICE_SHOP') {
+                              final service = data.service;
+                              productTitle = (service?.name ?? '').isNotEmpty ? service!.name : 'Service Enquiry';
+                              rating = (service?.rating ?? 0).toString();
+                              image = (service?.primaryImageUrl ?? '').toString();
+                              ratingCount = (service?.ratingCount ?? 0).toString();
+
+                              if (service != null && service.startsAt > 0) {
+                                priceText = 'From ₹${service.startsAt}';
+                              } else {
+                                priceText = 'Service';
+                              }
+                            } else if (type == 'PRODUCT') {
+                              productTitle = data.product?.name.toString() ?? '';
+                              priceText = '${data.product?.price ?? ''}';
+                              offerPrice = '₹${data.product?.offerPrice ?? ''}';
+                              image = data.product?.imageUrl ?? '';
+                              rating = '${data.product?.rating ?? ''}';
+                              ratingCount = '${data.product?.ratingCount ?? ''}';
+                            } else if (type == 'SERVICE') {
+                              productTitle = data.service?.name.toString() ?? '';
+                              offerPrice = '₹${data.service?.startsAt ?? ''}';
+                              image = data.service?.primaryImageUrl ?? '';
+                              rating = '${data.service?.rating ?? ''}';
+                              ratingCount = '${data.service?.ratingCount ?? ''}';
+                            }
+
+                            // ---------- flags ----------
+                            final enquirySource = (data.enquirySource ?? '').toString().toUpperCase();
+                            final bool isSmartConnect = enquirySource == 'SMART_CONNECT';
+
+                            final status = (data.status ?? '').toString().toUpperCase();
+                            final bool isClosed = status == 'CLOSED';
+
+                            final String enquiryId = data.id.toString();
+
+                            // isAds = reply-form-open toggle (your existing)
+                            final bool isAds = isSmartConnect ? _isAdsEnabled(enquiryId) : false;
+                            final bool isSending = _isSending(enquiryId);
+
+                            // ✅ SAFE answer parsing (fixes "Map has no getter title")
+                            final Map<String, dynamic>? answerMap =
+                            (data.answer is Map<String, dynamic>) ? (data.answer as Map<String, dynamic>) : null;
+
+                            // ✅ closed + smartconnect + has answer => show read-only answer UI
+                            final bool showAnswerOnly = isSmartConnect && isClosed && answerMap != null;
+
+                            final String answerTitle = (answerMap?['title'] ?? '').toString();
+                            final String answerDescription = (answerMap?['description'] ?? '').toString();
+
+                            final int answerPrice = (() {
+                              final v = answerMap?['price'];
+                              if (v == null) return 0;
+                              if (v is int) return v;
+                              return int.tryParse(v.toString()) ?? 0;
+                            })();
+
+                            final List<String> answerImages = (() {
+                              final v = answerMap?['images'];
+                              if (v is List) return v.map((e) => e.toString()).toList();
+                              return <String>[];
+                            })();
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Column(
+                                children: [
+                                  CommonContainer.inquiryProductCard(
+                                    isSmartConnect: isSmartConnect,
+                                    isAds: isAds,
+
+                                    // ✅ CLOSED read-only answer
+                                    showAnswerOnly: showAnswerOnly,
+                                    answerTitle: answerTitle,
+                                    answerDescription: answerDescription,
+                                    answerPrice: answerPrice,
+                                    answerImages: answerImages,
+
+                                    // ✅ OPEN reply controllers only when NOT closed
+                                    pickedImage: showAnswerOnly ? null : _getPicked(enquiryId),
+                                    messageController: showAnswerOnly ? null : _getMsgCtrl(enquiryId),
+                                    priceController: showAnswerOnly ? null : _getPriceCtrl(enquiryId),
+                                    maxMessageLength: _maxMsgLen,
+                                    isSending: showAnswerOnly ? false : isSending,
+
+                                    onPickImage: showAnswerOnly ? null : () => _showPickOptions(enquiryId),
+                                    onRemoveImage: showAnswerOnly ? null : () => _removeImage(enquiryId),
+
+                                    onSendTap: showAnswerOnly
+                                        ? null
+                                        : () async {
+                                      if (_isSending(enquiryId)) return;
+
+                                      final msgCtrl = _getMsgCtrl(enquiryId);
+                                      final priceCtrl = _getPriceCtrl(enquiryId);
+
+                                      final msg = msgCtrl.text.trim();
+                                      final priceStr = priceCtrl.text.trim();
+
+                                      if (msg.isEmpty) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Please enter message")),
+                                        );
+                                        return;
+                                      }
+
+                                      final price = int.tryParse(priceStr);
+                                      if (price == null || price <= 0) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Please enter valid price")),
+                                        );
+                                        return;
+                                      }
+
+                                      final pickedX = _getPicked(enquiryId);
+                                      final File? pickedFile = pickedX == null ? null : File(pickedX.path);
+
+                                      _setSending(enquiryId, true);
+                                      try {
+                                        await ref.read(homeNotifierProvider.notifier).replyEnquiry(
+                                          shopId: data.shop?.id.toString() ?? '',
+                                          requestId: enquiryId,
+                                          productTitle: productTitle,
+                                          message: msg,
+                                          price: price,
+                                          ownerImageFile: pickedFile,
+                                        );
+
+                                        final st = ref.read(homeNotifierProvider);
+
+                                        if (st.error == null) {
+                                          msgCtrl.clear();
+                                          priceCtrl.clear();
+                                          _removeImage(enquiryId);
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Reply sent successfully")),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(st.error ?? "Failed")),
+                                          );
+                                        }
+                                      } finally {
+                                        _setSending(enquiryId, false);
+                                      }
+                                    },
+
                                     questionText: '',
                                     productTitle: productTitle,
                                     rating: rating,
@@ -1205,29 +1659,25 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                     avatarAsset: customerImg,
                                     customerName: customerName,
                                     timeText: timeText,
+
+                                    // ✅ OPEN only
                                     onChatTap: () {
-                                      CallHelper.openWhatsapp(
-                                        context: context,
-                                        phone: whatsappNumber,
-                                      );
-                                      ref
-                                          .read(homeNotifierProvider.notifier)
-                                          .markEnquiry(enquiryId: data.id);
-                                      ref
-                                          .read(selectedShopProvider.notifier)
-                                          .switchShop('');
+                                      if (showAnswerOnly) return; // closed => disable
+                                      if (isSmartConnect) {
+                                        _enableAds(enquiryId); // open reply form
+                                        return;
+                                      }
+                                      CallHelper.openWhatsapp(context: context, phone: whatsappNumber);
+                                      ref.read(homeNotifierProvider.notifier).markEnquiry(enquiryId: data.id);
+                                      ref.read(selectedShopProvider.notifier).switchShop('');
                                     },
+
                                     onCallTap: () {
-                                      CallHelper.openDialer(
-                                        context: context,
-                                        rawPhone: phone,
-                                      );
-                                      ref
-                                          .read(homeNotifierProvider.notifier)
-                                          .markEnquiry(enquiryId: data.id);
-                                      ref
-                                          .read(selectedShopProvider.notifier)
-                                          .switchShop('');
+                                      if (showAnswerOnly) return;
+                                      if (isSmartConnect) return;
+                                      CallHelper.openDialer(context: context, rawPhone: phone);
+                                      ref.read(homeNotifierProvider.notifier).markEnquiry(enquiryId: data.id);
+                                      ref.read(selectedShopProvider.notifier).switchShop('');
                                     },
                                   ),
                                   const SizedBox(height: 20),
@@ -1235,7 +1685,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                               ),
                             );
                           },
-                        ),
+                        ),*/
                     ] else ...[
                       // ================== NON-TEXTILES BRANCH (NO FOOD WASTAGE etc.) ==================
                       // (your existing non-textiles UI unchanged)
@@ -1397,7 +1847,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                         ),
                       ),
                       const SizedBox(height: 50),
-                      // ... your remaining non-textiles UI (Food Orders cards etc.) ...
+                      // ... rest of your screen is unchanged ...
                     ],
                   ],
                 ),
@@ -1423,11 +1873,6 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
         setState(() => selectIndex = index);
         onTap?.call();
       },
-      // onTap: () {
-      //   setState(() {
-      //     selectIndex = index;
-      //   });
-      // },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -1442,30 +1887,34 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
         child: Row(
           children: [
             Image.asset(image, height: 23, color: AppColor.white),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              '$value',
+              value,
               style: AppTextStyles.mulish(
                 color: Colors.white,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
               ),
             ),
-            SizedBox(width: 4),
+            const SizedBox(width: 4),
             Text(
-              '$label',
+              label,
               style: AppTextStyles.mulish(
                 color: Colors.white,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w400,
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Container(
-              padding: EdgeInsets.all(6),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.grey.shade900,
               ),
-              child: Icon(Icons.arrow_forward, color: Colors.white, size: 15),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 15,
+              ),
             ),
           ],
         ),
@@ -1473,3 +1922,7 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     );
   }
 }
+ 
+
+
+

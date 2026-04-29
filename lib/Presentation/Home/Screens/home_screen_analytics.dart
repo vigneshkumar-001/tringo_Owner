@@ -16,8 +16,8 @@ import '../../../Core/Utility/call_helper.dart';
 import '../../../Core/Utility/common_Container.dart';
 import '../../Create Surprise Offers/Controller/create_surprise_notifier.dart';
 import '../../Menu/Screens/subscription_screen.dart';
-import '../Controller/home_notifier.dart';
-import '../Controller/shopContext_provider.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/home_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Controller/shopContext_provider.dart';
 
 class HomeScreenAnalytics extends ConsumerStatefulWidget {
   final String shopId;
@@ -120,7 +120,7 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
     // 1) fetch shops
     shopsRes = await ref
         .read(homeNotifierProvider.notifier)
-        .fetchShops(shopId: '');
+        .fetchShops(shopId: '', filter: '');
 
     shopIdVar = shopsRes?.data.items[0].id; // adjust to your model
     if (!mounted) return;
@@ -393,12 +393,12 @@ class _HomeScreenAnalyticsState extends ConsumerState<HomeScreenAnalytics>
                                       await ref
                                           .read(homeNotifierProvider.notifier)
                                           .refreshAnalytics(
-                                        /*   shopId: widget.shopId,*/
-                                        shopId: shop.id ?? '',
-                                        start: _start,
-                                        end: _end,
-                                        take: (_selectedTab == 0) ? 10 : 50,
-                                      );
+                                            /*   shopId: widget.shopId,*/
+                                            shopId: shop.id ?? '',
+                                            start: _start,
+                                            end: _end,
+                                            take: (_selectedTab == 0) ? 10 : 50,
+                                          );
                                     },
                                   ),
                                 );

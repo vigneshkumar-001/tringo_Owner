@@ -70,6 +70,7 @@ class LoginState {
 }
 
 class LoginNotifier extends Notifier<LoginState> {
+
   late final ApiDataSource api;
 
   @override
@@ -249,6 +250,9 @@ class LoginNotifier extends Notifier<LoginState> {
         await prefs.setString('refreshToken', data?.refreshToken ?? '');
         await prefs.setString('sessionToken', data?.sessionToken ?? '');
         await prefs.setString('role', data?.role ?? '');
+
+        // Store onboarding step so onboarding can resume after restart
+        await AppPrefs.setOnboardingStep(data?.onboardingStep);
 
         // ✅ OTP success state first (UI can navigate)
         state = state.copyWith(

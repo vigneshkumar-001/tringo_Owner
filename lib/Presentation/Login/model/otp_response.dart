@@ -32,6 +32,13 @@ class OtpData {
   final String role;
   final String sessionToken;
   final bool isNewOwner;
+  /// Backend may return either `onboardingStep` or `onboardingStatus`.
+  /// Example values: step-1, step-2, step-3, step-4
+  final String? onboardingStep;
+
+  final String? scopedShopId;
+  final bool? isReferralApplied;
+  final bool? vendorApproved;
 
   OtpData({
     required this.accessToken,
@@ -39,6 +46,10 @@ class OtpData {
     required this.role,
     required this.sessionToken,
     required this.isNewOwner,
+    this.onboardingStep,
+    this.scopedShopId,
+    this.isReferralApplied,
+    this.vendorApproved,
   });
 
   factory OtpData.fromJson(Map<String, dynamic> json) {
@@ -47,7 +58,16 @@ class OtpData {
       refreshToken: json['refreshToken'] ?? '',
       role: json['role'] ?? '',
       sessionToken: json['sessionToken'] ?? '',
-      isNewOwner: json['isNewOwner'] ?? '',
+      isNewOwner: json['isNewOwner'] == true,
+      onboardingStep:
+          (json['onboardingStep'] ?? json['onboardingStatus'])?.toString(),
+      scopedShopId: json['scopedShopId']?.toString(),
+      isReferralApplied: json['isReferralApplied'] is bool
+          ? json['isReferralApplied'] as bool
+          : null,
+      vendorApproved: json['vendorApproved'] is bool
+          ? json['vendorApproved'] as bool
+          : null,
     );
   }
 
@@ -58,6 +78,10 @@ class OtpData {
       'role': role,
       'sessionToken': sessionToken,
       'isNewOwner': isNewOwner,
+      'onboardingStep': onboardingStep,
+      'scopedShopId': scopedShopId,
+      'isReferralApplied': isReferralApplied,
+      'vendorApproved': vendorApproved,
     };
   }
 }

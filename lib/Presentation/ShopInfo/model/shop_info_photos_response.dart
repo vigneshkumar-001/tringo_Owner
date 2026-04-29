@@ -308,7 +308,8 @@ class BusinessProfile {
       user: json['user'] != null
           ? AppUser.fromJson(json['user'] as Map<String, dynamic>)
           : null,
-      onboardingStatus: json['onboardingStatus'] as String?,
+      onboardingStatus: (json['onboardingStep'] ?? json['onboardingStatus'])
+          ?.toString(),
     );
   }
 
