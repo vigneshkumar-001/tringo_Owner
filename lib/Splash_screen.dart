@@ -1,26 +1,20 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
+import 'package:tringo_owner/Core/Session/registration_product_seivice.dart';
+import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
 import 'Core/Routes/app_go_routes.dart';
 import 'Core/Utility/app_textstyles.dart';
-import 'Core/Widgets/caller_id_role_helper.dart';
-import 'Core/permissions/permission_service.dart';
-
-import 'Presentation/Home/Controller/home_notifier.dart';
-import 'Presentation/Home/Controller/shopContext_provider.dart';
-import 'Presentation/Login/controller/app_version_notifier.dart';
-import 'Presentation/Menu/Controller/subscripe_notifier.dart';
+import 'package:tringo_owner/Presentation/Login/controller/app_version_notifier.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -32,38 +26,26 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with WidgetsBindingObserver {
   // Use your real app version value here
-  final String appVersion = '1.0.0';
-
-  bool _batteryFlowRunning = false;
-  bool _batterySheetOpen = false;
-
-  // persist keys
-  static const _kBatteryDoneKey = "battery_opt_done";
-  static const _kBatteryLastShownAt = "battery_opt_last_shown_at";
-  static const _kWentToBatterySettings = "went_to_battery_settings";
-
-  // cooldown (avoid annoying user)
-  static const int _cooldownSeconds = 60 * 60 * 12; // 12 hours
+  final String appVersion = '1.0.1';
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // ✅ 1) MUST request Phone/CallLog/Contacts first
-      final ok = await PermissionService.requestCorePermissionsWithDialog(
-        context,
-      );
-      if (!ok) return;
-      // final nativeOk = await CallerIdRoleHelper.debugPhonePerm();
-      // debugPrint("✅ NATIVE READ_PHONE_STATE => $nativeOk");
-      // ✅ 2) Overlay permission (optional here)
-      final req = await CallerIdRoleHelper.requestReadPhoneState();
-      final now = await CallerIdRoleHelper.debugPhonePerm();
-      print("PHONE req=$req now=$now");
-
-      await PermissionService.requestOverlayIfNeeded();
+      // // ✅ 1) MUST request Phone/CallLog/Contacts first
+      // final ok = await PermissionService.requestCorePermissionsWithDialog(
+      //   context,
+      // );
+      // if (!ok) return;
+      // // final nativeOk = await CallerIdRoleHelper.debugPhonePerm();
+      // // debugPrint("✅ NATIVE READ_PHONE_STATE => $nativeOk");
+      // // ✅ 2) Overlay permission (optional here)
+      // final req = await CallerIdRoleHelper.requestReadPhoneState();
+      // final now = await CallerIdRoleHelper.debugPhonePerm();
+      // print("PHONE req=$req now=$now");
+      //
+      // await PermissionService.requestOverlayIfNeeded();
 
       // ✅ 3) Continue your flow
 
@@ -71,52 +53,80 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
   /// When user returns from Settings, re-check and mark done
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      _batteryFlowRunning = false;
-      await _postSettingsRecheckAndMarkDone();
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) async {
+  //   if (state == AppLifecycleState.resumed) {
+  //     _batteryFlowRunning = false;
+  //     await _postSettingsRecheckAndMarkDone();
+  //   }
+  // }
+
+  // Future<void> _postSettingsRecheckAndMarkDone() async {
+  //   if (!Platform.isAndroid) return;
+  //
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final went = prefs.getBool(_kWentToBatterySettings) ?? false;
+  //   if (!went) return;
+  //
+  //   await prefs.setBool(_kWentToBatterySettings, false);
+  //
+  //   // some devices need time before returning correct value
+  //   await Future.delayed(const Duration(milliseconds: 400));
+  //
+  //   bool ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
+  //   if (!ignoring) {
+  //     await Future.delayed(const Duration(milliseconds: 400));
+  //     ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
+  //   }
+  //
+  //   AppLogger.log.i("🔋 Post-settings recheck ignoring=$ignoring");
+  //
+  //   if (ignoring == true) {
+  //     await prefs.setBool(_kBatteryDoneKey, true);
+  //     AppLogger.log.i("✅ Battery optimization marked DONE");
+  //   }
+  // }
+  /*
+  bool _tokenSent = false;
+  Future<void> _sendDeviceTokenIfNeeded() async {
+    if (_tokenSent) return;
+    _tokenSent = true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final fcmToken = prefs.getString('fcmToken') ?? '';
+      AppLogger.log.i(fcmToken);
+
+      if (fcmToken.isEmpty) {
+        AppLogger.log.w("⚠️ No fcmToken in prefs yet");
+        return;
+      }
+
+      final deviceId = await DeviceIdHelper.getDeviceId();
+      final platform = Platform.isAndroid ? "android" : "ios";
+
+      await ref
+          .read(appVersionNotifierProvider.notifier)
+          .fcmTokenSend(
+            fcmToken: fcmToken,
+            platform: platform,
+            deviceId: deviceId,
+          );
+
+      final st = ref.read(appVersionNotifierProvider);
+      AppLogger.log.i(
+        "✅ device-token api response: ${st.deviceTokenResponse?.status}",
+      );
+    } catch (e, st) {
+      AppLogger.log.e("❌ sendDeviceToken failed: $e");
+      AppLogger.log.e(st);
     }
   }
-
-  Future<void> _postSettingsRecheckAndMarkDone() async {
-    if (!Platform.isAndroid) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final went = prefs.getBool(_kWentToBatterySettings) ?? false;
-    if (!went) return;
-
-    await prefs.setBool(_kWentToBatterySettings, false);
-
-    // some devices need time before returning correct value
-    await Future.delayed(const Duration(milliseconds: 400));
-
-    bool ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
-    if (!ignoring) {
-      await Future.delayed(const Duration(milliseconds: 400));
-      ignoring = await CallerIdRoleHelper.isIgnoringBatteryOptimizations();
-    }
-
-    AppLogger.log.i("🔋 Post-settings recheck ignoring=$ignoring");
-
-    if (ignoring == true) {
-      await prefs.setBool(_kBatteryDoneKey, true);
-      AppLogger.log.i("✅ Battery optimization marked DONE");
-    }
-  }
+  */
 
   Future<void> _initializeSplash() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-
       // 1) App version check
       await ref
           .read(appVersionNotifierProvider.notifier)
@@ -133,26 +143,75 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
 
       // 2) Battery flow (before navigation)
-      await _batteryOptimizationFlow();
+      // await _batteryOptimizationFlow();
 
-      // 3) Continue normal flow
-      await ref.read(selectedShopProvider.notifier).switchShop('');
-      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
-      await ref.read(subscriptionNotifier.notifier).getCurrentPlan();
-
-      if (!mounted) return;
-
-      final homeState = ref.read(homeNotifierProvider);
-      final bool isNewUser = homeState.shopsResponse?.data.isNewOwner ?? false;
-
-      // Optional: hold splash a bit
       await Future.delayed(const Duration(seconds: 2));
-      if (!mounted) return;
 
-      if (token.isNotEmpty) {
-        context.go(
-          isNewUser ? AppRoutes.privacyPolicyPath : AppRoutes.homeScreenPath,
-        );
+      // 3) Auth policy: resume session if token exists.
+      final token = (await AppPrefs.getToken())?.trim() ?? '';
+
+      String? goPath;
+      String? goNamed;
+      Object? extra;
+
+      if (token.isEmpty) {
+        goPath = AppRoutes.loginPath;
+      } else {
+        // Resume onboarding if backend had marked it incomplete.
+        final step = (await AppPrefs.getOnboardingStep())?.trim().toLowerCase();
+        final needsOnboarding = AppPrefs.isIncompleteOnboardingStep(step);
+
+        if (!needsOnboarding) {
+          await AppPrefs.setOnboardingStep(null);
+          await AppPrefs.clearRegistrationFlags();
+          goNamed = AppRoutes.homeScreen;
+        } else {
+          final hasFlags = await AppPrefs.hasRegistrationFlags();
+          final flags = await AppPrefs.getRegistrationFlags();
+          final isService = flags['isService'] == true;
+          final isIndividual = flags['isIndividual'] == true;
+
+          // If token exists but registration flags are missing, treat as an
+          // existing/fully-onboarded session and avoid forcing business-type
+          // onboarding on every restart.
+          if (!hasFlags) {
+            await AppPrefs.setOnboardingStep(null);
+            await AppPrefs.clearRegistrationFlags();
+            goNamed = AppRoutes.homeScreen;
+          } else {
+            final bt = isIndividual
+                ? BusinessType.individual
+                : BusinessType.company;
+            RegistrationSession.instance.businessType = bt;
+            RegistrationProductSeivice.instance.businessType = bt;
+            RegistrationProductSeivice.instance.businessCategory = isService
+                ? BusinessCategory.services
+                : BusinessCategory.sellingProduct;
+
+            if (step == 'step-2') {
+              goNamed = AppRoutes.shopCategoryInfo;
+              extra = {'isService': isService, 'isIndividual': isIndividual};
+            } else if (step == 'step-3') {
+              goNamed = AppRoutes.shopPhotoInfo;
+              extra = 'onboarding';
+            } else if (step == 'step-4') {
+              goNamed = AppRoutes.searchKeyword;
+            } else if (step == 'step-1') {
+              goNamed = AppRoutes.ownerInfo;
+              extra = {'isService': isService, 'isIndividual': isIndividual};
+            } else {
+              // Default: start onboarding from the beginning
+              goNamed = AppRoutes.register;
+            }
+          }
+        }
+      }
+
+      if (!mounted) return;
+      if (goPath != null) {
+        context.go(goPath);
+      } else if (goNamed != null) {
+        context.goNamed(goNamed, extra: extra);
       } else {
         context.go(AppRoutes.loginPath);
       }
@@ -163,7 +222,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
   }
 
-  Future<void> _batteryOptimizationFlow() async {
+  /*  Future<void> _batteryOptimizationFlow() async {
     if (!Platform.isAndroid) return;
     if (_batteryFlowRunning) return;
     _batteryFlowRunning = true;
@@ -236,9 +295,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     } catch (_) {
       _batteryFlowRunning = false;
     }
-  }
+  }*/
 
-  Future<_BatterySheetAction?> _showBatteryMandatoryBottomSheet() async {
+  /*Future<_BatterySheetAction?> _showBatteryMandatoryBottomSheet() async {
     return showModalBottomSheet<_BatterySheetAction>(
       context: context,
       backgroundColor: AppColor.white,
@@ -296,7 +355,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         );
       },
     );
-  }
+  }*/
 
   void _showUpdateBottomSheet() {
     showModalBottomSheet(
@@ -381,224 +440,4 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 }
 
-enum _BatterySheetAction { openSettings }
-
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:tringo_owner/Core/Const/app_logger.dart';
-// import 'package:tringo_owner/Core/Utility/common_Container.dart';
-// import 'package:url_launcher/url_launcher.dart';
-// import 'Core/Const/app_color.dart';
-// import 'Core/Const/app_images.dart';
-// import 'Core/Routes/app_go_routes.dart';
-// import 'Core/Utility/app_textstyles.dart';
-// import 'Core/permissions/permission_service.dart';
-// import 'Presentation/Home/Controller/home_notifier.dart';
-// import 'Presentation/Home/Controller/shopContext_provider.dart';
-// import 'Presentation/Login/controller/app_version_notifier.dart';
-// import 'Presentation/Menu/Controller/subscripe_notifier.dart';
-//
-// class SplashScreen extends ConsumerStatefulWidget {
-//   const SplashScreen({super.key});
-//
-//   @override
-//   ConsumerState<SplashScreen> createState() => _SplashScreenState();
-// }
-//
-// class _SplashScreenState extends ConsumerState<SplashScreen> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     _initializeSplash();
-//     checkNavigation();
-//     PermissionService.requestOverlayAndContacts();
-//   }
-//
-//   Future<void> checkNavigation() async {
-//     final prefs = await SharedPreferences.getInstance();
-//
-//     final token = prefs.getString('token');
-//     final bool isProfileCompleted =
-//         prefs.getBool("isProfileCompleted") ?? false;
-//
-//     // 1) Check app version
-//     await ref
-//         .read(appVersionNotifierProvider.notifier)
-//         .getAppVersion(
-//           appPlatForm: 'android',
-//           appVersion: appVersion,
-//           appName: 'customer',
-//         );
-//
-//     final versionState = ref.read(appVersionNotifierProvider);
-//
-//     if (versionState.appVersionResponse?.data?.forceUpdate == true) {
-//       _showUpdateBottomSheet();
-//       return;
-//     }
-//
-//     // 3) Hold splash for 3 seconds
-//     await Future.delayed(const Duration(seconds: 3));
-//     if (!mounted) return;
-//
-//     // // 4) Navigate
-//     // if (token == null) {
-//     //   context.go(AppRoutes.loginPath);
-//     // } else if (!isProfileCompleted) {
-//     //   context.go(AppRoutes.fillProfilePath);
-//     // } else {
-//     //   context.go(AppRoutes.homePath);
-//     // }
-//   }
-//
-//   String appVersion = '1.0.0';
-//   Future<void> _initializeSplash() async {
-//     try {
-//       final prefs = await SharedPreferences.getInstance();
-//       final token = prefs.getString('token');
-//
-//       // 1) Call App Version API
-//       await ref
-//           .read(appVersionNotifierProvider.notifier)
-//           .getAppVersion(
-//             appPlatForm: 'android',
-//             appVersion: appVersion,
-//             appName: 'owner',
-//           );
-//
-//       // 2) Read version state and decide
-//       final versionState = ref.read(appVersionNotifierProvider);
-//
-//       if (versionState.appVersionResponse?.data?.forceUpdate == true) {
-//         _showUpdateBottomSheet();
-//
-//         return; // ⛔ stop further navigation
-//       }
-//
-//       // 3) Continue normal flow
-//       await ref.read(selectedShopProvider.notifier).switchShop('');
-//       await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
-//       await ref.read(subscriptionNotifier.notifier).getCurrentPlan();
-//
-//       if (!mounted) return;
-//
-//       final homeState = ref.read(homeNotifierProvider);
-//       final bool isNewUser = homeState.shopsResponse?.data.isNewOwner ?? false;
-//
-//       // 4) Navigate
-//       if (token != null && token.isNotEmpty) {
-//         context.go(
-//           isNewUser ? AppRoutes.privacyPolicyPath : AppRoutes.homeScreenPath,
-//         );
-//       } else {
-//         context.go(AppRoutes.loginPath);
-//       }
-//     } catch (e, st) {
-//       AppLogger.log.e("Splash init error: $e\n$st");
-//       if (!mounted) return;
-//       context.go(AppRoutes.loginPath);
-//     }
-//   }
-//
-//   void _showUpdateBottomSheet() {
-//     showModalBottomSheet(
-//       context: context,
-//       isDismissible: false,
-//       enableDrag: false,
-//       shape: const RoundedRectangleBorder(
-//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-//       ),
-//       builder: (_) {
-//         return Padding(
-//           padding: const EdgeInsets.all(24.0),
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               Text(
-//                 "Update Available",
-//                 style: GoogleFonts.ibmPlexSans(
-//                   fontSize: 18,
-//                   fontWeight: FontWeight.bold,
-//                 ),
-//               ),
-//               const SizedBox(height: 12),
-//
-//               Text(
-//                 "A new version of the app is available. Please update to continue.",
-//                 textAlign: TextAlign.center,
-//                 style: GoogleFonts.ibmPlexSans(fontSize: 14),
-//               ),
-//               const SizedBox(height: 24),
-//               CommonContainer.button(
-//                 text: Text('Update Now'),
-//                 onTap: () {
-//                   openPlayStore();
-//                 },
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
-//
-//   void openPlayStore() async {
-//     final versionState = ref.read(appVersionNotifierProvider);
-//     final storeUrl =
-//         versionState.appVersionResponse?.data?.store.android.toString() ?? '';
-//
-//     if (storeUrl.isEmpty) {
-//       print('No URL available.');
-//       return;
-//     }
-//
-//     final uri = Uri.parse(storeUrl);
-//     print('Trying to launch: $uri');
-//
-//     // Try in-app or platform default mode
-//     final success = await launchUrl(
-//       uri,
-//       mode: LaunchMode.platformDefault, // or LaunchMode.inAppWebView
-//     );
-//
-//     if (!success) {
-//       print('Could not open the link. Maybe no browser is installed.');
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final h = MediaQuery.of(context).size.height;
-//     final w = MediaQuery.of(context).size.width;
-//     return Scaffold(
-//       body: SafeArea(
-//         child: Stack(
-//           children: [
-//             Image.asset(
-//               AppImages.splashScreen,
-//               width: w,
-//               height: h,
-//               fit: BoxFit.cover,
-//             ),
-//             Positioned(
-//               top: h * 0.53,
-//               left: w * 0.43,
-//               child: Text(
-//                 'V $appVersion',
-//                 style: AppTextStyles.mulish(
-//                   fontSize: 12,
-//                   fontWeight: FontWeight.w900,
-//                   color: AppColor.black,
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-//
+// enum _BatterySheetAction { openSettings }

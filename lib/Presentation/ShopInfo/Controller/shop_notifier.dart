@@ -9,10 +9,10 @@ import 'package:tringo_owner/Presentation/ShopInfo/model/category_keywords_respo
 import 'package:tringo_owner/Presentation/ShopInfo/model/search_keywords_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_info_photos_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_number_otp_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_number_verify_response.dart';
 import '../../../Core/Utility/app_prefs.dart';
-import '../model/shop_info_photos_response.dart';
-import '../model/shop_number_otp_response.dart';
-import '../model/shop_number_verify_response.dart';
 
 class ShopCategoryState {
   final bool isLoading;
@@ -62,7 +62,7 @@ class ShopCategoryState {
       isLoading: isLoading ?? this.isLoading,
       isKeyWordsLoading: isKeyWordsLoading ?? this.isKeyWordsLoading,
       categoryKeywordsResponse:
-      categoryKeywordsResponse ?? this.categoryKeywordsResponse,
+          categoryKeywordsResponse ?? this.categoryKeywordsResponse,
       isSendingOtp: isSendingOtp ?? this.isSendingOtp,
       isVerifyingOtp: isVerifyingOtp ?? this.isVerifyingOtp,
       error: clearError ? null : (error ?? this.error),
@@ -88,29 +88,28 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
   @override
   ShopCategoryState build() => ShopCategoryState.initial();
 
-
   Future<void> fetchKeyWords({
-    required String type,
+    required String categorySlug,
     required String query,
   }) async {
     state = const ShopCategoryState(isKeyWordsLoading: true);
 
-    final result = await apiDataSource.getKeyWords(query: query, type: type);
+    final result = await apiDataSource.getKeyWords(
+      query: query,
+      categorySlug: categorySlug,
+    );
 
     result.fold(
-          (failure) =>
-      state = ShopCategoryState(
+      (failure) => state = ShopCategoryState(
         isKeyWordsLoading: false,
         error: failure.message,
       ),
-          (response) =>
-      state = ShopCategoryState(
+      (response) => state = ShopCategoryState(
         isKeyWordsLoading: false,
         categoryKeywordsResponse: response,
       ),
     );
   }
-
 
   Future<ShopCategoryResponse?> shopCategoryInfo({
     required String category,
@@ -126,6 +125,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     required String primaryPhone,
     required String alternatePhone,
     required String contactEmail,
+    String? upiId,
     String? shopId,
     File? ownerImageFile, // only used if type == service
     required bool doorDelivery,
@@ -169,6 +169,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       ownerImageUrl: ownerImageUrl,
       contactEmail: contactEmail,
       doorDelivery: doorDelivery,
+      upiId: upiId,
     );
 
     return result.fold(
@@ -181,6 +182,10 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('shop_id', response.data.id);
 
+        await AppPrefs.setOnboardingStep(
+          response.data.businessProfile.onboardingStatus,
+        );
+
         state = ShopCategoryState(
           isLoading: false,
           shopCategoryResponse: response,
@@ -190,10 +195,10 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     );
   }
 
-  Future<void> fetchCategories() async {
+  Future<void> fetchCategories({required String type}) async {
     state = const ShopCategoryState(isLoading: true);
 
-    final result = await apiDataSource.getShopCategories();
+    final result = await apiDataSource.getShopCategories(type: type);
 
     result.fold(
       (failure) =>
@@ -204,6 +209,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       ),
     );
   }
+
   //
   // /// Returns true on success; false otherwise.
   // /// No SnackBars here — let the UI decide what to show.
@@ -281,8 +287,9 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
 
     // ✅ If no new images AND no existing urls -> error
     final hasAnyPicked = images.any((e) => e != null);
-    final hasAnyExisting =
-    (existingUrls ?? []).any((e) => e != null && e.trim().isNotEmpty);
+    final hasAnyExisting = (existingUrls ?? []).any(
+      (e) => e != null && e.trim().isNotEmpty,
+    );
 
     if (!hasAnyPicked && !hasAnyExisting) {
       state = const ShopCategoryState(
@@ -306,8 +313,8 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         );
 
         final uploadedUrl = uploadResult.fold<String?>(
-              (failure) => null,
-              (success) => success.message,
+          (failure) => null,
+          (success) => success.message,
         );
 
         if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
@@ -326,6 +333,19 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
       }
     }
 
+    // ✅ Enforce mandatory photos: SIGN_BOARD + OUTSIDE (Shop Advertisement).
+    bool hasType(String t) => items.any(
+      (m) => (m['type'] ?? '').toString().trim().toUpperCase() == t,
+    );
+
+    if (!hasType('SIGN_BOARD') || !hasType('OUTSIDE')) {
+      state = const ShopCategoryState(
+        isLoading: false,
+        error: 'Please upload Sign Board and Shop Advertisement photos',
+      );
+      return false;
+    }
+
     if (items.isEmpty) {
       state = const ShopCategoryState(isLoading: false, error: 'Upload failed');
       return false;
@@ -337,16 +357,21 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
     );
 
     return apiResult.fold(
-          (failure) {
+      (failure) {
         state = ShopCategoryState(isLoading: false, error: failure.message);
         AppLogger.log.e(failure.message);
         return false;
       },
-          (response) {
+      (response) {
         state = ShopCategoryState(
           isLoading: false,
           shopPhotoResponse: response,
         );
+
+        final nextStep = response.data.isNotEmpty
+            ? response.data.first.shop.businessProfile.onboardingStatus
+            : null;
+        AppPrefs.setOnboardingStep(nextStep);
         return response.status == true;
       },
     );
@@ -369,6 +394,11 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
           isLoading: false,
           shopCategoryApiResponse: response,
         );
+
+        final nextStep = response.data.isNotEmpty
+            ? response.data.first.shop.businessProfile.onboardingStatus
+            : null;
+        AppPrefs.setOnboardingStep(nextStep);
         success = true;
       },
     );
@@ -431,6 +461,7 @@ class ShopNotifier extends Notifier<ShopCategoryState> {
         final token = response.data?.verificationToken ?? '';
         if (token.isNotEmpty) {
           await AppPrefs.setVerificationToken(token);
+          await AppPrefs.setVerificationPhone10(phone10);
         }
 
         state = state.copyWith(

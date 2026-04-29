@@ -1,12 +1,23 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tringo_owner/Core/Const/app_logger.dart';
 
 class GoogleLocationPickerScreen extends StatefulWidget {
-  const GoogleLocationPickerScreen({super.key});
+  final double? initialLat;
+  final double? initialLng;
+
+  const GoogleLocationPickerScreen({
+    super.key,
+    this.initialLat,
+    this.initialLng,
+  });
 
   @override
   State<GoogleLocationPickerScreen> createState() =>
@@ -20,6 +31,8 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
   LatLng? currentLocation;
   LatLng? selectedLocation;
   bool _hideBottomSheet = false;
+  bool _hasLocationPermission = false;
+  bool _isRecentering = false;
 
   String locality = 'Fetching location...';
   String city = '';
@@ -36,6 +49,8 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
   late Animation<double> _fadeAnimation;
 
   static const double _zoom = 16;
+  static const Duration _positionTimeout = Duration(seconds: 6);
+  static const LocationAccuracy _fastAccuracy = LocationAccuracy.medium;
 
   // IMPORTANT:
   // 1) ROTATE your leaked key in Google Cloud Console.
@@ -53,7 +68,13 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    _getCurrentLocation();
+
+    final initial = _initialLatLngFromWidget();
+    if (initial != null) {
+      _initWithInitialLocation(initial);
+    } else {
+      _initWithDeviceLocation();
+    }
   }
 
   @override
@@ -65,14 +86,69 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
     super.dispose();
   }
 
-  Future<void> _getCurrentLocation() async {
+  LatLng? _initialLatLngFromWidget() {
+    final lat = widget.initialLat;
+    final lng = widget.initialLng;
+    if (lat == null || lng == null) return null;
+    return LatLng(lat, lng);
+  }
+
+  Future<bool> _ensureLocationPermission({bool requestIfDenied = true}) async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied && requestIfDenied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    final granted = permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
+
+    if (!mounted) return granted;
+    setState(() => _hasLocationPermission = granted);
+    return granted;
+  }
+
+  Future<void> _initWithInitialLocation(LatLng initial) async {
+    _setInitialMapLocation(initial);
+    unawaited(_reverseGeocode(initial.latitude, initial.longitude));
+
+    // Optional: try to fetch device location later for recenter/search bias,
+    // without overriding the initially selected shop location.
+    _updateDeviceLocationForRecenter();
+  }
+
+  void _setInitialMapLocation(LatLng loc) {
+    currentLocation = loc;
+    selectedLocation = loc;
+
+    if (!mounted) return;
+    if (loading) setState(() => loading = false);
+    _animationController.forward();
+  }
+
+  Future<void> _updateDeviceLocationForRecenter() async {
     try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      final granted = await _ensureLocationPermission(requestIfDenied: false);
+      if (!granted) return;
+
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: _fastAccuracy,
+        timeLimit: _positionTimeout,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        currentLocation = LatLng(pos.latitude, pos.longitude);
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  Future<void> _initWithDeviceLocation() async {
+    try {
+      final granted = await _ensureLocationPermission(requestIfDenied: true);
+      if (!granted) {
         if (!mounted) return;
         setState(() {
           loading = false;
@@ -82,18 +158,24 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
         return;
       }
 
+      // 1) Show map ASAP using last known location (fast)
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) {
+        _setInitialMapLocation(LatLng(last.latitude, last.longitude));
+        unawaited(_reverseGeocode(last.latitude, last.longitude));
+      }
+
+      // 2) Then fetch a fresher location (may take time)
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: _fastAccuracy,
+        timeLimit: _positionTimeout,
       );
 
-      currentLocation = LatLng(pos.latitude, pos.longitude);
-      selectedLocation = currentLocation;
-
-      await _reverseGeocode(pos.latitude, pos.longitude);
+      _setInitialMapLocation(LatLng(pos.latitude, pos.longitude));
+      unawaited(_reverseGeocode(pos.latitude, pos.longitude));
 
       if (!mounted) return;
-      setState(() => loading = false);
-      _animationController.forward();
+      if (loading) setState(() => loading = false);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -118,22 +200,35 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       if (response.statusCode != 200) {
         if (!mounted) return;
         setState(() {
-          locality = 'Unable to fetch location';
+          locality = 'Location unavailable';
           city = '';
-          fullAddress = 'HTTP ${response.statusCode}';
+          fullAddress = 'Network error. Please try again.';
         });
         return;
       }
 
       // Handle Google API errors clearly
       if (data['status'] != 'OK') {
+        final status = (data['status'] ?? '').toString();
+        final errorMsg = (data['error_message'] ?? '').toString();
+        _logGoogleMapsError('Geocode', status: status, errorMessage: errorMsg);
+
+        // Fallback: if Google APIs aren't enabled/reachable, try device geocoder
+        // (doesn't require Google Cloud API activation).
+        final didFallback = await _tryReverseGeocodeWithDevice(lat, lng);
+        if (didFallback) return;
+
+        final friendly = _friendlyGoogleMapsError(
+          status: status,
+          errorMessage: errorMsg,
+          apiName: 'Geocoding API',
+        );
+
         if (!mounted) return;
         setState(() {
-          locality = 'Unable to fetch location';
+          locality = 'Location unavailable';
           city = '';
-          fullAddress =
-              (data['error_message'] ?? data['status'] ?? 'Unknown error')
-                  .toString();
+          fullAddress = friendly;
         });
         return;
       }
@@ -173,12 +268,104 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       });
     } catch (e) {
       if (!mounted) return;
+      if (kDebugMode) AppLogger.log.w('Geocode exception: $e');
+
+      final didFallback = await _tryReverseGeocodeWithDevice(lat, lng);
+      if (didFallback) return;
+
       setState(() {
-        locality = 'Error fetching location';
+        locality = 'Location unavailable';
         city = '';
-        fullAddress = 'Unable to fetch address: $e';
+        fullAddress = 'Unable to fetch address. Please try again.';
       });
     }
+  }
+
+  Future<bool> _tryReverseGeocodeWithDevice(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return false;
+
+      final p = placemarks.first;
+
+      final loc = (p.subLocality?.trim().isNotEmpty == true)
+          ? p.subLocality!.trim()
+          : (p.locality?.trim().isNotEmpty == true)
+              ? p.locality!.trim()
+              : 'Selected Location';
+
+      final inferredCity = (p.administrativeArea?.trim().isNotEmpty == true)
+          ? p.administrativeArea!.trim()
+          : (p.subAdministrativeArea?.trim().isNotEmpty == true)
+              ? p.subAdministrativeArea!.trim()
+              : '';
+
+      final parts = <String>[
+        if (p.name?.trim().isNotEmpty == true) p.name!.trim(),
+        if (p.street?.trim().isNotEmpty == true) p.street!.trim(),
+        if (p.subLocality?.trim().isNotEmpty == true) p.subLocality!.trim(),
+        if (p.locality?.trim().isNotEmpty == true) p.locality!.trim(),
+        if (p.administrativeArea?.trim().isNotEmpty == true)
+          p.administrativeArea!.trim(),
+        if (p.postalCode?.trim().isNotEmpty == true) p.postalCode!.trim(),
+        if (p.country?.trim().isNotEmpty == true) p.country!.trim(),
+      ];
+
+      final addr = parts.toSet().join(', ');
+      if (!mounted) return true;
+
+      setState(() {
+        locality = loc;
+        city = inferredCity;
+        fullAddress = addr.isEmpty ? 'Selected Location' : addr;
+      });
+      return true;
+    } catch (e) {
+      if (kDebugMode) AppLogger.log.w('Device geocoder failed: $e');
+      return false;
+    }
+  }
+
+  String _friendlyGoogleMapsError({
+    required String status,
+    required String errorMessage,
+    required String apiName,
+  }) {
+    final s = status.trim().toUpperCase();
+
+    if (s == 'REQUEST_DENIED') {
+      return 'Map service is unavailable right now. Please try again.';
+    }
+
+    if (s == 'OVER_QUERY_LIMIT') {
+      return 'Map service is busy right now. Please try again in a few minutes.';
+    }
+
+    if (s == 'ZERO_RESULTS') {
+      return 'No address found for this location.';
+    }
+
+    if (s == 'INVALID_REQUEST') {
+      return 'Invalid map request. Please try again.';
+    }
+
+    // Default fallback (don't show raw Google error to user)
+    return 'Unable to fetch location. Please try again.';
+  }
+
+  void _logGoogleMapsError(
+    String source, {
+    required String status,
+    required String errorMessage,
+  }) {
+    if (!kDebugMode) return;
+
+    // Avoid dumping long/technical Google error messages in logs.
+    // Keep it short so logs remain readable and not scary for QA/users.
+    final s = status.trim().toUpperCase();
+    AppLogger.log.w(
+      '$source error: $s (check Google Cloud: enable APIs + billing + key restrictions)',
+    );
   }
 
   // Places Autocomplete (text -> predictions)
@@ -217,9 +404,25 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
         setState(() => _placePredictions = data['predictions'] as List);
       } else {
         // Typical: REQUEST_DENIED (Places API not enabled / key restricted)
+        final status = (data['status'] ?? '').toString();
+        final errorMsg = (data['error_message'] ?? '').toString();
+        _logGoogleMapsError(
+          'Places autocomplete',
+          status: status,
+          errorMessage: errorMsg,
+        );
         setState(() => _placePredictions = []);
-        // Optional: show error in address field for debugging
-        // setState(() => fullAddress = '${data['status']}: ${data['error_message'] ?? ''}');
+
+        // Optional UX: show a friendly hint only for hard failures (don't spam on ZERO_RESULTS)
+        if (status.toUpperCase() == 'REQUEST_DENIED') {
+          setState(() {
+            fullAddress = _friendlyGoogleMapsError(
+              status: status,
+              errorMessage: errorMsg,
+              apiName: 'Places API',
+            );
+          });
+        }
       }
     } catch (_) {
       if (!mounted) return;
@@ -246,10 +449,20 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
       if (!mounted) return;
 
       if (res.statusCode != 200 || data['status'] != 'OK') {
+        final status = (data['status'] ?? '').toString();
+        final errorMsg = (data['error_message'] ?? '').toString();
+        _logGoogleMapsError(
+          'Place details',
+          status: status,
+          errorMessage: errorMsg,
+        );
         setState(() {
           _placePredictions = [];
-          fullAddress = (data['error_message'] ?? data['status'] ?? 'Error')
-              .toString();
+          fullAddress = _friendlyGoogleMapsError(
+            status: status,
+            errorMessage: errorMsg,
+            apiName: 'Places API',
+          );
         });
         return;
       }
@@ -298,11 +511,66 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
   }
 
   void _recenter() {
-    if (currentLocation == null || _mapController == null) return;
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(currentLocation!, _zoom),
-    );
-    _onMapTap(currentLocation!);
+    _recenterToMyLocation();
+  }
+
+  Future<void> _recenterToMyLocation() async {
+    if (_mapController == null) return;
+    if (_isRecentering) return;
+
+    _isRecentering = true;
+    try {
+      final granted = await _ensureLocationPermission(requestIfDenied: true);
+      if (!granted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Enable location permission to use current location'),
+          ),
+        );
+        return;
+      }
+
+      // Fast recenter using cached location first (if available)
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null && mounted) {
+        final cached = LatLng(last.latitude, last.longitude);
+        setState(() {
+          currentLocation = cached;
+          selectedLocation = cached;
+        });
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(cached, _zoom),
+        );
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: _fastAccuracy,
+        timeLimit: _positionTimeout,
+      );
+
+      final my = LatLng(pos.latitude, pos.longitude);
+
+      if (!mounted) return;
+      setState(() {
+        currentLocation = my;
+        selectedLocation = my;
+      });
+
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(my, _zoom),
+      );
+
+      unawaited(_reverseGeocode(my.latitude, my.longitude));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to get current location: $e')),
+        );
+      }
+    } finally {
+      _isRecentering = false;
+    }
   }
 
   Widget _buildSearchBox() {
@@ -633,7 +901,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
               target: currentLocation!,
               zoom: _zoom,
             ),
-            myLocationEnabled: true,
+            myLocationEnabled: _hasLocationPermission,
             myLocationButtonEnabled: false,
             compassEnabled: true,
             mapToolbarEnabled: false,
@@ -657,7 +925,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
           // Recenter button
           Positioned(
             right: 16,
-            bottom: 240,
+            bottom: 350,
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Material(
@@ -667,7 +935,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
                   onTap: _recenter,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -682,7 +950,7 @@ class _GoogleLocationPickerScreenState extends State<GoogleLocationPickerScreen>
                     child: const Icon(
                       Icons.my_location,
                       color: Colors.blue,
-                      size: 26,
+                      size: 20,
                     ),
                   ),
                 ),

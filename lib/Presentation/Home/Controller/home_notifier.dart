@@ -1,14 +1,16 @@
 // home_notifier.dart
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Presentation/Home/Model/reply_response.dart';
 
 import '../../../Api/DataSource/api_data_source.dart';
-import '../../Login/controller/login_notifier.dart';
-import '../Model/enquiry_response.dart';
-import '../Model/mark_enquiry.dart';
-import '../Model/shops_response.dart';
-import '../Model/enquiry_analytics_response.dart';
+import 'package:tringo_owner/Presentation/Login/controller/login_notifier.dart';
+import 'package:tringo_owner/Presentation/Home/Model/enquiry_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/mark_enquiry.dart';
+import 'package:tringo_owner/Presentation/Home/Model/shops_response.dart';
+import 'package:tringo_owner/Presentation/Home/Model/enquiry_analytics_response.dart';
 
 enum AnalyticsType { enquiries, calls, locations }
 
@@ -133,6 +135,7 @@ class HomeState {
   final String? error;
 
   final EnquiryResponse? enquiryResponse;
+  final ReplyResponse? replyResponse;
   final ShopsResponse? shopsResponse;
   final MarkEnquiry? markEnquiry;
 
@@ -149,6 +152,7 @@ class HomeState {
     this.isLoading = false,
     this.error,
     this.enquiryResponse,
+    this.replyResponse,
     this.shopsResponse,
     this.markEnquiry,
     this.enquiryAnalyticsResponse,
@@ -164,6 +168,7 @@ class HomeState {
     bool? isLoading,
     String? error,
     EnquiryResponse? enquiryResponse,
+    ReplyResponse? replyResponse,
     ShopsResponse? shopsResponse,
     MarkEnquiry? markEnquiry,
     EnquiryAnalyticsResponse? enquiryAnalyticsResponse,
@@ -176,6 +181,7 @@ class HomeState {
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error, // ✅ FIX
       enquiryResponse: enquiryResponse ?? this.enquiryResponse,
+      replyResponse: replyResponse ?? this.replyResponse,
       shopsResponse: shopsResponse ?? this.shopsResponse,
       markEnquiry: markEnquiry ?? this.markEnquiry,
       enquiryAnalyticsResponse:
@@ -188,7 +194,6 @@ class HomeState {
       analyticsPages: analyticsPages ?? this.analyticsPages,
     );
   }
-
 }
 
 class HomeNotifier extends Notifier<HomeState> {
@@ -202,6 +207,14 @@ class HomeNotifier extends Notifier<HomeState> {
 
   // ------------------- Existing Methods -------------------
 
+  Future<String> _resolveShopId(String shopId) async {
+    final direct = shopId.trim();
+    if (direct.isNotEmpty) return direct;
+
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getString('currentShopId') ?? '').trim();
+  }
+
   Future<void> selectShop(String shopId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('currentShopId', shopId);
@@ -209,9 +222,10 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> fetchAllEnquiry({required String shopId}) async {
+    final resolvedShopId = await _resolveShopId(shopId);
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await api.getAllEnquiry(shopId: shopId);
+    final result = await api.getAllEnquiry(shopId: resolvedShopId);
 
     result.fold(
       (failure) => state = state.copyWith(
@@ -223,16 +237,140 @@ class HomeNotifier extends Notifier<HomeState> {
         isLoading: false,
         error: null,
         enquiryResponse: response,
+        selectedShopId: resolvedShopId.isNotEmpty
+            ? resolvedShopId
+            : state.selectedShopId,
       ),
     );
   }
-  Future<ShopsResponse?> fetchShops({required String shopId}) async {
+
+  Future<void> replyEnquiry({
+    required String shopId,
+    required String requestId,
+    required String productTitle,
+    required String message,
+    required int price,
+    required List<File> ownerImageFiles,
+  }) async {
+    state = state.copyWith(isLoading: false, error: null);
+
+    List<String> uploadedUrls = [];
+
+    // 🔥 Upload each image one by one
+    for (final file in ownerImageFiles) {
+      final hasValidImage = file.path.isNotEmpty && await file.exists();
+
+      if (hasValidImage) {
+        final uploadResult = await api.userProfileUpload(imageFile: file);
+
+        final url = uploadResult.fold(
+          (failure) => '',
+          (success) => success.message.toString(),
+        );
+
+        if (url.isNotEmpty) {
+          uploadedUrls.add(url);
+        }
+      }
+    }
+
+    // ✅ Send all uploaded image URLs
+    final result = await api.replyEnquiry(
+      shopId: shopId,
+      requestId: requestId,
+      productTitle: productTitle,
+      message: message,
+      images: uploadedUrls, // List<String>
+      price: price,
+    );
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          replyResponse: null,
+        );
+      },
+      (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          replyResponse: response,
+        );
+      },
+    );
+  }
+  /* Future<void> replyEnquiry({
+    required String shopId,
+    required String requestId,      // ✅ must pass real requestId
+    required String productTitle,   // ✅ must pass real title
+    required String message,        // ✅ must pass real message
+    required int price,             // ✅ must pass real price
+    List<File> ownerImageFiles
+  }) async {
+    state = state.copyWith(isLoading: false, error: null);
+
+    String uploadedUrl = '';
+
+    final hasValidImage =
+        ownerImageFile != null &&
+            ownerImageFile.path.isNotEmpty &&
+            await ownerImageFile.exists();
+
+    if (hasValidImage) {
+      final uploadResult = await api.userProfileUpload(imageFile: ownerImageFile);
+
+      uploadedUrl = uploadResult.fold(
+            (failure) => '',
+            (success) => (success.message ?? '').toString(), // ✅ your API returns URL in message
+      );
+    }
+
+    // ✅ images list (send empty list if no upload)
+    final imagesList = uploadedUrl.isNotEmpty ? [uploadedUrl] : <String>[];
+
+    final result = await api.replyEnquiry(
+      shopId: shopId,
+      requestId: requestId,           // ✅ FIX: pass real values
+      productTitle: productTitle,
+      message: message,
+      images: imagesList,             // ✅ FIX: List<String>
+      price: price,
+    );
+
+    result.fold(
+          (failure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+          replyResponse: null,
+        );
+      },
+          (response) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          replyResponse: response,
+        );
+      },
+    );
+  }*/
+
+  Future<ShopsResponse?> fetchShops({
+    required String shopId,
+    required String filter,
+  }) async {
+    final resolvedShopId = await _resolveShopId(shopId);
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await api.getAllShops(shopId: shopId);
+    final result = await api.getAllShops(
+      shopId: resolvedShopId,
+      filter: filter,
+    );
 
     return result.fold(
-          (failure) {
+      (failure) {
         state = state.copyWith(
           isLoading: false,
           error: failure.message,
@@ -240,12 +378,26 @@ class HomeNotifier extends Notifier<HomeState> {
         );
         return null; // ❌ failed
       },
-          (response) async {
+      (response) async {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(
           'isFreemium',
-          response.data.subscription?.isFreemium ?? false,
+          response.data.subscription.isFreemium,
         );
+
+        // If no shop selected yet, persist the first shop as default.
+        if (resolvedShopId.isEmpty &&
+            (prefs.getString('currentShopId') ?? '').trim().isEmpty) {
+          final firstId = (response.data.items.isNotEmpty)
+              ? response.data.items.first.id.toString().trim()
+              : '';
+          if (firstId.isNotEmpty) {
+            await prefs.setString('currentShopId', firstId);
+            state = state.copyWith(selectedShopId: firstId);
+          }
+        } else if (resolvedShopId.isNotEmpty) {
+          state = state.copyWith(selectedShopId: resolvedShopId);
+        }
 
         state = state.copyWith(
           isLoading: false,

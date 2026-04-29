@@ -4,11 +4,12 @@ import 'package:dotted_border/dotted_border.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 
 import 'app_textstyles.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 enum DatePickMode { none, single, range }
 
@@ -2462,6 +2463,7 @@ class CommonContainer {
     required int resendSeconds,
     required String last4Digits,
     bool showError = false,
+    String? errorText,
   }) {
     return Container(
       key: const ValueKey('otpCard'),
@@ -2526,6 +2528,7 @@ class CommonContainer {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -2551,11 +2554,16 @@ class CommonContainer {
                           ),
                         ),
                       ),
+                      onTap: () {
+                        final t = controllers[index].text;
+                        controllers[index].selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: t.length,
+                        );
+                      },
                       onChanged: (value) {
                         if (value.isNotEmpty && index < 3) {
                           FocusScope.of(context).nextFocus();
-                        } else if (value.isEmpty && index > 0) {
-                          FocusScope.of(context).previousFocus();
                         }
                       },
                     ),
@@ -2582,11 +2590,13 @@ class CommonContainer {
           ),
 
           if (showError)
-            const Padding(
-              padding: EdgeInsets.only(top: 8, left: 4),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
               child: Text(
-                "⚠️ Please Enter Valid OTP",
-                style: TextStyle(color: Colors.red, fontSize: 13),
+                (errorText ?? '').trim().isNotEmpty
+                    ? errorText!.trim()
+                    : "⚠️ Please Enter Valid OTP",
+                style: const TextStyle(color: Colors.red, fontSize: 13),
               ),
             ),
         ],
@@ -3324,6 +3334,7 @@ class CommonContainer {
     required String questionText,
     required String productTitle,
     required String rating,
+    bool isSmartConnect = false,
     bool isAds = false,
     required String ratingCount,
     required String priceText,
@@ -3332,11 +3343,38 @@ class CommonContainer {
     required String avatarAsset,
     required String customerName,
     required String timeText,
+
+    // ✅ CLOSED Answer UI
+    bool showAnswerOnly = false,
+    String? answerTitle,
+    String? answerDescription,
+    int? answerPrice,
+    List<String>? answerImages,
+
+    // ✅ Reply form...
+    // XFile? pickedImage,
+    List<XFile>? pickedImages,
+    TextEditingController? messageController,
+    TextEditingController? priceController,
+    int maxMessageLength = 120,
+    bool isSending = false,
+    VoidCallback? onPickImage,
+    Function(int index)? onRemoveImage,
+    VoidCallback? onSendTap,
+
+    // ✅ Top actions
     VoidCallback? onChatTap,
     VoidCallback? onCallTap,
 
     Color floralWhite = const Color(0xFFF9FAF6),
   }) {
+    final msg = messageController?.text ?? '';
+    final lettersLeft = maxMessageLength - msg.length;
+
+    final List<String> ansImgs = answerImages ?? const <String>[];
+    final bool hasAnsImage =
+        ansImgs.isNotEmpty && ansImgs.first.trim().isNotEmpty;
+    final List<XFile> images = pickedImages ?? [];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
@@ -3346,312 +3384,7 @@ class CommonContainer {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          questionText.isNotEmpty
-              ? Text(
-                  questionText,
-                  style: AppTextStyles.mulish(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                )
-              : SizedBox.shrink(),
-          questionText.isNotEmpty
-              ? const SizedBox(height: 14)
-              : SizedBox.shrink(),
-
-          if (isAds == false) ...[
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: const ColoredBox(color: Color(0xFFF8FBF8)),
-                    ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Color(0xFF000000).withOpacity(0.02), // 0%
-                              Color(0xFF000000).withOpacity(0.00), // 0%
-                              Color(0xFF000000).withOpacity(0.00), // 3%
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 14,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  productTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF31CC64),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            '$rating ',
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const Icon(
-                                            Icons.star,
-                                            size: 14,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            ratingCount,
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        overflow: TextOverflow.ellipsis,
-                                        priceText,
-                                        style: AppTextStyles.mulish(
-                                          fontSize: 14,
-                                          color: AppColor.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      mrpText,
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 14,
-                                        color: Color(0xFF888888),
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: CachedNetworkImage(
-                            imageUrl: phoneImageAsset, // your network image URL
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-
-                            placeholder: (_, __) => Container(
-                              width: 100,
-                              height: 100,
-                              color: Colors.grey.shade200,
-                            ),
-
-                            errorWidget: (_, __, ___) => Icon(
-                              Icons.broken_image,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage:
-                      (avatarAsset != null && avatarAsset.isNotEmpty)
-                      ? CachedNetworkImageProvider(avatarAsset)
-                      : AssetImage(AppImages.profile) as ImageProvider,
-                ),
-
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DottedBorder(
-                    color: Colors.grey.shade300, // border color
-                    strokeWidth: 1.2, // border thickness
-                    dashPattern: const [4, 3], // [dash, gap]
-                    borderType: BorderType.RRect, // rounded rect
-                    radius: const Radius.circular(30),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            customerName,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.mulish(
-                              fontSize: 12,
-                              color: AppColor.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          timeText,
-                          style: AppTextStyles.mulish(
-                            fontSize: 12,
-                            color: AppColor.darkGrey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: onCallTap,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColor.skyBlue,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Image.asset(
-                          AppImages.callImage,
-                          color: AppColor.white,
-                          height: 18,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 5),
-                    GestureDetector(
-                      onTap: onChatTap,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColor.green,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Image.asset(
-                          AppImages.whatsappImage,
-                          color: AppColor.white,
-                          height: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ] else ...[
-            Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: DottedBorder(
-                    color: Colors.grey.shade300, // border color
-                    strokeWidth: 1.2, // border thickness
-                    dashPattern: const [4, 3], // [dash, gap]
-                    borderType: BorderType.RRect, // rounded rect
-                    radius: const Radius.circular(30),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_rounded,
-                          color: AppColor.darkGrey,
-                          size: 13,
-                        ),
-                        Text(
-                          '100 M',
-                          style: AppTextStyles.mulish(
-                            color: AppColor.darkGrey,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 15),
-                        Text(
-                          customerName,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.mulish(
-                            fontSize: 12,
-                            color: AppColor.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Spacer(),
-                Text(
-                  timeText,
-                  style: AppTextStyles.mulish(
-                    fontSize: 12,
-                    color: AppColor.gray84,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 25),
+          if (questionText.isNotEmpty) ...[
             Text(
               questionText,
               style: AppTextStyles.mulish(
@@ -3659,377 +3392,826 @@ class CommonContainer {
                 fontSize: 16,
               ),
             ),
-            const SizedBox(height: 25),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+            const SizedBox(height: 14),
+          ],
+
+          // =========================================================
+          // NORMAL CARD UI (isAds == false)
+          // =========================================================
+          if (isAds == false) ...[
+            _productInfoTop(
+              productTitle: productTitle,
+              rating: rating,
+              ratingCount: ratingCount,
+              priceText: priceText,
+              mrpText: mrpText,
+              phoneImageAsset: phoneImageAsset,
+            ),
+            const SizedBox(height: 14),
+
+            _bottomRow(
+              avatarAsset: avatarAsset,
+              customerName: customerName,
+              timeText: timeText,
+              isSmartConnect: isSmartConnect,
+              showActions: !showAnswerOnly,
+              onChatTap: onChatTap,
+              onCallTap: onCallTap,
+            ),
+
+            // ✅ CLOSED smartconnect: show answer here also (read-only reply UI)
+            if (showAnswerOnly) ...[
+              const SizedBox(height: 18),
+              _readOnlyReplyUI(
+                title: answerTitle ?? '',
+                description: answerDescription ?? '',
+                price: answerPrice ?? 0,
+                images: ansImgs,
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: const ColoredBox(color: Color(0xFFF8FBF8)),
-                    ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              const Color(0xFF000000).withOpacity(0.02), // 3%
-                              const Color(0xFF000000).withOpacity(0.00), // 0%
-                              const Color(0xFF000000).withOpacity(0.00), // 0%
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+            ],
+          ] else ...[
+            // =========================================================
+            // ADS / REPLY UI (isAds == true)
+            // =========================================================
+            _adsTopRow(customerName: customerName, timeText: timeText),
+            const SizedBox(height: 25),
 
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 14,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  productTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.mulish(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
+            _productInfoTop(
+              productTitle: productTitle,
+              rating: rating,
+              ratingCount: ratingCount,
+              priceText: priceText,
+              mrpText: mrpText,
+              phoneImageAsset: phoneImageAsset,
+              isBigPrice: true,
+            ),
 
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF31CC64),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            '$rating ',
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const Icon(
-                                            Icons.star,
-                                            size: 14,
-                                            color: Colors.white,
-                                          ),
-                                          Text(
-                                            ratingCount,
-                                            style: AppTextStyles.mulish(
-                                              fontSize: 12,
-                                              color: AppColor.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
+            const SizedBox(height: 25),
 
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: const [
-                                    // price
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      priceText,
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 16,
-                                        color: AppColor.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      mrpText,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Color(0xFF888888),
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+            // ✅ CLOSED => read-only reply UI (NO send, NO edit)
+            if (showAnswerOnly) ...[
+              _readOnlyReplyUI(
+                title: answerTitle ?? '',
+                description: answerDescription ?? '',
+                price: answerPrice ?? 0,
+                images: ansImgs,
+              ),
+            ] else ...[
+              // ✅ OPEN => your editable reply form + send button
+              _editableReplyFormUI(
+                pickedImages: images,
+                messageController: messageController,
+                priceController: priceController,
+                maxMessageLength: maxMessageLength,
+                lettersLeft: lettersLeft,
+                isSending: isSending,
+                onPickImage: onPickImage,
+                onRemoveImage: onRemoveImage,
+                onSendTap: onSendTap,
+              ),
+              // _editableReplyFormUI(
+              //    pickedImages : pickedImage,
+              //   messageController: messageController,
+              //   priceController: priceController,
+              //   maxMessageLength: maxMessageLength,
+              //   lettersLeft: lettersLeft,
+              //   isSending: isSending,
+              //   onPickImage: onPickImage,
+              //   onRemoveImage: onRemoveImage,
+              //   onSendTap: onSendTap,
+              // ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
 
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.asset(
-                            phoneImageAsset,
-                            width: 100,
-                            height: 110,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+  static Widget _productInfoTop({
+    required String productTitle,
+    required String rating,
+    required String ratingCount,
+    required String priceText,
+    required String mrpText,
+    required String phoneImageAsset,
+    bool isBigPrice = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05))],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            const Positioned.fill(child: ColoredBox(color: Color(0xFFF8FBF8))),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      const Color(0xFF000000).withOpacity(0.02),
+                      const Color(0xFF000000).withOpacity(0.00),
+                      const Color(0xFF000000).withOpacity(0.00),
+                    ],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 25),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Reply to Enquiry",
-                        style: AppTextStyles.mulish(
-                          color: AppColor.darkGrey,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        "Report",
-                        style: AppTextStyles.mulish(
-                          color: AppColor.red1,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Stack(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+                        Text(
+                          productTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.mulish(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 12,
                           ),
-                          clipBehavior: Clip.antiAlias,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Stack(
-                              children: [
-                                Image.asset(
-                                  AppImages.imageContainer1,
-                                  width: double.infinity,
-                                  height: 150,
-                                  fit: BoxFit.cover,
-                                ),
-                                Positioned(
-                                  right: 8,
-                                  top: 8,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    padding: const EdgeInsets.all(5),
-                                    child: Image.asset(
-                                      AppImages.closeImage,
-                                      height: 12,
-                                      color: AppColor.black,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF31CC64),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '$rating ',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 12,
+                                      color: AppColor.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    ratingCount,
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 12,
+                                      color: AppColor.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Text(
+                              priceText,
+                              style: AppTextStyles.mulish(
+                                fontSize: isBigPrice ? 16 : 14,
+                                color: AppColor.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              mrpText,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: const Color(0xFF888888),
+                                decoration: TextDecoration.lineThrough,
+                                fontFamily: AppTextStyles.mulish().fontFamily,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: CachedNetworkImage(
+                    imageUrl: phoneImageAsset,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.grey.shade200,
+                    ),
+                    errorWidget: (_, __, ___) => const Icon(
+                      Icons.broken_image,
+                      size: 40,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                  const SizedBox(height: 14),
-
-                  // Message Text
-                  Text(
-                    "We have lot more models in best price, please visit our showroom",
+  static Widget _bottomRow({
+    required String avatarAsset,
+    required String customerName,
+    required String timeText,
+    required bool isSmartConnect,
+    required bool showActions,
+    VoidCallback? onChatTap,
+    VoidCallback? onCallTap,
+  }) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundImage: (avatarAsset.isNotEmpty)
+              ? CachedNetworkImageProvider(avatarAsset)
+              : AssetImage(AppImages.profile) as ImageProvider,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DottedBorder(
+            color: Colors.grey.shade300,
+            strokeWidth: 1.2,
+            dashPattern: const [4, 3],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(30),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    customerName,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.mulish(
-                      fontSize: 16,
+                      fontSize: 12,
+                      color: AppColor.black,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                ),
+                Text(
+                  timeText,
+                  style: AppTextStyles.mulish(
+                    fontSize: 12,
+                    color: AppColor.darkGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
 
-                  // Letter count
-                  Text(
-                    "10 Letters left",
+        if (showActions)
+          Row(
+            children: [
+              if (!isSmartConnect) ...[
+                GestureDetector(
+                  onTap: onCallTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColor.skyBlue,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Image.asset(
+                      AppImages.callImage,
+                      color: AppColor.white,
+                      height: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 5),
+              ],
+              GestureDetector(
+                onTap: onChatTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSmartConnect ? AppColor.skyBlue : AppColor.green,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Image.asset(
+                    isSmartConnect
+                        ? AppImages.messageImage
+                        : AppImages.whatsappImage,
+                    color: AppColor.white,
+                    height: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  static Widget _adsTopRow({
+    required String customerName,
+    required String timeText,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: DottedBorder(
+            color: Colors.grey.shade300,
+            strokeWidth: 1.2,
+            dashPattern: const [4, 3],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(30),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  color: AppColor.darkGrey,
+                  size: 13,
+                ),
+                Text(
+                  '100 M',
+                  style: AppTextStyles.mulish(
+                    color: AppColor.darkGrey,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Text(
+                    customerName,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.mulish(
                       fontSize: 12,
-                      color: AppColor.darkGrey,
+                      color: AppColor.black,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Spacer(),
+        Text(
+          timeText,
+          style: AppTextStyles.mulish(fontSize: 12, color: AppColor.gray84),
+        ),
+      ],
+    );
+  }
 
-                  // Price Box
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColor.leftArrow,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          "My Price",
-                          style: AppTextStyles.mulish(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Container(
-                          width: 1.5,
-                          height: 23,
-                          decoration: BoxDecoration(
-                            color: AppColor.borderLightGrey,
-                            // gradient: LinearGradient(
-                            //   begin: Alignment.topCenter,
-                            //   end: Alignment.bottomCenter,
-                            //   colors: [
-                            //     Colors.grey.shade200,
-                            //     Colors.grey.shade300,
-                            //     Colors.grey.shade200,
-                            //   ],
-                            // ),
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          "2750",
-                          style: AppTextStyles.mulish(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+  static Widget _readOnlyReplyUI({
+    required String title,
+    required String description,
+    required int price,
+    required List<String> images,
+  }) {
+    final validImages = images.where((e) => e.trim().isNotEmpty).toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Your Reply",
+                style: AppTextStyles.mulish(
+                  color: AppColor.darkGrey,
+                  fontSize: 12,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "CLOSED",
+                  style: AppTextStyles.mulish(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.skyBlue,
                   ),
-                  const SizedBox(height: 8),
+                ),
+              ),
+            ],
+          ),
 
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Image.asset(AppImages.question, height: 13),
+          const SizedBox(height: 14),
+
+          /// 🔥 MULTIPLE IMAGES SUPPORT
+          if (validImages.isNotEmpty) ...[
+            SizedBox(
+              height: 140,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: validImages.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: CachedNetworkImage(
+                        imageUrl: validImages[index],
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            Container(color: Colors.grey.shade200),
+                        errorWidget: (_, __, ___) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.broken_image),
+                        ),
                       ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          "Give less price than quoted price to attract more customers easily.",
-                          style: AppTextStyles.mulish(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.gray84,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
 
-                  Row(
-                    children: [
-                      Expanded(
+          if (title.trim().isNotEmpty)
+            Text(
+              title,
+              style: AppTextStyles.mulish(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColor.black,
+              ),
+            ),
+
+          if (description.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Text(
+                description,
+                style: AppTextStyles.mulish(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColor.darkGrey,
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 14),
+
+          /// Price Block
+          Container(
+            decoration: BoxDecoration(
+              color: AppColor.leftArrow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  "My Price",
+                  style: AppTextStyles.mulish(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  width: 1.5,
+                  height: 23,
+                  color: AppColor.borderLightGrey,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "₹$price",
+                  style: AppTextStyles.mulish(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+          Text(
+            "Sent to customer (read-only)",
+            style: AppTextStyles.mulish(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColor.gray84,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _editableReplyFormUI({
+    required List<XFile> pickedImages,
+    required TextEditingController? messageController,
+    required TextEditingController? priceController,
+    required int maxMessageLength,
+    required int lettersLeft,
+    required bool isSending,
+    required VoidCallback? onPickImage,
+    required Function(int index)? onRemoveImage,
+    required VoidCallback? onSendTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Reply to Enquiry",
+                style: AppTextStyles.mulish(
+                  color: AppColor.darkGrey,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                "Report",
+                style: AppTextStyles.mulish(color: AppColor.red1, fontSize: 12),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          /// 🔥 Horizontal Image Picker (Max 3)
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: pickedImages.length < 3
+                  ? pickedImages.length + 1
+                  : pickedImages.length,
+              itemBuilder: (context, index) {
+                /// Add Button
+                if (index == pickedImages.length && pickedImages.length < 3) {
+                  return GestureDetector(
+                    onTap: onPickImage,
+                    child: Container(
+                      width: 110,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 28,
+                            color: Colors.grey.shade700,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "Add Image",
+                            style: AppTextStyles.mulish(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColor.darkGrey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                /// Image Item
+                return Stack(
+                  children: [
+                    Container(
+                      width: 110,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.file(
+                        File(pickedImages[index].path),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: GestureDetector(
+                        onTap: () => onRemoveImage?.call(index),
                         child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColor.iceBlue,
-                            border: Border.all(color: AppColor.iceBlue),
-                            borderRadius: BorderRadius.circular(15),
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
                           ),
-                          child: Row(
+                          child: const Icon(
+                            Icons.close,
+                            size: 14,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          /// Message Field
+          TextField(
+            controller: messageController,
+            maxLength: maxMessageLength,
+            decoration: InputDecoration(
+              hintText: "Type message to customer...",
+              counterText: "",
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+            ),
+            style: AppTextStyles.mulish(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            minLines: 2,
+            maxLines: 4,
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            "$lettersLeft Letters left",
+            style: AppTextStyles.mulish(fontSize: 12, color: AppColor.darkGrey),
+          ),
+
+          const SizedBox(height: 14),
+
+          /// Price Field
+          Container(
+            decoration: BoxDecoration(
+              color: AppColor.leftArrow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  "My Price",
+                  style: AppTextStyles.mulish(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  width: 1.5,
+                  height: 23,
+                  decoration: BoxDecoration(
+                    color: AppColor.borderLightGrey,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: "Enter price",
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: AppTextStyles.mulish(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          /// Send Button
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: isSending ? null : onSendTap,
+              child: Opacity(
+                opacity: isSending ? 0.7 : 1,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColor.skyBlue,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Center(
+                    child: isSending
+                        ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset(AppImages.gallery, height: 19),
-                              SizedBox(width: 10),
-                              Text(
-                                "Replace Image",
-                                style: AppTextStyles.mulish(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                              const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColor.skyBlue,
-                            border: Border.all(color: AppColor.iceBlue),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                AppImages.messageImage,
-                                height: 19,
-                                color: AppColor.white,
-                              ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               Text(
-                                "Send",
+                                "Sending...",
                                 style: AppTextStyles.mulish(
                                   color: AppColor.white,
                                   fontWeight: FontWeight.bold,
@@ -4037,21 +4219,257 @@ class CommonContainer {
                                 ),
                               ),
                             ],
+                          )
+                        : Text(
+                            "Send",
+                            style: AppTextStyles.mulish(
+                              color: AppColor.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ],
-
-          // Footer
+          ),
         ],
       ),
     );
   }
+  /*
+
+  static Widget _editableReplyFormUI({
+    required XFile? pickedImage,
+    required TextEditingController? messageController,
+    required TextEditingController? priceController,
+    required int maxMessageLength,
+    required int lettersLeft,
+    required bool isSending,
+    required VoidCallback? onPickImage,
+    required VoidCallback? onRemoveImage,
+    required VoidCallback? onSendTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Reply to Enquiry",
+                style: AppTextStyles.mulish(
+                  color: AppColor.darkGrey,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                "Report",
+                style: AppTextStyles.mulish(
+                  color: AppColor.red1,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          GestureDetector(
+            onTap: onPickImage,
+            child: Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 150,
+                      child: pickedImage == null
+                          ? Container(
+                        color: Colors.grey.shade200,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_a_photo_outlined, size: 28, color: Colors.grey.shade700),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Tap to choose image",
+                                style: AppTextStyles.mulish(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.darkGrey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                          : Image.file(File(pickedImage.path), fit: BoxFit.cover),
+                    ),
+                  ),
+                  if (pickedImage != null)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onRemoveImage,
+                        child: Container(
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          padding: const EdgeInsets.all(5),
+                          child: Image.asset(AppImages.closeImage, height: 12, color: AppColor.black),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          TextField(
+            controller: messageController,
+            maxLength: maxMessageLength,
+            decoration: InputDecoration(
+              hintText: "Type message to customer...",
+              counterText: "",
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade400),
+              ),
+            ),
+            style: AppTextStyles.mulish(fontSize: 14, fontWeight: FontWeight.w600),
+            minLines: 2,
+            maxLines: 4,
+          ),
+
+          const SizedBox(height: 6),
+          Text(
+            "$lettersLeft Letters left",
+            style: AppTextStyles.mulish(fontSize: 12, color: AppColor.darkGrey),
+          ),
+
+          const SizedBox(height: 14),
+
+          Container(
+            decoration: BoxDecoration(
+              color: AppColor.leftArrow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Text("My Price", style: AppTextStyles.mulish(fontSize: 14, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 10),
+                Container(
+                  width: 1.5,
+                  height: 23,
+                  decoration: BoxDecoration(
+                    color: AppColor.borderLightGrey,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: "Enter price",
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: AppTextStyles.mulish(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          // ✅ Send button only in OPEN
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: isSending ? null : onSendTap,
+              child: Opacity(
+                opacity: isSending ? 0.7 : 1,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColor.skyBlue,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Center(
+                    child: isSending
+                        ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          "Sending...",
+                          style: AppTextStyles.mulish(
+                            color: AppColor.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    )
+                        : Text(
+                      "Send",
+                      style: AppTextStyles.mulish(
+                        color: AppColor.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+*/
 
   static Widget offerTile(String title, String count) {
     return Container(

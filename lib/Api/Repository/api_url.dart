@@ -1,8 +1,9 @@
-class ApiUrl {
+﻿class ApiUrl {
   // static const String base =
   //     "https://fenizo-tringo-backend-12ebb106711d.herokuapp.com/";
 
   static const String base = "https://bknd.tringobiz.com/";
+  // static const String base = "https://qbkqz1b4-4000.inc1.devtunnels.ms/";
   static const String baseUrlImage = "https://bknd.tringobiz.com/";
   static const String privacyPolicy =
       "${base}api/v1/public/pages/privacy-policy";
@@ -14,13 +15,29 @@ class ApiUrl {
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
+  static const String fcmToken = "${base}api/v1/auth/device-token";
   static const String mobileVerify = "${base}api/v1/auth/login-by-sim";
   static const String version = "${base}api/v1/app/version";
   static const String deleteAccount = "${base}api/v1/auth/me";
   static const String imageUrl = "${baseUrlImage}api/media/image-save";
   // "https://next.fenizotechnologies.com/Adrox/api/image-save";
   static const String plans = "${base}api/v1/subscriptions/plans";
-  static const String currentPlans = "${base}api/v1/subscriptions/current";
+
+  static String currentSubscription({String? businessProfileId}) {
+    final bp = (businessProfileId ?? '').trim();
+    return Uri.parse("${base}api/v1/subscriptions/current")
+        .replace(queryParameters: bp.isEmpty ? null : {"businessProfileId": bp})
+        .toString();
+  }
+
+  static const String ccavenueInit =
+      "${base}api/v1/subscriptions/ccavenue/init";
+  static const String ccavenueExtendInit =
+      "${base}api/v1/subscriptions/ccavenue/extend/init";
+  static const String ccavenueConfirm =
+      "${base}api/v1/subscriptions/ccavenue/confirm";
+
+  // Legacy endpoint (kept for backward compatibility in older builds)
   static const String purchase = "${base}api/v1/subscriptions/purchase";
   static const String contactInfo = "${base}api/v1/contacts/sync";
   static const String supportTicketsList = "${base}api/v1/support/tickets";
@@ -30,8 +47,21 @@ class ApiUrl {
     return "${base}api/v1/support/tickets/$ticketId/messages";
   }
 
-  static String getKeyWords({required String type, required String query}) {
-    return "${base}api/v1/public/keywords?type=$type&q=$query";
+  static String getKeyWords({
+    required String categorySlug,
+    required String query,
+  }) {
+    final params = <String, String>{};
+
+    final slug = categorySlug.trim();
+    final q = query.trim();
+
+    if (slug.isNotEmpty) params['categorySlug'] = slug;
+    if (q.isNotEmpty) params['q'] = q;
+
+    return Uri.parse("${base}api/v1/public/keywords")
+        .replace(queryParameters: params.isEmpty ? null : params)
+        .toString();
   }
 
   static String getChatMessages({required String id}) {
@@ -42,8 +72,10 @@ class ApiUrl {
       "${base}api/v1/auth/phone-verification/request";
   static const String shopNumberOtpVerify =
       "${base}api/v1/auth/phone-verification/verify";
-  static const String categoriesShop =
-      "${base}api/v1/public/categories?type=shop";
+
+  static String categoriesShop({required String type}) {
+    return "${base}api/v1/public/categories?kind=$type";
+  }
 
   static String shopPhotosUpload({required String shopId}) {
     return "${base}api/v1/shops/$shopId/media";
@@ -63,6 +95,13 @@ class ApiUrl {
 
   static String createSurpriseOffer({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers/surprise";
+  }
+
+  static String updateSurpriseOffer({
+    required String shopId,
+    required String offerId,
+  }) {
+    return "${base}api/v1/shops/$shopId/offers/surprise/$offerId";
   }
 
   static String updateProducts({required String productId}) {
@@ -120,8 +159,15 @@ class ApiUrl {
     return "${base}api/v1/dashboard/enquiries?page=1&limit=20&shopId=$shopId";
   }
 
-  static String getAllShopsDetails({required String shopId}) {
-    return "${base}api/v1/dashboard/shops?shopId=$shopId";
+  static String replyEnquiry({required String requestId}) {
+    return "${base}api/smart-connect/$requestId/responses";
+  }
+
+  static String getAllShopsDetails({
+    required String shopId,
+    required String filter,
+  }) {
+    return "${base}api/v1/dashboard/shops?shopId=$shopId&filter=$filter";
   }
 
   static String fetchAnalyticsActivity({
@@ -168,6 +214,14 @@ class ApiUrl {
 
   static String createAppOffer({required String shopId}) {
     return "${base}api/v1/shops/$shopId/offers/app";
+  }
+
+  static String getShopAnalytics({
+    required String shopId,
+    required String filter,
+    required String months,
+  }) {
+    return "${base}api/v1/shops/$shopId/profile/about-me-analytics?month=$months&filter=$filter";
   }
 
   static String productListShowForOffer({
@@ -238,3 +292,4 @@ class ApiUrl {
   }
 */
 }
+

@@ -1,32 +1,39 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
-import 'package:tringo_owner/Core/Utility/app_loader.dart';
-import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Screens/surprise_offer_list.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_snackbar.dart';
+import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
-import '../../AddProduct/Controller/product_notifier.dart';
 import '../Controller/create_surprise_notifier.dart';
-
+import '../Model/surprise_offer_list_response.dart';
 class CreateSurpriseOffer extends ConsumerStatefulWidget {
   final String shopId;
-  const CreateSurpriseOffer({super.key, required this.shopId});
+  final OfferItem? initialOffer;
+
+  const CreateSurpriseOffer({
+    super.key,
+    required this.shopId,
+    this.initialOffer,
+  });
+
+  bool get isEdit => initialOffer != null;
 
   @override
   ConsumerState<CreateSurpriseOffer> createState() =>
       _CreateSurpriseOfferState();
 }
-
 class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // ✅ Controllers
+  // Ã¢Å“â€¦ Controllers
   final TextEditingController _branchController = TextEditingController();
   final TextEditingController _offerTitleController = TextEditingController();
   final TextEditingController _availableDateController =
@@ -36,17 +43,12 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
   int Percentage = 1;
 
-  // ✅ Image Picker
+  // Ã¢Å“â€¦ Image Picker
   final ImagePicker _picker = ImagePicker();
   File? _bannerImageFile;
+  String _existingBannerUrl = '';
+  bool _didSyncBranchLabel = false;
 
-  // ✅ Dummy Branch list (API response இருந்தா அதுல இருந்து set pannunga)
-  final List<String> _branches = [
-    "Main Branch - Madurai",
-    "Anna Nagar Branch",
-    "KK Nagar Branch",
-    "Villapuram Branch",
-  ];
   Map<String, String> _extractDateRange(String value) {
     if (value.isEmpty) return {"from": "", "to": ""};
 
@@ -58,6 +60,31 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
     }
 
     return {"from": parts[0].trim(), "to": parts[1].trim()};
+  }
+  String _formatUiDate(DateTime d) =>
+      DateFormat('dd-MM-yyyy').format(d.toLocal());
+
+  String _formatUiDateRange(DateTime from, DateTime to) {
+    return '${_formatUiDate(from)} to ${_formatUiDate(to)}';
+  }
+
+  void _prefillFromOffer(OfferItem offer) {
+    _offerTitleController.text = offer.title;
+    _offerDescriptionController.text = offer.description;
+
+    final branch = offer.branchId.trim();
+    _selectedBranchId = branch.isEmpty ? null : branch;
+
+    _existingBannerUrl = (offer.bannerUrl ?? '').trim();
+
+    final totalCoupons = offer.coupons.total;
+    Percentage = totalCoupons > 0 ? totalCoupons : 1;
+
+    final from = offer.availableFrom;
+    final to = offer.availableTo;
+    if (from != null && to != null) {
+      _availableDateController.text = _formatUiDateRange(from, to);
+    }
   }
 
   @override
@@ -109,18 +136,18 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                   ),
                   const SizedBox(height: 14),
 
-                  /// 🔽 CONTENT AREA
+                  /// Ã°Å¸â€Â½ CONTENT AREA
                   Expanded(
                     child: Builder(
                       builder: (_) {
-                        /// 🔄 Loading (CENTERED)
+                        /// Ã°Å¸â€â€ž Loading (CENTERED)
                         if (state.isLoading) {
                           return const Center(
                             child: ThreeDotsLoader(dotColor: AppColor.black),
                           );
                         }
 
-                        /// ❌ Error (CENTERED)
+                        /// Ã¢ÂÅ’ Error (CENTERED)
                         if (state.error != null) {
                           return Center(
                             child: Text(
@@ -131,7 +158,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                           );
                         }
 
-                        /// ⚠️ Empty (CENTERED)
+                        /// Ã¢Å¡Â Ã¯Â¸Â Empty (CENTERED)
                         if (branches.isEmpty) {
                           return const Center(
                             child: Text(
@@ -141,7 +168,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                           );
                         }
 
-                        /// ✅ Success (LIST)
+                        /// Ã¢Å“â€¦ Success (LIST)
                         return ListView.separated(
                           itemCount: branches.length,
                           separatorBuilder: (_, __) => const Divider(height: 1),
@@ -177,7 +204,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
     );
   }
 
-  // ✅ Image Picker function
+  // Ã¢Å“â€¦ Image Picker function
   Future<void> _pickBannerImage(ImageSource source) async {
     try {
       final XFile? file = await _picker.pickImage(
@@ -197,7 +224,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
     }
   }
 
-  // ✅ Banner picker bottomsheet
+  // Ã¢Å“â€¦ Banner picker bottomsheet
   void _openBannerPickerSheet() {
     showModalBottomSheet(
       context: context,
@@ -253,8 +280,8 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                 },
               ),
 
-              // ✅ Only show when image already selected
-              if (_bannerImageFile != null) ...[
+              // Ã¢Å“â€¦ Only show when image already selected
+              if (_bannerImageFile != null || _existingBannerUrl.trim().isNotEmpty) ...[
                 CommonContainer.horizonalDivider(),
 
                 // // (Optional) View
@@ -267,7 +294,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                 //   },
                 // ),
 
-                // ✅ Remove
+                // Ã¢Å“â€¦ Remove
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
                   title: const Text(
@@ -276,7 +303,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    setState(() => _bannerImageFile = null);
+                    setState(() { _bannerImageFile = null; _existingBannerUrl = ''; });
                   },
                 ),
               ],
@@ -317,14 +344,46 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
   @override
   void initState() {
     super.initState();
+
+    final offer = widget.initialOffer;
+    if (offer != null) {
+      _prefillFromOffer(offer);
+    }
+
     Future.microtask(() {
-      ref.read(createSurpriseNotifier.notifier).getBranchList();
+      ref
+          .read(createSurpriseNotifier.notifier)
+          .getBranchList(apiShopId: widget.shopId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(createSurpriseNotifier);
+
+    final branches = state.storeListResponse?.data?.items ?? [];
+    if (!_didSyncBranchLabel) {
+      final selected = (_selectedBranchId ?? '').trim();
+      final currentLabel = _branchController.text.trim();
+
+      if (selected.isEmpty || currentLabel.isNotEmpty) {
+        _didSyncBranchLabel = true;
+      } else if (branches.isNotEmpty) {
+        _didSyncBranchLabel = true;
+        for (final b in branches) {
+          if (b.id == selected) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              setState(() {
+                _branchController.text = b.label;
+              });
+            });
+            break;
+          }
+        }
+      }
+    }
+
     AppLogger.log.w(widget.shopId);
     return Scaffold(
       body: SafeArea(
@@ -333,7 +392,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
             key: _formKey,
             child: Column(
               children: [
-                // ✅ back arrow
+                // Ã¢Å“â€¦ back arrow
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 15,
@@ -344,7 +403,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                   ),
                 ),
 
-                // ✅ Top Banner UI
+                // Ã¢Å“â€¦ Top Banner UI
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -369,7 +428,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                       Image.asset(AppImages.surprise, height: 154),
                       const SizedBox(height: 10),
                       Text(
-                        'Create Surprise Offer',
+                        widget.isEdit ? 'Edit Surprise Offer' : 'Create Surprise Offer',
                         textAlign: TextAlign.center,
                         style: AppTextStyles.mulish(
                           fontSize: 28,
@@ -384,13 +443,13 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
                 const SizedBox(height: 30),
 
-                // ✅ FORM AREA
+                // Ã¢Å“â€¦ FORM AREA
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ✅ Select Branch
+                      // Ã¢Å“â€¦ Select Branch
                       Text(
                         'Select Branch',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -413,7 +472,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
                       const SizedBox(height: 25),
 
-                      // ✅ Banner Add Container
+                      // Ã¢Å“â€¦ Banner Add Container
                       Text(
                         'Surprise Offer Banner',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -423,9 +482,9 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                       InkWell(
                         onTap: () {
                           if (_bannerImageFile != null) {
-                            _openBannerPickerSheet(); // ✅ view/replace/remove
+                            _openBannerPickerSheet(); // Ã¢Å“â€¦ view/replace/remove
                           } else {
-                            _openBannerPickerSheet(); // ✅ pick sheet
+                            _openBannerPickerSheet(); // Ã¢Å“â€¦ pick sheet
                           }
                         },
                         child: Container(
@@ -441,38 +500,69 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                   child: Image.file(
                                     _bannerImageFile!,
                                     width: double.infinity,
-                                    height: 150, // 👈 CONTROL HEIGHT HERE
+                                    height: 150,
                                     fit: BoxFit.cover,
-                                    // fit: BoxFit
-                                    //     .fitWidth, // auto height by aspect ratio
                                   ),
                                 )
-                              : SizedBox(
-                                  height: 50,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        AppImages.addImage,
-                                        width: 20,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "Add Image",
-                                        style: AppTextStyles.mulish(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.black54,
+                              : (_existingBannerUrl.trim().isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: Image.network(
+                                          _existingBannerUrl,
+                                          width: double.infinity,
+                                          height: 150,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => SizedBox(
+                                            height: 50,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Image.asset(
+                                                  AppImages.addImage,
+                                                  width: 20,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  "Add Image",
+                                                  style: AppTextStyles.mulish(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                      )
+                                    : SizedBox(
+                                        height: 50,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              AppImages.addImage,
+                                              width: 20,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              "Add Image",
+                                              style: AppTextStyles.mulish(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )),
                         ),
                       ),
                       const SizedBox(height: 25),
 
-                      // ✅ Title
+                      // Ã¢Å“â€¦ Title
                       Text(
                         'Surprise Offer Title',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -489,7 +579,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
                       const SizedBox(height: 25),
 
-                      // ✅ Description
+                      // Ã¢Å“â€¦ Description
                       Text(
                         'Surprise Offer Description',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -507,7 +597,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
                       const SizedBox(height: 25),
 
-                      // ✅ Date Range
+                      // Ã¢Å“â€¦ Date Range
                       Row(
                         children: [
                           Text(
@@ -546,7 +636,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
                       const SizedBox(height: 25),
 
-                      // ✅ Count
+                      // Ã¢Å“â€¦ Count
                       Text(
                         'Surprise Coupon Count',
                         style: AppTextStyles.mulish(color: AppColor.mildBlack),
@@ -636,7 +726,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
 
                       const SizedBox(height: 30),
 
-                      // ✅ Done Button
+                      // Ã¢Å“â€¦ Done Button
                       CommonContainer.button(
                         isLoading: state.isLoading,
                         buttonColor: AppColor.black,
@@ -657,10 +747,21 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                 final apiAvailableTo = availableTo.isEmpty
                                     ? ""
                                     : convertToApiFormat(availableTo);
-                                final File? ownerFile = _bannerImageFile == null
-                                    ? null
-                                    : File(_bannerImageFile!.path);
-                                if (_bannerImageFile == null) {
+                                final branchId =
+                                    (_selectedBranchId ?? '').trim();
+                                if (branchId.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Please select branch"),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                final hasBanner =
+                                    _bannerImageFile != null ||
+                                        _existingBannerUrl.trim().isNotEmpty;
+                                if (!hasBanner) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("Please add banner image"),
@@ -672,9 +773,15 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                 AppLogger.log.w(apiAvailableFrom);
                                 final sucess = await ref
                                     .watch(createSurpriseNotifier.notifier)
-                                    .createSurpriseOffer(
-                                      branchId: _selectedBranchId.toString(),
-                                      ownerImageFile: ownerFile,
+                                    .saveSurpriseOffer(
+                                      offerId: widget.initialOffer?.id,
+                                      branchId: branchId,
+                                      bannerImageFile: _bannerImageFile,
+                                      existingBannerUrl: _existingBannerUrl
+                                              .trim()
+                                              .isEmpty
+                                          ? null
+                                          : _existingBannerUrl.trim(),
                                       title: _offerTitleController.text.trim(),
                                       description: _offerDescriptionController
                                           .text
@@ -685,12 +792,8 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                       availableTo: apiAvailableTo,
                                     );
                                 if (sucess) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => SurpriseOfferList(),
-                                    ),
-                                  );
+                                  if (!mounted) return;
+                                  Navigator.pop(context, true);
                                 } else {
                                   final latestError = ref
                                       .read(createSurpriseNotifier)
@@ -703,7 +806,7 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
                                 // );
                               },
                         text: Text(
-                          'Done',
+                          widget.isEdit ? 'Update' : 'Done',
                           style: AppTextStyles.mulish(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -724,3 +827,18 @@ class _CreateSurpriseOfferState extends ConsumerState<CreateSurpriseOffer> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

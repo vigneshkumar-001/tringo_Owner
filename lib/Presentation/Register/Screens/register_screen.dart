@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Presentation/Register/Screens/owner_info_screens.dart';
 
@@ -31,8 +32,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // selectedKind == true  → Individual
-    // selectedKind == false → Company
     final bool isIndividual = selectedKind!;
     final BusinessType businessType = isIndividual
         ? BusinessType.individual
@@ -48,6 +47,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     RegistrationProductSeivice.instance.businessCategory = businessCategory;
 
+    // Persist flags so onboarding can resume after app restart
+    AppPrefs.setRegistrationFlags(
+      isService: selectedIndex == 1,
+      isIndividual: isIndividual,
+    );
+
     // Owner info
     context.pushNamed(
       AppRoutes.ownerInfo,
@@ -55,39 +60,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  ///new1///
-  // void _goNext() {
-  //   if (selectedKind == null) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Please select your business type.')),
-  //     );
-  //     return;
-  //   }
-  //
-  //   // selectedKind == true  → Individual
-  //   // selectedKind == false → Company
-  //   final bool isIndividual = selectedKind!;
-  //   final BusinessType businessType = isIndividual
-  //       ? BusinessType.individual
-  //       : BusinessType.company;
-  //
-  //   // 🔹 Save premium / non-premium to both sessions
-  //   RegistrationSession.instance.businessType = businessType;
-  //   RegistrationProductSeivice.instance.businessType = businessType;
-  //
-  //   // 🔹 Product / Service selection
-  //   final BusinessCategory businessCategory = (selectedIndex == 0)
-  //       ? BusinessCategory.product
-  //       : BusinessCategory.service;
-  //
-  //   RegistrationProductSeivice.instance.businessCategory = businessCategory;
-  //
-  //   // 🔹 Go to owner info with flags
-  //   context.pushNamed(
-  //     AppRoutes.ownerInfo,
-  //     extra: {'isService': selectedIndex == 1, 'isIndividual': isIndividual},
-  //   );
-  // }
 
   @override
   void dispose() {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
+import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Presentation/AddProduct/Controller/product_notifier.dart';
 import '../../../Core/Const/app_color.dart';
@@ -12,7 +13,7 @@ import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
-import '../../ShopInfo/model/shop_category_list_response.dart';
+import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import '../Service Info/Controller/service_info_notifier.dart';
 import 'add_product_list.dart';
 
@@ -35,6 +36,9 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
   final String? initialDoorDelivery; // "Yes" / "No"
   final String? initialCategorySlug;
   final String? initialSubCategorySlug;
+  final List<String> initialImageUrls;
+  final List<Map<String, String>> initialFeatures;
+  final List<String> initialKeywords;
 
   const ProductCategoryScreens({
     super.key,
@@ -55,6 +59,9 @@ class ProductCategoryScreens extends ConsumerStatefulWidget {
     this.initialDoorDelivery,
     this.initialCategorySlug,
     this.initialSubCategorySlug,
+    this.initialImageUrls = const [],
+    this.initialFeatures = const [],
+    this.initialKeywords = const [],
   });
 
   @override
@@ -100,8 +107,7 @@ class _ProductCategoryScreensState
     WidgetRef ref,
     TextEditingController controller, {
     void Function(ShopCategoryListData selectedCategory)? onCategorySelected,
-  })
-  {
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -240,6 +246,9 @@ class _ProductCategoryScreensState
                                           _subCategoryHasError = false;
                                         });
 
+                                        // Persist selected slug for ProductSearchKeyword suggestions
+                                        AppPrefs.setProductCategorySlug(category.slug);
+
                                         if (onCategorySelected != null) {
                                           onCategorySelected(category);
                                         }
@@ -264,8 +273,7 @@ class _ProductCategoryScreensState
     BuildContext context,
     List<ShopCategoryListData> children,
     TextEditingController controller,
-  )
-  {
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -447,6 +455,9 @@ class _ProductCategoryScreensState
 
     productCategorySlug = widget.initialCategorySlug ?? '';
     productSubCategorySlug = widget.initialSubCategorySlug ?? '';
+    if (productCategorySlug.trim().isNotEmpty) {
+      AppPrefs.setProductCategorySlug(productCategorySlug);
+    }
 
     _offerController.text = widget.initialOfferLabel ?? offers.first;
     _offerPriceController.text = widget.initialOfferValue ?? '5%';
@@ -604,76 +615,76 @@ class _ProductCategoryScreensState
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      GestureDetector(
-                        onTap: () {
-                          if (_categoryController.text.isEmpty) {
-                            AppSnackBar.info(
-                              context,
-                              'Please select a category first',
-                            );
-                            setState(() {
-                              _categoryHasError = true;
-                            });
-                            return;
-                          }
-
-                          if (_selectedCategoryChildren == null ||
-                              _selectedCategoryChildren!.isEmpty) {
-                            AppSnackBar.info(
-                              context,
-                              'No subcategories available for this category',
-                            );
-                            return;
-                          }
-
-                          _showCategoryChildrenBottomSheet(
-                            context,
-                            _selectedCategoryChildren!,
-                            _subCategoryController,
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 19,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColor.lightGray,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: _subCategoryHasError
-                                  ? Colors.red
-                                  : Colors.transparent,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _subCategoryController.text.isEmpty
-                                        ? " "
-                                        : _subCategoryController.text,
-                                    style: AppTextStyles.mulish(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 18,
-                                      color: _subCategoryController.text.isEmpty
-                                          ? Colors.grey
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                Image.asset(AppImages.downArrow, height: 30),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      // const SizedBox(height: 10),
+                      // GestureDetector(
+                      //   onTap: () {
+                      //     if (_categoryController.text.isEmpty) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'Please select a category first',
+                      //       );
+                      //       setState(() {
+                      //         _categoryHasError = true;
+                      //       });
+                      //       return;
+                      //     }
+                      //
+                      //     if (_selectedCategoryChildren == null ||
+                      //         _selectedCategoryChildren!.isEmpty) {
+                      //       AppSnackBar.info(
+                      //         context,
+                      //         'No subcategories available for this category',
+                      //       );
+                      //       return;
+                      //     }
+                      //
+                      //     _showCategoryChildrenBottomSheet(
+                      //       context,
+                      //       _selectedCategoryChildren!,
+                      //       _subCategoryController,
+                      //     );
+                      //   },
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(
+                      //       horizontal: 12,
+                      //       vertical: 19,
+                      //     ),
+                      //     decoration: BoxDecoration(
+                      //       color: AppColor.lightGray,
+                      //       borderRadius: BorderRadius.circular(20),
+                      //       border: Border.all(
+                      //         color: _subCategoryHasError
+                      //             ? Colors.red
+                      //             : Colors.transparent,
+                      //         width: 1.5,
+                      //       ),
+                      //     ),
+                      //     child: Padding(
+                      //       padding: const EdgeInsets.symmetric(
+                      //         horizontal: 8.0,
+                      //       ),
+                      //       child: Row(
+                      //         children: [
+                      //           Expanded(
+                      //             child: Text(
+                      //               _subCategoryController.text.isEmpty
+                      //                   ? " "
+                      //                   : _subCategoryController.text,
+                      //               style: AppTextStyles.mulish(
+                      //                 fontWeight: FontWeight.w700,
+                      //                 fontSize: 18,
+                      //                 color: _subCategoryController.text.isEmpty
+                      //                     ? Colors.grey
+                      //                     : Colors.black,
+                      //               ),
+                      //             ),
+                      //           ),
+                      //           Image.asset(AppImages.downArrow, height: 30),
+                      //         ],
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       const SizedBox(height: 25),
                       Text(
                         isServiceFlow ? 'Service Name' : 'Product name',
@@ -861,7 +872,6 @@ class _ProductCategoryScreensState
                           }
 
                           if (isServiceFlow) {
-
                             final serviceResponse = await ref
                                 .read(serviceInfoNotifierProvider.notifier)
                                 .saveServiceInfo(
@@ -943,26 +953,119 @@ class _ProductCategoryScreensState
                           }
 
                           if (success) {
-                            // 🎯 Navigation logic (product + service both use this)
+                            final productResp =
+                                ref.read(productNotifierProvider).productResponse?.data;
+                            final serviceResp = ref
+                                .read(serviceInfoNotifierProvider)
+                                .serviceInfoResponse
+                                ?.data;
+
+                            final initialImageUrls = isServiceFlow
+                                ? ((serviceResp?.media
+                                              .map((e) => e.url)
+                                              .where((e) => e.trim().isNotEmpty)
+                                              .toList() ??
+                                          <String>[])
+                                      .isNotEmpty
+                                    ? (serviceResp?.media
+                                              .map((e) => e.url)
+                                              .where((e) => e.trim().isNotEmpty)
+                                              .toList() ??
+                                          <String>[])
+                                    : widget.initialImageUrls)
+                                : ((productResp?.media ?? const <dynamic>[])
+                                              .map((e) {
+                                                if (e is Map<String, dynamic>) {
+                                                  return (e['url'] ?? '').toString();
+                                                }
+                                                try {
+                                                  return (e.url ?? '').toString();
+                                                } catch (_) {
+                                                  return '';
+                                                }
+                                              })
+                                              .where((e) => e.trim().isNotEmpty)
+                                              .toList()
+                                              .isNotEmpty
+                                      ? (productResp?.media ?? const <dynamic>[])
+                                            .map((e) {
+                                              if (e is Map<String, dynamic>) {
+                                                return (e['url'] ?? '').toString();
+                                              }
+                                              try {
+                                                return (e.url ?? '').toString();
+                                              } catch (_) {
+                                                return '';
+                                              }
+                                            })
+                                            .where((e) => e.trim().isNotEmpty)
+                                            .toList()
+                                      : widget.initialImageUrls);
+
+                            final initialFeatures = isServiceFlow
+                                ? ((serviceResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                      .isNotEmpty
+                                    ? (serviceResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                    : widget.initialFeatures)
+                                : ((productResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                      .isNotEmpty
+                                    ? (productResp?.features
+                                              .map((e) => {
+                                                    'heading': e.label,
+                                                    'answer': e.value,
+                                                  })
+                                              .toList() ??
+                                          <Map<String, String>>[])
+                                    : widget.initialFeatures);
+
+                            final initialKeywords = isServiceFlow
+                                ? ((serviceResp?.keywords ?? <String>[]).isNotEmpty
+                                    ? (serviceResp?.keywords ?? <String>[])
+                                    : widget.initialKeywords)
+                                : ((productResp?.keywords ?? <String>[]).isNotEmpty
+                                    ? (productResp?.keywords ?? <String>[])
+                                    : widget.initialKeywords);
+
+                            final nextPage = AddProductList(
+                              isService: isServiceFlow,
+                              isEditFlow: widget.page == 'AboutMeScreens' &&
+                                  widget.productId != null &&
+                                  widget.productId!.isNotEmpty,
+                              initialImageUrls: initialImageUrls,
+                              initialKeywords: initialKeywords,
+                              initialFeatures: initialFeatures,
+                            );
+
                             if (widget.page == 'AboutMeScreens') {
-                              // EDIT mode (product or service) -> productId / serviceId present
-                              if (widget.productId != null &&
-                                  widget.productId!.isNotEmpty) {
-                                // ✅ Tell AboutMeScreens that something was updated
+                              final updated = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(builder: (_) => nextPage),
+                              );
+                              if (updated == true && mounted) {
                                 Navigator.pop(context, true);
-                              } else {
-                                // ADD mode from AboutMe -> go to AddProductList
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AddProductList(isService: isServiceFlow,),
-                                  ),
-                                );
                               }
                             } else {
-                              context.pushNamed(
-                                AppRoutes.addProductList,
-                                extra: {'isService': isServiceFlow},
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => nextPage),
                               );
                             }
                           }
@@ -982,7 +1085,6 @@ class _ProductCategoryScreensState
                         imgHeight: 20,
                       ),
 
-
                       const SizedBox(height: 36),
                     ],
                   ),
@@ -995,4 +1097,9 @@ class _ProductCategoryScreensState
     );
   }
 }
+
+
+
+
+
 

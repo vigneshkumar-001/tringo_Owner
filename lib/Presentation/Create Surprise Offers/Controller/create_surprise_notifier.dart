@@ -1,20 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tringo_owner/Core/Const/app_logger.dart';
-import 'package:tringo_owner/Presentation/AddProduct/Model/product_response.dart';
-import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Model/create_surprise_response.dart';
-import 'package:tringo_owner/Presentation/Create%20Surprise%20Offers/Model/store_list_response.dart';
-import '../../../Api/DataSource/api_data_source.dart';
-import '../../../Api/Repository/failure.dart';
-import '../../AboutMe/Model/service_edit_response.dart';
-import '../../AboutMe/Model/service_remove_response.dart';
-import '../../Login/controller/login_notifier.dart';
-import '../../ShopInfo/model/shop_category_list_response.dart';
-import '../Model/surprise_offer_list_response.dart';
 
+import '../../../Api/DataSource/api_data_source.dart';
+import '../../Login/controller/login_notifier.dart';
+import '../Model/create_surprise_response.dart';
+import '../Model/store_list_response.dart';
+import '../Model/surprise_offer_list_response.dart';
 class CreateSurpriseState {
   final bool isLoading;
   final String? error;
@@ -42,27 +34,34 @@ class CreateSurpriseNotifier extends Notifier<CreateSurpriseState> {
     return CreateSurpriseState.initial();
   }
 
-  Future<bool> createSurpriseOffer({
+  Future<bool> saveSurpriseOffer({
+    String? offerId,
     required String branchId,
-
     required String title,
     required String description,
     required String shopIdToUse,
     required int couponCount,
-    File? ownerImageFile, // only used if type == service
+    File? bannerImageFile,
+    String? existingBannerUrl,
     required String availableFrom,
     required String availableTo,
   }) async {
-    state = const CreateSurpriseState(isLoading: true, error: null);
-    String ownerImageUrl = '';
+    state = CreateSurpriseState(
+      isLoading: true,
+      error: null,
+      storeListResponse: state.storeListResponse,
+      createSurpriseResponse: state.createSurpriseResponse,
+      surpriseOfferListResponse: state.surpriseOfferListResponse,
+    );
 
-    // Upload owner image only if type is 'service' and file is provided
-    if (ownerImageFile != null) {
+    var bannerUrl = (existingBannerUrl ?? '').trim();
+
+    if (bannerImageFile != null) {
       final uploadResult = await api.userProfileUpload(
-        imageFile: ownerImageFile,
+        imageFile: bannerImageFile,
       );
 
-      ownerImageUrl =
+      bannerUrl =
           uploadResult.fold<String?>(
             (failure) => null,
             (success) => success.message,
@@ -70,27 +69,49 @@ class CreateSurpriseNotifier extends Notifier<CreateSurpriseState> {
           '';
     }
 
-    final result = await api.createSurpriseOffer(
-      branchId: branchId,
-      bannerUrl: ownerImageUrl,
-      shopIdToUse: shopIdToUse,
-      title: title,
-      description: description,
-      couponCount: couponCount,
-      availableFrom: availableFrom,
-      availableTo: availableTo,
-    );
+    final trimmedOfferId = (offerId ?? '').trim();
+
+    final result = trimmedOfferId.isEmpty
+        ? await api.createSurpriseOffer(
+            branchId: branchId,
+            bannerUrl: bannerUrl,
+            shopIdToUse: shopIdToUse,
+            title: title,
+            description: description,
+            couponCount: couponCount,
+            availableFrom: availableFrom,
+            availableTo: availableTo,
+          )
+        : await api.updateSurpriseOffer(
+            offerId: trimmedOfferId,
+            branchId: branchId,
+            bannerUrl: bannerUrl,
+            shopIdToUse: shopIdToUse,
+            title: title,
+            description: description,
+            couponCount: couponCount,
+            availableFrom: availableFrom,
+            availableTo: availableTo,
+          );
 
     final isSuccess = await result.fold<Future<bool>>(
       (failure) async {
-        state = CreateSurpriseState(isLoading: false, error: failure.message);
+        state = CreateSurpriseState(
+          isLoading: false,
+          error: failure.message,
+          storeListResponse: state.storeListResponse,
+          createSurpriseResponse: state.createSurpriseResponse,
+          surpriseOfferListResponse: state.surpriseOfferListResponse,
+        );
         return false;
       },
       (response) async {
         state = CreateSurpriseState(
           isLoading: false,
           createSurpriseResponse: response,
-          error: null, // 🔥 CLEAR OLD ERROR
+          error: null,
+          storeListResponse: state.storeListResponse,
+          surpriseOfferListResponse: state.surpriseOfferListResponse,
         );
         return true;
       },
@@ -99,29 +120,75 @@ class CreateSurpriseNotifier extends Notifier<CreateSurpriseState> {
     return isSuccess;
   }
 
+  Future<bool> createSurpriseOffer({
+    required String branchId,
+    required String title,
+    required String description,
+    required String shopIdToUse,
+    required int couponCount,
+    File? ownerImageFile,
+    required String availableFrom,
+    required String availableTo,
+  }) {
+    return saveSurpriseOffer(
+      offerId: null,
+      branchId: branchId,
+      title: title,
+      description: description,
+      shopIdToUse: shopIdToUse,
+      couponCount: couponCount,
+      bannerImageFile: ownerImageFile,
+      existingBannerUrl: null,
+      availableFrom: availableFrom,
+      availableTo: availableTo,
+    );
+  }
   Future<void> getBranchList({String? apiShopId}) async {
-    state = const CreateSurpriseState(isLoading: true);
+    state = CreateSurpriseState(
+      isLoading: true,
+      error: null,
+      storeListResponse: state.storeListResponse,
+      createSurpriseResponse: state.createSurpriseResponse,
+      surpriseOfferListResponse: state.surpriseOfferListResponse,
+    );
 
     final result = await api.getBranchList(apiShopId: apiShopId);
 
     result.fold(
       (failure) =>
-          state = CreateSurpriseState(isLoading: false, error: failure.message),
+          state = CreateSurpriseState(
+            isLoading: false,
+            error: failure.message,
+            storeListResponse: state.storeListResponse,
+            createSurpriseResponse: state.createSurpriseResponse,
+            surpriseOfferListResponse: state.surpriseOfferListResponse,
+          ),
       (response) => state = CreateSurpriseState(
         isLoading: false,
         storeListResponse: response,
+        createSurpriseResponse: state.createSurpriseResponse,
+        surpriseOfferListResponse: state.surpriseOfferListResponse,
       ),
     );
   }
 
   Future<void> surpriseOfferList({String? shopId}) async {
-    state = const CreateSurpriseState(isLoading: true);
+    state = CreateSurpriseState(
+      isLoading: true,
+      error: null,
+      storeListResponse: state.storeListResponse,
+      createSurpriseResponse: state.createSurpriseResponse,
+      surpriseOfferListResponse: state.surpriseOfferListResponse,
+    );
 
     final sid = (shopId ?? '').trim();
     if (sid.isEmpty) {
-      state = const CreateSurpriseState(
+      state = CreateSurpriseState(
         isLoading: false,
         error: "Shop id missing",
+        storeListResponse: state.storeListResponse,
+        createSurpriseResponse: state.createSurpriseResponse,
+        surpriseOfferListResponse: state.surpriseOfferListResponse,
       );
       return;
     }
@@ -130,10 +197,18 @@ class CreateSurpriseNotifier extends Notifier<CreateSurpriseState> {
 
     result.fold(
       (failure) =>
-          state = CreateSurpriseState(isLoading: false, error: failure.message),
+          state = CreateSurpriseState(
+            isLoading: false,
+            error: failure.message,
+            storeListResponse: state.storeListResponse,
+            createSurpriseResponse: state.createSurpriseResponse,
+            surpriseOfferListResponse: state.surpriseOfferListResponse,
+          ),
       (response) => state = CreateSurpriseState(
         isLoading: false,
         surpriseOfferListResponse: response,
+        storeListResponse: state.storeListResponse,
+        createSurpriseResponse: state.createSurpriseResponse,
       ),
     );
   }
@@ -143,3 +218,6 @@ final createSurpriseNotifier =
     NotifierProvider<CreateSurpriseNotifier, CreateSurpriseState>(
       CreateSurpriseNotifier.new,
     );
+
+
+

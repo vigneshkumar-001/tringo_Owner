@@ -44,7 +44,7 @@ class _QrCodeScreenState extends ConsumerState<QrCodeScreen> {
         (shopsRes?.data.items as List?)?.toList() ?? <dynamic>[];
 
     if (shops.isEmpty) {
-      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '');
+      await ref.read(homeNotifierProvider.notifier).fetchShops(shopId: '',filter: '');
     }
 
     final home2 = ref.read(homeNotifierProvider);
