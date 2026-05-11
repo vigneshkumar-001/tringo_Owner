@@ -1,3 +1,5 @@
+import 'plan_list_response.dart';
+
 class CurrentPlanResponse {
   final bool status;
   final String message;
@@ -30,6 +32,7 @@ class CurrentPlanData {
   final Plan plan;
   final dynamic payment; // can update if you have payment model
   final Period period;
+  final Invoice? invoice;
 
   CurrentPlanData({
     required this.subscriptionId,
@@ -39,6 +42,7 @@ class CurrentPlanData {
     required this.plan,
     this.payment,
     required this.period,
+    this.invoice,
   });
 
   factory CurrentPlanData.fromJson(Map<String, dynamic> json) {
@@ -50,6 +54,9 @@ class CurrentPlanData {
       plan: Plan.fromJson(json['plan']),
       payment: json['payment'],
       period: Period.fromJson(json['period']),
+      invoice: json['invoice'] != null
+          ? Invoice.fromJson(json['invoice'])
+          : null,
     );
   }
 
@@ -61,10 +68,35 @@ class CurrentPlanData {
     'plan': plan.toJson(),
     'payment': payment,
     'period': period.toJson(),
+    'invoice': invoice?.toJson(),
   };
   @override
   String toString() => toJson().toString();
+}
 
+class Invoice {
+  final String? url;
+  final String? downloadUrl;
+  final String? fileName;
+  final String? expiresAt;
+
+  const Invoice({this.url, this.downloadUrl, this.fileName, this.expiresAt});
+
+  factory Invoice.fromJson(Map<String, dynamic> json) {
+    return Invoice(
+      url: json['url'] as String?,
+      downloadUrl: json['downloadUrl'] as String?,
+      fileName: json['fileName'] as String?,
+      expiresAt: json['expiresAt'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'url': url,
+    'downloadUrl': downloadUrl,
+    'fileName': fileName,
+    'expiresAt': expiresAt,
+  };
 }
 
 class Plan {
@@ -75,7 +107,7 @@ class Plan {
   final int durationDays;
   final String durationLabel;
   final int price;
-  final dynamic features; // null for now
+  final List<PlanFeature> features;
 
   Plan({
     required this.id,
@@ -85,10 +117,32 @@ class Plan {
     required this.durationDays,
     required this.durationLabel,
     required this.price,
-    this.features,
+    required this.features,
   });
 
   factory Plan.fromJson(Map<String, dynamic> json) {
+    final rawFeatures = json['features'];
+    final List<PlanFeature> parsedFeatures = <PlanFeature>[];
+
+    if (rawFeatures is List) {
+      for (var i = 0; i < rawFeatures.length; i++) {
+        final e = rawFeatures[i];
+        if (e is Map) {
+          parsedFeatures.add(PlanFeature.fromJson(e.cast<String, dynamic>()));
+        } else {
+          parsedFeatures.add(
+            PlanFeature(
+              key: '',
+              label: e.toString(),
+              free: true,
+              premium: true,
+              sort: i + 1,
+            ),
+          );
+        }
+      }
+    }
+
     return Plan(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
@@ -97,7 +151,7 @@ class Plan {
       durationDays: json['durationDays'] ?? 0,
       durationLabel: json['durationLabel'] ?? '',
       price: json['price'] ?? 0,
-      features: json['features'],
+      features: parsedFeatures,
     );
   }
 
@@ -151,5 +205,4 @@ class Period {
   };
   @override
   String toString() => toJson().toString();
-
 }

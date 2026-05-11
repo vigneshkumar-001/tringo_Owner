@@ -325,6 +325,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                                       planData?.period.startsAtLabel ?? '',
                                   titlePlan: planData?.plan.durationLabel ?? '',
                                   toDate: planData?.period.endsAtLabel ?? '',
+                                  invoiceDownloadUrl:
+                                      planData?.invoice?.downloadUrl,
                                 ),
                               ),
                             );
@@ -384,6 +386,8 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                                           planData?.plan.durationLabel ?? '',
                                       toDate:
                                           planData?.period.endsAtLabel ?? '',
+                                      invoiceDownloadUrl:
+                                          planData?.invoice?.downloadUrl,
                                     )
                                   : const SubscriptionScreen(),
                             ),

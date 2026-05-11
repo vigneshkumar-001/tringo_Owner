@@ -26,7 +26,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with WidgetsBindingObserver {
   // Use your real app version value here
-  final String appVersion = '1.0.1';
+  final String appVersion = '1.0.2';
 
   @override
   void initState() {

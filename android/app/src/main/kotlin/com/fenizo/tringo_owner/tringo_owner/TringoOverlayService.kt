@@ -186,7 +186,7 @@ class TringoOverlayService : Service() {
         startForegroundDataSyncSafe()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            showCallerHeadsUp("Tringo Caller ID", "Enable overlay permission to show popup", "overlay_permission_missing")
+            showCallerHeadsUp("Caller ID", "Enable overlay permission to show popup", "overlay_permission_missing")
             openAppSettings()
             stopSelf()
             return START_NOT_STICKY
@@ -209,13 +209,13 @@ class TringoOverlayService : Service() {
             val nm = getSystemService(NotificationManager::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 nm.createNotificationChannel(
-                    NotificationChannel(channelId, "Tringo Overlay", NotificationManager.IMPORTANCE_LOW)
+                    NotificationChannel(channelId, "Overlay Service", NotificationManager.IMPORTANCE_LOW)
                 )
             }
 
             val notif = NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(android.R.drawable.ic_menu_call)
-                .setContentTitle("Tringo Caller ID")
+                .setContentTitle("Caller ID")
                 .setContentText("Running...")
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
@@ -452,7 +452,7 @@ class TringoOverlayService : Service() {
         adsAdapter = OverlayAdsAdapter()
         recycler?.adapter = adsAdapter
 
-        smallTop?.text = if (postCallPopupMode) "Tringo Call Ended" else "Tringo Identifies"
+        smallTop?.text = if (postCallPopupMode) "Call Ended" else "Caller Identified"
 
         closeBtn?.setOnClickListener {
             markUserClosedDuringCall(pendingPhone)
@@ -488,7 +488,7 @@ class TringoOverlayService : Service() {
         try {
             windowManager?.addView(v, params)
         } catch (e: Exception) {
-            showCallerHeadsUp("Tringo Caller ID", if (contactName.isNotBlank()) contactName else phone, "addView_failed")
+            showCallerHeadsUp("Caller ID", if (contactName.isNotBlank()) contactName else phone, "addView_failed")
             stopSelf()
             return
         }
@@ -750,7 +750,7 @@ class TringoOverlayService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = getSystemService(NotificationManager::class.java)
             nm.createNotificationChannel(
-                NotificationChannel(channelId, "Tringo Call Alerts", NotificationManager.IMPORTANCE_HIGH)
+                NotificationChannel(channelId, "Call Alerts", NotificationManager.IMPORTANCE_HIGH)
             )
         }
 

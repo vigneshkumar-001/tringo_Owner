@@ -302,55 +302,73 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           // OTP fields
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 35),
-                            child: PinCodeTextField(
-                              appContext: context,
-                              length: 4,
-                              autoFocus: otp.text.isEmpty,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              autoDisposeControllers: false,
-                              blinkWhenObscuring: true,
-                              controller: otp,
-                              keyboardType: TextInputType.number,
-                              cursorColor: AppColor.black,
-                              animationDuration: const Duration(
-                                milliseconds: 300,
-                              ),
-                              enableActiveFill: true,
-                              pinTheme: PinTheme(
-                                shape: PinCodeFieldShape.box,
-                                borderRadius: BorderRadius.circular(17),
-                                fieldHeight: 55,
-                                fieldWidth: 55,
-                                selectedColor: AppColor.darkBlue,
-                                activeColor: AppColor.darkBlue,
-                                activeFillColor: AppColor.white,
-                                inactiveColor: AppColor.darkBlue,
-                                selectedFillColor: AppColor.white,
-                                inactiveFillColor: AppColor.white,
-                                fieldOuterPadding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                ),
-                              ),
-                              boxShadows: [
-                                BoxShadow(
-                                  offset: const Offset(0, 1),
-                                  color: AppColor.skyBlue,
-                                  blurRadius: 5,
-                                ),
-                              ],
-                              onCompleted: (value) {
-                                verifyCode = value;
-                              },
-                              onChanged: (value) {
-                                verifyCode = value;
-                                if (otpError != null && value.isNotEmpty) {
-                                  setState(() {
-                                    otpError = null;
-                                  });
-                                }
-                              },
-                              beforeTextPaste: (text) {
-                                return true;
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                // Prevent tiny overflows on smaller widths by sizing the
+                                // pin boxes to fit the available space.
+                                const length = 4;
+                                const outerPadding = 8.0;
+                                const fieldHeight = 55.0;
+                                const maxFieldWidth = 55.0;
+                                const minFieldWidth = 44.0;
+
+                                final fieldWidth =
+                                    ((constraints.maxWidth / length) -
+                                            (outerPadding * 2))
+                                        .clamp(minFieldWidth, maxFieldWidth);
+
+                                return PinCodeTextField(
+                                  appContext: context,
+                                  length: length,
+                                  autoFocus: otp.text.isEmpty,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  autoDisposeControllers: false,
+                                  blinkWhenObscuring: true,
+                                  controller: otp,
+                                  keyboardType: TextInputType.number,
+                                  cursorColor: AppColor.black,
+                                  animationDuration: const Duration(
+                                    milliseconds: 300,
+                                  ),
+                                  enableActiveFill: true,
+                                  pinTheme: PinTheme(
+                                    shape: PinCodeFieldShape.box,
+                                    borderRadius: BorderRadius.circular(17),
+                                    fieldHeight: fieldHeight,
+                                    fieldWidth: fieldWidth,
+                                    selectedColor: AppColor.darkBlue,
+                                    activeColor: AppColor.darkBlue,
+                                    activeFillColor: AppColor.white,
+                                    inactiveColor: AppColor.darkBlue,
+                                    selectedFillColor: AppColor.white,
+                                    inactiveFillColor: AppColor.white,
+                                    fieldOuterPadding:
+                                        const EdgeInsets.symmetric(
+                                          horizontal: outerPadding,
+                                        ),
+                                  ),
+                                  boxShadows: [
+                                    BoxShadow(
+                                      offset: const Offset(0, 1),
+                                      color: AppColor.skyBlue,
+                                      blurRadius: 5,
+                                    ),
+                                  ],
+                                  onCompleted: (value) {
+                                    verifyCode = value;
+                                  },
+                                  onChanged: (value) {
+                                    verifyCode = value;
+                                    if (otpError != null && value.isNotEmpty) {
+                                      setState(() {
+                                        otpError = null;
+                                      });
+                                    }
+                                  },
+                                  beforeTextPaste: (text) {
+                                    return true;
+                                  },
+                                );
                               },
                             ),
                           ),

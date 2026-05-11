@@ -247,21 +247,23 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
           homeState.selectedShopId ?? prefs.getString('currentShopId') ?? '';
       final expectedChartFilter = chartFilterToApi(_selectedChartFilter);
       final currentChart = homeState.shopsResponse?.data.homeChart;
-      final shouldReloadChart = currentChart == null ||
+      final shouldReloadChart =
+          currentChart == null ||
           currentChart.shopId != selectedShopId ||
           currentChart.filter != expectedChartFilter ||
           currentChart.series.isEmpty;
 
       if (selectedShopId.isNotEmpty &&
           homeState.selectedShopId != selectedShopId) {
-        await ref.read(homeNotifierProvider.notifier).selectShop(selectedShopId);
+        await ref
+            .read(homeNotifierProvider.notifier)
+            .selectShop(selectedShopId);
       }
 
       if (shouldReloadChart) {
-        await ref.read(homeNotifierProvider.notifier).fetchShops(
-          shopId: selectedShopId,
-          filter: expectedChartFilter,
-        );
+        await ref
+            .read(homeNotifierProvider.notifier)
+            .fetchShops(shopId: selectedShopId, filter: expectedChartFilter);
       }
 
       if (homeState.enquiryResponse == null) {
@@ -967,89 +969,102 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                     const SizedBox(height: 140),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CommonContainer.offerCardContainer(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      CommonBottomNavigation(initialIndex: 2),
-                                  //     CreateAppOffer(
-                                  //   shopId: mainShop?.id ?? '',
-                                  // ),
-                                ),
-                              );
-                            },
-                            tittle: 'The App',
-                            cardImage: AppImages.appOfferCard,
-                            cardImage1: AppImages.appOffer,
-                          ),
-                          CommonContainer.offerCardContainer(
-                            onTap: () {
-                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SurpriseOfferList(),
-                                  ),
-                                );
-                              // ✅ false => SurpriseOfferList, true => SubscriptionScreen
-                              // if (isFreemium == false) {
-                              //   Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //       builder: (_) => SurpriseOfferList(),
-                              //     ),
-                              //   );
-                              // } else {
-                              //   Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //       builder: (_) => SubscriptionScreen(),
-                              //     ),
-                              //   );
-                              // }
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          const gap = 12.0;
+                          final cardWidth = ((constraints.maxWidth - gap) / 2)
+                              .clamp(140.0, 180.0);
 
-                              AppLogger.log.i(mainShop?.id);
-                            },
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              CommonContainer.offerCardContainer(
+                                width: cardWidth,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CommonBottomNavigation(
+                                            initialIndex: 2,
+                                          ),
+                                      //     CreateAppOffer(
+                                      //   shopId: mainShop?.id ?? '',
+                                      // ),
+                                    ),
+                                  );
+                                },
+                                tittle: 'The App',
+                                cardImage: AppImages.appOfferCard,
+                                cardImage1: AppImages.appOffer,
+                              ),
+                              const SizedBox(width: gap),
+                              CommonContainer.offerCardContainer(
+                                width: cardWidth,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => SurpriseOfferList(),
+                                    ),
+                                  );
+                                  // ✅ false => SurpriseOfferList, true => SubscriptionScreen
+                                  // if (isFreemium == false) {
+                                  //   Navigator.push(
+                                  //     context,
+                                  //     MaterialPageRoute(
+                                  //       builder: (_) => SurpriseOfferList(),
+                                  //     ),
+                                  //   );
+                                  // } else {
+                                  //   Navigator.push(
+                                  //     context,
+                                  //     MaterialPageRoute(
+                                  //       builder: (_) => SubscriptionScreen(),
+                                  //     ),
+                                  //   );
+                                  // }
 
-                            // onTap: () {
-                            //   if (_isFreemium == false) {
-                            //     Navigator.push(
-                            //       context,
-                            //       MaterialPageRoute(
-                            //         builder: (_) => SurpriseOfferList(),
-                            //       ),
-                            //     );
-                            //   } else {
-                            //     Navigator.push(
-                            //       context,
-                            //       MaterialPageRoute(
-                            //         builder: (_) => SubscriptionScreen(),
-                            //       ),
-                            //     );
-                            //   }
-                            //   // final isPremium =
-                            //   //     RegistrationProductSeivice.instance.isPremium;
-                            //   // Navigator.push(
-                            //   //   context,
-                            //   //   MaterialPageRoute(
-                            //   //     builder: (_) => isPremium
-                            //   //         ? SurpriseOfferList()
-                            //   //         : SubscriptionScreen(),
-                            //   //   ),
-                            //   // );
-                            //   AppLogger.log.i(mainShop?.id);
-                            // },
-                            arrowColor: AppColor.surpriseOfferArrow,
-                            isSurpriseCard: true,
-                            tittle: 'Surprise',
-                            cardImage: AppImages.surpriseCard,
-                            cardImage1: AppImages.surprise,
-                          ),
-                        ],
+                                  AppLogger.log.i(mainShop?.id);
+                                },
+
+                                // onTap: () {
+                                //   if (_isFreemium == false) {
+                                //     Navigator.push(
+                                //       context,
+                                //       MaterialPageRoute(
+                                //         builder: (_) => SurpriseOfferList(),
+                                //       ),
+                                //     );
+                                //   } else {
+                                //     Navigator.push(
+                                //       context,
+                                //       MaterialPageRoute(
+                                //         builder: (_) => SubscriptionScreen(),
+                                //       ),
+                                //     );
+                                //   }
+                                //   // final isPremium =
+                                //   //     RegistrationProductSeivice.instance.isPremium;
+                                //   // Navigator.push(
+                                //   //   context,
+                                //   //   MaterialPageRoute(
+                                //   //     builder: (_) => isPremium
+                                //   //         ? SurpriseOfferList()
+                                //   //         : SubscriptionScreen(),
+                                //   //   ),
+                                //   // );
+                                //   AppLogger.log.i(mainShop?.id);
+                                // },
+                                arrowColor: AppColor.surpriseOfferArrow,
+                                isSurpriseCard: true,
+                                tittle: 'Surprise',
+                                cardImage: AppImages.surpriseCard,
+                                cardImage1: AppImages.surprise,
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
 
@@ -1922,7 +1937,3 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
     );
   }
 }
- 
-
-
-

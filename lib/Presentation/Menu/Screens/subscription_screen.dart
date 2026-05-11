@@ -16,6 +16,7 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 
 import 'ccavenue_checkout_screen.dart';
+import 'subscription_history.dart';
 import '../Widgets/payment_result_dialog.dart';
 import '../Controller/subscripe_notifier.dart';
 
@@ -161,7 +162,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       ),
                       SizedBox(height: 15),
                       _ComparisonCard(features: comparisonFeatures),
-
+                      SizedBox(height: 15),
                       if (widget.showSkip)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 31),
@@ -221,6 +222,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             ),
                           ),
                         ),
+                      SizedBox(height: 15),
                     ],
                   ),
                 ),
@@ -535,6 +537,35 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                 .getCurrentPlan(
                                   businessProfileId: businessProfileId,
                                 );
+
+                            if (!mounted) return;
+
+                            final currentPlanResp = ref
+                                .read(subscriptionNotifier)
+                                .currentPlanResponse;
+                            final planData = currentPlanResp?.data;
+                            final status = (planData?.status ?? '')
+                                .trim()
+                                .toUpperCase();
+                            final isActive =
+                                status == 'ACTIVE' &&
+                                (planData?.isFreemium == false);
+
+                            if (isActive) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (_) => SubscriptionHistory(
+                                    fromDate:
+                                        planData?.period.startsAtLabel ?? '',
+                                    titlePlan:
+                                        planData?.plan.durationLabel ?? '',
+                                    toDate: planData?.period.endsAtLabel ?? '',
+                                    invoiceDownloadUrl:
+                                        planData?.invoice?.downloadUrl,
+                                  ),
+                                ),
+                              );
+                            }
                           },
 
                     style: ElevatedButton.styleFrom(
@@ -561,18 +592,26 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(
-                                'Upgrade now and get leads',
-                                style: AppTextStyles.mulish(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                            : Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Upgrade now and get leads',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         state.isInsertLoading
-                            ? SizedBox.shrink()
-                            : Icon(
+                            ? const SizedBox.shrink()
+                            : const Icon(
                                 Icons.arrow_forward_rounded,
                                 color: Colors.white,
                               ),
@@ -722,28 +761,40 @@ class _ComparisonCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
-                      children: const [
-                        Expanded(flex: 3, child: Text("")),
+                      children: [
+                        const Expanded(flex: 4, child: Text("")),
                         Expanded(
                           flex: 3,
-                          child: Center(
-                            child: Text(
-                              "Free",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
+                          child: const Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "Free",
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Center(
-                            child: Text(
-                              "Premium",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                          child: const Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "Premium",
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),

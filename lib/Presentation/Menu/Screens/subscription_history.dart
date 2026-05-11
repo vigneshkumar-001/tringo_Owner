@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 
 import '../../../Core/Const/app_images.dart';
 import '../../../Core/Utility/app_textstyles.dart';
+import '../Controller/subscripe_notifier.dart';
+import '../Model/plan_list_response.dart';
 import 'subscription_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class SubscriptionHistory extends StatefulWidget {
+class SubscriptionHistory extends ConsumerStatefulWidget {
   final String titlePlan;
   final String fromDate;
   final String toDate;
+  final String? invoiceDownloadUrl;
   final VoidCallback? onDownloadInvoice;
   final VoidCallback? onCancelSubscription;
   final VoidCallback? onExtendPlan;
@@ -18,16 +23,45 @@ class SubscriptionHistory extends StatefulWidget {
     required this.titlePlan,
     required this.fromDate,
     required this.toDate,
+    this.invoiceDownloadUrl,
     this.onDownloadInvoice,
     this.onCancelSubscription,
     this.onExtendPlan,
   });
 
   @override
-  State<SubscriptionHistory> createState() => _SubscriptionHistoryState();
+  ConsumerState<SubscriptionHistory> createState() =>
+      _SubscriptionHistoryState();
 }
 
-class _SubscriptionHistoryState extends State<SubscriptionHistory> {
+class _SubscriptionHistoryState extends ConsumerState<SubscriptionHistory> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Refresh from backend when entering this screen so UI is always up-to-date.
+      await ref.read(subscriptionNotifier.notifier).getCurrentPlan();
+    });
+  }
+
+  String get _effectiveTitlePlan {
+    final planData = ref.watch(subscriptionNotifier).currentPlanResponse?.data;
+    final fromApi = planData?.plan.durationLabel;
+    return (fromApi ?? widget.titlePlan).trim();
+  }
+
+  String get _effectiveFromDate {
+    final planData = ref.watch(subscriptionNotifier).currentPlanResponse?.data;
+    final fromApi = planData?.period.startsAtLabel;
+    return (fromApi ?? widget.fromDate).trim();
+  }
+
+  String get _effectiveToDate {
+    final planData = ref.watch(subscriptionNotifier).currentPlanResponse?.data;
+    final fromApi = planData?.period.endsAtLabel;
+    return (fromApi ?? widget.toDate).trim();
+  }
+
   void _showInfoSnack(String message) {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
@@ -40,7 +74,33 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
       widget.onDownloadInvoice!.call();
       return;
     }
-    _showInfoSnack('Download invoice is not connected yet.');
+
+    final raw = (_effectiveInvoiceUrl ?? '').trim();
+    if (raw.isEmpty) {
+      _showInfoSnack('Invoice link not available.');
+      return;
+    }
+
+    final uri = Uri.tryParse(raw);
+    if (uri == null || uri.scheme != 'https') {
+      _showInfoSnack('Invalid invoice link.');
+      return;
+    }
+
+    launchUrl(uri, mode: LaunchMode.externalApplication)
+        .then((ok) {
+          if (!ok) _showInfoSnack('Unable to open invoice link.');
+        })
+        .catchError((_) {
+          _showInfoSnack('Unable to open invoice link.');
+        });
+  }
+
+  String? get _effectiveInvoiceUrl {
+    final planData = ref.watch(subscriptionNotifier).currentPlanResponse?.data;
+    final fromApi = planData?.invoice?.downloadUrl;
+    if ((fromApi ?? '').trim().isNotEmpty) return fromApi;
+    return widget.invoiceDownloadUrl;
   }
 
   void _extendPlan() {
@@ -147,7 +207,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Plan: ${widget.titlePlan}',
+                              'Plan: ${_effectiveTitlePlan}',
                               style: AppTextStyles.mulish(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
@@ -156,7 +216,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Paid on ${widget.fromDate} • Expires on ${widget.toDate}',
+                              'Paid on ${_effectiveFromDate} • Expires on ${_effectiveToDate}',
                               style: AppTextStyles.mulish(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -239,6 +299,14 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
 
   @override
   Widget build(BuildContext context) {
+    final planData = ref.watch(subscriptionNotifier).currentPlanResponse?.data;
+    final effectiveTitlePlan =
+        (planData?.plan.durationLabel ?? widget.titlePlan).trim();
+    final effectiveFromDate =
+        (planData?.period.startsAtLabel ?? widget.fromDate).trim();
+    final effectiveToDate = (planData?.period.endsAtLabel ?? widget.toDate)
+        .trim();
+
     return Scaffold(
       backgroundColor: Color(0xFFF3F3F3),
       body: SafeArea(
@@ -316,7 +384,10 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${widget.titlePlan} Plan',
+                                    '$effectiveTitlePlan Plan',
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
                                     style: AppTextStyles.mulish(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -335,7 +406,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                                           ),
                                         ),
                                         TextSpan(
-                                          text: widget.fromDate,
+                                          text: effectiveFromDate,
                                           style: AppTextStyles.mulish(
                                             color: AppColor.gray84,
                                             fontSize: 12,
@@ -358,7 +429,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                                           ),
                                         ),
                                         TextSpan(
-                                          text: widget.toDate,
+                                          text: effectiveToDate,
                                           style: AppTextStyles.mulish(
                                             color: AppColor.gray84,
                                             fontSize: 12,
@@ -415,7 +486,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                               ),
                             ),
                           ),
-                         
+
                           const SizedBox(width: 12),
                           GestureDetector(
                             onTap: _extendPlan,
@@ -450,7 +521,7 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                               ),
                             ),
                           ),
-                           const SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           GestureDetector(
                             onTap: _confirmCancelSubscription,
                             child: Container(
@@ -483,7 +554,6 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                               ),
                             ),
                           ),
-                        
                         ],
                       ),
                     ),
@@ -495,15 +565,27 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
                       children: [
                         CommonContainer.horizonalDivider(isSubscription: true),
                         SizedBox(height: 20),
-                        Text(
-                          "Premium Tringo's Features",
-                          style: AppTextStyles.mulish(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            "Premium Tringo's Features",
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.mulish(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         SizedBox(height: 20),
-                        const _ComparisonCard(),
+                        if ((planData?.isFreemium ?? true) == false)
+                          _ComparisonCard(
+                            // Show only Premium-available features for paid plans.
+                            features: (planData?.plan.features ?? const [])
+                                .where((f) => f.premium)
+                                .toList(),
+                          ),
                         SizedBox(height: 20),
                       ],
                     ),
@@ -519,7 +601,9 @@ class _SubscriptionHistoryState extends State<SubscriptionHistory> {
 }
 
 class _ComparisonCard extends StatelessWidget {
-  const _ComparisonCard();
+  final List<PlanFeature> features;
+
+  const _ComparisonCard({required this.features});
 
   @override
   Widget build(BuildContext context) {
@@ -529,16 +613,64 @@ class _ComparisonCard extends StatelessWidget {
       colors: [Color(0xFF0797FD), Color(0xFF07C8FD), Color(0xFF0797FD)],
     );
 
-    // text + availability in Free
-    const features = <({String text, bool premium})>[
-      (text: 'Search engine visibility upto 5km', premium: true),
-      (text: 'Unlimited Reply in Smart Connect', premium: true),
-      (text: 'Reach your entire district', premium: true),
-      (text: 'Search engine priority', premium: true),
-      (text: 'Place 2 ads per month', premium: true),
-      (text: 'Get Trusted Batch to gain clients', premium: true),
-      (text: 'View Followers Picture', premium: true),
-    ];
+    final List<PlanFeature> uiFeatures = () {
+      if (features.isEmpty) {
+        return const <PlanFeature>[
+          PlanFeature(
+            key: 'search_engine_visibility_upto_5km',
+            label: 'Search engine visibility upto 5km',
+            free: false,
+            premium: true,
+            sort: 1,
+          ),
+          PlanFeature(
+            key: 'unlimited_reply_in_smart_connect',
+            label: 'Unlimited Reply in Smart Connect',
+            free: false,
+            premium: true,
+            sort: 2,
+          ),
+          PlanFeature(
+            key: 'reach_your_entire_district',
+            label: 'Reach your entire district',
+            free: false,
+            premium: true,
+            sort: 3,
+          ),
+          PlanFeature(
+            key: 'search_engine_priority',
+            label: 'Search engine priority',
+            free: false,
+            premium: true,
+            sort: 4,
+          ),
+          PlanFeature(
+            key: 'place_2_ads_per_month',
+            label: 'Place 2 ads per month',
+            free: false,
+            premium: true,
+            sort: 5,
+          ),
+          PlanFeature(
+            key: 'trusted_badge',
+            label: 'Get Trusted Batch to gain clients',
+            free: false,
+            premium: true,
+            sort: 6,
+          ),
+          PlanFeature(
+            key: 'view_followers_picture',
+            label: 'View Followers Picture',
+            free: false,
+            premium: true,
+            sort: 7,
+          ),
+        ];
+      }
+
+      final sorted = [...features]..sort((a, b) => a.sort.compareTo(b.sort));
+      return sorted.where((f) => f.label.trim().isNotEmpty).toList();
+    }();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
@@ -597,11 +729,17 @@ class _ComparisonCard extends StatelessWidget {
                         Expanded(
                           flex: 1,
                           child: Center(
-                            child: Text(
-                              'Premium',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Premium',
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -610,7 +748,7 @@ class _ComparisonCard extends StatelessWidget {
                     ),
                     SizedBox(height: 8),
 
-                    ...features.map(
+                    ...uiFeatures.map(
                       (f) => Row(
                         children: [
                           Expanded(
@@ -620,7 +758,7 @@ class _ComparisonCard extends StatelessWidget {
                                 horizontal: 8.0,
                               ),
                               child: Text(
-                                f.text,
+                                _cleanFeatureText(f.label),
                                 style: AppTextStyles.mulish(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -649,6 +787,19 @@ class _ComparisonCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _cleanFeatureText(String input) {
+  var s = input.trim();
+  if (s.isEmpty) return s;
+
+  // Remove leading bullets/symbols
+  s = s.replaceFirst(RegExp(r'^[\u2022\-*]+\s*'), '');
+
+  // Remove leading list markers like "1.", "1)", "a.", "a -"
+  s = s.replaceFirst(RegExp(r'^([0-9]{1,3}|[a-zA-Z])\s*[\)\.\-:,]\s*'), '');
+
+  return s.trim();
 }
 
 ///new

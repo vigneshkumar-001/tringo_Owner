@@ -193,22 +193,17 @@ class MainActivity : FlutterActivity() {
   private fun requestSetAsDefaultCallerIdSpam(result: MethodChannel.Result) {
     try {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        val rm = getSystemService(RoleManager::class.java)
-
-        if (!rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
-          startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
-          result.success(false)
+        // Avoid showing the system "Set as default Caller ID & spam app" role prompt.
+        // If the role is already held, report success; otherwise open Settings so the
+        // user can choose manually (no role request dialog).
+        val alreadyDefault = isTringoDefaultCallerIdSpam(this)
+        if (alreadyDefault) {
+          result.success(true)
           return
         }
 
-        if (pendingRoleResult != null) {
-          result.success(isTringoDefaultCallerIdSpam(this))
-          return
-        }
-
-        pendingRoleResult = result
-        val intent = rm.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
-        startActivityForResult(intent, REQ_ROLE_CALL_SCREENING)
+        startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
+        result.success(false)
       } else {
         startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
         result.success(false)

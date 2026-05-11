@@ -1,6 +1,6 @@
 {
-    "name": "tringo_vendor",
-    "short_name": "tringo_vendor",
+    "name": "Business Tringo",
+    "short_name": "Business Tringo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

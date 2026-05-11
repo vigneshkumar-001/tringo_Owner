@@ -2982,6 +2982,8 @@ class CommonContainer {
     required String tittle,
     required String cardImage,
     required String cardImage1,
+    double? width,
+    double? height,
     Color arrowColor = AppColor.appOfferArrow,
     bool isSurpriseCard = false,
     VoidCallback? onTap,
@@ -2995,8 +2997,8 @@ class CommonContainer {
           Positioned.fill(child: Image.asset(cardImage, height: 100)),
           // Orange Card
           Container(
-            width: 180,
-            height: 200,
+            width: width ?? 180,
+            height: height ?? 200,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
             child: Padding(
               padding: const EdgeInsets.only(
@@ -3194,15 +3196,39 @@ class CommonContainer {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      title,
-                      style: AppTextStyles.mulish(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: AppColor.scaffoldColor,
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final normal = Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.mulish(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: AppColor.scaffoldColor,
+                          ),
+                        );
+
+                        if (constraints.maxWidth < 220) {
+                          return FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.mulish(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColor.scaffoldColor,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return normal;
+                      },
                     ),
                     SizedBox(height: 10),
                     Text(
@@ -3276,15 +3302,39 @@ class CommonContainer {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      title,
-                      style: AppTextStyles.mulish(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                        color: AppColor.scaffoldColor,
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final normal = Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.mulish(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w900,
+                            color: AppColor.scaffoldColor,
+                          ),
+                        );
+
+                        if (constraints.maxWidth < 220) {
+                          return FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.mulish(
+                                fontSize: 25,
+                                fontWeight: FontWeight.w900,
+                                color: AppColor.scaffoldColor,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return normal;
+                      },
                     ),
                     SizedBox(height: 10),
                     Text(

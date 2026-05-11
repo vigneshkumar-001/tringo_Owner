@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../Core/Const/app_color.dart';
+import '../../../Core/Const/app_logger.dart';
 import '../Model/ccavenue_init_response.dart';
 
 class CcAvenueCheckoutResult {
@@ -37,6 +40,41 @@ class _CcAvenueCheckoutScreenState extends State<CcAvenueCheckoutScreen> {
   bool _isClosing = false;
   String? _lastUrl;
   String? _error;
+  bool _loggedCallbackUrl = false;
+
+  bool _shouldOpenExternally(String url) {
+    try {
+      final scheme = Uri.parse(url).scheme.toLowerCase();
+      if (scheme == 'http' || scheme == 'https' || scheme == 'about') {
+        return false;
+      }
+      // CCAvenue/UPI deep links commonly use these schemes.
+      return scheme == 'upi' ||
+          scheme == 'intent' ||
+          scheme == 'tez' ||
+          scheme == 'paytmmp' ||
+          scheme == 'phonepe';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _openExternal(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No app found to handle this payment')),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open payment app')),
+      );
+    }
+  }
 
   bool _isCallbackUrl(String url) {
     final redirect = widget.initData.redirectUrl.trim();
@@ -46,6 +84,67 @@ class _CcAvenueCheckoutScreenState extends State<CcAvenueCheckoutScreen> {
     if (cancel.isNotEmpty && url.startsWith(cancel)) return true;
 
     return false;
+  }
+
+  String _safeUrlForLog(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.queryParameters.isEmpty) {
+        return uri.toString();
+      }
+
+      const sensitiveKeys = <String>{
+        'token',
+        'access_token',
+        'id_token',
+        'refresh_token',
+        'auth',
+        'authorization',
+        'signature',
+        'sig',
+        'hash',
+        'key',
+        'secret',
+        'encResp',
+        'encRequest',
+        'merchant_param1',
+        'merchant_param2',
+        'merchant_param3',
+        'merchant_param4',
+        'merchant_param5',
+      };
+
+      final redacted = <String, String>{};
+      uri.queryParameters.forEach((k, v) {
+        final lower = k.toLowerCase();
+        redacted[k] = sensitiveKeys.contains(lower) ? '***' : v;
+      });
+
+      final sanitized = uri.replace(queryParameters: redacted);
+      final s = sanitized.toString();
+      return s.length > 900 ? '${s.substring(0, 900)}…' : s;
+    } catch (_) {
+      // If parsing fails, still avoid logging huge strings.
+      return url.length > 900 ? '${url.substring(0, 900)}…' : url;
+    }
+  }
+
+  void _logCallbackIfNeeded(String url, {required String source}) {
+    if (_loggedCallbackUrl) return;
+    if (!_isCallbackUrl(url)) return;
+
+    _loggedCallbackUrl = true;
+    final safe = _safeUrlForLog(url);
+
+    // Keep in release too (user requested production-safe logging), but avoid PII by redacting.
+    AppLogger.log.i('CCAvenue callback detected ($source): $safe');
+
+    if (kDebugMode) {
+      final redirect = widget.initData.redirectUrl.trim();
+      final cancel = widget.initData.cancelUrl.trim();
+      AppLogger.log.d('CCAvenue redirectUrl: ${_safeUrlForLog(redirect)}');
+      AppLogger.log.d('CCAvenue cancelUrl: ${_safeUrlForLog(cancel)}');
+    }
   }
 
   String _buildAutoPostHtml({
@@ -90,44 +189,58 @@ class _CcAvenueCheckoutScreenState extends State<CcAvenueCheckoutScreen> {
       accessCode: init.form.fields.accessCode,
     );
 
-    _controller =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..setNavigationDelegate(
-            NavigationDelegate(
-              onPageStarted: (url) {
-                _lastUrl = url;
-                setState(() {
-                  _isLoading = true;
-                  _error = null;
-                });
-                if (_isCallbackUrl(url)) _callbackDetected = true;
-              },
-              onPageFinished: (url) async {
-                _lastUrl = url;
-                setState(() => _isLoading = false);
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (url) {
+            _lastUrl = url;
+            setState(() {
+              _isLoading = true;
+              _error = null;
+            });
+            if (_isCallbackUrl(url)) {
+              _callbackDetected = true;
+              _logCallbackIfNeeded(url, source: 'onPageStarted');
+            }
+          },
+          onPageFinished: (url) async {
+            _lastUrl = url;
+            setState(() => _isLoading = false);
 
-                if (_isClosing) return;
-                if (!_callbackDetected) return;
-                if (!_isCallbackUrl(url)) return;
+            if (_isClosing) return;
+            if (!_callbackDetected) return;
+            if (!_isCallbackUrl(url)) return;
 
-                await _closeWithBestEffortEncResp(url);
-              },
-              onNavigationRequest: (request) {
-                final url = request.url;
-                _lastUrl = url;
-                if (_isCallbackUrl(url)) _callbackDetected = true;
-                return NavigationDecision.navigate;
-              },
-              onWebResourceError: (err) {
-                setState(() {
-                  _isLoading = false;
-                  _error = err.description;
-                });
-              },
-            ),
-          )
-          ..loadHtmlString(html);
+            _logCallbackIfNeeded(url, source: 'onPageFinished');
+            await _closeWithBestEffortEncResp(url);
+          },
+          onNavigationRequest: (request) {
+            final url = request.url;
+            _lastUrl = url;
+
+            // WebView can't handle UPI deep links; open them externally instead.
+            if (_shouldOpenExternally(url)) {
+              // Can't await here (sync callback). Fire and forget.
+              unawaited(_openExternal(url));
+              return NavigationDecision.prevent;
+            }
+
+            if (_isCallbackUrl(url)) {
+              _callbackDetected = true;
+              _logCallbackIfNeeded(url, source: 'onNavigationRequest');
+            }
+            return NavigationDecision.navigate;
+          },
+          onWebResourceError: (err) {
+            setState(() {
+              _isLoading = false;
+              _error = err.description;
+            });
+          },
+        ),
+      )
+      ..loadHtmlString(html);
   }
 
   Future<void> _closeWithBestEffortEncResp(String url) async {
@@ -161,10 +274,9 @@ class _CcAvenueCheckoutScreenState extends State<CcAvenueCheckoutScreen> {
         final s = v?.toString() ?? '';
 
         // Some platforms wrap string results in quotes.
-        final normalized =
-            s.startsWith('"') && s.endsWith('"') && s.length >= 2
-                ? s.substring(1, s.length - 1)
-                : s;
+        final normalized = s.startsWith('"') && s.endsWith('"') && s.length >= 2
+            ? s.substring(1, s.length - 1)
+            : s;
 
         if (normalized.trim().isNotEmpty) encResp = normalized.trim();
       } catch (_) {
@@ -230,10 +342,7 @@ class _CcAvenueCheckoutScreenState extends State<CcAvenueCheckoutScreen> {
           ),
           actions: [
             if (_error != null)
-              TextButton(
-                onPressed: _retry,
-                child: const Text('Retry'),
-              ),
+              TextButton(onPressed: _retry, child: const Text('Retry')),
           ],
         ),
         body: Stack(
@@ -275,4 +384,3 @@ class _CcAvenueCheckoutScreenState extends State<CcAvenueCheckoutScreen> {
     );
   }
 }
-

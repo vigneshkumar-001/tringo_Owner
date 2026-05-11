@@ -116,11 +116,23 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ScreenUtilInit(
       designSize: const Size(360, 690),
+      splitScreenMode: true,
+      minTextAdapt: true,
       builder: (context, child) {
         return MaterialApp.router(
           routerConfig: goRouter,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(scaffoldBackgroundColor: AppColor.scaffoldColor),
+          builder: (context, appChild) {
+            final mq = MediaQuery.of(context);
+
+            // Keep typography/layout consistent across devices by:
+            // locking system text scaling (prevents unexpected line wraps/overflows)
+            return MediaQuery(
+              data: mq.copyWith(textScaler: const TextScaler.linear(1.0)),
+              child: appChild ?? const SizedBox.shrink(),
+            );
+          },
         );
       },
     );

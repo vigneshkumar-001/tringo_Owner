@@ -1,11 +1,25 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Session/session_manager.dart';
 
 class Request {
+  static String _redactToken(String? token) {
+    final t = (token ?? '').trim();
+    if (t.isEmpty) return '';
+    if (t.length <= 12) return '***';
+    return '${t.substring(0, 6)}***${t.substring(t.length - 4)}';
+  }
+
+  static String _truncateForLog(Object? value, {int max = 2000}) {
+    final s = value?.toString() ?? '';
+    if (s.length <= max) return s;
+    return '${s.substring(0, max)}…';
+  }
+
   static Future<dynamic> sendRequest(
     String url,
     Map<String, dynamic> body,
@@ -32,13 +46,17 @@ class Request {
         },
         onResponse:
             (Response<dynamic> response, ResponseInterceptorHandler handler) {
-              AppLogger.log.i(body);
-              AppLogger.log.i(
-                "sendRequest \n"
-                " API: $url \n"
-                " Token : $token \n"
-                " RESPONSE: ${response.toString()}",
-              );
+              if (kDebugMode) {
+                AppLogger.log.d(body);
+                AppLogger.log.d('sendRequest API: $url');
+                AppLogger.log.d('Token: ${token ?? ''}');
+                AppLogger.log.d('Session: ${sessionToken ?? ''}');
+                AppLogger.log.d('RESPONSE: ${_truncateForLog(response.data)}');
+              } else {
+                AppLogger.log.i(
+                  'sendRequest API: $url (${response.statusCode})',
+                );
+              }
               return handler.next(response);
             },
         onError: (DioException error, ErrorInterceptorHandler handler) async {
@@ -323,10 +341,17 @@ class Request {
         },
         onResponse:
             (Response<dynamic> response, ResponseInterceptorHandler handler) {
-              AppLogger.log.i(queryParams);
-              AppLogger.log.i(
-                "RESPONSE \n API: $url \n Token : $token \n session Token : $sessionToken \n Headers : headers \n RESPONSE: ${response.toString()}",
-              );
+              if (kDebugMode) {
+                AppLogger.log.d(queryParams);
+                AppLogger.log.d('sendGetRequest API: $url');
+                AppLogger.log.d('Token: ${token ?? ''}');
+                AppLogger.log.d('Session: ${sessionToken ?? ''}');
+                AppLogger.log.d('RESPONSE: ${_truncateForLog(response.data)}');
+              } else {
+                AppLogger.log.i(
+                  'sendGetRequest API: $url (${response.statusCode})',
+                );
+              }
               return handler.next(response);
             },
         onError: (DioException error, ErrorInterceptorHandler handler) async {

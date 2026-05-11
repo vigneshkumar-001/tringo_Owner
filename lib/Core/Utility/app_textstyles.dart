@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTextStyles {
   static textWith600() {
     return GoogleFonts.mulish(fontWeight: FontWeight.w600);
   }
-  static textWith700({  FontWeight? fontWeight = FontWeight.w700,Color?color,double? fontSize}) {
-    return GoogleFonts.mulish(fontWeight: fontWeight,color: color,fontSize: fontSize);
+
+  static textWith700({
+    FontWeight? fontWeight = FontWeight.w700,
+    Color? color,
+    double? fontSize,
+  }) {
+    return GoogleFonts.mulish(
+      fontWeight: fontWeight,
+      color: color,
+      fontSize: fontSize == null ? null : fontSize.sp,
+    );
   }
+
   static textWithBold({
     double fontSize = 32,
     FontWeight? fontWeight = FontWeight.bold,
     Color? color,
   }) {
-    return GoogleFonts.mulish(fontSize: fontSize, fontWeight: fontWeight,color: color);
+    return GoogleFonts.mulish(
+      fontSize: fontSize.sp,
+      fontWeight: fontWeight,
+      color: color,
+    );
   }
 
   static mulish({
@@ -30,8 +45,7 @@ class AppTextStyles {
     Paint? foreground,
   }) {
     return GoogleFonts.mulish(
-
-      fontSize: fontSize,
+      fontSize: fontSize.sp,
       fontWeight: fontWeight,
       color: color,
       letterSpacing: letterSpacing,
@@ -51,7 +65,7 @@ class AppTextStyles {
     Color? color,
   }) {
     return GoogleFonts.ibmPlexSans(
-      fontSize: fontSize,
+      fontSize: fontSize.sp,
       fontWeight: fontWeight,
       color: color,
       letterSpacing: letterSpacing,
@@ -61,7 +75,7 @@ class AppTextStyles {
 
   static inter({double fontSize = 18, FontWeight? fontWeight, Color? color}) {
     return GoogleFonts.inter(
-      fontSize: fontSize,
+      fontSize: fontSize.sp,
       fontWeight: fontWeight,
       color: color,
     );

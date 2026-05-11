@@ -1,8 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:tringo_owner/Presentation/Home/Screens/home_screens.dart';
-import 'package:tringo_owner/Presentation/Shops%20Details/Screen/shops_details.dart';
+import 'package:tringo_owner/Presentation/Menu/Screens/subscription_history.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
@@ -203,79 +202,117 @@ class _PaySuccessAndCancelState extends State<PaySuccessAndCancel> {
 
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Row(
+                        child: Column(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColor.black.withOpacity(0.6),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 17.5,
-                                  horizontal: 33,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      AppImages.shareImage,
-                                      height: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Share',
-                                      style: AppTextStyles.mulish(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColor.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            SizedBox(width: 12),
-
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          CommonBottomNavigation(),
-                                    ),
-                                  );
-                                },
-                                child: Container(
+                            Row(
+                              children: [
+                                Container(
                                   decoration: BoxDecoration(
-                                    color: AppColor.black,
+                                    color: AppColor.black.withOpacity(0.6),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 17.5,
+                                      horizontal: 33,
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
+                                        Image.asset(
+                                          AppImages.shareImage,
+                                          height: 20,
+                                        ),
+                                        SizedBox(width: 8),
                                         Text(
-                                          'Go to Shop',
+                                          'Share',
                                           style: AppTextStyles.mulish(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w700,
                                             color: AppColor.white,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
-                                        Image.asset(
-                                          AppImages.rightStickArrow,
-                                          height: 18,
-                                        ),
                                       ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              CommonBottomNavigation(),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColor.black,
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 17.5,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'Go to Shop',
+                                              style: AppTextStyles.mulish(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColor.white,
+                                              ),
+                                            ),
+                                            SizedBox(width: 8),
+                                            Image.asset(
+                                              AppImages.rightStickArrow,
+                                              height: 18,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => SubscriptionHistory(
+                                      titlePlan: widget.tittle,
+                                      fromDate: widget.startAt,
+                                      toDate: widget.endsAt,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: AppColor.black.withOpacity(0.75),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'View Subscription History',
+                                    style: AppTextStyles.mulish(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColor.white,
                                     ),
                                   ),
                                 ),
