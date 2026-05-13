@@ -19,10 +19,10 @@ class ContactsService {
       debugPrint("📛 Contacts permission after request: $status");
     }
 
-    // If permanently denied -> open settings
+    // Do not force users out of the app. Callers can show their own
+    // in-app permission UI and let users open Settings manually if needed.
     if (status.isPermanentlyDenied) {
-      debugPrint("❌ Permanently denied. Opening app settings...");
-      await openAppSettings();
+      debugPrint("❌ Contacts permission permanently denied.");
       return [];
     }
 
@@ -71,5 +71,4 @@ class ContactsService {
     return cleaned;
   }
 }
-
 

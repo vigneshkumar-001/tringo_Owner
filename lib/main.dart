@@ -20,9 +20,23 @@ import 'Core/Firebase_service/firebase_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Must initialize Firebase in background isolate too
-  await Firebase.initializeApp();
-  AppLogger.log.i('🔕 [BG] messageId=${message.messageId}');
+  try {
+    // Must initialize Firebase in background isolate too.
+    await Firebase.initializeApp();
+    AppLogger.log.i('🔕 [BG] messageId=${message.messageId}');
+  } catch (e, st) {
+    AppLogger.log.w('Firebase background init failed: $e\n$st');
+  }
+}
+
+Future<bool> _initializeFirebaseSafely() async {
+  try {
+    await Firebase.initializeApp();
+    return true;
+  } catch (e, st) {
+    AppLogger.log.w('Firebase init skipped: $e\n$st');
+    return false;
+  }
 }
 
 Future<void> main() async {
@@ -31,37 +45,41 @@ Future<void> main() async {
     FlutterError.dumpErrorToConsole(details);
   };
 
-  await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  final firebaseService = FirebaseService();
   final pushRouter = PushNotificationRouter.instance;
-  await firebaseService.initializeFirebase(
-    onLocalNotificationTapData: (data) {
-      pushRouter.handleData(data);
-    },
-  );
-  // Delay token fetch a bit to avoid transient SERVICE_NOT_AVAILABLE on cold start
-  Future.delayed(const Duration(seconds: 2), () {
-    firebaseService.fetchFCMTokenIfNeeded();
-  });
+  RemoteMessage? initialMsg;
 
-  // ✅ Register listeners (no need for postFrame)
-  firebaseService.listenToMessages(
-    onMessage: (msg) async {
-      AppLogger.log.i('📩 [FG] ${msg.messageId}');
-      await firebaseService.showNotification(msg);
-    },
-    onMessageOpenedApp: (msg) {
-      AppLogger.log.i('📬 [OPENED] ${msg.messageId}');
-      pushRouter.handleRemoteMessage(msg);
-    },
-  );
+  final firebaseReady = await _initializeFirebaseSafely();
+  if (firebaseReady) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  // ✅ Handle "terminated -> opened by tap"
-  final initialMsg = await FirebaseMessaging.instance.getInitialMessage();
-  if (initialMsg != null) {
-    AppLogger.log.i('🚀 [TERMINATED OPEN] ${initialMsg.messageId}');
+    final firebaseService = FirebaseService();
+    await firebaseService.initializeFirebase(
+      onLocalNotificationTapData: (data) {
+        pushRouter.handleData(data);
+      },
+    );
+    // Delay token fetch a bit to avoid transient SERVICE_NOT_AVAILABLE on cold start.
+    Future.delayed(const Duration(seconds: 2), () {
+      firebaseService.fetchFCMTokenIfNeeded();
+    });
+
+    // ✅ Register listeners (no need for postFrame)
+    firebaseService.listenToMessages(
+      onMessage: (msg) async {
+        AppLogger.log.i('📩 [FG] ${msg.messageId}');
+        await firebaseService.showNotification(msg);
+      },
+      onMessageOpenedApp: (msg) {
+        AppLogger.log.i('📬 [OPENED] ${msg.messageId}');
+        pushRouter.handleRemoteMessage(msg);
+      },
+    );
+
+    // ✅ Handle "terminated -> opened by tap"
+    initialMsg = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMsg != null) {
+      AppLogger.log.i('🚀 [TERMINATED OPEN] ${initialMsg.messageId}');
+    }
   }
 
   runApp(AppRoot(initialMessage: initialMsg));
