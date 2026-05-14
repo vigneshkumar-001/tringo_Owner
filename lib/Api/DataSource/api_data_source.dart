@@ -3249,14 +3249,12 @@ dateRange: $start â†’ $end
         url,
         {
           "fcmToken": fcmToken,
-          "platform": "android",
+          "platform": platform,
           if (deviceId.trim().isNotEmpty) "deviceId": deviceId,
         },
         'POST',
         true,
       );
-
-      AppLogger.log.i(response);
 
       if (response is! DioException) {
         if (response.statusCode == 200 || response.statusCode == 201) {
@@ -3280,8 +3278,7 @@ dateRange: $start â†’ $end
         return Left(ServerFailure(response.message ?? "Unknown Dio error"));
       }
     } catch (e, st) {
-      AppLogger.log.e(e);
-      print('$e,$st');
+      AppLogger.log.e('$e\n$st');
       return Left(ServerFailure(e.toString()));
     }
   }

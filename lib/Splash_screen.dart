@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,7 @@ import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Session/registration_product_seivice.dart';
 import 'package:tringo_owner/Core/Session/registration_session.dart';
+import 'package:tringo_owner/Core/Firebase_service/device_token_sync.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
@@ -149,6 +152,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       // 3) Auth policy: resume session if token exists.
       final token = (await AppPrefs.getToken())?.trim() ?? '';
+      if (token.isNotEmpty) {
+        unawaited(DeviceTokenSync.instance.sync(reason: 'splash', force: true));
+      }
 
       String? goPath;
       String? goNamed;

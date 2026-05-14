@@ -17,6 +17,7 @@ import 'package:tringo_owner/Core/Session/session_manager.dart';
 import 'package:tringo_owner/Core/Firebase_service/push_notification_router.dart';
 
 import 'Core/Firebase_service/firebase_service.dart';
+import 'Core/Firebase_service/device_token_sync.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -52,12 +53,16 @@ Future<void> main() async {
   if (firebaseReady) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    final firebaseService = FirebaseService();
+    final firebaseService = FirebaseService.instance;
     await firebaseService.initializeFirebase(
       onLocalNotificationTapData: (data) {
         pushRouter.handleData(data);
       },
     );
+
+    firebaseService.onTokenRefreshed = (token) async {
+      await DeviceTokenSync.instance.sync(reason: 'token_refresh');
+    };
     // Delay token fetch a bit to avoid transient SERVICE_NOT_AVAILABLE on cold start.
     Future.delayed(const Duration(seconds: 2), () {
       firebaseService.fetchFCMTokenIfNeeded();

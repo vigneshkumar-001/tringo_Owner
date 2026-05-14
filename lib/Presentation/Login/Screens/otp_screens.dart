@@ -1,16 +1,13 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Utility/app_loader.dart';
 import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
-import 'package:tringo_owner/Presentation/Login/controller/app_version_notifier.dart';
+import 'package:tringo_owner/Core/Firebase_service/device_token_sync.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
@@ -19,7 +16,6 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/common_Container.dart';
-import '../../../Core/Utility/device_helper.dart';
 import '../controller/login_notifier.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -84,37 +80,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     });
   }
 
-  bool _fcmSent = false;
-  Future<void> _sendFcmAfterLogin() async {
-    if (_fcmSent) return;
-    _fcmSent = true;
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final fcmToken = prefs.getString('fcmToken') ?? '';
-
-      if (fcmToken.isEmpty) {
-        AppLogger.log.w("⚠️ FCM token empty after login");
-        return;
-      }
-
-      final deviceId = await DeviceIdHelper.getDeviceId();
-      final platform = Platform.isAndroid ? "android" : "ios";
-
-      await ref
-          .read(appVersionNotifierProvider.notifier)
-          .fcmTokenSend(
-            fcmToken: fcmToken,
-            platform: platform,
-            deviceId: deviceId,
-          );
-
-      AppLogger.log.i("✅ FCM token sent after OTP login");
-    } catch (e) {
-      AppLogger.log.e("❌ FCM send failed: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(loginNotifierProvider);
@@ -130,7 +95,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       }
       // OTP verified
       else if (next.otpResponse != null) {
-        Future(() => _sendFcmAfterLogin());
+        Future(() => DeviceTokenSync.instance.sync(reason: 'otp_success', force: true));
         AppSnackBar.success(context, 'OTP verified successfully!');
 
         final data = next.otpResponse?.data;

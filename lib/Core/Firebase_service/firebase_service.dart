@@ -8,6 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
 
 class FirebaseService {
+  FirebaseService._();
+
+  static final FirebaseService instance = FirebaseService._();
+
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -30,6 +34,8 @@ class FirebaseService {
   int _tokenRetryIndex = 0;
   DateTime? _lastTokenAttemptAt;
   DateTime? _lastNoTokenLogAt;
+
+  Future<void> Function(String token)? onTokenRefreshed;
 
   bool _isServiceNotAvailable(Object e) {
     final msg = e.toString();
@@ -121,7 +127,13 @@ class FirebaseService {
       _fcmToken = token;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('fcmToken', token);
-      AppLogger.log.i('FCM Token refreshed: $token');
+      AppLogger.log.i('FCM Token refreshed');
+
+      try {
+        await onTokenRefreshed?.call(token);
+      } catch (e, st) {
+        AppLogger.log.w('onTokenRefreshed failed: $e\n$st');
+      }
     });
   }
 
@@ -178,7 +190,7 @@ class FirebaseService {
     final existing = (_fcmToken ?? "").trim();
     if (existing.isNotEmpty) {
       _fcmToken = existing;
-      AppLogger.log.i('â„¹ï¸ Existing FCM Token: $_fcmToken');
+      AppLogger.log.i('FCM token already available');
       return;
     }
 
@@ -204,7 +216,7 @@ class FirebaseService {
       _tokenRetryIndex = 0;
       _tokenRetryTimer?.cancel();
       _tokenRetryTimer = null;
-      AppLogger.log.i('âœ… FCM Token: $_fcmToken');
+      AppLogger.log.i('FCM token fetched');
       return;
     }
 
@@ -270,5 +282,25 @@ class FirebaseService {
   /// If app was terminated and opened by tapping a notification
   Future<RemoteMessage?> getInitialMessage() {
     return FirebaseMessaging.instance.getInitialMessage();
+  }
+
+  /// Ensures an FCM token is available (cached/prefs or freshly fetched).
+  /// Returns null if token cannot be obtained right now.
+  Future<String?> ensureFcmToken() async {
+    await fetchFCMTokenIfNeeded();
+    final token = (_fcmToken ?? '').trim();
+    return token.isEmpty ? null : token;
+  }
+
+  Future<void> waitForFcmToken({
+    Duration timeout = const Duration(seconds: 15),
+    Duration pollInterval = const Duration(milliseconds: 500),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      final t = await ensureFcmToken();
+      if ((t ?? '').trim().isNotEmpty) return;
+      await Future.delayed(pollInterval);
+    }
   }
 }

@@ -6,6 +6,50 @@ import 'package:tringo_owner/Core/Const/app_logger.dart';
 import 'package:tringo_owner/Core/Session/session_manager.dart';
 
 class Request {
+  static const bool _isRelease = bool.fromEnvironment('dart.vm.product');
+
+  static Map<String, dynamic> _redactHeaders(Map<String, dynamic> headers) {
+    final redacted = <String, dynamic>{};
+    headers.forEach((k, v) {
+      final key = k.toString();
+      final lower = key.toLowerCase();
+      if (lower == 'authorization') {
+        redacted[key] = 'Bearer ***';
+      } else if (lower == 'x-session-token') {
+        redacted[key] = '***';
+      } else {
+        redacted[key] = v;
+      }
+    });
+    return redacted;
+  }
+
+  static Map<String, dynamic> _redactBody(Map<String, dynamic> body) {
+    const sensitiveKeys = <String>{
+      'password',
+      'token',
+      'refreshToken',
+      'sessionToken',
+      'otp',
+      'simToken',
+      'fcmToken',
+    };
+
+    dynamic redact(dynamic value) {
+      if (value is Map) {
+        return value.map((k, v) {
+          final key = k.toString();
+          if (sensitiveKeys.contains(key)) return MapEntry(key, '***');
+          return MapEntry(key, redact(v));
+        });
+      }
+      if (value is List) return value.map(redact).toList();
+      return value;
+    }
+
+    return (redact(body) as Map).cast<String, dynamic>();
+  }
+
   static Future<dynamic> sendRequest(
     String url,
     Map<String, dynamic> body,
@@ -32,13 +76,13 @@ class Request {
         },
         onResponse:
             (Response<dynamic> response, ResponseInterceptorHandler handler) {
-              AppLogger.log.i(body);
-              AppLogger.log.i(
-                "sendRequest \n"
-                " API: $url \n"
-                " Token : $token \n"
-                " RESPONSE: ${response.toString()}",
-              );
+              if (!_isRelease) {
+                AppLogger.log.i(
+                  "sendRequest\n"
+                  " API: $url\n"
+                  " STATUS: ${response.statusCode}",
+                );
+              }
               return handler.next(response);
             },
         onError: (DioException error, ErrorInterceptorHandler handler) async {
@@ -71,13 +115,15 @@ class Request {
 
       final httpMethod = (method ?? 'POST').toUpperCase();
 
-      AppLogger.log.i(
-        "REQUEST \n"
-        " METHOD: $httpMethod \n"
-        " API   : $url \n"
-        " BODY  : $body \n"
-        " HEADERS: $headers",
-      );
+      if (!_isRelease) {
+        AppLogger.log.i(
+          "REQUEST\n"
+          " METHOD: $httpMethod\n"
+          " API: $url\n"
+          " BODY: ${_redactBody(body)}\n"
+          " HEADERS: ${_redactHeaders(headers)}",
+        );
+      }
 
       late Response response;
 
