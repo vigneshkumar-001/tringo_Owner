@@ -14,6 +14,17 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val keyAliasProp = (keystoreProperties["keyAlias"] as? String)?.trim().orEmpty()
+val keyPasswordProp = (keystoreProperties["keyPassword"] as? String)?.trim().orEmpty()
+val storeFileProp = (keystoreProperties["storeFile"] as? String)?.trim().orEmpty()
+val storePasswordProp = (keystoreProperties["storePassword"] as? String)?.trim().orEmpty()
+val hasReleaseKeystore =
+    keyAliasProp.isNotEmpty() &&
+        keyPasswordProp.isNotEmpty() &&
+        storeFileProp.isNotEmpty() &&
+        storePasswordProp.isNotEmpty() &&
+        rootProject.file(storeFileProp).exists()
+
 android {
     namespace = "com.fenizo.tringo_owner.tringo_owner"
     compileSdk = flutter.compileSdkVersion
@@ -28,11 +39,19 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
+        if (hasReleaseKeystore) {
+            create("release") {
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp
+                storeFile = rootProject.file(storeFileProp)
+                storePassword = storePasswordProp
+            }
+        } else {
+            println(
+                "WARNING: android/key.properties missing/incomplete (or keystore file not found). " +
+                    "Release builds will be signed with the debug key. " +
+                    "Create a keystore + fill android/key.properties for Play Store releases.",
+            )
         }
     }
 
@@ -56,7 +75,8 @@ android {
             isShrinkResources = false
         }
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig =
+                if (hasReleaseKeystore) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }

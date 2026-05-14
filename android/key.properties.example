@@ -2,9 +2,12 @@
 #
 # Android signing config used by: `android/app/build.gradle.kts`
 #
+# Tip (Windows): you can run `scripts/generate-android-keystore.ps1` to generate a new keystore
+# outside the repo and create `android/key.properties` automatically.
+#
 # Recommended: keep the keystore file outside the repo and reference it here.
 # Example:
-# storeFile=C:\\keys\\tringo_owner\\upload-new.jks
+# storeFile=C:/keys/tringo_owner/upload-new.jks
 # storePassword=YOUR_STORE_PASSWORD
 # keyAlias=upload
 # keyPassword=YOUR_KEY_PASSWORD
