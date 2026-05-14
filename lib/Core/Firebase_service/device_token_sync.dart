@@ -23,6 +23,8 @@ class DeviceTokenSync {
   DateTime? _lastSyncAttemptAt;
 
   Future<void> sync({required String reason, bool force = false}) async {
+    if (Platform.isIOS) return;
+
     if (_syncCompleter != null) return _syncCompleter!.future;
 
     final now = DateTime.now();

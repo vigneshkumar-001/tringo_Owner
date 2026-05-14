@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:call_log/call_log.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -49,7 +51,7 @@ Future<void> main() async {
   final pushRouter = PushNotificationRouter.instance;
   RemoteMessage? initialMsg;
 
-  final firebaseReady = await _initializeFirebaseSafely();
+  final firebaseReady = !Platform.isIOS && await _initializeFirebaseSafely();
   if (firebaseReady) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
