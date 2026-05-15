@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:call_log/call_log.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -48,10 +48,14 @@ Future<void> main() async {
     FlutterError.dumpErrorToConsole(details);
   };
 
-  final pushRouter = PushNotificationRouter.instance;
-  RemoteMessage? initialMsg;
+  runApp(const AppRoot());
+  unawaited(_initializePushServices());
+}
 
-  final firebaseReady = !Platform.isIOS && await _initializeFirebaseSafely();
+Future<void> _initializePushServices() async {
+  final pushRouter = PushNotificationRouter.instance;
+
+  final firebaseReady = await _initializeFirebaseSafely();
   if (firebaseReady) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
@@ -83,13 +87,14 @@ Future<void> main() async {
     );
 
     // ✅ Handle "terminated -> opened by tap"
-    initialMsg = await FirebaseMessaging.instance.getInitialMessage();
+    final initialMsg = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMsg != null) {
       AppLogger.log.i('🚀 [TERMINATED OPEN] ${initialMsg.messageId}');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        pushRouter.handleRemoteMessage(initialMsg);
+      });
     }
   }
-
-  runApp(AppRoot(initialMessage: initialMsg));
 }
 
 class AppRoot extends StatefulWidget {

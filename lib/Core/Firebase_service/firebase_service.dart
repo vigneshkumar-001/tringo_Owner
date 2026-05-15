@@ -1,6 +1,7 @@
 // firebase_service.dart
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -42,6 +43,32 @@ class FirebaseService {
     return msg.contains('SERVICE_NOT_AVAILABLE');
   }
 
+  bool _isTokenTemporarilyUnavailable(Object e) {
+    final msg = e.toString();
+    return _isServiceNotAvailable(e) ||
+        msg.contains('apns-token-not-set') ||
+        msg.contains('APNS token has not been set');
+  }
+
+  Future<void> _waitForApnsTokenIfNeeded() async {
+    if (!Platform.isIOS) return;
+
+    const attempts = 10;
+    for (var i = 0; i < attempts; i++) {
+      try {
+        final token = await FirebaseMessaging.instance.getAPNSToken();
+        if ((token ?? '').trim().isNotEmpty) {
+          AppLogger.log.i('APNs token available');
+          return;
+        }
+      } catch (e) {
+        AppLogger.log.w('APNs token check failed: $e');
+      }
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
+    AppLogger.log.w('APNs token not available yet; FCM token fetch will retry.');
+  }
 
   Future<void> initializeFirebase({
     void Function(Map<String, dynamic> data)? onLocalNotificationTapData,
@@ -88,6 +115,7 @@ class FirebaseService {
     }
 
     await _requestNotificationPermission();
+    unawaited(_waitForApnsTokenIfNeeded());
     _listenToTokenRefresh();
 
     // iOS foreground presentation (harmless on Android)
@@ -142,16 +170,17 @@ class FirebaseService {
     const delays = [1, 2, 4, 8]; // seconds
     for (final s in delays) {
       try {
+        await _waitForApnsTokenIfNeeded();
         final t = await FirebaseMessaging.instance.getToken();
         final token = (t ?? "").trim();
         if (token.isNotEmpty) return token;
       } catch (e) {
-        if (_isServiceNotAvailable(e)) {
+        if (_isTokenTemporarilyUnavailable(e)) {
           if (!_loggedServiceNotAvailable) {
             _loggedServiceNotAvailable = true;
             AppLogger.log.w(
-              'FCM token service temporarily unavailable (SERVICE_NOT_AVAILABLE). '
-              'Common causes: first app start, weak network, or emulator without Google Play services. '
+              'FCM token temporarily unavailable. '
+              'Common causes: first app start, weak network, APNs token delay, or emulator without Google Play services. '
               'Will retry in background.',
             );
           }
@@ -165,15 +194,16 @@ class FirebaseService {
 
     // One last attempt (no stack traces).
     try {
+      await _waitForApnsTokenIfNeeded();
       final t = await FirebaseMessaging.instance.getToken();
       final token = (t ?? "").trim();
       return token.isEmpty ? null : token;
     } catch (e) {
-      if (_isServiceNotAvailable(e)) {
+      if (_isTokenTemporarilyUnavailable(e)) {
         if (!_loggedServiceNotAvailable) {
           _loggedServiceNotAvailable = true;
           AppLogger.log.w(
-            'FCM token service temporarily unavailable (SERVICE_NOT_AVAILABLE). Will retry in background.',
+            'FCM token temporarily unavailable. Will retry in background.',
           );
         }
         return null;
@@ -250,6 +280,8 @@ class FirebaseService {
 
   /// Call this when you receive an FCM message in foreground
   Future<void> showNotification(RemoteMessage message) async {
+    if (Platform.isIOS) return;
+
     const androidDetails = AndroidNotificationDetails(
       'flutter_notification',
       'flutter_notification_title',

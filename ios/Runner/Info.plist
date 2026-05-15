@@ -34,6 +34,10 @@
 	<string>Business Tringo needs permission to save generated files and images to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Business Tringo needs photo library access to upload business and product images.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
