@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -122,17 +123,28 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
     final state = ref.watch(ownerInfoNotifierProvider);
     AppLogger.log.w(mobileController.text);
     final bool isIndividualFlow = widget.isIndividual ?? true;
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            autovalidateMode: _isSubmitted
-                ? AutovalidateMode.onUserInteraction
-                : AutovalidateMode.disabled,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          context.pop();
+        } else {
+          await SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              autovalidateMode: _isSubmitted
+                  ? AutovalidateMode.onUserInteraction
+                  : AutovalidateMode.disabled,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 /// HEADER BAR
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -146,7 +158,12 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           if (showOtpCard) {
                             setState(() => showOtpCard = false);
                           } else {
-                            Navigator.pop(context);
+                            final router = GoRouter.of(context);
+                            if (router.canPop()) {
+                              context.pop();
+                            } else {
+                              SystemNavigator.pop();
+                            }
                           }
                         },
                       ),
@@ -530,7 +547,8 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                 ),
 
                 SizedBox(height: 30),
-              ],
+                ],
+              ),
             ),
           ),
         ),

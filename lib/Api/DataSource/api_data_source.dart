@@ -69,6 +69,7 @@ import '../../Presentation/Support/Model/chat_message_response.dart';
 import '../../Presentation/Support/Model/create_support_response.dart';
 import '../../Presentation/Support/Model/send_message_response.dart';
 import '../../Presentation/Support/Model/support_list_response.dart';
+import '../../Presentation/Register/model/business_profile_response.dart';
 
 enum AnalyticsType { enquiries, calls, locations }
 
@@ -304,6 +305,36 @@ class ApiDataSource extends BaseApiDataSource {
       }
     } catch (e) {
       AppLogger.log.e(e);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, BusinessProfileResponse>> getBusinessProfile() async {
+    try {
+      final url = ApiUrl.ownerInfo;
+      final response = await Request.sendRequest(url, {}, 'GET', true);
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data is Map && response.data['status'] == true) {
+            return Right(BusinessProfileResponse.fromJson(response.data));
+          }
+          return Left(
+            ServerFailure(response.data['message'] ?? 'Something went wrong'),
+          );
+        }
+        return Left(
+          ServerFailure(response.data['message'] ?? 'Something went wrong'),
+        );
+      }
+
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? 'Unknown Dio error'));
+    } catch (e, st) {
+      AppLogger.log.e('$e\n$st');
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
@@ -69,18 +70,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          context.pop();
+        } else {
+          await SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CommonContainer.topLeftArrow(
-                  onTap: () {
-                    Navigator.maybePop(context);
+                  onTap: () async {
+                    final router = GoRouter.of(context);
+                    if (router.canPop()) {
+                      context.pop();
+                    } else {
+                      await SystemNavigator.pop();
+                    }
                   },
                 ),
                 SizedBox(height: 20),
@@ -142,6 +159,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   buttonTap: _goNext,
                 ),
               ],
+              ),
             ),
           ),
         ),

@@ -12,6 +12,7 @@ import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Session/registration_product_seivice.dart';
 import 'package:tringo_owner/Core/Session/registration_session.dart';
 import 'package:tringo_owner/Core/Firebase_service/device_token_sync.dart';
+import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
@@ -148,6 +149,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // 2) Battery flow (before navigation)
       // await _batteryOptimizationFlow();
 
+      final businessFuture = ApiDataSource().getBusinessProfile();
       await Future.delayed(const Duration(seconds: 2));
 
       // 3) Auth policy: resume session if token exists.
@@ -163,38 +165,51 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (token.isEmpty) {
         goPath = AppRoutes.loginPath;
       } else {
-        // Resume onboarding if backend had marked it incomplete.
-        final step = (await AppPrefs.getOnboardingStep())?.trim().toLowerCase();
-        final needsOnboarding = AppPrefs.isIncompleteOnboardingStep(step);
+        // Always prefer backend onboarding state to avoid wrong navigation
+        // after app restart (token exists but onboarding incomplete).
+        final businessResult = await businessFuture;
+        final backendHandled = await businessResult.fold<Future<bool>>(
+          (failure) async {
+            AppLogger.log.w('Business profile fetch failed: ${failure.message}');
+            return false;
+          },
+          (profile) async {
+            final data = profile.data;
+            final step = (data?.onboardingStep ?? '').trim().toLowerCase();
+            final isComplete = data?.isOnboardingComplete == true;
 
-        if (!needsOnboarding) {
-          await AppPrefs.setOnboardingStep(null);
-          await AppPrefs.clearRegistrationFlags();
-          goNamed = AppRoutes.homeScreen;
-        } else {
-          final hasFlags = await AppPrefs.hasRegistrationFlags();
-          final flags = await AppPrefs.getRegistrationFlags();
-          final isService = flags['isService'] == true;
-          final isIndividual = flags['isIndividual'] == true;
+            final bt = (data?.businessType ?? '').trim().toUpperCase();
+            final ot = (data?.ownershipType ?? '').trim().toUpperCase();
 
-          // If token exists but registration flags are missing, treat as an
-          // existing/fully-onboarded session and avoid forcing business-type
-          // onboarding on every restart.
-          if (!hasFlags) {
-            await AppPrefs.setOnboardingStep(null);
-            await AppPrefs.clearRegistrationFlags();
-            goNamed = AppRoutes.homeScreen;
-          } else {
-            final bt = isIndividual
+            final isService = bt == 'SERVICES';
+            final isIndividual = ot == 'INDIVIDUAL';
+
+            await AppPrefs.setOnboardingStep(step.isEmpty ? null : step);
+            await AppPrefs.setRegistrationFlags(
+              isService: isService,
+              isIndividual: isIndividual,
+            );
+
+            if (isComplete) {
+              await AppPrefs.setOnboardingStep(null);
+              goNamed = AppRoutes.homeScreen;
+              return true;
+            }
+
+            // Restore in-memory registration singletons (needed by later screens)
+            final businessType = isIndividual
                 ? BusinessType.individual
                 : BusinessType.company;
-            RegistrationSession.instance.businessType = bt;
-            RegistrationProductSeivice.instance.businessType = bt;
+            RegistrationSession.instance.businessType = businessType;
+            RegistrationProductSeivice.instance.businessType = businessType;
             RegistrationProductSeivice.instance.businessCategory = isService
                 ? BusinessCategory.services
                 : BusinessCategory.sellingProduct;
 
-            if (step == 'step-2') {
+            if (step == 'step-1') {
+              goNamed = AppRoutes.ownerInfo;
+              extra = {'isService': isService, 'isIndividual': isIndividual};
+            } else if (step == 'step-2') {
               goNamed = AppRoutes.shopCategoryInfo;
               extra = {'isService': isService, 'isIndividual': isIndividual};
             } else if (step == 'step-3') {
@@ -202,12 +217,62 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               extra = 'onboarding';
             } else if (step == 'step-4') {
               goNamed = AppRoutes.searchKeyword;
-            } else if (step == 'step-1') {
-              goNamed = AppRoutes.ownerInfo;
-              extra = {'isService': isService, 'isIndividual': isIndividual};
+            } else if (step == 'step-5') {
+              goNamed = AppRoutes.productCategoryScreens;
             } else {
-              // Default: start onboarding from the beginning
               goNamed = AppRoutes.register;
+            }
+
+            return true;
+          },
+        );
+
+        if (!backendHandled) {
+          // Fallback to local onboarding state if backend call fails.
+          final step =
+              (await AppPrefs.getOnboardingStep())?.trim().toLowerCase();
+          final needsOnboarding = AppPrefs.isIncompleteOnboardingStep(step);
+
+          if (!needsOnboarding) {
+            await AppPrefs.setOnboardingStep(null);
+            await AppPrefs.clearRegistrationFlags();
+            goNamed = AppRoutes.homeScreen;
+          } else {
+            final hasFlags = await AppPrefs.hasRegistrationFlags();
+            final flags = await AppPrefs.getRegistrationFlags();
+            final isService = flags['isService'] == true;
+            final isIndividual = flags['isIndividual'] == true;
+
+            if (!hasFlags) {
+              await AppPrefs.setOnboardingStep(null);
+              await AppPrefs.clearRegistrationFlags();
+              goNamed = AppRoutes.homeScreen;
+            } else {
+              final bt = isIndividual
+                  ? BusinessType.individual
+                  : BusinessType.company;
+              RegistrationSession.instance.businessType = bt;
+              RegistrationProductSeivice.instance.businessType = bt;
+              RegistrationProductSeivice.instance.businessCategory = isService
+                  ? BusinessCategory.services
+                  : BusinessCategory.sellingProduct;
+
+              if (step == 'step-2') {
+                goNamed = AppRoutes.shopCategoryInfo;
+                extra = {'isService': isService, 'isIndividual': isIndividual};
+              } else if (step == 'step-3') {
+                goNamed = AppRoutes.shopPhotoInfo;
+                extra = 'onboarding';
+              } else if (step == 'step-4') {
+                goNamed = AppRoutes.searchKeyword;
+              } else if (step == 'step-1') {
+                goNamed = AppRoutes.ownerInfo;
+                extra = {'isService': isService, 'isIndividual': isIndividual};
+              } else if (step == 'step-5') {
+                goNamed = AppRoutes.productCategoryScreens;
+              } else {
+                goNamed = AppRoutes.register;
+              }
             }
           }
         }
@@ -217,7 +282,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (goPath != null) {
         context.go(goPath);
       } else if (goNamed != null) {
-        context.goNamed(goNamed, extra: extra);
+        context.goNamed(goNamed!, extra: extra);
       } else {
         context.go(AppRoutes.loginPath);
       }

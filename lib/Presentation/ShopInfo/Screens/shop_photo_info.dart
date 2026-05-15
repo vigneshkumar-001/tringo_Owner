@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -290,8 +291,19 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
     final state = ref.watch(shopCategoryNotifierProvider);
     final notifier = ref.read(shopCategoryNotifierProvider.notifier);
 
-    return Scaffold(
-      body: SafeArea(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          context.pop();
+        } else {
+          await SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -303,7 +315,14 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
                 child: Row(
                   children: [
                     CommonContainer.topLeftArrow(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () async {
+                        final router = GoRouter.of(context);
+                        if (router.canPop()) {
+                          context.pop();
+                        } else {
+                          await SystemNavigator.pop();
+                        }
+                      },
                     ),
                     const SizedBox(width: 50),
                     Text(
@@ -453,6 +472,7 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

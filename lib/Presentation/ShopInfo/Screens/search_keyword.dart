@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Routes/app_go_routes.dart';
@@ -129,8 +130,19 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
         FocusScope.of(context).unfocus();
         setState(() => _showSuggestions = false);
       },
-      child: Scaffold(
-        body: SafeArea(
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final router = GoRouter.of(context);
+          if (router.canPop()) {
+            context.pop();
+          } else {
+            await SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +152,14 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                   child: Row(
                     children: [
                       CommonContainer.topLeftArrow(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () async {
+                          final router = GoRouter.of(context);
+                          if (router.canPop()) {
+                            context.pop();
+                          } else {
+                            await SystemNavigator.pop();
+                          }
+                        },
                       ),
                       const SizedBox(width: 50),
                       Text(
@@ -562,6 +581,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),

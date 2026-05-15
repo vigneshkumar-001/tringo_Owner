@@ -8,6 +8,7 @@ import 'package:tringo_owner/Core/Utility/app_loader.dart';
 import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Firebase_service/device_token_sync.dart';
+import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
@@ -38,6 +39,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   bool _canResend = false;
 
   String? lastLoginPage;
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -98,47 +100,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         Future(() => DeviceTokenSync.instance.sync(reason: 'otp_success', force: true));
         AppSnackBar.success(context, 'OTP verified successfully!');
 
-        final data = next.otpResponse?.data;
-        final step = (data?.onboardingStep ?? '').trim().toLowerCase();
-
-        if (data?.isNewOwner == false) {
-          // Existing owner
-          context.goNamed(AppRoutes.homeScreen);
-        } else {
-          // New owner / onboarding
-          final hasFlags = await AppPrefs.hasRegistrationFlags();
-          final flags = await AppPrefs.getRegistrationFlags();
-          final isService = flags['isService'] == true;
-          final isIndividual = flags['isIndividual'] == true;
-
-          // Restore in-memory registration singletons (needed by later screens)
-          final bt = isIndividual
-              ? BusinessType.individual
-              : BusinessType.company;
-          RegistrationSession.instance.businessType = bt;
-          RegistrationProductSeivice.instance.businessType = bt;
-          RegistrationProductSeivice.instance.businessCategory = isService
-              ? BusinessCategory.services
-              : BusinessCategory.sellingProduct;
-
-          if (step == 'step-2') {
-            context.goNamed(
-              AppRoutes.shopCategoryInfo,
-              extra: {'isService': isService, 'isIndividual': isIndividual},
-            );
-          } else if (step == 'step-3') {
-            context.goNamed(AppRoutes.shopPhotoInfo, extra: 'onboarding');
-          } else if (step == 'step-4') {
-            context.goNamed(AppRoutes.searchKeyword);
-          } else if (step == 'step-1' && hasFlags) {
-            context.goNamed(
-              AppRoutes.ownerInfo,
-              extra: {'isService': isService, 'isIndividual': isIndividual},
-            );
-          } else {
-            // Default: start at business type selection
-            context.goNamed(AppRoutes.register);
-          }
+        if (!_navigated) {
+          _navigated = true;
+          unawaited(_navigateAfterOtp(next));
         }
 
         notifier.resetState();
@@ -460,5 +424,88 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _navigateAfterOtp(LoginState next) async {
+    final data = next.otpResponse?.data;
+    final isNewOwner = data?.isNewOwner;
+
+    if (isNewOwner == false) {
+      if (!mounted) return;
+      context.goNamed(AppRoutes.homeScreen);
+      return;
+    }
+
+    final api = ApiDataSource();
+
+    String step = (data?.onboardingStep ?? '').trim().toLowerCase();
+    bool isComplete = false;
+
+    try {
+      final result =
+          await api.getBusinessProfile().timeout(const Duration(seconds: 5));
+      await result.fold<Future<void>>(
+        (failure) async {
+          AppLogger.log.w('Business profile fetch failed: ${failure.message}');
+        },
+        (profile) async {
+          final p = profile.data;
+          step = (p?.onboardingStep ?? step).trim().toLowerCase();
+          isComplete = p?.isOnboardingComplete == true;
+
+          final bt = (p?.businessType ?? '').trim().toUpperCase();
+          final ot = (p?.ownershipType ?? '').trim().toUpperCase();
+          final isService = bt == 'SERVICES';
+          final isIndividual = ot == 'INDIVIDUAL';
+
+          await AppPrefs.setOnboardingStep(step.isEmpty ? null : step);
+          await AppPrefs.setRegistrationFlags(
+            isService: isService,
+            isIndividual: isIndividual,
+          );
+        },
+      );
+    } catch (_) {
+      // timeout or unexpected error: fall back to OTP payload/local prefs
+    }
+
+    if (!mounted) return;
+
+    if (isComplete) {
+      await AppPrefs.setOnboardingStep(null);
+      context.goNamed(AppRoutes.homeScreen);
+      return;
+    }
+
+    final flags = await AppPrefs.getRegistrationFlags();
+    final isService = flags['isService'] == true;
+    final isIndividual = flags['isIndividual'] == true;
+
+    // Restore in-memory registration singletons (needed by later screens)
+    final bt = isIndividual ? BusinessType.individual : BusinessType.company;
+    RegistrationSession.instance.businessType = bt;
+    RegistrationProductSeivice.instance.businessType = bt;
+    RegistrationProductSeivice.instance.businessCategory =
+        isService ? BusinessCategory.services : BusinessCategory.sellingProduct;
+
+    if (step == 'step-1') {
+      context.goNamed(
+        AppRoutes.ownerInfo,
+        extra: {'isService': isService, 'isIndividual': isIndividual},
+      );
+    } else if (step == 'step-2') {
+      context.goNamed(
+        AppRoutes.shopCategoryInfo,
+        extra: {'isService': isService, 'isIndividual': isIndividual},
+      );
+    } else if (step == 'step-3') {
+      context.goNamed(AppRoutes.shopPhotoInfo, extra: 'onboarding');
+    } else if (step == 'step-4') {
+      context.goNamed(AppRoutes.searchKeyword);
+    } else if (step == 'step-5') {
+      context.goNamed(AppRoutes.productCategoryScreens);
+    } else {
+      context.goNamed(AppRoutes.register);
+    }
   }
 }

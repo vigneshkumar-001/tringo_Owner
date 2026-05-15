@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -784,12 +785,23 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     final String typeText = 'category';
     final bool isIndividualFlow = widget.isIndividual ?? true;
     final bool isEditFromAboutMe = widget.pages == "AboutMeScreens";
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          context.pop();
+        } else {
+          await SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
@@ -800,7 +812,14 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   child: Row(
                     children: [
                       CommonContainer.topLeftArrow(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () async {
+                          final router = GoRouter.of(context);
+                          if (router.canPop()) {
+                            context.pop();
+                          } else {
+                            await SystemNavigator.pop();
+                          }
+                        },
                       ),
                       SizedBox(width: 50),
                       Text(
@@ -1924,6 +1943,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                   ),
                 ),
               ],
+              ),
             ),
           ),
         ),

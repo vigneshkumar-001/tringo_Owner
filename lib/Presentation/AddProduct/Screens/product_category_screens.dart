@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tringo_owner/Core/Const/app_logger.dart';
@@ -487,12 +488,23 @@ class _ProductCategoryScreensState
         ? serviceState.isLoading
         : productState.isLoading;
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          context.pop();
+        } else {
+          await SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
@@ -503,7 +515,14 @@ class _ProductCategoryScreensState
                   child: Row(
                     children: [
                       CommonContainer.topLeftArrow(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () async {
+                          final router = GoRouter.of(context);
+                          if (router.canPop()) {
+                            context.pop();
+                          } else {
+                            await SystemNavigator.pop();
+                          }
+                        },
                       ),
                       const SizedBox(width: 50),
                       Text(
@@ -1090,6 +1109,7 @@ class _ProductCategoryScreensState
                   ),
                 ),
               ],
+              ),
             ),
           ),
         ),
