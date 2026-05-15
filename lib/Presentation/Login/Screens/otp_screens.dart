@@ -9,6 +9,7 @@ import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Firebase_service/device_token_sync.dart';
 import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
+import 'package:tringo_owner/Core/Utility/onboarding_cache.dart';
 
 import '../../../Core/Const/app_color.dart';
 import '../../../Core/Const/app_images.dart';
@@ -463,6 +464,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             isService: isService,
             isIndividual: isIndividual,
           );
+
+          if (p?.ownerInfo != null) {
+            await OnboardingCache.saveOwnerInfo(p!.ownerInfo!);
+          }
+          if (p?.shopInfo != null) {
+            await OnboardingCache.saveShopInfo(p!.shopInfo!);
+          }
         },
       );
     } catch (_) {

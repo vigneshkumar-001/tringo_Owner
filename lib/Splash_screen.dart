@@ -13,6 +13,7 @@ import 'package:tringo_owner/Core/Session/registration_product_seivice.dart';
 import 'package:tringo_owner/Core/Session/registration_session.dart';
 import 'package:tringo_owner/Core/Firebase_service/device_token_sync.dart';
 import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
+import 'package:tringo_owner/Core/Utility/onboarding_cache.dart';
 
 import 'Core/Const/app_color.dart';
 import 'Core/Const/app_images.dart';
@@ -189,6 +190,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               isService: isService,
               isIndividual: isIndividual,
             );
+
+            if (data?.ownerInfo != null) {
+              await OnboardingCache.saveOwnerInfo(data!.ownerInfo!);
+            }
+            if (data?.shopInfo != null) {
+              await OnboardingCache.saveShopInfo(data!.shopInfo!);
+            }
 
             if (isComplete) {
               await AppPrefs.setOnboardingStep(null);

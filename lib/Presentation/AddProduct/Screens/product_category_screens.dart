@@ -14,6 +14,7 @@ import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_loader.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Utility/onboarding_nav.dart';
 import 'package:tringo_owner/Presentation/ShopInfo/model/shop_category_list_response.dart';
 import '../Service Info/Controller/service_info_notifier.dart';
 import 'add_product_list.dart';
@@ -492,12 +493,7 @@ class _ProductCategoryScreensState
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          context.pop();
-        } else {
-          await SystemNavigator.pop();
-        }
+        await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
       },
       child: Scaffold(
         body: SafeArea(
@@ -516,12 +512,9 @@ class _ProductCategoryScreensState
                     children: [
                       CommonContainer.topLeftArrow(
                         onTap: () async {
-                          final router = GoRouter.of(context);
-                          if (router.canPop()) {
-                            context.pop();
-                          } else {
-                            await SystemNavigator.pop();
-                          }
+                          await OnboardingNav.backToPreviousOrExit(
+                            GoRouter.of(context),
+                          );
                         },
                       ),
                       const SizedBox(width: 50),

@@ -15,6 +15,8 @@ import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/registration_session.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Utility/onboarding_nav.dart';
+import '../../../Core/Utility/onboarding_cache.dart';
 import '../Controller/shop_notifier.dart';
 
 class ShopPhotoInfo extends ConsumerStatefulWidget {
@@ -122,6 +124,46 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
         }
       }
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // If navigation didn't pass existing images, prefill from cached shopInfo.media
+      final hasAny = _existingUrls.any((e) => e != null && e!.trim().isNotEmpty);
+      if (hasAny) return;
+
+      final cached = await OnboardingCache.getShopInfo();
+      final media = cached?['media'];
+      if (media is! List) return;
+
+      String? pickUrl(String type) {
+        final candidates = media
+            .whereType<Map>()
+            .map((m) => m.map((k, v) => MapEntry(k.toString(), v)))
+            .where((m) => (m['type'] ?? '').toString().toUpperCase() == type)
+            .toList();
+
+        if (candidates.isEmpty) return null;
+
+        candidates.sort((a, b) {
+          final ao = int.tryParse((a['displayOrder'] ?? '').toString()) ?? 0;
+          final bo = int.tryParse((b['displayOrder'] ?? '').toString()) ?? 0;
+          return ao.compareTo(bo);
+        });
+
+        final url = (candidates.first['url'] ?? '').toString().trim();
+        return url.isEmpty ? null : url;
+      }
+
+      final sign = pickUrl('SIGN_BOARD');
+      final outside = pickUrl('OUTSIDE');
+      final inside = pickUrl('INSIDE');
+
+      if (!mounted) return;
+      setState(() {
+        _existingUrls[0] = sign ?? _existingUrls[0];
+        _existingUrls[1] = outside ?? _existingUrls[1];
+        _existingUrls[2] = inside ?? _existingUrls[2];
+      });
+    });
   }
 
   Future<void> _pickImage(int index) async {
@@ -295,12 +337,7 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          context.pop();
-        } else {
-          await SystemNavigator.pop();
-        }
+        await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
       },
       child: Scaffold(
         body: SafeArea(
@@ -316,12 +353,9 @@ class _ShopPhotoInfoState extends ConsumerState<ShopPhotoInfo> {
                   children: [
                     CommonContainer.topLeftArrow(
                       onTap: () async {
-                        final router = GoRouter.of(context);
-                        if (router.canPop()) {
-                          context.pop();
-                        } else {
-                          await SystemNavigator.pop();
-                        }
+                        await OnboardingNav.backToPreviousOrExit(
+                          GoRouter.of(context),
+                        );
                       },
                     ),
                     const SizedBox(width: 50),

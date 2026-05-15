@@ -16,6 +16,8 @@ import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/app_textstyles.dart';
 import '../../../Core/Utility/common_Container.dart';
+import '../../../Core/Utility/onboarding_cache.dart';
+import '../../../Core/Utility/onboarding_nav.dart';
 import '../Controller/shop_notifier.dart';
 
 class SearchKeyword extends ConsumerStatefulWidget {
@@ -67,6 +69,27 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
             return acc;
           }),
     );
+
+    if (_keywords.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final cached = await OnboardingCache.getShopInfo();
+        final kw = cached?['keywords'];
+        if (kw is List) {
+          final items = kw
+              .map((e) => e.toString().trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+          if (!mounted) return;
+          setState(() {
+            for (final k in items) {
+              if (_keywords.length >= 5) break;
+              if (_keywords.contains(k)) continue;
+              _keywords.add(k);
+            }
+          });
+        }
+      });
+    }
 
     // ✅ Fetch initial recommended keywords on screen open
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -134,12 +157,7 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
         canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
-          final router = GoRouter.of(context);
-          if (router.canPop()) {
-            context.pop();
-          } else {
-            await SystemNavigator.pop();
-          }
+          await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
         },
         child: Scaffold(
           body: SafeArea(
@@ -153,12 +171,9 @@ class _SearchKeywordState extends ConsumerState<SearchKeyword> {
                     children: [
                       CommonContainer.topLeftArrow(
                         onTap: () async {
-                          final router = GoRouter.of(context);
-                          if (router.canPop()) {
-                            context.pop();
-                          } else {
-                            await SystemNavigator.pop();
-                          }
+                          await OnboardingNav.backToPreviousOrExit(
+                            GoRouter.of(context),
+                          );
                         },
                       ),
                       const SizedBox(width: 50),

@@ -26,6 +26,8 @@ import '../../../Core/Utility/app_prefs.dart';
 import '../../../Core/Utility/app_snackbar.dart';
 import '../../../Core/Utility/map_picker_page.dart';
 import '../../../Core/Utility/thanglish_to_tamil.dart';
+import '../../../Core/Utility/onboarding_cache.dart';
+import '../../../Core/Utility/onboarding_nav.dart';
 import '../../../Core/Widgets/owner_verify_feild.dart';
 import '../../AboutMe/Controller/about_me_notifier.dart';
 
@@ -578,6 +580,91 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
     });
     if (widget.isEditMode) {
       _prefillFields();
+    } else {
+      _prefillFromCacheIfAny();
+    }
+  }
+
+  Future<void> _prefillFromCacheIfAny() async {
+    final cached = await OnboardingCache.getShopInfo();
+    if (cached == null) return;
+    if (!mounted) return;
+
+    final englishName = (cached['englishName'] ?? '').toString().trim();
+    final tamilName = (cached['tamilName'] ?? '').toString().trim();
+    final descEn = (cached['descriptionEn'] ?? '').toString().trim();
+    final descTa = (cached['descriptionTa'] ?? '').toString().trim();
+    final addressEn = (cached['addressEn'] ?? '').toString().trim();
+    final addressTa = (cached['addressTa'] ?? '').toString().trim();
+    final category = (cached['category'] ?? '').toString().trim();
+    final subCategory = (cached['subCategory'] ?? '').toString().trim();
+    final primaryPhone = (cached['primaryPhone'] ?? '').toString().trim();
+    final altPhone = (cached['alternatePhone'] ?? '').toString().trim();
+    final email = (cached['contactEmail'] ?? '').toString().trim();
+    final upi = (cached['upiId'] ?? '').toString().trim();
+    final lat = (cached['gpsLatitude'] ?? '').toString().trim();
+    final lng = (cached['gpsLongitude'] ?? '').toString().trim();
+
+    if (_shopNameEnglishController.text.trim().isEmpty && englishName.isNotEmpty) {
+      _shopNameEnglishController.text = englishName;
+    }
+    if (tamilNameController.text.trim().isEmpty && tamilName.isNotEmpty) {
+      tamilNameController.text = tamilName;
+      _tamilPrefilled = true;
+    } else {
+      _prefillTamilFromEnglishOnce();
+    }
+
+    if (_descriptionEnglishController.text.trim().isEmpty && descEn.isNotEmpty) {
+      _descriptionEnglishController.text = descEn;
+    }
+    if (descriptionTamilController.text.trim().isEmpty && descTa.isNotEmpty) {
+      descriptionTamilController.text = descTa;
+    }
+    if (_addressEnglishController.text.trim().isEmpty && addressEn.isNotEmpty) {
+      _addressEnglishController.text = addressEn;
+    }
+    if (addressTamilNameController.text.trim().isEmpty && addressTa.isNotEmpty) {
+      addressTamilNameController.text = addressTa;
+    }
+    if (_categoryController.text.trim().isEmpty && category.isNotEmpty) {
+      _categoryController.text = category;
+      await AppPrefs.setShopCategorySlug(category);
+    }
+    if (_subCategoryController.text.trim().isEmpty && subCategory.isNotEmpty) {
+      _subCategoryController.text = subCategory;
+      await AppPrefs.setProductCategorySlug(subCategory);
+    }
+    if (_primaryMobileController.text.trim().isEmpty && primaryPhone.isNotEmpty) {
+      _primaryMobileController.text = _normalizeIndianPhone10(primaryPhone);
+    }
+    if (_whatsappController.text.trim().isEmpty && altPhone.isNotEmpty) {
+      _whatsappController.text = _normalizeIndianPhone10(altPhone);
+    }
+    if (_emailController.text.trim().isEmpty && email.isNotEmpty) {
+      _emailController.text = email;
+    }
+    if (_upiIdController.text.trim().isEmpty && upi.isNotEmpty && upi != 'null') {
+      _upiIdController.text = upi;
+    }
+    if (_gpsController.text.trim().isEmpty && lat.isNotEmpty && lng.isNotEmpty) {
+      _gpsController.text = '$lat,$lng';
+      _gpsFetched = true;
+    }
+
+    final weeklyHours = cached['weeklyHours'];
+    if (weeklyHours is List && weeklyHours.isNotEmpty) {
+      final first = weeklyHours.first;
+      if (first is Map) {
+        final opensAt = (first['opensAt'] ?? '').toString().trim();
+        final closesAt = (first['closesAt'] ?? '').toString().trim();
+        if (_openTimeController.text.trim().isEmpty && opensAt.isNotEmpty) {
+          _openTimeController.text = opensAt;
+        }
+        if (_closeTimeController.text.trim().isEmpty && closesAt.isNotEmpty) {
+          _closeTimeController.text = closesAt;
+        }
+      }
     }
   }
 
@@ -789,12 +876,7 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          context.pop();
-        } else {
-          await SystemNavigator.pop();
-        }
+        await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
       },
       child: Scaffold(
         body: SafeArea(
@@ -813,12 +895,9 @@ class _ShopCategoryInfotate extends ConsumerState<ShopCategoryInfo> {
                     children: [
                       CommonContainer.topLeftArrow(
                         onTap: () async {
-                          final router = GoRouter.of(context);
-                          if (router.canPop()) {
-                            context.pop();
-                          } else {
-                            await SystemNavigator.pop();
-                          }
+                          await OnboardingNav.backToPreviousOrExit(
+                            GoRouter.of(context),
+                          );
                         },
                       ),
                       SizedBox(width: 50),

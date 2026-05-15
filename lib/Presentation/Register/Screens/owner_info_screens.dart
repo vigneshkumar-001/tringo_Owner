@@ -14,6 +14,8 @@ import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
 import 'package:tringo_owner/Core/Utility/thanglish_to_tamil.dart';
+import 'package:tringo_owner/Core/Utility/onboarding_cache.dart';
+import 'package:tringo_owner/Core/Utility/onboarding_nav.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_session.dart';
@@ -72,6 +74,10 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
     _loadOwnerPhone();
     otpControllers = List.generate(otpLength, (_) => TextEditingController());
     otpFocusNodes = List.generate(otpLength, (_) => FocusNode());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prefillFromCache();
+    });
   }
 
   @override
@@ -118,6 +124,46 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
   bool get isOtpComplete =>
       otpControllers.every((controller) => controller.text.isNotEmpty);
 
+  Future<void> _prefillFromCache() async {
+    try {
+      final cached = await OnboardingCache.getOwnerInfo();
+      if (cached == null) return;
+
+      final fullName = (cached['fullName'] ?? cached['govtRegisteredName'] ?? '')
+          .toString()
+          .trim();
+      final email = (cached['email'] ?? '').toString().trim();
+      final ownerTamil = (cached['ownerNameTamil'] ?? '').toString().trim();
+      final gender = (cached['gender'] ?? '').toString().trim();
+      final dob = (cached['dateOfBirth'] ?? '').toString().trim(); // yyyy-MM-dd
+
+      if (!mounted) return;
+
+      if (fullName.isNotEmpty && englishNameController.text.trim().isEmpty) {
+        englishNameController.text = fullName;
+      }
+      if (ownerTamil.isNotEmpty && tamilNameController.text.trim().isEmpty) {
+        tamilNameController.text = ownerTamil;
+      }
+      if (email.isNotEmpty && emailIdController.text.trim().isEmpty) {
+        emailIdController.text = email;
+      }
+      if (gender.isNotEmpty && genderController.text.trim().isEmpty) {
+        genderController.text = gender;
+      }
+      if (dob.isNotEmpty && dateOfBirthController.text.trim().isEmpty) {
+        try {
+          final parsed = DateTime.parse(dob);
+          dateOfBirthController.text = DateFormat('dd-MM-yyyy').format(parsed);
+        } catch (_) {
+          // ignore invalid format
+        }
+      }
+    } catch (_) {
+      // ignore cache parsing errors
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(ownerInfoNotifierProvider);
@@ -127,12 +173,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          context.pop();
-        } else {
-          await SystemNavigator.pop();
-        }
+        await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
       },
       child: Scaffold(
         body: SafeArea(
@@ -154,7 +195,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                   child: Row(
                     children: [
                       CommonContainer.topLeftArrow(
-                        onTap: () {
+                        onTap: () async {
                           if (showOtpCard) {
                             setState(() => showOtpCard = false);
                           } else {
@@ -162,7 +203,7 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                             if (router.canPop()) {
                               context.pop();
                             } else {
-                              SystemNavigator.pop();
+                              await OnboardingNav.backToPreviousOrExit(router);
                             }
                           }
                         },

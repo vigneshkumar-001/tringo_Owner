@@ -20,6 +20,8 @@ class BusinessProfileData {
   final bool isOnboardingComplete;
   final String? resumeShopId;
   final String? resumeShopStatus;
+  final Map<String, dynamic>? ownerInfo;
+  final Map<String, dynamic>? shopInfo;
 
   const BusinessProfileData({
     this.businessType,
@@ -28,6 +30,8 @@ class BusinessProfileData {
     required this.isOnboardingComplete,
     this.resumeShopId,
     this.resumeShopStatus,
+    this.ownerInfo,
+    this.shopInfo,
   });
 
   factory BusinessProfileData.fromJson(Map<String, dynamic> json) {
@@ -38,7 +42,13 @@ class BusinessProfileData {
       isOnboardingComplete: json['isOnboardingComplete'] == true,
       resumeShopId: json['resumeShopId']?.toString(),
       resumeShopStatus: json['resumeShopStatus']?.toString(),
+      ownerInfo: json['ownerInfo'] is Map
+          ? (json['ownerInfo'] as Map)
+              .map((k, v) => MapEntry(k.toString(), v))
+          : null,
+      shopInfo: json['shopInfo'] is Map
+          ? (json['shopInfo'] as Map).map((k, v) => MapEntry(k.toString(), v))
+          : null,
     );
   }
 }
-

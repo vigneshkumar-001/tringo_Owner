@@ -11,6 +11,7 @@ import 'package:tringo_owner/Core/Session/registration_session.dart';
 
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
+import '../../../Core/Utility/onboarding_nav.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -74,12 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          context.pop();
-        } else {
-          await SystemNavigator.pop();
-        }
+        await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
       },
       child: Scaffold(
         body: SafeArea(
@@ -92,12 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 CommonContainer.topLeftArrow(
                   onTap: () async {
-                    final router = GoRouter.of(context);
-                    if (router.canPop()) {
-                      context.pop();
-                    } else {
-                      await SystemNavigator.pop();
-                    }
+                    await OnboardingNav.backToPreviousOrExit(GoRouter.of(context));
                   },
                 ),
                 SizedBox(height: 20),
