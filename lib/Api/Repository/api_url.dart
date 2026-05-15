@@ -13,6 +13,7 @@
   static const String verifyOtp = "${base}api/v1/auth/verify-otp";
   static const String whatsAppVerify = "${base}api/v1/auth/check-whatsapp";
   static const String resendOtp = "${base}api/v1/auth/resend-otp";
+  static const String logout = "${base}api/v1/auth/logout";
   static const String ownerInfo = "${base}api/v1/business";
   static const String shop = "${base}api/v1/shops";
   static const String fcmToken = "${base}api/v1/auth/device-token";

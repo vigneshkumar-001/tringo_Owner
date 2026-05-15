@@ -843,7 +843,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                     );
 
                     if (shouldLogout ?? false) {
-                      await SessionManager.forceLogout();
+                      await SessionManager.logoutWithBackend();
                     }
                   },
                   text: Text(

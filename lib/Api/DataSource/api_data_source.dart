@@ -55,6 +55,8 @@ import '../../Presentation/Login/model/contact_response.dart';
 import '../../Presentation/Login/model/device_token_response.dart';
 import '../../Presentation/Login/model/login_new_response.dart';
 import '../../Presentation/Login/model/whatsapp_response.dart';
+import '../../Presentation/Login/model/logout_request.dart';
+import '../../Presentation/Login/model/logout_response.dart';
 import '../../Presentation/Menu/Model/delete_response.dart';
 import '../../Presentation/Menu/Model/plan_list_response.dart';
 import '../../Presentation/Menu/Model/purchase_response.dart';
@@ -322,6 +324,53 @@ class ApiDataSource extends BaseApiDataSource {
           return Left(
             ServerFailure(response.data['message'] ?? 'Something went wrong'),
           );
+        }
+        return Left(
+          ServerFailure(response.data['message'] ?? 'Something went wrong'),
+        );
+      }
+
+      final errorData = response.response?.data;
+      if (errorData is Map && errorData.containsKey('message')) {
+        return Left(ServerFailure(errorData['message']));
+      }
+      return Left(ServerFailure(response.message ?? 'Unknown Dio error'));
+    } catch (e, st) {
+      AppLogger.log.e('$e\n$st');
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, LogoutResponse>> logout({
+    required String refreshToken,
+    String? sessionToken,
+  }) async {
+    try {
+      final rt = refreshToken.trim();
+      if (rt.isEmpty) {
+        return Left(ServerFailure('Missing refresh token'));
+      }
+
+      final url = ApiUrl.logout;
+      final payload = LogoutRequest(refreshToken: rt, sessionToken: sessionToken);
+
+      final response = await Request.sendRequest(
+        url,
+        payload.toJson(),
+        'POST',
+        false,
+      );
+
+      if (response is! DioException) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          if (response.data is Map) {
+            final map = (response.data as Map).cast<String, dynamic>();
+            if (map['status'] == true) {
+              return Right(LogoutResponse.fromJson(map));
+            }
+            return Left(ServerFailure(map['message'] ?? 'Logout failed'));
+          }
+          return Left(ServerFailure('Unexpected response'));
         }
         return Left(
           ServerFailure(response.data['message'] ?? 'Something went wrong'),
