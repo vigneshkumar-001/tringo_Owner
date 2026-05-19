@@ -11,6 +11,7 @@ import '../../No Data Screen/Screen/no_data_screen.dart';
 import '../Model/support_list_response.dart';
 import '../controller/support_notifier.dart';
 import 'create_support.dart';
+import '../../../Core/Utility/app_snackbar.dart';
 
 class SupportScreen extends ConsumerStatefulWidget {
   const SupportScreen({super.key});
@@ -118,6 +119,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                 .supportList(context: context);
           },
           child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
               child: Column(
@@ -130,6 +132,26 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                         alignment: Alignment.centerLeft,
                         child: CommonContainer.topLeftArrow(
                           onTap: () => Navigator.pop(context),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          tooltip: 'Refresh',
+                          onPressed: state.isLoading
+                              ? null
+                              : () async {
+                                  await ref
+                                      .read(supportNotifier.notifier)
+                                      .supportList(context: context);
+                                },
+                          icon: state.isLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.refresh),
                         ),
                       ),
                       Text(
@@ -194,18 +216,25 @@ class _SupportScreenState extends ConsumerState<SupportScreen>
                         padding: const EdgeInsets.all(8.0),
                         child: CommonContainer.supportBox(
                           imageTextColor: imageTextColor,
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    SupportChatScreen(id: ticket.id),
-                              ),
-                            );
-                            await ref
-                                .read(supportNotifier.notifier)
-                                .supportList(context: context);
-                          },
+                          onTap: ticket.status == SupportStatus.closed
+                              ? () {
+                                  AppSnackBar.error(
+                                    context,
+                                    'This ticket is closed. You can create a new ticket.',
+                                  );
+                                }
+                              : () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          SupportChatScreen(id: ticket.id),
+                                    ),
+                                  );
+                                  await ref
+                                      .read(supportNotifier.notifier)
+                                      .supportList(context: context);
+                                },
                           containerColor: containerColor,
                           image: imageAsset,
                           imageText: statusText,
