@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -28,12 +30,37 @@
 	<string>Business Tringo needs camera access to scan QR codes and capture business photos.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Business Tringo needs contacts access to help sync and manage customer contact details.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Business Tringo needs location access to select and save your shop location, even when location-capable services are used by the app.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Business Tringo needs location access to select and save your shop location.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Business Tringo needs permission to save generated files and images to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Business Tringo needs photo library access to upload business and product images.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
@@ -55,9 +82,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
 </dict>
 </plist>
