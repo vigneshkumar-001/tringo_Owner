@@ -17,6 +17,7 @@ import '../../Presentation/Mobile Nomber Verify/mobile_number_verify.dart';
 import '../../Presentation/Privacy Policy/Screens/privacy_policy.dart';
 import '../../Presentation/Shops Details/Screen/shops_details.dart';
 import '../../Splash_screen.dart';
+import '../Utility/ios_review_guard.dart';
 import '../Widgets/bottom_navigation_bar.dart';
 
 class AppRoutes {
@@ -287,6 +288,10 @@ final goRouter = GoRouter(
       path: AppRoutes.subscriptionScreenPath,
       name: AppRoutes.subscriptionScreen,
       builder: (context, state) {
+        if (isIOSReviewBuild) {
+          return const CommonBottomNavigation(initialIndex: 0);
+        }
+
         final extra = state.extra;
 
         bool showSkip = false;

@@ -32,7 +32,7 @@ class _CallAndContactScreenState extends State<CallAndContactScreen> {
     }
 
     if (status[Permission.contacts]!.isGranted) {
-      final List<Contact> allContacts = await FlutterContacts.getContacts();
+      final List<Contact> allContacts = await FlutterContacts.getAll();
       setState(() => contacts = allContacts);
     }
   }
@@ -50,7 +50,7 @@ class _CallAndContactScreenState extends State<CallAndContactScreen> {
             ...callLogs.map((e) => Text('${e.name ?? e.number} - ${e.callType} - ${e.duration}s')),
             const SizedBox(height: 20),
             const Text('Contacts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ...contacts.map((c) => Text(c.displayName)),
+            ...contacts.map((c) => Text(c.displayName ?? 'Unknown')),
           ],
         ),
       ),

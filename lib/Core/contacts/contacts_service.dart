@@ -32,13 +32,15 @@ class ContactsService {
     }
 
     // ✅ Now fetch contacts
-    final contacts = await FlutterContacts.getContacts(withProperties: true);
+    final contacts = await FlutterContacts.getAll(
+      properties: {ContactProperty.phone},
+    );
     debugPrint("📒 Raw contacts count = ${contacts.length}");
 
     final out = <SimpleContact>[];
 
     for (final c in contacts) {
-      final name = (c.displayName).trim();
+      final name = (c.displayName ?? '').trim();
       for (final p in c.phones) {
         final phone = normalizePhone(p.number);
         if (phone.isNotEmpty) {
@@ -71,4 +73,3 @@ class ContactsService {
     return cleaned;
   }
 }
-

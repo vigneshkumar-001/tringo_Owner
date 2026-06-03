@@ -75,7 +75,15 @@ class FirebaseService {
   }) async {
     // Local notifications init
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidInit);
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const initSettings = InitializationSettings(
+      android: androidInit,
+      iOS: iosInit,
+    );
 
     // Ã¢Å“â€¦ v20.x uses `settings:` (NOT `initializationSettings:`)
     await flutterLocalNotificationsPlugin.initialize(

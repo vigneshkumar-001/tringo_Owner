@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tringo_owner/Api/DataSource/api_data_source.dart';
 import 'package:tringo_owner/Api/Repository/failure.dart';
+import 'package:tringo_owner/Presentation/Login/controller/login_notifier.dart';
 import 'package:tringo_owner/Presentation/Login/model/logout_response.dart';
 
 class LogoutState {
@@ -57,4 +58,3 @@ final logoutNotifierProvider =
     NotifierProvider.autoDispose<LogoutNotifier, LogoutState>(
   LogoutNotifier.new,
 );
-

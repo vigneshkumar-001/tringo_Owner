@@ -20,6 +20,7 @@ import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/session_manager.dart';
 import '../../../Core/Utility/app_snackbar.dart';
+import '../../../Core/Utility/ios_review_guard.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/Screens/create_surprise_offers.dart';
@@ -355,465 +356,472 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                 SizedBox(height: 20),
 
                 for (int i = 0; i < titles.length; i++) ...[
-                  InkWell(
-                    onTap: () async {
-                      switch (i) {
-                        case 6: // SUPPORT
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SupportScreen(),
+                  if (isIOSReviewBuild && i == 4) ...[
+                    const SizedBox.shrink(),
+                  ] else ...[
+                    InkWell(
+                      onTap: () async {
+                        switch (i) {
+                          case 6: // SUPPORT
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SupportScreen(),
+                              ),
+                            );
+                            break;
+
+                          case 7: // DELETE ACCOUNT
+                            await _handleDeleteAccount();
+                            break;
+
+                          case 4: // SUBSCRIPTION
+                            final bool isFreemium =
+                                planData?.isFreemium == false;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => isFreemium
+                                    ? SubscriptionHistory(
+                                        fromDate:
+                                            planData?.period.startsAtLabel ??
+                                            '',
+                                        titlePlan:
+                                            planData?.plan.durationLabel ?? '',
+                                        toDate:
+                                            planData?.period.endsAtLabel ?? '',
+                                      )
+                                    : const SubscriptionScreen(),
+                              ),
+                            );
+                            break;
+
+                          case 8: // ✅ QR Code
+                            final selectedShopId =
+                                (ref.read(selectedShopProvider)?.toString() ??
+                                        '')
+                                    .trim();
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    QrCodeScreen(shopId: selectedShopId),
+                              ),
+                            );
+                            break;
+                          case 9: // Privacy Policy
+                            await _openPrivacyPolicy();
+                            break;
+                          // case 9: // ✅ Privacy Policy
+                          //   Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //       builder: (_) =>
+                          //           const PrivacyPolicy(showAcceptReject: false),
+                          //     ),
+                          //   );
+                          //   break;
+
+                          default:
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => screens[i]),
+                            );
+                        }
+                      },
+
+                      // onTap: () async {
+                      //   // ✅ DELETE ACCOUNT (index 7)
+                      //   if (i == 7) {
+                      //     final confirmed = await showDialog<bool>(
+                      //       context: context,
+                      //       barrierDismissible: false,
+                      //       builder: (_) => Dialog(
+                      //         shape: RoundedRectangleBorder(
+                      //           borderRadius: BorderRadius.circular(24),
+                      //         ),
+                      //         elevation: 0,
+                      //         backgroundColor: Colors.transparent,
+                      //         child: Container(
+                      //           padding: const EdgeInsets.all(24),
+                      //           decoration: BoxDecoration(
+                      //             color: Colors.white,
+                      //             borderRadius: BorderRadius.circular(24),
+                      //             boxShadow: [
+                      //               BoxShadow(
+                      //                 color: Colors.black.withOpacity(0.15),
+                      //                 blurRadius: 20,
+                      //                 offset: const Offset(0, 10),
+                      //               ),
+                      //             ],
+                      //           ),
+                      //           child: Column(
+                      //             mainAxisSize: MainAxisSize.min,
+                      //             children: [
+                      //               // Icon
+                      //               Container(
+                      //                 padding: const EdgeInsets.all(16),
+                      //                 decoration: BoxDecoration(
+                      //                   color: Colors.red.shade50,
+                      //                   shape: BoxShape.circle,
+                      //                 ),
+                      //                 child: Icon(
+                      //                   Icons.warning_rounded,
+                      //                   color: Colors.red.shade600,
+                      //                   size: 48,
+                      //                 ),
+                      //               ),
+                      //
+                      //               const SizedBox(height: 20),
+                      //
+                      //               // Title
+                      //               const Text(
+                      //                 'Delete Account?',
+                      //                 style: TextStyle(
+                      //                   fontSize: 22,
+                      //                   fontWeight: FontWeight.w700,
+                      //                   color: Colors.black87,
+                      //                 ),
+                      //                 textAlign: TextAlign.center,
+                      //               ),
+                      //
+                      //               const SizedBox(height: 12),
+                      //
+                      //               // Description
+                      //               Text(
+                      //                 'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+                      //                 style: TextStyle(
+                      //                   fontSize: 15,
+                      //                   color: Colors.grey.shade600,
+                      //                   height: 1.5,
+                      //                 ),
+                      //                 textAlign: TextAlign.center,
+                      //               ),
+                      //
+                      //               const SizedBox(height: 28),
+                      //
+                      //               // Buttons
+                      //               Row(
+                      //                 children: [
+                      //                   // Cancel Button
+                      //                   Expanded(
+                      //                     child: SizedBox(
+                      //                       height: 52,
+                      //                       child: OutlinedButton(
+                      //                         onPressed: () =>
+                      //                             Navigator.pop(context, false),
+                      //                         style: OutlinedButton.styleFrom(
+                      //                           side: BorderSide(
+                      //                             color: Colors.grey.shade300,
+                      //                             width: 1.5,
+                      //                           ),
+                      //                           shape: RoundedRectangleBorder(
+                      //                             borderRadius:
+                      //                                 BorderRadius.circular(14),
+                      //                           ),
+                      //                           foregroundColor:
+                      //                               Colors.grey.shade700,
+                      //                         ),
+                      //                         child: const Text(
+                      //                           'Cancel',
+                      //                           style: TextStyle(
+                      //                             fontSize: 16,
+                      //                             fontWeight: FontWeight.w600,
+                      //                           ),
+                      //                         ),
+                      //                       ),
+                      //                     ),
+                      //                   ),
+                      //
+                      //                   const SizedBox(width: 12),
+                      //
+                      //                   // Delete Button
+                      //                   Expanded(
+                      //                     child: SizedBox(
+                      //                       height: 52,
+                      //                       child: ElevatedButton(
+                      //                         onPressed: () =>
+                      //                             Navigator.pop(context, true),
+                      //                         style: ElevatedButton.styleFrom(
+                      //                           backgroundColor:
+                      //                               Colors.red.shade600,
+                      //                           foregroundColor: Colors.white,
+                      //                           elevation: 0,
+                      //                           shape: RoundedRectangleBorder(
+                      //                             borderRadius:
+                      //                                 BorderRadius.circular(14),
+                      //                           ),
+                      //                         ),
+                      //                         child: const Text(
+                      //                           'Delete',
+                      //                           style: TextStyle(
+                      //                             fontSize: 16,
+                      //                             fontWeight: FontWeight.w600,
+                      //                           ),
+                      //                         ),
+                      //                       ),
+                      //                     ),
+                      //                   ),
+                      //                 ],
+                      //               ),
+                      //             ],
+                      //           ),
+                      //         ),
+                      //       ),
+                      //       //     AlertDialog(
+                      //       //   backgroundColor: AppColor.white,
+                      //       //   title: Text(
+                      //       //     'Delete Account?',
+                      //       //     style: AppTextStyles.mulish(
+                      //       //       fontWeight: FontWeight.w800,
+                      //       //       fontSize: 18,
+                      //       //       color: AppColor.darkBlue,
+                      //       //     ),
+                      //       //   ),
+                      //       //   content: Text(
+                      //       //     'This will permanently delete your account. This action cannot be undone.',
+                      //       //     style: AppTextStyles.mulish(
+                      //       //       fontSize: 14,
+                      //       //       color: AppColor.darkGrey,
+                      //       //     ),
+                      //       //   ),
+                      //       //   actions: [
+                      //       //     TextButton(
+                      //       //       onPressed: () => Navigator.pop(context, false),
+                      //       //       child: Text(
+                      //       //         'Cancel',
+                      //       //         style: AppTextStyles.mulish(
+                      //       //           color: AppColor.darkBlue,
+                      //       //         ),
+                      //       //       ),
+                      //       //     ),
+                      //       //     TextButton(
+                      //       //       onPressed: () => Navigator.pop(context, true),
+                      //       //       child: Text(
+                      //       //         'Delete Account',
+                      //       //         style: AppTextStyles.mulish(
+                      //       //           color: AppColor.red1,
+                      //       //         ),
+                      //       //       ),
+                      //       //     ),
+                      //       //   ],
+                      //       // ),
+                      //     );
+                      //
+                      //     if (confirmed != true) return;
+                      //
+                      //     // loader
+                      //     showDialog(
+                      //       context: context,
+                      //       barrierDismissible: false,
+                      //       builder: (_) =>
+                      //           const Center(child: CircularProgressIndicator()),
+                      //     );
+                      //
+                      //     await ref
+                      //         .read(subscriptionNotifier.notifier)
+                      //         .deleteAccount();
+                      //
+                      //     if (context.mounted)
+                      //       Navigator.pop(context); // close loader
+                      //
+                      //     final st = ref.read(subscriptionNotifier);
+                      //
+                      //     if (st.deleteResponse?.status == true) {
+                      //       final prefs = await SharedPreferences.getInstance();
+                      //       await prefs.clear();
+                      //
+                      //       if (!context.mounted) return;
+                      //       AppSnackBar.success(
+                      //         context,
+                      //         "Account deleted successfully",
+                      //       );
+                      //       context.goNamed(AppRoutes.login);
+                      //     } else {
+                      //       if (!context.mounted) return;
+                      //       AppSnackBar.error(
+                      //         context,
+                      //         st.deleteResponse?.message ??
+                      //             st.error ??
+                      //             "Delete failed",
+                      //       );
+                      //     }
+                      //
+                      //     return; // ✅ stop further navigation
+                      //   }
+                      //
+                      //   // ✅ EXISTING subscription click
+                      //   if (i == 4) {
+                      //     final bool isFreemium = planData?.isFreemium == false;
+                      //
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (_) => isFreemium
+                      //             ? SubscriptionHistory(
+                      //                 fromDate:
+                      //                     planData?.period.startsAtLabel
+                      //                         .toString() ??
+                      //                     '',
+                      //                 titlePlan:
+                      //                     planData?.plan.durationLabel
+                      //                         .toString() ??
+                      //                     '',
+                      //                 toDate:
+                      //                     planData?.period.endsAtLabel
+                      //                         .toString() ??
+                      //                     '',
+                      //               )
+                      //             : const SubscriptionScreen(),
+                      //       ),
+                      //     );
+                      //     return;
+                      //   }
+                      //
+                      //   if (i == 8) {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (_) => const UnderProcessing(),
+                      //       ),
+                      //     );
+                      //     return;
+                      //   }
+                      //
+                      //   if (i == 6) {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (_) =>  SupportScreen(),
+                      //       ),
+                      //     );
+                      //     return;
+                      //   }
+                      //   // ✅ DEFAULT navigation
+                      //   Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(builder: (_) => screens[i]),
+                      //   );
+                      // },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 15,
                             ),
-                          );
-                          break;
-
-                        case 7: // DELETE ACCOUNT
-                          await _handleDeleteAccount();
-                          break;
-
-                        case 4: // SUBSCRIPTION
-                          final bool isFreemium = planData?.isFreemium == false;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => isFreemium
-                                  ? SubscriptionHistory(
-                                      fromDate:
-                                          planData?.period.startsAtLabel ?? '',
-                                      titlePlan:
-                                          planData?.plan.durationLabel ?? '',
-                                      toDate:
-                                          planData?.period.endsAtLabel ?? '',
-                                    )
-                                  : const SubscriptionScreen(),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColor.brightGray,
                             ),
-                          );
-                          break;
-
-                        case 8: // ✅ QR Code
-                          final selectedShopId =
-                              (ref.read(selectedShopProvider)?.toString() ?? '')
-                                  .trim();
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  QrCodeScreen(shopId: selectedShopId),
+                            child: Image.asset(
+                              images[i],
+                              height: 17,
+                              color: i == 5 ? AppColor.black : null,
                             ),
-                          );
-                          break;
-                        case 9: // Privacy Policy
-                          await _openPrivacyPolicy();
-                          break;
-                        // case 9: // ✅ Privacy Policy
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //       builder: (_) =>
-                        //           const PrivacyPolicy(showAcceptReject: false),
-                        //     ),
-                        //   );
-                        //   break;
+                          ),
+                          SizedBox(width: 15),
+                          Text(
+                            titles[i],
+                            style: AppTextStyles.mulish(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                          Spacer(),
+                          Image.asset(
+                            AppImages.rightArrow,
+                            color: AppColor.darkGrey,
+                            height: 15,
+                          ),
+                        ],
+                      ),
+                    ),
 
-                        default:
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => screens[i]),
-                          );
-                      }
-                    },
-
-                    // onTap: () async {
-                    //   // ✅ DELETE ACCOUNT (index 7)
-                    //   if (i == 7) {
-                    //     final confirmed = await showDialog<bool>(
-                    //       context: context,
-                    //       barrierDismissible: false,
-                    //       builder: (_) => Dialog(
-                    //         shape: RoundedRectangleBorder(
-                    //           borderRadius: BorderRadius.circular(24),
-                    //         ),
-                    //         elevation: 0,
-                    //         backgroundColor: Colors.transparent,
-                    //         child: Container(
-                    //           padding: const EdgeInsets.all(24),
-                    //           decoration: BoxDecoration(
-                    //             color: Colors.white,
-                    //             borderRadius: BorderRadius.circular(24),
-                    //             boxShadow: [
-                    //               BoxShadow(
-                    //                 color: Colors.black.withOpacity(0.15),
-                    //                 blurRadius: 20,
-                    //                 offset: const Offset(0, 10),
-                    //               ),
-                    //             ],
-                    //           ),
-                    //           child: Column(
-                    //             mainAxisSize: MainAxisSize.min,
-                    //             children: [
-                    //               // Icon
-                    //               Container(
-                    //                 padding: const EdgeInsets.all(16),
-                    //                 decoration: BoxDecoration(
-                    //                   color: Colors.red.shade50,
-                    //                   shape: BoxShape.circle,
-                    //                 ),
-                    //                 child: Icon(
-                    //                   Icons.warning_rounded,
-                    //                   color: Colors.red.shade600,
-                    //                   size: 48,
-                    //                 ),
-                    //               ),
+                    // InkWell(
+                    //   onTap: () {
+                    //     if (i == 4) {
+                    //       final bool isFreemium = planData?.isFreemium == false;
                     //
-                    //               const SizedBox(height: 20),
-                    //
-                    //               // Title
-                    //               const Text(
-                    //                 'Delete Account?',
-                    //                 style: TextStyle(
-                    //                   fontSize: 22,
-                    //                   fontWeight: FontWeight.w700,
-                    //                   color: Colors.black87,
-                    //                 ),
-                    //                 textAlign: TextAlign.center,
-                    //               ),
-                    //
-                    //               const SizedBox(height: 12),
-                    //
-                    //               // Description
-                    //               Text(
-                    //                 'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
-                    //                 style: TextStyle(
-                    //                   fontSize: 15,
-                    //                   color: Colors.grey.shade600,
-                    //                   height: 1.5,
-                    //                 ),
-                    //                 textAlign: TextAlign.center,
-                    //               ),
-                    //
-                    //               const SizedBox(height: 28),
-                    //
-                    //               // Buttons
-                    //               Row(
-                    //                 children: [
-                    //                   // Cancel Button
-                    //                   Expanded(
-                    //                     child: SizedBox(
-                    //                       height: 52,
-                    //                       child: OutlinedButton(
-                    //                         onPressed: () =>
-                    //                             Navigator.pop(context, false),
-                    //                         style: OutlinedButton.styleFrom(
-                    //                           side: BorderSide(
-                    //                             color: Colors.grey.shade300,
-                    //                             width: 1.5,
-                    //                           ),
-                    //                           shape: RoundedRectangleBorder(
-                    //                             borderRadius:
-                    //                                 BorderRadius.circular(14),
-                    //                           ),
-                    //                           foregroundColor:
-                    //                               Colors.grey.shade700,
-                    //                         ),
-                    //                         child: const Text(
-                    //                           'Cancel',
-                    //                           style: TextStyle(
-                    //                             fontSize: 16,
-                    //                             fontWeight: FontWeight.w600,
-                    //                           ),
-                    //                         ),
-                    //                       ),
-                    //                     ),
-                    //                   ),
-                    //
-                    //                   const SizedBox(width: 12),
-                    //
-                    //                   // Delete Button
-                    //                   Expanded(
-                    //                     child: SizedBox(
-                    //                       height: 52,
-                    //                       child: ElevatedButton(
-                    //                         onPressed: () =>
-                    //                             Navigator.pop(context, true),
-                    //                         style: ElevatedButton.styleFrom(
-                    //                           backgroundColor:
-                    //                               Colors.red.shade600,
-                    //                           foregroundColor: Colors.white,
-                    //                           elevation: 0,
-                    //                           shape: RoundedRectangleBorder(
-                    //                             borderRadius:
-                    //                                 BorderRadius.circular(14),
-                    //                           ),
-                    //                         ),
-                    //                         child: const Text(
-                    //                           'Delete',
-                    //                           style: TextStyle(
-                    //                             fontSize: 16,
-                    //                             fontWeight: FontWeight.w600,
-                    //                           ),
-                    //                         ),
-                    //                       ),
-                    //                     ),
-                    //                   ),
-                    //                 ],
-                    //               ),
-                    //             ],
-                    //           ),
-                    //         ),
-                    //       ),
-                    //       //     AlertDialog(
-                    //       //   backgroundColor: AppColor.white,
-                    //       //   title: Text(
-                    //       //     'Delete Account?',
-                    //       //     style: AppTextStyles.mulish(
-                    //       //       fontWeight: FontWeight.w800,
-                    //       //       fontSize: 18,
-                    //       //       color: AppColor.darkBlue,
-                    //       //     ),
-                    //       //   ),
-                    //       //   content: Text(
-                    //       //     'This will permanently delete your account. This action cannot be undone.',
-                    //       //     style: AppTextStyles.mulish(
-                    //       //       fontSize: 14,
-                    //       //       color: AppColor.darkGrey,
-                    //       //     ),
-                    //       //   ),
-                    //       //   actions: [
-                    //       //     TextButton(
-                    //       //       onPressed: () => Navigator.pop(context, false),
-                    //       //       child: Text(
-                    //       //         'Cancel',
-                    //       //         style: AppTextStyles.mulish(
-                    //       //           color: AppColor.darkBlue,
-                    //       //         ),
-                    //       //       ),
-                    //       //     ),
-                    //       //     TextButton(
-                    //       //       onPressed: () => Navigator.pop(context, true),
-                    //       //       child: Text(
-                    //       //         'Delete Account',
-                    //       //         style: AppTextStyles.mulish(
-                    //       //           color: AppColor.red1,
-                    //       //         ),
-                    //       //       ),
-                    //       //     ),
-                    //       //   ],
-                    //       // ),
-                    //     );
-                    //
-                    //     if (confirmed != true) return;
-                    //
-                    //     // loader
-                    //     showDialog(
-                    //       context: context,
-                    //       barrierDismissible: false,
-                    //       builder: (_) =>
-                    //           const Center(child: CircularProgressIndicator()),
-                    //     );
-                    //
-                    //     await ref
-                    //         .read(subscriptionNotifier.notifier)
-                    //         .deleteAccount();
-                    //
-                    //     if (context.mounted)
-                    //       Navigator.pop(context); // close loader
-                    //
-                    //     final st = ref.read(subscriptionNotifier);
-                    //
-                    //     if (st.deleteResponse?.status == true) {
-                    //       final prefs = await SharedPreferences.getInstance();
-                    //       await prefs.clear();
-                    //
-                    //       if (!context.mounted) return;
-                    //       AppSnackBar.success(
+                    //       Navigator.push(
                     //         context,
-                    //         "Account deleted successfully",
+                    //         MaterialPageRoute(
+                    //           builder: (_) => isFreemium
+                    //               ? SubscriptionHistory(
+                    //                   fromDate:
+                    //                       planData?.period.startsAtLabel
+                    //                           .toString() ??
+                    //                       '',
+                    //                   titlePlan:
+                    //                       planData?.plan.durationLabel
+                    //                           .toString() ??
+                    //                       '',
+                    //                   toDate:
+                    //                       planData?.period.endsAtLabel
+                    //                           .toString() ??
+                    //                       '',
+                    //                 ) // <-- your history page
+                    //               : const SubscriptionScreen(),
+                    //         ),
                     //       );
-                    //       context.goNamed(AppRoutes.login);
-                    //     } else {
-                    //       if (!context.mounted) return;
-                    //       AppSnackBar.error(
-                    //         context,
-                    //         st.deleteResponse?.message ??
-                    //             st.error ??
-                    //             "Delete failed",
-                    //       );
+                    //       return;
                     //     }
                     //
-                    //     return; // ✅ stop further navigation
-                    //   }
-                    //
-                    //   // ✅ EXISTING subscription click
-                    //   if (i == 4) {
-                    //     final bool isFreemium = planData?.isFreemium == false;
-                    //
                     //     Navigator.push(
                     //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (_) => isFreemium
-                    //             ? SubscriptionHistory(
-                    //                 fromDate:
-                    //                     planData?.period.startsAtLabel
-                    //                         .toString() ??
-                    //                     '',
-                    //                 titlePlan:
-                    //                     planData?.plan.durationLabel
-                    //                         .toString() ??
-                    //                     '',
-                    //                 toDate:
-                    //                     planData?.period.endsAtLabel
-                    //                         .toString() ??
-                    //                     '',
-                    //               )
-                    //             : const SubscriptionScreen(),
-                    //       ),
+                    //       MaterialPageRoute(builder: (_) => screens[i]),
                     //     );
-                    //     return;
-                    //   }
+                    //   },
                     //
-                    //   if (i == 8) {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (_) => const UnderProcessing(),
+                    //   child: Row(
+                    //     children: [
+                    //       Container(
+                    //         padding: const EdgeInsets.symmetric(
+                    //           horizontal: 13,
+                    //           vertical: 15,
+                    //         ),
+                    //         decoration: BoxDecoration(
+                    //           shape: BoxShape.circle,
+                    //           color: AppColor.brightGray,
+                    //         ),
+                    //         child: Image.asset(
+                    //           images[i],
+                    //           height: 17,
+                    //           color: i == 5 ? AppColor.black : null,
+                    //         ),
                     //       ),
-                    //     );
-                    //     return;
-                    //   }
-                    //
-                    //   if (i == 6) {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (_) =>  SupportScreen(),
+                    //       SizedBox(width: 15),
+                    //       Text(
+                    //         titles[i],
+                    //         style: AppTextStyles.mulish(
+                    //           fontSize: 16,
+                    //           fontWeight: FontWeight.w500,
+                    //           color: AppColor.darkBlue,
+                    //         ),
                     //       ),
-                    //     );
-                    //     return;
-                    //   }
-                    //   // ✅ DEFAULT navigation
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(builder: (_) => screens[i]),
-                    //   );
-                    // },
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 13,
-                            vertical: 15,
-                          ),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColor.brightGray,
-                          ),
-                          child: Image.asset(
-                            images[i],
-                            height: 17,
-                            color: i == 5 ? AppColor.black : null,
-                          ),
-                        ),
-                        SizedBox(width: 15),
-                        Text(
-                          titles[i],
-                          style: AppTextStyles.mulish(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: AppColor.darkBlue,
-                          ),
-                        ),
-                        Spacer(),
-                        Image.asset(
-                          AppImages.rightArrow,
-                          color: AppColor.darkGrey,
-                          height: 15,
-                        ),
-                      ],
-                    ),
-                  ),
+                    //       Spacer(),
+                    //       Image.asset(
+                    //         AppImages.rightArrow,
+                    //         color: AppColor.darkGrey,
+                    //         height: 15,
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    if (i == 5) ...[
+                      const SizedBox(height: 15),
+                      CommonContainer.horizonalDivider(),
 
-                  // InkWell(
-                  //   onTap: () {
-                  //     if (i == 4) {
-                  //       final bool isFreemium = planData?.isFreemium == false;
-                  //
-                  //       Navigator.push(
-                  //         context,
-                  //         MaterialPageRoute(
-                  //           builder: (_) => isFreemium
-                  //               ? SubscriptionHistory(
-                  //                   fromDate:
-                  //                       planData?.period.startsAtLabel
-                  //                           .toString() ??
-                  //                       '',
-                  //                   titlePlan:
-                  //                       planData?.plan.durationLabel
-                  //                           .toString() ??
-                  //                       '',
-                  //                   toDate:
-                  //                       planData?.period.endsAtLabel
-                  //                           .toString() ??
-                  //                       '',
-                  //                 ) // <-- your history page
-                  //               : const SubscriptionScreen(),
-                  //         ),
-                  //       );
-                  //       return;
-                  //     }
-                  //
-                  //     Navigator.push(
-                  //       context,
-                  //       MaterialPageRoute(builder: (_) => screens[i]),
-                  //     );
-                  //   },
-                  //
-                  //   child: Row(
-                  //     children: [
-                  //       Container(
-                  //         padding: const EdgeInsets.symmetric(
-                  //           horizontal: 13,
-                  //           vertical: 15,
-                  //         ),
-                  //         decoration: BoxDecoration(
-                  //           shape: BoxShape.circle,
-                  //           color: AppColor.brightGray,
-                  //         ),
-                  //         child: Image.asset(
-                  //           images[i],
-                  //           height: 17,
-                  //           color: i == 5 ? AppColor.black : null,
-                  //         ),
-                  //       ),
-                  //       SizedBox(width: 15),
-                  //       Text(
-                  //         titles[i],
-                  //         style: AppTextStyles.mulish(
-                  //           fontSize: 16,
-                  //           fontWeight: FontWeight.w500,
-                  //           color: AppColor.darkBlue,
-                  //         ),
-                  //       ),
-                  //       Spacer(),
-                  //       Image.asset(
-                  //         AppImages.rightArrow,
-                  //         color: AppColor.darkGrey,
-                  //         height: 15,
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
-                  if (i == 5) ...[
-                    const SizedBox(height: 15),
-                    CommonContainer.horizonalDivider(),
-
-                    const SizedBox(height: 15),
-                  ] else if (i == 8) ...[
-                    const SizedBox(height: 25),
-                    CommonContainer.horizonalDivider(),
-                    const SizedBox(height: 20),
-                  ] else
-                    const SizedBox(height: 18),
+                      const SizedBox(height: 15),
+                    ] else if (i == 8) ...[
+                      const SizedBox(height: 25),
+                      CommonContainer.horizonalDivider(),
+                      const SizedBox(height: 20),
+                    ] else
+                      const SizedBox(height: 18),
+                  ],
                 ],
 
                 CommonContainer.button(
