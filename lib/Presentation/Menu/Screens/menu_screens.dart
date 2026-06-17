@@ -356,7 +356,7 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                 SizedBox(height: 20),
 
                 for (int i = 0; i < titles.length; i++) ...[
-                  if (isIOSReviewBuild && i == 4) ...[
+                  if (isIOSReviewBuild && (i == 4 || i == 10)) ...[
                     const SizedBox.shrink(),
                   ] else ...[
                     InkWell(

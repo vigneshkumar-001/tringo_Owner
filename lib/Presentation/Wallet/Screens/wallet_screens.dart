@@ -10,6 +10,7 @@ import 'package:tringo_owner/Core/Utility/app_loader.dart';
 import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Utility/ios_review_guard.dart';
 import 'package:tringo_owner/Presentation/Wallet/Controller/wallet_notifier.dart';
 import 'package:tringo_owner/Presentation/Wallet/Model/wallet_history_response.dart';
 import 'package:tringo_owner/Presentation/Wallet/Screens/qr_scan_screen.dart';
@@ -328,6 +329,15 @@ class _WalletScreensState extends ConsumerState<WalletScreens>
 
   @override
   Widget build(BuildContext context) {
+    // iOS App Store review: TCoin wallet (intermediary currency) is hidden to
+    // comply with Guideline 3.1.1. Never render this screen on iOS review builds.
+    if (isIOSReviewBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).maybePop();
+      });
+      return const Scaffold(body: SizedBox.shrink());
+    }
+
     final walletState = ref.watch(walletNotifier);
 
     final resp = walletState.walletHistoryResponse;
