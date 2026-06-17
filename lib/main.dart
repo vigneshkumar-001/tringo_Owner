@@ -190,8 +190,8 @@ class _CallDashboardScreenState extends State<CallDashboardScreen> {
 
     // CONTACTS
     if (statuses[Permission.contacts]!.isGranted) {
-      final allContacts = await FlutterContacts.getContacts(
-        withProperties: true,
+      final allContacts = await FlutterContacts.getAll(
+        properties: {ContactProperty.phone},
       );
       setState(() => contacts = allContacts);
     }
@@ -259,7 +259,7 @@ class _CallDashboardScreenState extends State<CallDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    c.displayName,
+                    c.displayName ?? 'Unknown',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

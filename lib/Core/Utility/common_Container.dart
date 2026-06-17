@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -6,9 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tringo_owner/Core/Const/app_color.dart';
 import 'package:tringo_owner/Core/Const/app_images.dart';
+import 'package:tringo_owner/Core/Utility/ios_review_guard.dart';
 
 import 'app_textstyles.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 enum DatePickMode { none, single, range }
@@ -2614,8 +2616,13 @@ class CommonContainer {
     bool addAnotherShop = false,
     bool showSwitch = true, // 🔑 NEW
   }) {
+    final effectiveShopLocation = isIOSReviewBuild && addAnotherShop
+        ? 'Add branch unavailable'
+        : shopLocation;
+    final effectiveOnTap = isIOSReviewBuild && addAnotherShop ? null : onTap;
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: effectiveOnTap,
       child: Container(
         width: 345,
         margin: const EdgeInsets.only(right: 0, left: 2),
@@ -2712,7 +2719,7 @@ class CommonContainer {
                       ),
                       const SizedBox(height: 3),
 
-                      if (shopLocation.isNotEmpty)
+                      if (effectiveShopLocation.isNotEmpty)
                         Row(
                           children: [
                             if (!addAnotherShop)
@@ -2726,7 +2733,7 @@ class CommonContainer {
 
                             Expanded(
                               child: Text(
-                                shopLocation,
+                                effectiveShopLocation,
                                 style: AppTextStyles.mulish(
                                   color: AppColor.scaffoldColor.withOpacity(
                                     0.6,
@@ -3172,6 +3179,10 @@ class CommonContainer {
     required String description,
     required VoidCallback onTap,
   }) {
+    if (isIOSReviewBuild) {
+      return const SizedBox.shrink();
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -3253,6 +3264,10 @@ class CommonContainer {
     required String description,
     required VoidCallback onTap,
   }) {
+    if (isIOSReviewBuild) {
+      return const SizedBox.shrink();
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(

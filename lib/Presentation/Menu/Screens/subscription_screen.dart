@@ -14,6 +14,7 @@ import '../../../Core/Const/app_images.dart';
 import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Utility/app_textstyles.dart';
+import '../../../Core/Utility/ios_review_guard.dart';
 
 import 'ccavenue_checkout_screen.dart';
 import '../Widgets/payment_result_dialog.dart';
@@ -40,6 +41,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   @override
   void initState() {
     super.initState();
+    if (isIOSReviewBuild) return;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(subscriptionNotifier.notifier).getPlanList();
     });
@@ -68,6 +70,97 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
       return <PlanFeature>[];
     }();
+
+    if (isIOSReviewBuild) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF3F3F3),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColor.white3),
+                      shape: BoxShape.circle,
+                      color: AppColor.white,
+                    ),
+                    child: Image.asset(
+                      AppImages.leftArrow,
+                      height: 15,
+                      color: AppColor.black,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Feature unavailable',
+                  style: AppTextStyles.mulish(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColor.darkBlue,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'This feature is currently unavailable on iOS.',
+                  style: AppTextStyles.mulish(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.darkGrey,
+                  ),
+                ),
+                const Spacer(),
+                if (widget.showSkip)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      RegistrationProductSeivice.instance.markUnsubscribed();
+                      final router = GoRouter.of(context);
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      }
+                      router.goNamed(
+                        AppRoutes.shopsDetails,
+                        extra: {
+                          'backDisabled': false,
+                          'fromSubscriptionSkip': true,
+                        },
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColor.silverGray),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Continue as Free',
+                          style: AppTextStyles.mulish(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColor.darkBlue,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Color(0xFFF3F3F3),
