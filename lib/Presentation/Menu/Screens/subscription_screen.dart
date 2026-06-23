@@ -71,6 +71,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       return <PlanFeature>[];
     }();
 
+    // Title follows the selected plan (changes with the price box). Falls back
+    // to the static text when the API title is missing/empty.
+    final String selectedTitle = () {
+      const fallback = "Unlock your business growth";
+      final plans = planAmount ?? const <PlanModel>[];
+      if (plans.isEmpty) return fallback;
+
+      if (_selectedBilling >= 0 && _selectedBilling < plans.length) {
+        final t = plans[_selectedBilling].title.trim();
+        if (t.isNotEmpty) return t;
+      }
+
+      for (final p in plans) {
+        if (p.title.trim().isNotEmpty) return p.title.trim();
+      }
+
+      return fallback;
+    }();
+
     if (isIOSReviewBuild) {
       return Scaffold(
         backgroundColor: const Color(0xFFF3F3F3),
@@ -239,7 +258,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       ),
                       SizedBox(height: 10),
                       Text(
-                        "Unlock your business growth",
+                        selectedTitle,
+                        textAlign: TextAlign.center,
                         style: AppTextStyles.mulish(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -373,6 +393,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                               index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ add this
                           price: data.price.toString(),
                           isBestValue: isBestValueForUi,
+                          boxColor: _colorFromHex(
+                            data.color,
+                            fallback: Colors.white,
+                          ),
 
                           type: data.type
                               .toString(), // better: show duration text
@@ -903,6 +927,30 @@ String _cleanFeatureText(String input) {
   return s.trim();
 }
 
+/// Parse an API color string like "#c123fb", "c123fb", "#fff" or
+/// "#aarrggbb" into a [Color]. Returns [fallback] when empty/invalid so a bad
+/// value never crashes the UI.
+Color _colorFromHex(String? hex, {Color fallback = Colors.white}) {
+  if (hex == null) return fallback;
+  var s = hex.trim().replaceAll('#', '');
+  if (s.isEmpty) return fallback;
+  if (s.length == 3) {
+    // #rgb -> #rrggbb
+    s = s.split('').map((c) => '$c$c').join();
+  }
+  if (s.length == 6) s = 'FF$s'; // assume fully opaque
+  if (s.length != 8) return fallback;
+  final value = int.tryParse(s, radix: 16);
+  if (value == null) return fallback;
+  return Color(value);
+}
+
+/// Pick a readable foreground color (black or white) for [background] so the
+/// price/year text stays visible whatever color the API sends.
+Color _onColorFor(Color background) {
+  return background.computeLuminance() > 0.5 ? AppColor.black : Colors.white;
+}
+
 Widget star({Color? color = AppColor.white}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -918,6 +966,7 @@ class _BillingOptions extends StatelessWidget {
     required this.onChanged,
     required this.price,
     required this.isBestValue,
+    required this.boxColor,
   });
 
   final int index; // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ current item index
@@ -928,12 +977,14 @@ class _BillingOptions extends StatelessWidget {
   final String type;
   final String price;
   final bool isBestValue;
+  final Color boxColor; // color from API (per-plan)
 
   @override
   Widget build(BuildContext context) {
     return _BillingChip(
       labelTop: '\u20B9$price',
       labelBottom: type,
+      boxColor: boxColor,
       selected:
           selectedIndex ==
           index, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ compare with index
@@ -950,6 +1001,7 @@ class _BillingChip extends StatelessWidget {
     required this.labelBottom,
     required this.selected,
     required this.onTap,
+    required this.boxColor,
     this.highlight = false,
   });
 
@@ -958,12 +1010,14 @@ class _BillingChip extends StatelessWidget {
   final String labelBottom;
   final bool selected;
   final bool highlight;
+  final Color boxColor; // background color from API (per-plan)
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final border = selected ? const Color(0xFF0797FD) : const Color(0xFFFFFFFF);
+    // Readable text/icon color for whatever color the API sends.
+    final Color onColor = _onColorFor(boxColor);
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -978,14 +1032,25 @@ class _BillingChip extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: boxColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
+                  // Brand-blue ring on the selected box (visible on any color);
+                  // a subtle edge otherwise.
                   color: selected
                       ? const Color(0xFF0797FD)
-                      : const Color(0xFFE5E7EB),
-                  width: selected ? 3 : 2,
+                      : onColor.withOpacity(0.15),
+                  width: selected ? 2 : 1.5,
                 ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF0797FD).withOpacity(0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
               child: Padding(
                 padding: EdgeInsets.only(top: highlight ? 12 : 0),
@@ -998,9 +1063,7 @@ class _BillingChip extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
-                        color: selected
-                            ? const Color(0xFF0797FD)
-                            : AppColor.black,
+                        color: onColor,
                         fontSize: 19,
                         height: 1.0,
                       ),
@@ -1014,8 +1077,8 @@ class _BillingChip extends StatelessWidget {
                       style: AppTextStyles.mulish(
                         fontWeight: selected
                             ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: selected ? AppColor.black : AppColor.gray84,
+                            : FontWeight.w600,
+                        color: onColor.withOpacity(selected ? 1.0 : 0.85),
                         fontSize: 11,
                         height: 1.0,
                       ),
