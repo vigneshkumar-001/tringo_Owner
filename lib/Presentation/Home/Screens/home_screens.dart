@@ -1324,11 +1324,37 @@ class _HomeScreensState extends ConsumerState<HomeScreens> {
                                   CommonContainer.inquiryProductCard(
                                     isSmartConnect: isSmartConnect,
                                     isAds: isAds,
-                                    onChatTap: showAnswerOnly
-                                        ? null
-                                        : () {
-                                            _enableAds(enquiryId);
-                                          },
+                                    onChatTap: () {
+                                      if (showAnswerOnly) return;
+                                      if (isSmartConnect) {
+                                        _enableAds(enquiryId);
+                                        return;
+                                      }
+                                      // Normal enquiry → WhatsApp the customer.
+                                      CallHelper.openWhatsapp(
+                                        context: context,
+                                        phone: whatsappNumber.trim().isNotEmpty
+                                            ? whatsappNumber
+                                            : phone,
+                                      );
+                                      ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .markEnquiry(enquiryId: data.id);
+                                    },
+                                    onCallTap: () {
+                                      if (showAnswerOnly) return;
+                                      if (isSmartConnect) return;
+                                      // Normal enquiry → dial the customer.
+                                      CallHelper.openDialer(
+                                        context: context,
+                                        rawPhone: phone.trim().isNotEmpty
+                                            ? phone
+                                            : whatsappNumber,
+                                      );
+                                      ref
+                                          .read(homeNotifierProvider.notifier)
+                                          .markEnquiry(enquiryId: data.id);
+                                    },
 
                                     showAnswerOnly: showAnswerOnly,
                                     answerTitle: answerTitle,
