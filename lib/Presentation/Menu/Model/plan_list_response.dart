@@ -23,6 +23,7 @@ class PlanModel {
   final String price;
   final int durationDays;
   final bool isBestValue;
+  final String color;
   final List<PlanFeature> features;
 
   PlanModel({
@@ -34,6 +35,7 @@ class PlanModel {
     required this.price,
     required this.durationDays,
     required this.isBestValue,
+    required this.color,
     required this.features,
   });
 
@@ -86,6 +88,7 @@ class PlanModel {
           parseBool(json['is_best_value']) ||
           parseBool(json['bestValue']) ||
           parseBool(json['isBestvalue']),
+      color: (json['color'] ?? '').toString(),
       features: parsedFeatures,
     );
   }

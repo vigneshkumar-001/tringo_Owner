@@ -63,19 +63,36 @@ class Subscription {
   final int maxShopsAllowed;
   final String planType;
 
+  // Certificate (nullable: only present for eligible/premium plans).
+  final String? certificateUrl;
+  final String? certificateType;
+  final String? certificateGeneratedAt;
+
   const Subscription({
     required this.isFreemium,
     required this.maxShopsAllowed,
     required this.planType,
+    this.certificateUrl,
+    this.certificateType,
+    this.certificateGeneratedAt,
   });
 
   factory Subscription.fromJson(Map<String, dynamic> json) {
+    String? str(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      return s.isEmpty ? null : s;
+    }
+
     return Subscription(
       isFreemium: json['isFreemium'] == true,
       maxShopsAllowed: (json['maxShopsAllowed'] ?? 0) is int
           ? (json['maxShopsAllowed'] ?? 0) as int
           : int.tryParse((json['maxShopsAllowed'] ?? '0').toString()) ?? 0,
       planType: (json['planType'] ?? '').toString(),
+      certificateUrl: str(json['certificateUrl']),
+      certificateType: str(json['certificateType']),
+      certificateGeneratedAt: str(json['certificateGeneratedAt']),
     );
   }
 }

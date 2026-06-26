@@ -24,6 +24,7 @@ import '../../../Core/Utility/ios_review_guard.dart';
 import '../../../Core/Widgets/bottom_navigation_bar.dart';
 import '../../Create App Offer/Screens/create_app_offer.dart';
 import '../../Create Surprise Offers/Screens/create_surprise_offers.dart';
+import '../../Home/Controller/home_notifier.dart';
 import '../../Home/Controller/shopContext_provider.dart';
 import '../../Login/controller/login_notifier.dart';
 import '../../No Data Screen/Screen/no_data_screen.dart';
@@ -91,6 +92,21 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
 
     if (!launched && mounted) {
       AppSnackBar.error(context, 'Could not open privacy policy');
+    }
+  }
+
+  Future<void> _openCertificate(String rawUrl) async {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null || !uri.hasScheme) {
+      if (mounted) AppSnackBar.error(context, 'Invalid certificate link');
+      return;
+    }
+
+    // Open externally so the PDF/image can be viewed or downloaded by the OS.
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (!launched && mounted) {
+      AppSnackBar.error(context, 'Could not open certificate');
     }
   }
 
@@ -270,6 +286,16 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     final isPremium = RegistrationProductSeivice.instance.isPremium;
     final isNonPremium = RegistrationProductSeivice.instance.isNonPremium;
     final planData = planState.currentPlanResponse?.data;
+
+    // Certificate URL comes from the Home API (subscription.certificateUrl).
+    final String? certificateUrl = ref
+        .watch(homeNotifierProvider)
+        .shopsResponse
+        ?.data
+        .subscription
+        .certificateUrl;
+    final bool hasCertificate =
+        certificateUrl != null && certificateUrl.trim().isNotEmpty;
 
     String time = '-';
     String date = '-';
@@ -822,6 +848,47 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
                     ] else
                       const SizedBox(height: 18),
                   ],
+                ],
+
+                if (hasCertificate) ...[
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _openCertificate(certificateUrl),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(13),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColor.brightGray,
+                          ),
+                          child: const Icon(
+                            Icons.workspace_premium_rounded,
+                            size: 18,
+                            color: AppColor.darkBlue,
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Text(
+                            'Download Certificate',
+                            style: AppTextStyles.mulish(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColor.darkBlue,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(
+                          Icons.download_rounded,
+                          size: 20,
+                          color: AppColor.darkGrey,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                 ],
 
                 CommonContainer.button(
