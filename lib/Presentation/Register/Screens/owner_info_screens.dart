@@ -13,6 +13,7 @@ import 'package:tringo_owner/Core/Utility/app_prefs.dart';
 import 'package:tringo_owner/Core/Utility/app_snackbar.dart';
 import 'package:tringo_owner/Core/Utility/app_textstyles.dart';
 import 'package:tringo_owner/Core/Utility/common_Container.dart';
+import 'package:tringo_owner/Core/Utility/ios_review_guard.dart';
 import 'package:tringo_owner/Core/Utility/thanglish_to_tamil.dart';
 import 'package:tringo_owner/Core/Utility/onboarding_cache.dart';
 import 'package:tringo_owner/Core/Utility/onboarding_nav.dart';
@@ -460,8 +461,11 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                             DateSingleType.dob18Plus, // ✅ 18+ restriction
                         context: context,
                         readOnly: true,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Select DOB" : null,
+                        validator: (v) {
+                          // iOS App Store Guideline 5.1.1(v): DOB must be optional.
+                          if (isIOSReviewBuild) return null;
+                          return v == null || v.isEmpty ? "Select DOB" : null;
+                        },
                       ),
 
                       // CommonContainer.fillingContainer(
@@ -494,8 +498,11 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                         imagePath: AppImages.downArrow,
                         controller: genderController,
                         context: context,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Select gender' : null,
+                        validator: (v) {
+                          // iOS App Store Guideline 5.1.1(v): gender must be optional.
+                          if (isIOSReviewBuild) return null;
+                          return v == null || v.isEmpty ? 'Select gender' : null;
+                        },
                       ),
 
                       const SizedBox(height: 30),
@@ -522,16 +529,20 @@ class _OwnerInfoScreensState extends ConsumerState<OwnerInfoScreens> {
                           final input = dateOfBirthController.text.trim();
 
                           String dobForApi = '';
-                          try {
-                            final parsedDate = DateFormat(
-                              'dd-MM-yyyy',
-                            ).parseStrict(input);
-                            dobForApi = DateFormat(
-                              'yyyy-MM-dd',
-                            ).format(parsedDate);
-                          } catch (e) {
-                            AppSnackBar.error(context, "Invalid DOB");
-                            return;
+                          // DOB is optional (e.g. iOS Guideline 5.1.1(v)); only
+                          // parse/validate when the user actually entered one.
+                          if (input.isNotEmpty) {
+                            try {
+                              final parsedDate = DateFormat(
+                                'dd-MM-yyyy',
+                              ).parseStrict(input);
+                              dobForApi = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(parsedDate);
+                            } catch (e) {
+                              AppSnackBar.error(context, "Invalid DOB");
+                              return;
+                            }
                           }
 
                           final gender = genderController.text.trim();
