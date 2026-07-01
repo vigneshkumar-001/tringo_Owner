@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:tringo_owner/Core/Const/app_logger.dart';
@@ -30,8 +32,21 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with WidgetsBindingObserver {
-  // Use your real app version value here
-  final String appVersion = '1.0.2';
+  // Read at runtime from the platform build (iOS Info.plist / Android
+  // build.gradle), so Android and iOS each report their own real version.
+  String appVersion = '0.0.0';
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (info.version.isNotEmpty) {
+        appVersion = info.version;
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      AppLogger.log.w('Failed to read app version: $e');
+    }
+  }
 
   @override
   void initState() {
@@ -132,11 +147,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _initializeSplash() async {
     try {
-      // 1) App version check
+      // 1) App version check — read the real installed version first.
+      await _loadAppVersion();
       await ref
           .read(appVersionNotifierProvider.notifier)
           .getAppVersion(
-            appPlatForm: 'android',
+            appPlatForm: Platform.isAndroid ? 'android' : 'ios',
             appVersion: appVersion,
             appName: 'owner',
           );
@@ -477,8 +493,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> openPlayStore() async {
     final versionState = ref.read(appVersionNotifierProvider);
+    final store = versionState.appVersionResponse?.data?.store;
+    // Open the App Store on iOS and the Play Store on Android.
     final storeUrl =
-        versionState.appVersionResponse?.data?.store.android.toString() ?? '';
+        (Platform.isIOS ? store?.ios : store?.android)?.toString() ?? '';
     if (storeUrl.isEmpty) return;
 
     final uri = Uri.parse(storeUrl);

@@ -16,7 +16,6 @@ import 'package:tringo_owner/Presentation/Menu/Screens/subscription_screen.dart'
 import 'package:tringo_owner/Presentation/Wallet/Screens/wallet_screens.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../Core/Routes/app_go_routes.dart';
 import '../../../Core/Session/registration_product_seivice.dart';
 import '../../../Core/Session/session_manager.dart';
 import '../../../Core/Utility/app_snackbar.dart';
@@ -270,10 +269,12 @@ class _MenuScreensState extends ConsumerState<MenuScreens> {
     if (!mounted) return;
 
     if (success) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
       AppSnackBar.success(context, "Account deleted successfully");
-      context.goNamed(AppRoutes.login);
+      // Full reset (prefs + in-memory singletons + Riverpod ProviderScope) so the
+      // next login starts clean. A bare prefs.clear() left the deleted user's
+      // cached home/profile data in memory, which leaked into the freshly
+      // created account on re-login.
+      await SessionManager.forceLogout();
     } else {
       AppSnackBar.error(context, st.error ?? "Delete failed");
     }

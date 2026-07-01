@@ -94,6 +94,13 @@
         android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
+        <!-- FCM: route background/terminated notifications to the channel the app
+             creates in firebase_service.dart (importance high, playSound true), so
+             push notifications play sound consistently. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="flutter_notification" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAoOiPmmtlMJ7dqbk3yW13itbM1B5grOdc" />
